@@ -27,9 +27,11 @@ The first archetype in the catalog (D4), under `.claude/archetypes/pipeline-stag
 - `archetype.md`: frontmatter (`name`, `version`, `phases`, `gates`, per-agent `models`), then when it applies, the edge-case checklist, extra done-items, and where its files go in the hexagonal layers (`application` for the stage, `domain.model` only for exported results, ports in `infra.port`).
 - `design.md.tmpl`, `test-plan.md.tmpl`, `impl-guide.md`, `test-guide.md`, and `skeletons/*.java.tmpl`.
 
-The content comes from refining DFS-001, whose decisions are the checklist: accumulation that can be merged (so it can be parallelised later), deterministic output order, immutable results, invalid-argument rejection, the same input appearing twice, configuration defaults and where they live, and memory measured, not assumed. It also draws on the `CLAUDE.md` conventions (records and sealed interfaces, tests against fakes, ArchUnit layering, large fixtures generated in code). Defaults from D3, D9 and D2: gates `[design, done]`, the D9 model tiers, and stubs owned by the architect that throw a recognisable not-implemented exception.
+The content comes from refining DFS-001, whose decisions are the checklist: accumulation that can be merged (so it can be parallelised later), deterministic output order, immutable results, invalid-argument rejection, the same input appearing twice, configuration defaults and where they live, and memory measured, not assumed. It also draws on the `CLAUDE.md` conventions (records and sealed interfaces, tests against fakes, ArchUnit layering, large fixtures generated in code). Defaults from D3, D9 and D2: gates `[design, done]`, the D9 model tiers, and stubs owned by the architect that throw `new UnsupportedOperationException("not implemented: <TICKET-ID>")` (the convention is decided in DFS-010).
 
 It applies to DFS-001, DFS-002 and DFS-003, which get `archetype: pipeline-stage` here.
+
+Test naming (D11, decided while refining DFS-010): a test's `@DisplayName` starts with the acceptance-criterion ID(s) it proves, for example `DFS-001.AC-3 Files of equal size form one candidate group`. `test-plan.md.tmpl` maps criterion, scenarios and tests, and `test-guide.md` states the convention.
 
 ## Scenarios
 
@@ -60,6 +62,11 @@ Feature: The pipeline-stage archetype
     Given DFS-001, DFS-002 and DFS-003
     When their frontmatter is read
     Then each has `archetype: pipeline-stage`
+
+  Scenario: The test guide sets the naming convention
+    Given `test-guide.md` and `test-plan.md.tmpl`
+    When they are read
+    Then they require each test's `@DisplayName` to start with its criterion ID, and the plan template maps criterion, scenarios and tests
 ```
 
 ## Scope
@@ -83,5 +90,4 @@ Feature: The pipeline-stage archetype
 
 - Scenarios are a first draft derived from the design log only; review and complete them.
 - How detailed should the Java skeletons be (a class shell, or a full test scaffold)?
-- Stub convention: which exact exception and message does the red gate (DFS-010) match?
 - Which stage will the sample-stage check use, given DFS-001 is not implemented yet?

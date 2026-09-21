@@ -90,3 +90,4 @@ Feature: Starting and tracking a scan
 - Handling of partial failures and skipped entries: how are they surfaced to the caller?
 - Threading: this ticket decides how `SizeIndex` (DFS-001, mergeable and not thread-safe) is used: one instance sequentially now. Keep the walker's listener contract open to per-worker sinks, because DFS-006 wants one index per worker merged at the end.
 - Start locations: normalize them up front by dropping any location nested inside another (or equal to another), so a file is never walked twice. `SizeIndex` (DFS-001) collapses equal paths within a group only as a safeguard.
+- If this ticket adds a new exported package, `file-scanner/src/main/java/module-info.java` must be listed explicitly in `touches` (a package entry does not cover it; see DFS-010).

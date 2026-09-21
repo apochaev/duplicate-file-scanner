@@ -38,9 +38,9 @@ Rejected:
 
 Sequential, test-first, in one worktree. The test author runs first, against the architect's compilable stubs, and stops when the tests compile and every one fails for the right reason; the implementer then makes them pass. The implementation does not exist when the tests are written, so the tests cannot inherit its mistakes, and there are no extra worktrees, no merge and no Gradle contention.
 
-- **Red gate:** a deterministic script, not an agent, runs the tests and parses the JUnit XML reports. Every test must fail with the stubs' `UnsupportedOperationException`. A test that passes, or fails for another reason, goes back to the test author as a defect naming only the offending tests and the reason (about ten lines). Stack traces and full Gradle output never enter an agent's context. This catches vacuous tests and broken tests before the implementer spends a cycle on them.
+- **Red gate:** a deterministic script, not an agent, runs the tests and parses the JUnit XML reports. Every story test (display name starting with the ticket ID, D11) must fail with the stubs' `UnsupportedOperationException`, and every other test must pass (settled while refining DFS-010). A test that passes, or fails for another reason, goes back to the test author as a defect naming only the offending tests and the reason (about ten lines). Stack traces and full Gradle output never enter an agent's context. This catches vacuous tests and broken tests before the implementer spends a cycle on them.
 - **Test freeze:** after the test phase the verifier checks with `git diff` that no test file changed, so the implementer cannot make tests green by editing them.
-- **Stubs:** owned by the architect; methods throw a recognisable not-implemented exception.
+- **Stubs:** owned by the architect; methods throw `new UnsupportedOperationException("not implemented: <TICKET-ID>")`. The message prefix is what the red gate matches, because real code also throws `UnsupportedOperationException` (immutable collections). Settled while refining DFS-010.
 - **Rule for the whole pipeline:** gates are deterministic scripts, and an agent reads only a compact verdict.
 - **Parallel option kept:** phases in `plan.json` declare what they depend on, so an archetype for a large story can opt in to running implementer and test author in separate worktrees (both branched from the stub commit, disjoint `src/main` and `src/test`) as a configuration change. Not built now.
 
@@ -131,7 +131,7 @@ Deterministic gate (scripts, no tokens; an agent sees only a compact verdict):
 - no `@Disabled`; any skipped test must come from a platform `Assumptions` check (for example the case-sensitivity fixture test on Windows);
 - test freeze: no test file changed since the test phase (`git diff`);
 - touches: every changed file is inside the ticket's `touches`, its story folder, or its tests;
-- scenario traceability: every Gherkin scenario title appears in `test-plan.md` and on a test (`@DisplayName`);
+- acceptance-criterion traceability (see D11): every criterion has a tagged scenario and appears, by ID, at the start of a test's display name and in `test-plan.md`;
 - consistency: the ticket status matches the plan, and `plan.json` parses;
 - done-items are ticked by the verifier after it has verified them, not by the implementer (the "Implementing a ticket" rules in the `tickets` skill must change accordingly).
 
@@ -181,14 +181,26 @@ Rejected: cheapest by default with escalation only (a weak contract is not a fai
 
 ### D10. Gate script implementation (decided 2026-09-21)
 
-Java source-launch programs in `tools/story-gate/`, run as `java tools/story-gate/StoryGate.java <check> <ID>`. Each check prints a verdict of about ten lines and sets an exit code. Multi-file source launch (JDK 22 and later) lets the code split into small files. The launcher uses `$JAVA_HOME`'s `java`, because multi-file launch fails on the older JDKs that are also on this machine's path (17 and 11). The JDK has no JSON parser, so the "plan.json parses" check uses a small hand-written validator (about 60 lines).
+Java source-launch programs in `tools/story-gate/`, run as `java tools/story-gate/StoryGate.java <check> <ID>`. Each check prints a verdict of about ten lines and sets an exit code. Multi-file source launch (JDK 22 and later) lets the code split into small files. The launcher uses `$JAVA_HOME`'s `java`, because multi-file launch fails on the older JDKs that are also on this machine's path (17 and 11). The JDK has no JSON parser, so the tools use a small but complete hand-written JSON parser (one file, about 150 lines), because the freeze check must read a field from `plan.json`, not only validate it (settled while refining DFS-010).
 
-The gates are the pipeline's safety net, so they need tests. If they grow, promote them to a small Gradle subproject with JUnit tests (a later ticket).
+The gates are the pipeline's safety net, so they carry a fixture-driven `selftest` built into the tools (settled while refining DFS-010). If they grow, promote them to a small Gradle subproject with JUnit tests (a later ticket).
 
 Rejected:
 - Python: a second runtime for every agent and sandbox, and version ambiguity on this machine (`python` is 3.11.9 while `py` resolves to 3.14.3). The runner-up; revisit if the gates grow large and change often, or if Python is preferred.
 - bash: fragile XML parsing and no `jq` installed.
 - Gradle task: Gradle's startup warning and progress lines add tokens to agent context, and it couples the gates to the product build.
+
+### D11. Acceptance criteria (decided 2026-09-21, while refining DFS-010)
+
+Refinement produces a numbered list of acceptance criteria, in a `## Acceptance criteria` section between Context and Scenarios. Each is a one-line testable statement with the ID `<TICKET-ID>.AC-<n>` (for example `DFS-011.AC-1`).
+
+- Scenarios carry `@AC-n` tags (one or several). Every scenario needs at least one tag, and every criterion needs at least one scenario.
+- Tests start their `@DisplayName` with the ID(s) they prove, followed by a readable title. The traceability check reads the JUnit XML, where the display name is the test case name, and matches by ID, so retitling a scenario does not break the link.
+- IDs are never renumbered or reused; a retired criterion keeps its number and is marked retired.
+- The chain is criterion, scenario, test, and each link is checked. The human gates show the criteria with their coverage status (about twenty lines), and the verifier records a verdict per criterion.
+- Migration: DFS-001 gets criteria derived from its scenarios (the author confirms the mapping, DFS-008); the drafts are grandfathered until refined.
+
+Rejected: one criterion per scenario (as fine-grained as the scenarios, no requirement-level statement, no compact gate summary); numbering inside scenario titles (the same granularity, and less standard than tags).
 
 ## Build tickets (created as drafts on 2026-09-21)
 
@@ -196,7 +208,7 @@ DFS-008 to DFS-013 exist as drafts in `docs/tickets/backlog/`. Each still needs 
 
 | ID | Ticket | Depends on |
 |---|---|---|
-| DFS-008 | Extend the `tickets` skill: `archetype` and optional `models` frontmatter, "archetype set" in the `ready` gate, and the verifier (not the implementer) ticking done-items. | none |
+| DFS-008 | Extend the `tickets` skill: `archetype` and optional `models` frontmatter, "archetype set" in the `ready` gate, the verifier (not the implementer) ticking done-items, and numbered acceptance criteria (D11). | none |
 | DFS-009 | Write the `pipeline-stage` archetype, from what was learned refining DFS-001. | DFS-008 |
 | DFS-010 | The story gate tools in Java (`tools/story-gate/`): red gate, build verdict, test freeze, touches, traceability, consistency, and the `plan.json` validator. | none |
 | DFS-011 | The five agent definitions, with the D9 models and turn caps. | DFS-009, DFS-010 |

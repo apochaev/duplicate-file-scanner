@@ -27,7 +27,7 @@ A skill in the main session that launches the phase agents as subagents (D1). Ea
 
 - **State (D5):** one `plan.json` per story, the orchestrator its only writer. Shape: ticket, archetype and version, branch, state (`running`, `awaiting-approval`, `blocked`, `done`), phases (id, agent, `after`, status, `runs` with model, effort, turns and outcome, artifacts, commit), gates, defects.
 - **Resume protocol (D5):** read the plan; mark an approved gate; pick the first phase not done whose `after` phases are done; if it is `in-progress`, reconcile (artifacts and commit exist and the gate passes, then done; otherwise re-run with the notes from `progress.md`); launch; run the phase's deterministic gate on return; on failure record a defect and route it; after two failed attempts set `blocked` and escalate.
-- **Gates (D3):** two by default, after design and before `done`, configurable per archetype; each shows a summary of about twenty lines.
+- **Gates (D3):** two by default, after design and before `done`, configurable per archetype; each shows a summary of about twenty lines that lists the acceptance criteria with their coverage status.
 - **Gate tools (D7, D10):** calls `tools/story-gate` after each phase.
 - **Models (D9):** resolved ticket over archetype over agent; a second attempt runs one tier up through the per-invocation model.
 - **Learning (D6):** `/story learn <ID>` shows ranked proposals; the user applies, parks or rejects each; decisions go in `docs/learnings/log.md`; applied changes bump the archetype version. Every proposal cites evidence.
