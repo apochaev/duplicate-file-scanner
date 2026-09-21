@@ -81,3 +81,4 @@ Feature: Full-hash stage
 - `DuplicateSet` shape: fields (size, digest, paths?) and the digest value type. Is it introduced here or in DFS-004/DFS-005?
 - SHA-256 via the JDK `MessageDigest` is an assumed default, not confirmed with the user.
 - Failure handling for unreadable files must match DFS-002; decide once.
+- Confirmation strategy: full SHA-256 for every group, or a byte-for-byte compare (the `ContentComparator` already planned for delete time, decision 4) for groups of exactly two files? Compare reads the same bytes as hashing a pair, skips digest CPU and stops at the first difference, but cannot be cached, interleaves two files on one spinning disk, and reads more for groups of three or more. It also depends on whether `DuplicateSet` keeps a digest. Benchmark before deciding.

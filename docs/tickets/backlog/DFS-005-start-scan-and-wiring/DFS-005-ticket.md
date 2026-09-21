@@ -85,6 +85,8 @@ Feature: Starting and tracking a scan
 
 - Scenarios are a first draft derived from CLAUDE.md only; review and complete them.
 - Split into smaller tickets (see Context)?
-- Status model (which states), progress listener shape, and config record fields with their defaults.
+- Status model (which states), progress listener shape, and config record fields with their defaults. The config record's minimum size defaults to 1 (empty files excluded) and is passed explicitly to `SizeIndex(long minSize)` (DFS-001), which has its own no-arg default of 1.
 - `ListDuplicateSets` query shape: paging, ordering, filtering.
 - Handling of partial failures and skipped entries: how are they surfaced to the caller?
+- Threading: this ticket decides how `SizeIndex` (DFS-001, mergeable and not thread-safe) is used: one instance sequentially now. Keep the walker's listener contract open to per-worker sinks, because DFS-006 wants one index per worker merged at the end.
+- Start locations: normalize them up front by dropping any location nested inside another (or equal to another), so a file is never walked twice. `SizeIndex` (DFS-001) collapses equal paths within a group only as a safeguard.
