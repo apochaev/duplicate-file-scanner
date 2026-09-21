@@ -4,6 +4,7 @@ title: Build the story gate tools
 status: ready
 type: feature
 scope: [build]
+archetype: none
 priority: high
 depends_on: []
 touches: [tools/story-gate]
@@ -33,7 +34,7 @@ Checks:
 - **disabled:** no `@Disabled`; a skipped test must come from a platform `Assumptions` check.
 - **freeze:** no test file changed since the test-phase commit (`git diff`).
 - **touches:** every changed file is inside the ticket's `touches`, its story folder, or its tests.
-- **traceability:** the chain criterion, scenario, test holds. Every criterion has at least one tagged scenario, every scenario carries at least one `@AC-n` tag naming an existing criterion, and every criterion ID (`<TICKET-ID>.AC-<n>`) appears at the start of at least one test's display name in the XML reports and in `test-plan.md`.
+- **traceability:** the chain criterion, scenario, test holds. Every criterion has at least one tagged scenario, every scenario carries at least one `@AC-n` tag naming an existing criterion, and every criterion ID (`<TICKET-ID>.AC-<n>`) appears at the start of at least one test's display name in the XML reports and in `test-plan.md`. Criteria are read from the ticket's `## Acceptance criteria` lines, written `- **AC-<n>** text`. A line written `- **AC-<n> (retired)** text` is skipped (no scenario or test needed), and a scenario tag or test that names a retired criterion fails the check.
 - **stubs:** no `not implemented:` marker remains in production source.
 - **consistency:** the ticket status matches the plan, and `plan.json` parses.
 
@@ -204,6 +205,18 @@ Feature: Story gate checks
     Given an acceptance criterion that no scenario is tagged with
     When the traceability check runs
     Then the verdict names the criterion
+
+  @AC-8
+  Scenario: A retired criterion is skipped by the traceability check
+    Given a criterion written `- **AC-2 (retired)** ...` with no scenario and no test
+    When the traceability check runs
+    Then the criterion is not reported
+
+  @AC-8
+  Scenario: A scenario tag naming a retired criterion fails the traceability check
+    Given a criterion AC-2 marked retired and a scenario tagged `@AC-2`
+    When the traceability check runs
+    Then the verdict names the scenario and AC-2
 
   @AC-8
   Scenario: A missing criterion is caught at the end of the test phase

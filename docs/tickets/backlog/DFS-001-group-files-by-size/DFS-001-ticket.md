@@ -42,6 +42,18 @@ Stage 1 of the detection pipeline (CLAUDE.md design decision 3): group by size, 
 
 **Decided (2026-09-21): equal paths are collapsed inside each group when `groups()` runs.** Scanning two locations where one is nested in the other feeds the index the same `FileEntry` twice, which would otherwise form a group of "two copies" that is really one file: a file reported as a duplicate of itself, so deleting one of them would delete the only copy. Because each group is sorted by path, equal paths are adjacent, so this is a linear pass with no extra memory. Two entries with the same path and size but different modification times collapse to the one with the later modification time, which does not depend on insertion order. A group that shrinks below two files is dropped. Not handled here: the same path in two different groups because its size changed between visits (rare; DFS-004's identity check and the delete-time byte compare cover it). DFS-005 should also normalize start locations so nested ones are dropped before walking.
 
+## Acceptance criteria
+
+The full ID of each criterion is `DFS-001.AC-<n>`. Derived from the scenarios and confirmed by the author on 2026-09-21 (DFS-008).
+
+- **AC-1** Files whose size is unique are dropped, and files of equal size form one candidate group, across folders.
+- **AC-2** Empty files are excluded by default, and files below a configurable minimum size are excluded.
+- **AC-3** Merging partial indexes gives the same groups as a single index, leaves the merged-in index unchanged, and is rejected when the minimum sizes differ.
+- **AC-4** The same path added more than once counts once, keeping the later modification time.
+- **AC-5** Output is deterministic: largest group first, paths ascending, independent of insertion order.
+- **AC-6** Returned groups are immutable.
+- **AC-7** Invalid input is rejected: a candidate group's invariants, a negative minimum size and a null entry.
+
 ## Scenarios
 
 ```gherkin
@@ -50,90 +62,107 @@ Feature: Size grouping
   Background:
     Given a size index with default settings (empty files excluded)
 
+  @AC-1
   Scenario: Files with a unique size are dropped
     Given "a.txt" of 10 bytes, "b.txt" of 20 bytes and "c.txt" of 30 bytes are added
     When groups are requested
     Then no candidate groups are produced
 
+  @AC-1
   Scenario: Files of equal size form one candidate group
     Given "a.txt" and "b.txt" of 10 bytes each and "c.txt" of 20 bytes are added
     When groups are requested
     Then one candidate group of size 10 is produced containing "a.txt" and "b.txt"
 
+  @AC-1
   Scenario: Files are grouped across folders
     Given "folder1/a.txt" and "folder2/b.txt" of 10 bytes each are added
     When groups are requested
     Then one candidate group is produced containing both paths
 
+  @AC-2
   Scenario: Empty files are excluded by default
     Given two files of 0 bytes are added
     When groups are requested
     Then no candidate groups are produced
 
+  @AC-2
   Scenario: A minimum size excludes smaller files
     Given an index created with a minimum size of 100 bytes
     And two files of 99 bytes and two files of 100 bytes are added
     When groups are requested
     Then one candidate group is produced containing only the two 100-byte files
 
+  @AC-3
   Scenario: Merging indexes with different minimum sizes is rejected
     Given index 1 created with a minimum size of 1 byte and index 2 created with a minimum size of 100 bytes
     When index 2 is merged into index 1
     Then the merge is rejected
 
+  @AC-3
   Scenario: Merging partial indexes equals one index
     Given index 1 holds only "folder1/a.txt" of 10 bytes and index 2 holds only "folder2/b.txt" of 10 bytes
     And neither index alone produces a candidate group
     When index 2 is merged into index 1
     Then the groups equal those of a single index that received both files
 
+  @AC-3
   Scenario: Merging leaves the other index unchanged
     Given index 2 holds "b.txt" of 10 bytes and has been merged into index 1
     When more files are added to index 1
     Then the groups of index 2 are unchanged
 
+  @AC-4
   Scenario: The same path added twice counts once
     Given "a.txt" of 10 bytes is added twice
     When groups are requested
     Then no candidate groups are produced
 
+  @AC-4
   Scenario: A repeated path does not inflate a group
     Given "a.txt" of 10 bytes is added twice and "b.txt" of 10 bytes is added once
     When groups are requested
     Then one candidate group is produced containing "a.txt" and "b.txt" once each
 
+  @AC-3
   Scenario: Merging an index with an equal one changes nothing
     Given an index holding "a.txt" and "b.txt" of 10 bytes each
     When another index holding the same two files is merged into it
     Then its groups equal those before the merge
 
+  @AC-4
   Scenario: Equal paths keep the later modification time
     Given "a.txt" of 10 bytes modified at 10:00, "a.txt" of 10 bytes modified at 11:00, and "b.txt" of 10 bytes are added
     When groups are requested
     Then the group holds "a.txt" with the 11:00 modification time
     And the result is the same whichever order the entries were added in
 
+  @AC-5
   Scenario: Output does not depend on insertion order
     Given the same set of files added in two different orders
     When groups are requested from each index
     Then both produce the same groups
     And the paths within each group are sorted ascending
 
+  @AC-5
   Scenario: Groups are returned largest first
     Given two files each of 10 bytes, 50 bytes and 30 bytes are added
     When groups are requested
     Then the groups are returned in the order 50, 30, 10 bytes
 
+  @AC-6
   Scenario: Returned groups are immutable
     Given groups were requested from an index
     When more files are added to the index afterwards
     Then the previously returned groups are unchanged
 
+  @AC-7
   Scenario: A candidate group enforces its invariants
     Given a single file, or two files of different sizes, or files whose size differs from the group's size
     When a candidate group is constructed from them
     Then construction is rejected
 
+  @AC-7
   Scenario: Invalid arguments are rejected
     Given a negative minimum size, or a null entry
     When the index is created or the entry is added
