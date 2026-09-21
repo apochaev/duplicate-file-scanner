@@ -190,9 +190,9 @@ Rejected:
 - bash: fragile XML parsing and no `jq` installed.
 - Gradle task: Gradle's startup warning and progress lines add tokens to agent context, and it couples the gates to the product build.
 
-## Proposed build tickets (not yet created)
+## Build tickets (created as drafts on 2026-09-21)
 
-Proposed as drafts DFS-008 to DFS-013. Each still needs its own refinement to reach `ready`.
+DFS-008 to DFS-013 exist as drafts in `docs/tickets/backlog/`. Each still needs its own refinement to reach `ready`.
 
 | ID | Ticket | Depends on |
 |---|---|---|
