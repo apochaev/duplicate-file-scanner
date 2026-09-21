@@ -1,7 +1,7 @@
 ---
 id: DFS-008
 title: Extend the tickets skill for archetypes, models and verifier ticking
-status: ready
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -11,7 +11,7 @@ touches: [.claude/skills/tickets, CLAUDE.md]
 blocked_reason:
 created: 2026-09-21
 updated: 2026-09-21
-completed:
+completed: 2026-09-21
 ---
 
 # DFS-008: Extend the tickets skill for archetypes, models and verifier ticking
@@ -188,7 +188,7 @@ Feature: Ticket workflow with archetypes and models
   Scenario: A new ticket starts from the updated template
     Given the updated `TEMPLATE.md`
     When `new` creates a draft ticket
-    Then the file has a blank `archetype:` line, a commented `models` example and an empty `## Acceptance criteria` section, and `validate` reports nothing about it
+    Then the file has a blank `archetype:` line, a commented `models` example and an `## Acceptance criteria` section with one placeholder criterion (AC-1, which the placeholder scenarios are tagged with), and `validate` reports nothing about it
 
   @AC-2
   Scenario: A ticket with archetype none passes the gate and validate
@@ -223,13 +223,29 @@ Feature: Ticket workflow with archetypes and models
 
 ## Definition of done
 
-- [ ] `SKILL.md` and `TEMPLATE.md` describe the new fields, the `ready` gate item, the `validate` checks and the verifier rule
-- [ ] A walkthrough of each mode on a scratch copy of the backlog shows every scenario's outcome, with no false findings on existing tickets (evidence noted in this ticket)
-- [ ] The `CLAUDE.md` Tickets section mentions the archetype and models fields
-- [ ] The walkthrough of `validate` shows DFS-001 and DFS-010 with no criteria or tag findings (only the archetype finding for DFS-001, until DFS-009)
-- [ ] No files changed outside the paths listed under Touches
+- [x] `SKILL.md` and `TEMPLATE.md` describe the new fields, the `ready` gate item, the `validate` checks and the verifier rule
+  - Evidence: `SKILL.md` gains the `archetype` and `models` rows, the gate items, an "Acceptance criteria" section, and the `refine`, `list`, `validate` and implementer rules; `TEMPLATE.md` gains the blank `archetype:`, the commented `models` example, the criteria section and tags.
+- [x] A walkthrough of each mode on a scratch copy of the backlog shows every scenario's outcome, with no false findings on existing tickets (evidence noted in this ticket)
+  - Evidence: see "Walkthrough evidence" below.
+- [x] The `CLAUDE.md` Tickets section mentions the archetype and models fields
+  - Evidence: the Tickets paragraph now names `archetype` (and `none`), `models`, the numbered criteria and the `@AC-n` tags.
+- [x] The walkthrough of `validate` shows DFS-001 and DFS-010 with no criteria or tag findings (only the archetype finding for DFS-001, until DFS-009)
+  - Evidence: on the scratch copy `validate` reports only "no archetype" for DFS-001; DFS-010 and DFS-008 have no findings; no draft is flagged.
+- [x] No files changed outside the paths listed under Touches
+  - Evidence: `git status` shows this implementation touched only `SKILL.md`, `TEMPLATE.md`, `CLAUDE.md` and this ticket. The one-line status change in DFS-010 and the untracked `.claude/worktrees/` come from another session, not from this work.
 
 ## Open questions
 
 None.
+
+## Walkthrough evidence
+
+Run on 2026-09-21 on a scratch copy of `docs/tickets/`, `.claude/skills/` and `CLAUDE.md` (the real backlog was not touched). The skill is prose, so a throwaway script transcribed its written `validate` and gate rules literally and applied them to one fixture ticket per scenario and to every existing ticket. The script is not kept in the repo. It shows the rules are unambiguous and produce no false findings on the existing backlog; it does not show that a model follows them. Scenarios about instructions (refine, the implementer rule, `list`, `CLAUDE.md`) were checked by confirming the skill and `CLAUDE.md` state the rule in words, which is a weaker check than running them.
+
+- **Fixtures:** 26 checks, 0 failed, covering all 23 scenarios (S1 to S23): a ticket with no archetype is unmet at the gate; known, unknown and `none` archetypes; well-formed, unknown-agent and unknown-field `models`; untagged scenario and uncovered criterion at the gate; duplicate, gap, dangling and retired-tag findings; a retired criterion needing no scenario; the touches note; ready-or-later flagged and drafts not; a draft made from `TEMPLATE.md` validates cleanly.
+- **Existing tickets:** DFS-001 (`ready`): one finding, "no archetype", as predicted until DFS-009. DFS-008 and DFS-010: no findings. DFS-002 to DFS-007 and DFS-009, DFS-011 to DFS-013 (drafts): no findings. Touches notes only for entries that name files not yet created (DFS-007, DFS-009, DFS-010, DFS-011, DFS-012); DFS-001's package resolves.
+
+**Two deviations found while implementing, both small:**
+- The template ships one placeholder criterion (AC-1) that the placeholder scenarios are tagged with. An empty criteria section would leave those tags dangling, and `validate` would flag every new draft. The scenario "A new ticket starts from the updated template" was reworded to match.
+- "Ready-or-later" in `validate` means `ready`, `in-progress` and `in-review`. Done and cancelled tickets are history and are not checked, since a done ticket that predates the rule could never be fixed. Blocked tickets are not checked either, because a blocked ticket may never have been ready.
 

@@ -4,6 +4,8 @@ title:
 status: draft
 type: feature
 scope: []
+archetype:
+# models: {architect: {model: opus, effort: high, maxTurns: 25}}
 priority: medium
 depends_on: []
 touches: []
@@ -25,6 +27,14 @@ So that <benefit>
 
 <!-- Why this exists. Reference CLAUDE.md design decisions by number, name existing types and ports. An agent must not need anything beyond this file and CLAUDE.md. -->
 
+## Acceptance criteria
+
+<!-- Filled during refinement. State the full ID once, then one testable statement per line, numbered from 1. Never renumber or delete: retire with `- **AC-<n> (retired)** <statement>. Retired <date>: <reason>`. -->
+
+The full ID of each criterion is `DFS-000.AC-<n>`.
+
+- **AC-1** <one testable statement>
+
 ## Scenarios
 
 ```gherkin
@@ -33,11 +43,13 @@ Feature: <name>
   Background:
     Given <shared precondition>
 
+  @AC-1
   Scenario: <happy path>
     Given <concrete state>
     When <action>
     Then <observable outcome>
 
+  @AC-1
   Scenario: <edge case>
     Given <concrete state>
     When <action>
