@@ -122,6 +122,8 @@ Rules:
 
 Rejected: review-and-apply with no memory (skipped proposals return, one-offs get approved too eagerly); a recurrence threshold alone (every friction must happen twice, and it needs fuzzy counting across stories); an autonomous loop with regression checks (as in GRASP), too costly and risky this early, worth revisiting once there is a body of stories to test against.
 
+**Manual stand-in (added 2026-09-21).** Until the `retro` agent and `/story learn` exist (DFS-011, DFS-012), `docs/learnings/log.md` is kept by hand in the same format: friction is logged as `proposed` with evidence, the `tickets` skill's `done` mode asks whether there is any, and the user decides apply, park or reject. It gives the first `retro` run real entries and the recurrence counts to work from.
+
 ### D7. Verifier scope (decided 2026-09-21)
 
 Two layers.
