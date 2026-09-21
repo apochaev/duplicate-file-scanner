@@ -1,0 +1,1 @@
+rootProject.name = "duplicate-file-scanner"
