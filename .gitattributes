@@ -1,0 +1,2 @@
+# Fixture bytes must be identical on every platform: no line-ending conversion.
+file-scanner/src/test/resources/fixtures/** -text
