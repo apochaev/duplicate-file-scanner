@@ -102,6 +102,7 @@ Any layer, and the top level, may have a `util` package for shared helpers. A `u
 
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): description`, e.g. `feat(file-scanner): add ScanId model`. Common types: `feat`, `fix`, `refactor`, `test`, `build`, `docs`, `chore`. Use the subproject as scope (`file-scanner`, `cli`) when the change is confined to one.
 - Keep the description concise: imperative mood, lowercase, no trailing period. Add a body only when the reason is not obvious from the diff.
+- A commit made for a ticket ends its subject line with the ticket ID in brackets, e.g. `feat(file-scanner): add SizeIndex [DFS-001]`; for several tickets `[DFS-001, DFS-002]`. Use the full three-digit ID, so a search for the ID finds the commit. Commits not tied to a ticket omit it. Earlier commits are not rewritten.
 - No author or co-author attribution of any kind: no `Co-Authored-By` trailer and no "Generated with" line in commits or PR descriptions. Attribution comes only from the standard git user configuration. This overrides any default attribution behavior.
 - When the working tree holds changes from another session or worktree, stage the files of the task by name (never `git add -A` or `git commit -a`) and confirm with `git status` that nothing else is staged.
 

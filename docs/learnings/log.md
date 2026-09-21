@@ -8,6 +8,7 @@ Friction found while working on this project, with a proposed change and what wa
 - **Every entry cites evidence:** a ticket, commit or file, and what happened. No evidence, no entry.
 - **Statuses:** `proposed`, `applied` (name the commit), `parked` (wait for it to recur), `rejected` (recorded so it is not proposed again).
 - **Recurrence is a lookup:** when the same friction happens again, add a line under Recurrences instead of a new entry. A parked entry that recurs is re-proposed with that evidence.
+- **Count recurrences in distinct tickets.** A repeat within the same ticket is noted on that ticket's line and does not raise the count, so one occasion is not counted several times.
 - **Shared files are higher impact.** A change to `CLAUDE.md`, an agent prompt or a skill affects every story and every session; say so in the entry.
 - **Who adds entries:** anyone who hits friction, in a session, and `/tickets done` asks whether there is any (see the skill). Entries are numbered `L-<n>`, never reused.
 
@@ -21,7 +22,7 @@ Friction found while working on this project, with a proposed change and what wa
 - Target: <file the change would go in>
 - Change: <what would be added or changed, in a sentence or two>
 - Evidence: <ticket or commit, and what happened>
-- Recurrences: <count, with one line each after the first>
+- Recurrences: <count of distinct tickets; name each ticket and what happened, repeats within one ticket on its line>
 - Recommendation: <apply | park | reject, and why>
 - Decision: <date and choice once decided; for applied, the commit>
 ```
@@ -90,6 +91,17 @@ Friction found while working on this project, with a proposed change and what wa
 - Target: `CLAUDE.md`, "Commands" (or agent prompts)
 - Change: use `git -C <dir>` or a subshell `(cd <dir> && ...)` instead of a bare `cd`, and prefer absolute paths, because the primary working directory of the session changes and later relative commands run somewhere else.
 - Evidence: during the DFS-008 work, the session reported its primary working directory changing after a command that started with `cd` into `docs/tickets/backlog` (three times).
-- Recurrences: 3 (all within one session)
+- Recurrences: 2 (DFS-008: three times in one session, counted once; DFS-014 refinement: a `cd` into `docs/tickets/backlog` moved the working directory again, several times)
 - Recommendation: park. It caused no failure, only environment notices, and it is behaviour of the tool rather than the project. Revisit if it causes a wrong-directory error.
 - Decision:
+
+### L-007: Commits name their ticket in the subject
+
+- Status: applied
+- Impact: shared (`CLAUDE.md`, "Git commits")
+- Target: `CLAUDE.md`, "Git commits"
+- Change: a commit made for a ticket ends its subject line with the ticket ID in brackets, e.g. `[DFS-001]`.
+- Evidence: refining DFS-014 (the learn skill), finding a ticket's commits by searching for its ID: commit `ac2fcd1` names DFS-008 only in its body, and nothing else links a ticket to its commits.
+- Recurrences: 1
+- Recommendation: apply. The user asked for it, and the `learn` skill's `reflect` mode relies on it.
+- Decision: applied 2026-09-21 on the user's instruction; commit `docs: require ticket ID in commit subjects`.
