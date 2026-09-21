@@ -216,6 +216,7 @@ DFS-008 to DFS-013 exist as drafts in `docs/tickets/backlog/`. Each still needs 
 | DFS-011 | The five agent definitions, with the D9 models and turn caps. | DFS-009, DFS-010 |
 | DFS-012 | The `/story` skill: run and resume, `plan.json`, gates, `learn`, and the learnings log. | DFS-008, DFS-010, DFS-011 |
 | DFS-013 | The pilot (a spike, D8): A/B on DFS-001, then the pipeline on DFS-002, with the metrics table and the pruning review. | DFS-012, and DFS-002 refined |
+| DFS-014 | The `learn` skill (added 2026-09-21): manages the learnings log (`add`, `review`, `decide`, `apply`) and `reflect`, which launches an agent that drafts entries from a finished ticket. The agent is the seed of `retro` (DFS-011), and `/story learn` (DFS-012) wraps it. | none |
 
 DFS-008 and DFS-010 do not depend on each other and could be built first, in parallel. Once DFS-008 lands, DFS-001 gets `archetype: pipeline-stage`.
 

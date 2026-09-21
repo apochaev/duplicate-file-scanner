@@ -96,5 +96,6 @@ Feature: Story agents
 - Scenarios are a first draft derived from the design log only; review and complete them.
 - Tool allowlists per agent, and whether path guards are needed (the verifier needs Edit for the ticket and Write for its report but must not touch source; a `PreToolUse` hook scoped to the verifier, or the touches check alone?).
 - How does an agent learn the story folder path (passed in the launch prompt by the orchestrator)?
+- DFS-014 (the `learn` skill) creates `.claude/agents/reflect.md` (Sonnet, low, 15 turns), which reads a ticket, its history and the learnings log. It is the seed of `retro`. Does `retro` reuse it, extend it with the plan and `progress.md` inputs, or replace it? `touches` overlaps at `.claude/agents`, so sequence the two tickets.
 - Is `omitClaudeMd` worth using for `retro` to save tokens?
 - Is there a way to evaluate agent prompts beyond the pilot run?

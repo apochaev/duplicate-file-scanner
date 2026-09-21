@@ -30,7 +30,7 @@ A skill in the main session that launches the phase agents as subagents (D1). Ea
 - **Gates (D3):** two by default, after design and before `done`, configurable per archetype; each shows a summary of about twenty lines that lists the acceptance criteria with their coverage status.
 - **Gate tools (D7, D10):** calls `tools/story-gate` after each phase.
 - **Models (D9):** resolved ticket over archetype over agent; a second attempt runs one tier up through the per-invocation model.
-- **Learning (D6):** `/story learn <ID>` shows ranked proposals; the user applies, parks or rejects each; decisions go in `docs/learnings/log.md`; applied changes bump the archetype version. Every proposal cites evidence. `docs/learnings/log.md` already exists as a manual log (2026-09-21, entries `L-<n>`); `learn` reads and extends it and keeps its entry format.
+- **Learning (D6):** `/story learn <ID>` shows ranked proposals; the user applies, parks or rejects each; decisions go in `docs/learnings/log.md`; applied changes bump the archetype version. Every proposal cites evidence. `docs/learnings/log.md` already exists as a manual log (2026-09-21, entries `L-<n>`); `/story learn` is a thin wrapper (decided while refining DFS-014, 2026-09-21): it runs the `retro` agent, which appends `proposed` entries in that format, then hands over to `/learn review`, `decide` and `apply` (DFS-014), which stay the log's only writer. Details are for this ticket's refinement.
 - **Pilot data (D8):** the run records in `plan.json` are the raw material for the metrics.
 
 ## Scenarios
