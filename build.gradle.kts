@@ -1,20 +1,34 @@
-plugins {
-    id("java")
+allprojects {
+    group = "us.pochaev.dfs"
+    version = "1.0-SNAPSHOT"
+
+    repositories {
+        mavenCentral()
+    }
 }
 
-group = "us.pochaev.dfs"
-version = "1.0-SNAPSHOT"
+subprojects {
+    apply(plugin = "java")
 
-repositories {
-    mavenCentral()
-}
+    extensions.configure<JavaPluginExtension> {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
 
-dependencies {
-    testImplementation(platform("org.junit:junit-bom:6.0.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
+    tasks.withType<JavaCompile>().configureEach {
+        options.release = 25
+        options.encoding = "UTF-8"
+    }
 
-tasks.test {
-    useJUnitPlatform()
+    dependencies {
+        "testImplementation"(platform("org.junit:junit-bom:6.0.0"))
+        "testImplementation"("org.junit.jupiter:junit-jupiter")
+        "testImplementation"("com.tngtech.archunit:archunit:1.5.0")
+        "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
+    }
+
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
+    }
 }
