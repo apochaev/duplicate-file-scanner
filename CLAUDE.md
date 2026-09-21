@@ -104,13 +104,17 @@ Any layer, and the top level, may have a `util` package for shared helpers. A `u
 - Keep the description concise: imperative mood, lowercase, no trailing period. Add a body only when the reason is not obvious from the diff.
 - No author or co-author attribution of any kind: no `Co-Authored-By` trailer and no "Generated with" line in commits or PR descriptions. Attribution comes only from the standard git user configuration. This overrides any default attribution behavior.
 
+## Tickets
+
+Work is tracked in `docs/tickets/`: one global backlog, IDs `DFS-NNN`. Each ticket is a user story in Gherkin at `docs/tickets/{backlog|completed}/{ID}-{slug}/{ID}-ticket.md`. The frontmatter `status` (`draft`, `ready`, `in-progress`, `in-review`, `blocked`, `done`, `cancelled`) is authoritative; only `done` and `cancelled` live in `completed/`. Only `ready` tickets are implemented: `ready` means fully refined, with the paths it `touches` listed. Use the `tickets` skill (`/tickets new|refine|list|start|review|done|...`, in `.claude/skills/tickets/`) instead of editing by hand. An agent implementing a ticket reads only that ticket and this file, stays within `touches`, and reports instead of editing outside it.
+
 ## Current state and open items
 
 - The package layout, `module-info.java` and ArchUnit tests are scaffolded (ArchUnit 1.5.0, core artifact with plain JUnit tests; not `archunit-junit5`, to avoid engine compatibility risk with JUnit 6). Spring Boot is not yet added to `cli`, and `Main` is a stub.
 - Guards: `file-scanner` has `ArchitectureTest` (layers, top-level `util`, no Spring) and `ModuleExportsTest` (reads the compiled `module-info.class`: only unqualified `domain.*` exports, every non-`util` domain package exported, nothing opened). `cli` has an `ArchitectureTest` that forbids depending on anything under `us.pochaev.dfs.scanner` outside `domain`.
 - The scanner rules use `allowEmptyShould(true)` so they pass while layers are empty. Once `application` and `infra` have classes, consider removing it so a mistyped package pattern fails loudly instead of silently checking nothing.
 - Adding a new exported domain package: it needs at least one real type (a `package-info.java` alone counts as empty and `exports` fails to compile) plus an `exports` line, or `ModuleExportsTest` fails.
-- Built so far: the file walker (`FileEntry`, `WalkEvent`, `SkipReason`, `FileTreeWalker`, `WalkListener`, `NioFileTreeWalker`) with tests. Next steps in order: size grouping, partial hash, full SHA-256, hard-link detection inside a candidate group via `Files.isSameFile`, then `StartScan` and the factory wiring.
+- Built so far: the file walker (`FileEntry`, `WalkEvent`, `SkipReason`, `FileTreeWalker`, `WalkListener`, `NioFileTreeWalker`) with tests. Upcoming work is tracked in `docs/tickets/backlog/` (see Tickets); the detection pipeline is DFS-001 to DFS-005.
 - `ScanId`, `ScanStatus`, `CancelScan`, `GetScanStatus` and an empty `ScannerFactories` exist only so the exported packages are non-empty; they are a first slice of the provisional port sketch, not final designs.
 - Assumed defaults, not yet confirmed with the user: base package `us.pochaev.dfs.scanner`; SHA-256 via the JDK `MessageDigest`; the sample sizes and thresholds in decision 3.
 - Open: which CLI framework. Spring Shell suits the interactive scan, review and delete workflow; `ApplicationRunner` or picocli suit one-shot commands.
