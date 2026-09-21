@@ -30,14 +30,14 @@ Friction found while working on this project, with a proposed change and what wa
 
 ### L-001: State counts only from a mechanical count
 
-- Status: proposed
+- Status: applied
 - Impact: shared (the `tickets` skill)
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
 - Change: when a ticket, note or summary states a count (scenarios, criteria, files), take it from a mechanical count such as `grep -c`, never from memory or from an earlier note.
 - Evidence: refining DFS-010, the scenario count was stated as 24 and the mechanical check gave 32. Migrating DFS-001 to acceptance criteria (commit `b64bda7`), the stated 21 scenarios were 17.
 - Recurrences: 2 (DFS-010 refinement; DFS-001 migration)
 - Recommendation: apply. It has already happened twice, and the cost of the rule is one sentence.
-- Decision:
+- Decision: applied 2026-09-21 by the user, as recommended; commit `docs: apply L-001 and L-005` (the sentence is in the `refine` mode of the skill).
 
 ### L-002: A criterion that names a set lists its members
 
@@ -74,14 +74,14 @@ Friction found while working on this project, with a proposed change and what wa
 
 ### L-005: With parallel sessions, stage explicit paths
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`CLAUDE.md`, "Git commits")
 - Target: `CLAUDE.md`, "Git commits"
 - Change: when the working tree holds changes from another session or worktree, stage the files of the task by name (never `git add -A` or `git commit -a`) and confirm with `git status` that nothing else is staged.
 - Evidence: commit `ac2fcd1` was prepared while another session had changed DFS-010's ticket (status `in-progress`) and created `.claude/worktrees/`. Naming the paths kept both out of the commit. This is a practice that worked, recorded so it is not lost, and it becomes more likely to matter once stories run in parallel.
 - Recurrences: 1
 - Recommendation: apply. It is a rule about a mistake that is easy to make and costly to undo, and the pipeline will make parallel sessions normal.
-- Decision:
+- Decision: applied 2026-09-21 by the user, as recommended; commit `docs: apply L-001 and L-005` (a bullet in `CLAUDE.md`, "Git commits").
 
 ### L-006: A `cd` in a shell command moves the session's working directory
 
