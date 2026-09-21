@@ -69,8 +69,8 @@ Any layer, and the top level, may have a `util` package for shared helpers. A `u
 - **Never delete the last copy.** Every `DeletionPlan` must leave at least one verified surviving copy per `DuplicateSet`. Rules can conflict (folder1's copy may itself be marked for deletion by another rule), so validate the plan as a whole, not rule by rule.
 - **Re-verify at execution time:** the keeper and the candidate still exist and are unchanged, and content is byte-identical (decision 4).
 - **Preview is a pure query; execution is a separate command.** `PreviewDeletionPlan` never touches disk state.
-- **Hard links are not duplicates.** Paths with the same file key are one physical file: drop them before hashing.
-- **Do not follow symlinks or junctions by default** (avoids cycles), and skip cloud placeholders (e.g. OneDrive) by default, since reading them triggers a download.
+- **Hard links are not duplicates.** Paths that are the same physical file must not count as copies of each other. `BasicFileAttributes.fileKey()` returns null on Windows (verified), so it cannot identify them; use `Files.isSameFile` within a candidate group instead (never pairwise over the whole disk).
+- **Do not follow symlinks or junctions by default** (avoids cycles), and skip cloud placeholders (e.g. OneDrive) by default, since reading them triggers a download. On Windows a junction reports `isDirectory=true, isSymbolicLink=false, isOther=true`, and `Files.walk`/`walkFileTree` descend into it anyway (verified: files appear twice). The walker adapter must detect reparse points itself (`isOther()` directories and symlinks) and skip the subtree.
 - Exclude empty (0-byte) files by default; a minimum-size setting generalizes this.
 
 ## Provisional port sketch (revise as it is built)
@@ -78,6 +78,8 @@ Any layer, and the top level, may have a `util` package for shared helpers. A `u
 - Commands: `StartScan` (returns a scan ID immediately), `CancelScan`, `ExecuteDeletionPlan`, plus undo/purge of a quarantine run.
 - Queries: `GetScanStatus`, `ListDuplicateSets`, `ListLocationOverlaps`, `PreviewDeletionPlan`.
 - Secondary ports: `FileTreeWalker`, `ContentHasher` (sample and full), `ContentComparator`, `FileDeleter`, `ScanRepository`.
+
+`FileTreeWalker` is built (`walk(Path root, WalkListener)`, implemented by `NioFileTreeWalker` on `Files.walkFileTree`). It is callback-based rather than returning a `Stream` so it reuses the JDK's cached directory-listing attributes and reports errors through hooks; the listener returns `false` to stop (this is how cancellation reaches it). It emits `WalkEvent.FileFound(FileEntry)` for each regular file and `WalkEvent.Skipped(path, SkipReason, detail)` for everything left out (`SYMLINK`, `SPECIAL_FILE`, `UNREADABLE`). One rule on every platform: yield only regular files, descend only into plain directories, never follow links. A link given as the root itself is resolved and its target walked. Empty files are yielded; filtering by size belongs in `application`.
 
 ## Spring-friendliness rules for the scanner
 
@@ -93,6 +95,8 @@ Any layer, and the top level, may have a `util` package for shared helpers. A `u
 - Java 25: records for data, sealed interfaces for results and variants. Do not enable preview features (`StructuredTaskScope` is still preview).
 - Test `application` against fake or in-memory adapters (JimFS or hand-written fakes) rather than the real disk.
 - Keep the ArchUnit layering tests green; they are the real enforcement of the rules above.
+- Test fixtures: `file-scanner/src/test/resources/fixtures/` holds only what git stores portably (regular files and directories: empty files, Unicode and odd names, deep nesting, same-size-different-content, duplicates across folders). Tests copy it into a `@TempDir` (`Fixtures.copyInto`). Never commit anything platform-specific there: symlinks, hard links and junctions do not survive git or a Windows checkout, empty directories are not tracked, and Windows forbids case-only variants and some names. Create those at test time, and skip the test (`Assumptions`) when the platform or privileges do not allow it. `.gitattributes` marks fixtures `-text` so bytes are identical everywhere; keep it that way. Expect the case-sensitivity test to skip on Windows and macOS.
+- Explicit expected-file lists (`Fixtures.FILES`) are deliberate: adding a fixture file means updating the list. Add near-duplicate and large-file fixtures (same size, differing only in the middle byte, over the 128 KB sample threshold) when the hashing stages are built; generate large ones in code rather than committing them.
 
 ## Git commits
 
@@ -106,6 +110,7 @@ Any layer, and the top level, may have a `util` package for shared helpers. A `u
 - Guards: `file-scanner` has `ArchitectureTest` (layers, top-level `util`, no Spring) and `ModuleExportsTest` (reads the compiled `module-info.class`: only unqualified `domain.*` exports, every non-`util` domain package exported, nothing opened). `cli` has an `ArchitectureTest` that forbids depending on anything under `us.pochaev.dfs.scanner` outside `domain`.
 - The scanner rules use `allowEmptyShould(true)` so they pass while layers are empty. Once `application` and `infra` have classes, consider removing it so a mistyped package pattern fails loudly instead of silently checking nothing.
 - Adding a new exported domain package: it needs at least one real type (a `package-info.java` alone counts as empty and `exports` fails to compile) plus an `exports` line, or `ModuleExportsTest` fails.
+- Built so far: the file walker (`FileEntry`, `WalkEvent`, `SkipReason`, `FileTreeWalker`, `WalkListener`, `NioFileTreeWalker`) with tests. Next steps in order: size grouping, partial hash, full SHA-256, hard-link detection inside a candidate group via `Files.isSameFile`, then `StartScan` and the factory wiring.
 - `ScanId`, `ScanStatus`, `CancelScan`, `GetScanStatus` and an empty `ScannerFactories` exist only so the exported packages are non-empty; they are a first slice of the provisional port sketch, not final designs.
 - Assumed defaults, not yet confirmed with the user: base package `us.pochaev.dfs.scanner`; SHA-256 via the JDK `MessageDigest`; the sample sizes and thresholds in decision 3.
 - Open: which CLI framework. Spring Shell suits the interactive scan, review and delete workflow; `ApplicationRunner` or picocli suit one-shot commands.
