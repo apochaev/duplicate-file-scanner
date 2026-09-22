@@ -204,6 +204,22 @@ Refinement produces a numbered list of acceptance criteria, in a `## Acceptance 
 
 Rejected: one criterion per scenario (as fine-grained as the scenarios, no requirement-level statement, no compact gate summary); numbering inside scenario titles (the same granularity, and less standard than tags).
 
+### D12. Every stop shows a next step (decided 2026-09-21)
+
+The aspiration is that every point where `/story run` (or `/story learn`) returns control to the user ends its output with an explicit next action, never a bare status the user has to interpret. This applies to every stop, not only the two default human gates (D3):
+
+- **A human gate reached:** the compact summary (D3) ends with the literal command to approve or give feedback (`/story run <ID>` again after approval, or how to reject).
+- **A run resumes and stops again** (the next gate, or the same gate re-shown after a failed reconciliation): same rule — the resumed output still ends with the next command.
+- **`blocked`** (two failed attempts on a phase, D5): the escalation names the phase, the defect, and the concrete options (retry, edit the ticket/design and resume, or cancel the story), not just "blocked."
+- **The pipeline finishes** (`state: done`): says so and names the next thing that becomes possible (`/story learn <ID>` if there is anything to learn, otherwise that there is nothing to learn).
+- **`/story learn` shows proposals:** each one ends with the commands to decide it, as `/learn review` already does (apply, park, reject).
+
+This generalizes what `tickets` and `learn` already do at their own stop points (for example `tickets done`'s trailing `/learn reflect <ID>` offer, `learn apply`'s wait-for-approval before writing) to every stop the orchestrator itself introduces, so a run never leaves the user needing to recall a command from memory or ask "what now."
+
+Rejected: a status-only stop that trusts the user to know the pipeline's commands (matches how `/story run` was sketched in D1/D5, but is the gap this decision closes); a single generic "run `/story run` to continue" appended everywhere regardless of state (cheaper, but wrong for `blocked`, where there is no single next command, only a choice among them).
+
+This is a requirement for DFS-012's refinement to turn into acceptance criteria and scenarios (one per stop kind above), not yet reflected in the ticket file itself.
+
 ## Build tickets (created as drafts on 2026-09-21)
 
 DFS-008 to DFS-013 exist as drafts in `docs/tickets/backlog/`. Each still needs its own refinement to reach `ready`.
