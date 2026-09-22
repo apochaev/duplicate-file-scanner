@@ -237,3 +237,14 @@ Friction found while working on this project, with a proposed change and what wa
 - Recurrences: 1 (CCW-005)
 - Recommendation: reject. Single, minor, and already self-corrected within the same commit with no downstream cost; not distinct enough from ordinary scope discovery to warrant a rule.
 - Decision: rejected 2026-09-22 by the user, as recommended.
+
+### L-020: `tickets done` should commit its own changes and merge the story branch into main
+
+- Status: applied
+- Impact: shared (`.claude/skills/tickets/SKILL.md`, `done` mode)
+- Target: `.claude/skills/tickets/SKILL.md`, `done` mode
+- Change: after moving the ticket folder and updating frontmatter, `done` re-stages that one file by name, confirms with `git diff --cached` that the staged content matches the working tree (`git mv` can silently leave the index holding pre-edit content), and commits it itself as a narrow, documented exception to "commits only when asked." If a branch `tickets/<ID>-<slug>` exists and differs from the branch `done` runs from, merge it in (fast-forward if possible, otherwise an ordinary merge commit; on conflict, stop and tell the user to resolve it by hand) and delete it only once the merge succeeds.
+- Evidence: closing CCW-004, the `git mv`-based close commit (`45adfd1`) staged pre-edit frontmatter despite the working tree already having the edit — caught only via a `0 insertions/0 deletions` stat, needing corrective commit `a6a2624`. Closing CCW-005 hit the identical bug, caught this time only because of the CCW-004 lesson. The user then asked directly for `done` to commit and merge, with implementation left to best judgement.
+- Recurrences: 2 (CCW-004: original, corrected by `a6a2624`; CCW-005: recurred identically, caught by explicit re-staging)
+- Recommendation: apply. Two occurrences of the identical stale-index failure across two tickets is a real mechanical pattern; the merge-into-main half serves the same close-out moment and the user asked for both together. Overlaps with CCW-008 ("Make the tickets lifecycle worktree-aware") — worth a glance when that ticket is next refined, in case it wants to extend this further rather than duplicate it.
+- Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-020` (the `done` mode addition in `.claude/skills/tickets/SKILL.md`).
