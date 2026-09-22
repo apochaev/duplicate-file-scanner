@@ -1,7 +1,7 @@
 ---
 id: DFS-010
 title: Build the story gate tools
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -11,7 +11,7 @@ touches: [tools/story-gate]
 blocked_reason:
 created: 2026-09-21
 updated: 2026-09-21
-completed:
+completed: 2026-09-21
 ---
 
 # DFS-010: Build the story gate tools
