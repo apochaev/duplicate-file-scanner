@@ -124,6 +124,39 @@ Friction found while working on this project, with a proposed change and what wa
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
 - Change: when a ticket edits instructions (a skill or an agent prompt), refinement records for each scenario whether it can be run mechanically or only checked by reading, so a read-through is not presented as a walkthrough of every mode.
 - Evidence: DFS-008 ticket, "Walkthrough evidence" (commit `ac2fcd1`): "Scenarios about instructions (refine, the implementer rule, `list`, `CLAUDE.md`) were checked by confirming the skill and `CLAUDE.md` state the rule in words, which is a weaker check than running them", against its done-item "A walkthrough of each mode". Found by `/learn reflect DFS-008` on 2026-09-21.
-- Recurrences: 1
-- Recommendation: park. One ticket, and the ticket states the limit openly.
+- Recurrences: 2 (DFS-008: see Evidence; DFS-014: agent-side scenarios covered only by the written rules and a stand-in run, "These show the words are present, which is weaker than running them" (2026-09-21))
+- Recommendation: apply. Two tickets that edit instructions now state the same limit; DFS-014 already separates what ran from what was only read, which the rule would make routine. The edit is one sentence in `refine`.
+- Decision:
+
+### L-010: Recurrences names its ticket even at count 1
+
+- Status: proposed
+- Impact: local (the log's own rules and format; the skill already copes with a bare count)
+- Target: docs/learnings/log.md, Rules and Entry format
+- Change: an entry's Recurrences field names its originating ticket from the start (`1 (DFS-008)`), so a second ticket has something to append to and the check can compare names with the count.
+- Evidence: DFS-014 ticket, "Deviations found while implementing": "Entries such as L-002 have `Recurrences: 1` with no ticket named, so adding a second ticket had nothing to append to." Six entries still have a bare 1 (mechanical count).
+- Recurrences: 1 (DFS-014)
+- Recommendation: park. The skill's `add` already names the original ticket from Evidence when a second one arrives, and the check accepts a bare 1, so nothing breaks. Apply it if entries keep being written without a ticket name.
+- Decision:
+
+### L-011: A new agent can't be launched in the turn that creates its file
+
+- Status: proposed
+- Impact: shared (the `tickets` skill, `refine` guidance for tickets that create agents)
+- Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
+- Change: for a ticket that creates an agent, refinement plans the real-run done-item for after the agent is registered, not in the turn that creates the file, and does not tick it on a stand-in run.
+- Evidence: DFS-014 ticket, "Deviations found while implementing": "`Agent` with `subagent_type: reflect` failed with 'Agent type 'reflect' not found'". Commit `033d31c` left the real-run item unticked ("Not yet met"); commit `9cb7c7c` ticked it after the agent had registered later in the same session ("The real run").
+- Recurrences: 1 (DFS-014)
+- Recommendation: park. One occurrence, handled openly. DFS-011 creates five agents and is where it would recur.
+- Decision:
+
+### L-012: A finding declined in `reflect` leaves no record, so it is proposed again
+
+- Status: proposed
+- Impact: shared (the `learn` skill, `reflect` mode)
+- Target: `.claude/skills/learn/SKILL.md`, `reflect` mode, step 4
+- Change: for each finding the user answers write, reject or skip. Reject writes the entry with status `rejected` and the decision date, so a later run reports it as "matches rejected L-<n>" and does not propose it again. Skip leaves no trace, as today.
+- Evidence: DFS-014 ticket, last paragraph, added in `9cb7c7c`: "`reflect` leaves no trace of a finding the user declines, and nothing records which tickets it has run on".
+- Recurrences: 1 (DFS-014)
+- Recommendation: apply. The gap follows from the design, and the change is a few lines in one step of the skill.
 - Decision:
