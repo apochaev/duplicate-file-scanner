@@ -1,7 +1,7 @@
 ---
 id: CCW-004
 title: Define the five story agents
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -11,7 +11,7 @@ touches: [.claude/agents]
 blocked_reason:
 created: 2026-09-21
 updated: 2026-09-22
-completed:
+completed: 2026-09-22
 ---
 
 # CCW-004: Define the five story agents
