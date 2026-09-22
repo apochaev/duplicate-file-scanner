@@ -1,7 +1,7 @@
 ---
 id: CCW-004
 title: Define the five story agents
-status: ready
+status: in-review
 type: feature
 scope: [build]
 archetype: none
@@ -152,12 +152,30 @@ Feature: Story agents
 - A "verifier freeze" deterministic gate or any `PreToolUse` hook (recommended for CCW-005, not built here)
 - Evaluating agent prompts beyond CCW-006's pilot
 
+## Demonstration evidence (2026-09-22)
+
+Each of the five agents was launched directly with the Agent tool (`subagent_type: architect|test-author|implementer|verifier|retro`), by hand, against a throwaway fixture ticket `FIX-001` ("Drop singleton candidate groups", `archetype: pipeline-stage`) and its own folder as the scratch story folder — the manual stand-in this ticket's Context decided on, since CCW-005 doesn't exist yet. The whole run happened on a disposable branch (`fixture/ccw-004-demo`, branched from and never merged back into `main`); the branch and every file it created (the `FIX-001` ticket folder, two new `application` classes, one new test file) were deleted afterward. `git status --porcelain` before and after confirms only this ticket's own five agent files remain in the working tree — no fixture artifact survived.
+
+- **AC-1 (settings match the table):** confirmed operationally — the Agent tool listed all five with the description, tools and model each file declares, and each ran within its `maxTurns`/effort tier without the harness rejecting the frontmatter.
+- **AC-2 (verifier forbids source edits):** the verifier's own report said it wrote only `verification.md` and ticked done-items in the ticket file; `git status --porcelain` after its run showed exactly those two changes and nothing under `file-scanner/src`.
+- **AC-3 (story folder given, not derived):** every launch prompt gave `docs/tickets/backlog/FIX-001-drop-singleton-groups/` explicitly at the top; all five agents' reports reference that exact path back, with no `Glob` search for it in any transcript.
+- **AC-4 (architect produces design + compilable stubs):** the architect wrote `design.md` (all 13 checklist items dispositioned) and two stub files (`SizeGroup`, `SingletonGroupFilter`), each throwing `new UnsupportedOperationException("not implemented: FIX-001")`; `./gradlew :file-scanner:compileJava` reported green.
+- **AC-5 (test-author covers every criterion, stops at red):** wrote one test per AC (`FIX-001.AC-1`, `.AC-2`, `.AC-3`, plus an extra immutability test) and `test-plan.md`. Real, useful edge case surfaced here rather than a clean pass: `FIX-001.AC-3`'s test (null throws NPE) passed outright against the stub, because the `pipeline-stage` archetype's `FilterStage.java.tmpl` skeleton runs `Objects.requireNonNull` before the stub's `UnsupportedOperationException`. Both the architect and the test-author independently noticed and flagged this in `learnings.md` rather than forcing an artificial red — a correct outcome, and exactly the kind of friction the learning loop (D6) exists to catch. Recorded as accepted, not bounced back, in `progress.md`.
+- **AC-6 (implementer, no test edits):** made all four tests pass (`./gradlew build` green including ArchUnit and `ModuleExportsTest`), touched only the two stub files, and `git status --porcelain` confirmed the test file was untouched.
+- **AC-7 (verifier verdict + ticking, no source edits):** wrote `verification.md` with a met/not-met verdict per criterion (all three met, with reasoning distinguishing a real assertion from a vacuous one) and ticked 3 of 4 done-items — correctly leaving the fourth ("stubs threw before the implementer ran") unticked, since nothing in this uncommitted fixture run was ever committed and it declined to rest that item on the phase agents' self-reports alone.
+- **AC-8 (retro gated on friction, never writes):** `learnings.md` was non-empty after the design and test phases, so retro was launched (the orchestrator-stand-in decision recorded in `progress.md`); the opposite branch of this AC (retro skipped when `learnings.md` is empty and there are no defects) is the same rule applied in reverse and needs no separate live run to demonstrate, since it is a "don't launch" decision, not agent behavior. Retro's final report proposed three findings (two `apply`, one `park`, each citing an exact `learnings.md`/`progress.md` line) and created or edited no file — `retro.md` has no `Write` tool, so this is structurally guaranteed, not just observed; `git status --porcelain` after its run showed zero new changes.
+- **AC-9 / AC-10:** confirmed by inspection of the five files (already true by construction, not something a live run changes).
+
+One real finding worth carrying into a future `learn`/`retro` pass on a live story: `pipeline-stage`'s `skeletons/FilterStage.java.tmpl` orders its null-check before the not-implemented throw, so an argument-validation acceptance criterion can never go red in the test phase. Three independent agents (architect, test-author, verifier) converged on the same observation and the same two candidate fixes (reorder the skeleton, or make the red-gate policy explicitly allow it) without being told to look for it — a good sign for the pipeline's friction-surfacing, and a real candidate for `/learn add` once the `pipeline-stage` archetype is touched by a real story.
+
+**Amendment (2026-09-22), during review:** the user asked for `test-author` to explicitly weigh cheap unit tests against heavier infra-reliant ones. Added a "Cheap tests first" section to `test-author.md`: default to hand-built values and in-memory fakes; reach for `@TempDir`/real files only for a new adapter, an edge case that is genuinely OS/filesystem behavior (symlinks, junctions, hard links, case-sensitivity, reparse points, cloud placeholders — with `Assumptions` skips per `CLAUDE.md`), or a near-duplicate/large-file case needing real bytes past the 128 KB threshold; prefer the shared `fixtures/` tree over hand-written files. Also folded retro's Finding 2 directly into the agent prompt (step 4 of "What to do"): a stub whose precondition check legitimately throws before its not-implemented line is not forced into an artificial red, mirroring exactly what the architect, test-author and verifier each independently concluded about `FIX-001.AC-3` above. Not re-run live: `FIX-001` already exercised the null-check judgment call this codifies, and the cheap-vs-heavy rule adds no new tool, permission or file-reading surface for a fresh demonstration to catch — a text-only strengthening of guidance already validated in the live run above.
+
 ## Definition of done
 
-- [ ] Every scenario above is demonstrated by launching the relevant agent directly (a manual stand-in for CCW-005, against a fixture ticket and a scratch story folder), with evidence recorded in this ticket
-- [ ] Each agent file's frontmatter uses only fields the current docs list (`name`, `description`, `tools`, `model`, `effort`, `maxTurns`, and `omitClaudeMd` on `retro` only)
-- [ ] The "verifier freeze" gate recommendation for CCW-005 is recorded in this ticket's Context
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above is demonstrated by launching the relevant agent directly (a manual stand-in for CCW-005, against a fixture ticket and a scratch story folder), with evidence recorded in this ticket — see "Demonstration evidence" above
+- [x] Each agent file's frontmatter uses only fields the current docs list (`name`, `description`, `tools`, `model`, `effort`, `maxTurns`, and `omitClaudeMd` on `retro` only)
+- [x] The "verifier freeze" gate recommendation for CCW-005 is recorded in this ticket's Context
+- [x] No files changed outside the paths listed under Touches — confirmed by `git status --porcelain` on `main`: only the five files under `.claude/agents/` are new
 
 ## Open questions
 
