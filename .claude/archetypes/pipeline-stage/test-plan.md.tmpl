@@ -1,0 +1,21 @@
+# <TICKET-ID>: <ticket title> — test plan
+
+Filled in by the test-author during the `test` phase, before writing any test. `tools/story-gate`'s `TraceabilityCheck` reads this file and requires every live criterion's full ID (`<TICKET-ID>.AC-<n>`) to appear in it somewhere, so keep the ID column exact. Delete this instruction line and every `<...>` placeholder before committing.
+
+## Criterion → scenario → test
+
+| Criterion | Scenario | Test (`@DisplayName`) |
+|---|---|---|
+| `<TICKET-ID>.AC-1` | `<scenario title from the ticket>` | `<TICKET-ID>.AC-1 <short readable title>` |
+| ... | ... | ... |
+
+One row per scenario; a criterion with several scenarios gets several rows. A test whose display name proves more than one criterion lists every ID it starts with, comma-separated, e.g. `<TICKET-ID>.AC-1, <TICKET-ID>.AC-2 <title>` (see `test-guide.md`).
+
+## Fakes and fixtures used
+
+- `<port>`: faked with `<fake implementation, e.g. an in-memory ContentHasher returning fixed digests>`
+- Fixture files: `<from file-scanner/src/test/resources/fixtures/, or generated in code — name which and why>`
+
+## Notes for the implementer
+
+Anything a test relies on that is not obvious from its name (a specific byte pattern, a generated large-file fixture's exact size). Empty section ("None.") if there is nothing to add.

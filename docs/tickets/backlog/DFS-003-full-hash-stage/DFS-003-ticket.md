@@ -4,6 +4,7 @@ title: Confirm duplicates with full SHA-256 hash
 status: draft
 type: feature
 scope: [file-scanner]
+archetype: pipeline-stage
 priority: high
 depends_on: [DFS-002]
 touches: [us.pochaev.dfs.scanner.application, us.pochaev.dfs.scanner.domain.model, us.pochaev.dfs.scanner.infra.port, us.pochaev.dfs.scanner.infra.adapter]

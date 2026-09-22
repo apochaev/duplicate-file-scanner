@@ -1,0 +1,48 @@
+# <TICKET-ID>: <ticket title> — design
+
+Filled in by the architect during the `design` phase. This is the artifact the design gate (D3, gate 1) summarizes for the human, so keep it to roughly the length below — it is a contract, not an essay. Delete this instruction line and every `<...>` placeholder before committing.
+
+## Public API
+
+The types this stage adds or changes, with their full signature. One line each; a sentence after if a signature needs explanation.
+
+- `<ClassOrRecordName>` in `<package>`: `<constructor / key methods>`
+- ...
+
+## Layer placement
+
+- `application`: `<what goes here>`
+- `domain.model` (exported, added to `module-info.java`): `<what goes here, or "none">`
+- `infra.port` / `infra.adapter`: `<port name and its adapter, or "none">`
+
+## Checklist disposition
+
+One line per item of `archetype.md`'s edge-case checklist: how this stage addresses it, or "not applicable: <reason>".
+
+1. Accumulation and merging: <...>
+2. Inter-stage currency invariants: <...>
+3. Deterministic output order: <...>
+4. Immutable results: <...>
+5. Repeated input: <...>
+6. Configuration and its defaults: <...>
+7. Memory or performance, measured: <...>
+8. Groups of one are dropped: <...>
+9. Path-order processing: <...>
+10. Failure mid-stage: <...>
+11. New secondary ports: <...>
+12. Large and near-duplicate fixtures: <...>
+13. Reused across concurrent scans: <...>
+
+## Configuration
+
+- Tunable(s) this stage reads, their default, and where they are enforced: `<...>`
+
+## Open design notes
+
+Anything the architect deviated from in the ticket, or a decision made while designing that the ticket left open. Empty section ("None.") if there is nothing to add.
+
+## Stubs
+
+- Files stubbed: `<list>`
+- Each throws `new UnsupportedOperationException("not implemented: <TICKET-ID>")` per D2 / CLAUDE.md decision 5.
+- Commit: `<hash, filled in after the design commit>`

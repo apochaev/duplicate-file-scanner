@@ -4,6 +4,7 @@ title: Group scanned files by size
 status: ready
 type: feature
 scope: [file-scanner]
+archetype: pipeline-stage
 priority: high
 depends_on: []
 touches: [us.pochaev.dfs.scanner.application]

@@ -1,0 +1,29 @@
+package us.pochaev.dfs.scanner.application;
+
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * <One-line purpose, e.g. "Confirms candidate groups by a head-and-tail sample hash.">
+ * A pure function over the previous stage's output: no accumulation, nothing to merge
+ * (checklist item 1 — this stage receives a finished list, unlike an accumulating stage).
+ */
+public final class <ClassName> {
+
+    private final <PortType> hasher;
+
+    public <ClassName>(<PortType> hasher) {
+        this.hasher = Objects.requireNonNull(hasher, "hasher");
+    }
+
+    /**
+     * Filters {@code groups}, dropping members that no longer match and dropping any group
+     * left with fewer than two members (checklist item 8). Members within a group are
+     * processed in ascending path order (checklist item 9). Input order of {@code groups}
+     * itself is preserved.
+     */
+    public List<<ResultType>> filter(List<<InputType>> groups) {
+        Objects.requireNonNull(groups, "groups");
+        throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+    }
+}

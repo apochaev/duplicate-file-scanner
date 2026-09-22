@@ -1,0 +1,48 @@
+package us.pochaev.dfs.scanner.application;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * <One-line purpose.> Accumulates {@link <InputType>} values seen so far and produces
+ * {@link <ResultType>} groups from them.
+ *
+ * <p>Not thread-safe: a single instance belongs to one scan (or one worker's partition of a
+ * scan). Combine partial instances with {@link #merge(<ClassName>)}.
+ */
+public final class <ClassName> {
+
+    private final List<<InputType>> entries = new ArrayList<>();
+
+    public <ClassName>() {
+        // architect: set any configuration default here (checklist item 6).
+    }
+
+    /**
+     * Adds one entry. Rejects {@code null}.
+     */
+    public void add(<InputType> entry) {
+        Objects.requireNonNull(entry, "entry");
+        throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+    }
+
+    /**
+     * Merges {@code other}'s entries into this instance. {@code other} is left unchanged
+     * (checklist item 1): callers must be free to keep accumulating into it, or discard it,
+     * without affecting this instance.
+     */
+    public void merge(<ClassName> other) {
+        Objects.requireNonNull(other, "other");
+        throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+    }
+
+    /**
+     * Returns the accumulated groups: immutable, deterministically ordered regardless of
+     * insertion order (checklist items 3 and 4), with any group of fewer than two entries
+     * already dropped (checklist item 8).
+     */
+    public List<<ResultType>> groups() {
+        throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+    }
+}

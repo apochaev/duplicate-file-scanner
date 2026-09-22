@@ -4,6 +4,7 @@ title: Filter candidates by head-and-tail partial hash
 status: draft
 type: feature
 scope: [file-scanner]
+archetype: pipeline-stage
 priority: high
 depends_on: [DFS-001]
 touches: [us.pochaev.dfs.scanner.application, us.pochaev.dfs.scanner.infra.port, us.pochaev.dfs.scanner.infra.adapter]

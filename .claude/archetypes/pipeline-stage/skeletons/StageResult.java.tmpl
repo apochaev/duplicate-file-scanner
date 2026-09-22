@@ -1,0 +1,23 @@
+package us.pochaev.dfs.scanner.application;
+
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * The currency this stage passes to the next one: <one line describing what the group
+ * shares in common, e.g. "files sharing one size">. Internal to {@code application} — export
+ * it to {@code domain.model} only if a later stage decides it must leave the stage chain
+ * (see {@code archetype.md}, "Where files go").
+ */
+public record <ResultType>(<key field type> <keyField>, List<<MemberType>> members) {
+
+    public <ResultType> {
+        Objects.requireNonNull(members, "members");
+        // architect: enforce this record's own invariants here (checklist item 2), for example:
+        //   - reject fewer than two members
+        //   - reject a member that does not actually match <keyField>
+        // and take an immutable defensive copy of `members`, sorted per the stage's canonical
+        // order (checklist item 3), before assigning the field.
+        throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+    }
+}
