@@ -1,7 +1,7 @@
 ---
 id: DFS-014
 title: Build the learn skill for the learnings log
-status: in-progress
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -12,7 +12,7 @@ touches: [.claude/skills/learn, .claude/agents/reflect.md, .claude/skills/ticket
 blocked_reason:
 created: 2026-09-21
 updated: 2026-09-21
-completed:
+completed: 2026-09-21
 ---
 
 # DFS-014: Build the learn skill for the learnings log
@@ -220,8 +220,8 @@ Feature: The learn skill
 
 - [x] A walkthrough of each scenario on a scratch copy of the log and a sample ticket shows its outcome (evidence noted in this ticket)
   - Evidence: see "Walkthrough evidence" below.
-- [ ] One real run of `/learn reflect DFS-008` on the finished ticket meets this pass condition, with the result noted here: every finding is matched to L-001, L-002 or L-003 as already logged; nothing is added and no recurrence count changes (same ticket); any other proposal cites evidence a reviewer can verify in the files
-  - Not yet met. A stand-in run was made on 2026-09-21 (see "Reflect run" below) because the `reflect` agent is not registered until the session reloads its agent definitions. The real run of `/learn reflect DFS-008` is still to do; tick this item only after it.
+- [x] One real run of `/learn reflect DFS-008` on the finished ticket meets this pass condition, with the result noted here: every finding is matched to L-001, L-002 or L-003 as already logged; nothing is added and no recurrence count changes (same ticket); any other proposal cites evidence a reviewer can verify in the files
+  - Evidence: see "Reflect run" below. The real run (2026-09-21) matched L-002 and L-003, changed no count, and made one new proposal whose evidence was checked against the files. The stand-in run before it is described there too.
 - [x] The docs claims this design rests on are confirmed when building: `context: fork` applies to a whole skill, `disable-model-invocation` keeps the description out of context, and an agent's effort can be set (result noted here; if one is wrong, the affected decision is amended)
   - Evidence: read 2026-09-21 on the Claude Code docs (skills and sub-agents pages) with a fetch that asked for verbatim quotes. All three hold, so no decision is amended. `context: fork` is one frontmatter field of the whole skill ("Set to `fork` to run in a forked subagent context"), and the docs say the subagent "doesn't see your conversation history". `disable-model-invocation: true` is listed with "Description not in context, full skill loads when you invoke". A subagent definition takes `effort` (`low` to `max`), `model` and `maxTurns`. Not confirmed by the docs: that a skill can launch a subagent by name (the page does not address it); the `reflect` run below is the test of that. Still a summarising fetch, not a reading of the page.
 - [x] The skill writes nothing outside `docs/learnings/` and the target file the user approved
@@ -262,3 +262,15 @@ Result: history 71 of 71 lines, not cut; 3 commits found; 4 findings, all with e
 - One flaw in the report: it recommended `reject` for the already-applied L-005. The agent prompt now says the recommendation is `none` for `already counted` and `matches rejected`.
 
 Against the pass condition: nothing was added and no count changed; every finding was matched or carries checkable evidence. The condition named L-001, L-002 and L-003; one finding matched L-005 and one was new, so it holds with those two stated. Not a pass of the real run.
+
+### The real run
+
+After commit `033d31c` the session registered the `reflect` agent (it did not exist at the time of the stand-in run), and `/learn reflect DFS-008` was run through the skill, which launched the agent by name and gave it only the ticket ID and path. So a skill can launch an agent by name, which the docs page did not say. It took 6 tool calls and about 31,000 tokens (27 s).
+
+- **Report:** history 71 of 71 lines, not cut; 3 commits found; 3 findings. Two were `already counted` (L-002, L-003), with recommendation `none` as the amended prompt asks. One was `new`.
+- **Verification by the skill's step 4:** the cited commit `ac2fcd1` exists; L-002 and L-003 both name DFS-008 and that commit; every quoted line is in the ticket or in the `ac2fcd1` diff (one quote differed from the ticket only in its quote marks). One claim was not supported: the new finding says scenarios "AC-3, AC-9, AC-10, AC-12 and AC-13" could not be run, but the ticket names only the categories, not those numbers. It was left out of the entry.
+- **The new finding**, that scenarios about instructions are only read and not run, was written by the user's decision as L-009 (`proposed`, recurrences 1, recommendation park), after the check on the log found no problem (9 entries, each number once, all fields, no count mismatch). It is the same finding the stand-in run raised, so two runs agree on it; whether it is friction or a stated limit is the user's judgement, and the user chose to record it.
+- **Not tested:** the fold-in path (a finding that matches an entry for another ticket). L-009 is placed so that `/learn reflect DFS-014` should find it as a recurrence; that run has not been made.
+- **Pass condition:** L-002 and L-003 matched as the condition names them; no count changed; the proposal beyond them cites evidence a reviewer can verify. A pass on one ticket shows `reflect` is not obviously broken, not that it is good.
+
+**Gap noticed after the build (not fixed, a candidate follow-up):** `reflect` leaves no trace of a finding the user declines, and nothing records which tickets it has run on, so a declined finding is proposed again the next time. Recording a decline as a `rejected` entry would close it.

@@ -116,3 +116,14 @@ Friction found while working on this project, with a proposed change and what wa
 - Recurrences: 1
 - Recommendation: apply, as a ticket (DFS-015) rather than a one-line edit, because it changes three modes and adds a destructive step (removing worktrees and branches) that needs its own safeguards and decisions. DFS-012 (`/story`) needs the same semantics, so the two should share one design.
 - Decision:
+
+### L-009: Scenarios about instructions are only read, not run
+
+- Status: proposed
+- Impact: shared (the `tickets` skill, `refine` mode)
+- Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
+- Change: when a ticket edits instructions (a skill or an agent prompt), refinement records for each scenario whether it can be run mechanically or only checked by reading, so a read-through is not presented as a walkthrough of every mode.
+- Evidence: DFS-008 ticket, "Walkthrough evidence" (commit `ac2fcd1`): "Scenarios about instructions (refine, the implementer rule, `list`, `CLAUDE.md`) were checked by confirming the skill and `CLAUDE.md` state the rule in words, which is a weaker check than running them", against its done-item "A walkthrough of each mode". Found by `/learn reflect DFS-008` on 2026-09-21.
+- Recurrences: 1
+- Recommendation: park. One ticket, and the ticket states the limit openly.
+- Decision:
