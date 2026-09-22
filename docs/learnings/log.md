@@ -171,3 +171,36 @@ Friction found while working on this project, with a proposed change and what wa
 - Recurrences: 1 (CCW-004)
 - Recommendation: apply. Three independent agents converged on the same root cause and the same fix on a single run; it will recur on the first real filter-stage ticket with an argument-validation acceptance criterion. (A related half of this friction — whether a red-gate should tolerate a validation AC passing off the stub — was already addressed separately, in the same ticket, by adding explicit guidance to `.claude/agents/test-author.md`; this entry is only the remaining skeleton-ordering fix, which belongs to the archetype, not the agent.)
 - Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-013` (the stub's `requireNonNull` moved to a guiding comment after the throw in `FilterStage.java.tmpl`; `pipeline-stage`'s `archetype.md` `version` bumped 1 → 2).
+
+### L-014: StageResult.java.tmpl skeleton contradicts architect contract and sibling skeleton
+
+- Status: applied
+- Impact: shared (an archetype skeleton every pipeline-stage story's architect reads)
+- Target: `.claude/archetypes/pipeline-stage/skeletons/StageResult.java.tmpl`
+- Change: drop the pre-throw `Objects.requireNonNull(members, "members")` (the same ordering issue L-013 fixed in `FilterStage.java.tmpl`, left unfixed here) and reword the architect-directed comment from instructing the architect to enforce invariants and take a defensive copy itself, to "architect: state the invariants in javadoc; implementer enforces them" — matching the actual architect/implementer contract (the architect writes stubs only, never real logic).
+- Evidence: `docs/tickets/completed/CCW-005-story-orchestrator-skill/CCW-005-ticket.md`, "Demonstration evidence" — running the pipeline live against fixture ticket FIX-002, the architect found the skeleton's own comments telling it to "enforce this record's own invariants ... and take an immutable defensive copy ... before assigning the field," which contradicts the architect contract and repeats the pre-throw ordering L-013 already fixed in the sibling skeleton. Worked around manually (invariants moved to javadoc, `requireNonNull` dropped) rather than following the skeleton as written.
+- Recurrences: 1 (CCW-005)
+- Recommendation: apply. The architect had to manually detect and route around a documented contradiction in the skeleton during this run; fixing it removes that rediscovery cost for every future pipeline-stage ticket that uses a stage-result-shaped skeleton, and keeps the L-013 fix consistent across all of `pipeline-stage`'s skeletons rather than just `FilterStage.java.tmpl`.
+- Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-014, L-015 and L-016` (the stub's `requireNonNull` moved to a guiding comment after the throw in `StageResult.java.tmpl`; `pipeline-stage`'s `archetype.md` `version` bumped 2 → 3).
+
+### L-015: A pipeline-stage ticket should name its stage's input/output currency types
+
+- Status: applied
+- Impact: shared (the `pipeline-stage` edge-case checklist every ticket's refinement walks through)
+- Target: `.claude/archetypes/pipeline-stage/archetype.md`, edge-case checklist
+- Change: add a checklist item requiring a `pipeline-stage` ticket's refinement to name the stage's input and output currency types explicitly, or say the architect is free to choose them, so the architect never has to invent an unspecified type at design time.
+- Evidence: `docs/tickets/completed/CCW-005-story-orchestrator-skill/CCW-005-ticket.md`, "Demonstration evidence" — fixture ticket FIX-002 named the stage class (`SmallGroupFilter`) and a member accessor (`long size()`) but not the type the stage filters, so the architect had to invent `CandidateGroup` at design time with no ticket guidance.
+- Recurrences: 1 (CCW-005)
+- Recommendation: apply. Low-risk clarification to the refinement checklist; likely to recur on the next `pipeline-stage` ticket refined without this fixture's pattern in mind.
+- Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-014, L-015 and L-016` (new checklist item 14 in `archetype.md`; `version` bumped 2 → 3).
+
+### L-016: test-guide.md should warn against assertThrows for L-013-style stubs
+
+- Status: applied
+- Impact: shared (an archetype guide every pipeline-stage story's test-author reads)
+- Target: `.claude/archetypes/pipeline-stage/test-guide.md`
+- Change: add a note that `assertThrows(ExpectedType.class, ...)` against a stub whose precondition throw comes after its `UnsupportedOperationException` (the L-013 ordering) misreports under the red gate: `assertThrows` wraps the mismatch as its own `AssertionFailedError` instead of letting the stub's exception propagate, and `RedCheck` reads only the top-level JUnit XML failure type. Recommend a `try { ...; fail(...); } catch (ExpectedType expected) {}` block instead.
+- Evidence: `docs/tickets/completed/CCW-005-story-orchestrator-skill/CCW-005-ticket.md`, "Demonstration evidence" — FIX-002's test-author discovered this while writing the AC-3 null-argument test against `SmallGroupFilter`'s L-013-ordered stub, and flagged it explicitly as a general trap for any L-013-style stub.
+- Recurrences: 1 (CCW-005)
+- Recommendation: apply. The test-author explicitly flagged this as a general trap worth documenting, and it cost extra gate iterations to discover; a one-line addition to `test-guide.md` prevents every future pipeline-stage test-author from rediscovering it.
+- Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-014, L-015 and L-016` (new bullet in `test-guide.md`'s "What not to do"; `archetype.md` `version` bumped 2 → 3).

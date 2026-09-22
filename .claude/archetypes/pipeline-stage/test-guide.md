@@ -33,3 +33,4 @@ A test that proves more than one criterion lists every ID, comma-separated, at t
 - Do not write a test that only restates the implementation ("calls method X"); assert on behavior and output.
 - Do not test the port's real adapter from `application`-level tests, or vice versa.
 - Do not touch a stub's production code — that is the implementer's job, done after your tests are frozen.
+- Do not use `assertThrows` against a stub whose precondition check runs after its `UnsupportedOperationException` (the L-013 ordering): the type mismatch reports as `assertThrows`'s own `AssertionFailedError`, masking the stub's exception, and the red gate reads only the top-level JUnit XML failure type — so this misreports as "not a stub failure." Use `try { ...; fail(...); } catch (ExpectedType expected) {}` instead, so the stub's exception propagates uncaught.

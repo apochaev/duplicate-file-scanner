@@ -1,6 +1,6 @@
 ---
 name: pipeline-stage
-version: 2
+version: 3
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
@@ -42,6 +42,7 @@ Work through every item that applies to this stage; skip and say why for one tha
 11. **New secondary ports.** If this stage introduces a port (for example a hasher), does its interface match the stage decomposition (a sample method here, a full-hash method in a later ticket, or both together — the design doc states which and why), and is the application-level stage tested against a fake implementation of the port while only the NIO adapter is tested against real temp files (CLAUDE.md's test conventions)?
 12. **Large and near-duplicate fixtures.** If this stage's behavior depends on file content past a threshold (the 128 KB partial-hash sample, full-hash confirmation), does the test plan include a same-size, differs-only-in-the-middle-byte pair generated in code, not committed to `fixtures/`?
 13. **Reused across concurrent scans.** Does anything in this stage hold state in a field that would be shared if two scans ran at once (CLAUDE.md's "no state in singleton fields")? If it accumulates (item 1), one instance belongs to one scan; say so in the design doc.
+14. **Input/output currency named.** Does the ticket's Story or Context name the type(s) this stage consumes and produces — the currency shared with its neighbor stages — or explicitly say the architect is free to choose them? If neither, raise it now rather than leaving the architect to invent an unspecified type at design time. (CCW-005: FIX-002's fixture demonstration, where the architect had to invent `CandidateGroup` unprompted.)
 
 ## Extra done-items
 
