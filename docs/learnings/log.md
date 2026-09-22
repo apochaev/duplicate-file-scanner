@@ -119,14 +119,14 @@ Friction found while working on this project, with a proposed change and what wa
 
 ### L-009: Scenarios about instructions are only read, not run
 
-- Status: proposed
+- Status: applied
 - Impact: shared (the `tickets` skill, `refine` mode)
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
 - Change: when a ticket edits instructions (a skill or an agent prompt), refinement records for each scenario whether it can be run mechanically or only checked by reading, so a read-through is not presented as a walkthrough of every mode.
 - Evidence: DFS-008 ticket, "Walkthrough evidence" (commit `ac2fcd1`): "Scenarios about instructions (refine, the implementer rule, `list`, `CLAUDE.md`) were checked by confirming the skill and `CLAUDE.md` state the rule in words, which is a weaker check than running them", against its done-item "A walkthrough of each mode". Found by `/learn reflect DFS-008` on 2026-09-21.
 - Recurrences: 2 (DFS-008: see Evidence; DFS-014: agent-side scenarios covered only by the written rules and a stand-in run, "These show the words are present, which is weaker than running them" (2026-09-21))
 - Recommendation: apply. Two tickets that edit instructions now state the same limit; DFS-014 already separates what ran from what was only read, which the rule would make routine. The edit is one sentence in `refine`.
-- Decision:
+- Decision: applied 2026-09-21 by the user, as recommended; commit `docs: apply L-009 and L-012` (a sentence in the `refine` mode of the `tickets` skill).
 
 ### L-010: Recurrences names its ticket even at count 1
 
@@ -152,11 +152,11 @@ Friction found while working on this project, with a proposed change and what wa
 
 ### L-012: A finding declined in `reflect` leaves no record, so it is proposed again
 
-- Status: proposed
+- Status: applied
 - Impact: shared (the `learn` skill, `reflect` mode)
 - Target: `.claude/skills/learn/SKILL.md`, `reflect` mode, step 4
 - Change: for each finding the user answers write, reject or skip. Reject writes the entry with status `rejected` and the decision date, so a later run reports it as "matches rejected L-<n>" and does not propose it again. Skip leaves no trace, as today.
 - Evidence: DFS-014 ticket, last paragraph, added in `9cb7c7c`: "`reflect` leaves no trace of a finding the user declines, and nothing records which tickets it has run on".
 - Recurrences: 1 (DFS-014)
 - Recommendation: apply. The gap follows from the design, and the change is a few lines in one step of the skill.
-- Decision:
+- Decision: applied 2026-09-21 by the user, as recommended; commit `docs: apply L-009 and L-012` (step 4 of `reflect` mode in the `learn` skill).

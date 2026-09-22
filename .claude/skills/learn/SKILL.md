@@ -50,9 +50,9 @@ Usage: `/learn <mode> [args]`. Modes: `add`, `review`, `decide`, `apply`, `refle
 1. Confirm the ticket exists (`docs/tickets/{backlog,completed}/<ID>-*/`); otherwise refuse.
 2. Launch the `reflect` agent (`.claude/agents/reflect.md`) with the Agent tool, and give it only the ticket ID and its path. Do not pass anything from this conversation and add no findings of your own: its evidence is the files it reads, which is the point of running it as an agent.
 3. Show the user its READ line, so they see whether the history read was cut. If it reports `No friction found`, say so and write nothing.
-4. For each finding, confirm mechanically that its cited commit or file exists (`git cat-file -t <hash>`, or a search for the quoted line); drop and report any that do not. Then walk the user through the rest one at a time:
-   - `new`: show the drafted entry; on approval write it as in `add`, step 4.
-   - `recurrence of L-<n>`: show that entry's Change and Evidence lines and the new evidence; on approval record it as in `add`, step 3.
+4. For each finding, confirm mechanically that its cited commit or file exists (`git cat-file -t <hash>`, or a search for the quoted line); drop and report any that do not. Then walk the user through the rest one at a time, offering write, reject or skip:
+   - `new`: show the drafted entry; on write, add it as in `add`, step 4; on reject, write it anyway but as `rejected`, with Decision `rejected <date> by the user`, so a later run reports `matches rejected L-<n>` and does not propose it again; on skip, write nothing and leave no trace.
+   - `recurrence of L-<n>`: show that entry's Change and Evidence lines and the new evidence; on write, record it as in `add`, step 3; on reject or skip, write nothing.
    - `already counted in L-<n>` and `matches rejected L-<n>`: report them and write nothing.
 5. Run the check.
 
