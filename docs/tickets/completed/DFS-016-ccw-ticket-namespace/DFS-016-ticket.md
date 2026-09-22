@@ -1,7 +1,7 @@
 ---
 id: DFS-016
 title: Introduce a CCW ticket namespace for process and tooling work
-status: in-review
+status: done
 type: feature
 scope: [build, docs]
 archetype: none
@@ -12,7 +12,7 @@ touches: [.claude/skills/tickets, CLAUDE.md, docs/tickets/completed/DFS-008-tick
 blocked_reason:
 created: 2026-09-22
 updated: 2026-09-22
-completed:
+completed: 2026-09-22
 ---
 
 # DFS-016: Introduce a CCW ticket namespace for process and tooling work
