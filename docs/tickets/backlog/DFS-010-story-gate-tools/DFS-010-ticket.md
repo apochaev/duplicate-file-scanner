@@ -1,7 +1,7 @@
 ---
 id: DFS-010
 title: Build the story gate tools
-status: ready
+status: in-review
 type: feature
 scope: [build]
 archetype: none
@@ -51,6 +51,19 @@ Checks:
 **Decided (2026-09-21): UTF-8 by construction.** Verdicts are written through an explicit UTF-8 stream that the tool creates itself, independent of console settings, and git is called with `-z` (raw, NUL-separated paths) and its output decoded as UTF-8. This keeps non-ASCII names exact in every verdict, and stops git's default quoting (octal escapes) from mangling paths in the touches and freeze checks. Someone running a check by hand in a legacy console may see garbled non-ASCII characters; that is cosmetic. Rejected: ASCII-escaped output (unreadable for people, and agents must interpret the escapes); leaving the defaults (`?` substitution and git's quoting fail silently, and the fixtures contain exactly such names).
 
 **Decided (2026-09-21): a fixture-driven self-test built into the tools.** `java tools/story-gate/StoryGate.java selftest` runs each check on small fixture cases and compares each verdict with an expected file. Each check is split into a thin runner (which runs Gradle or git) and a core that evaluates plain inputs. The fixtures feed the cores pre-made JUnit XML, sample plans, sample tickets, and a temporary git repository that the self-test creates and modifies. The cases are the evidence for the definition of done, and each maps to a scenario. The orchestrator can run `selftest` as a pre-flight before trusting the gates. The cases translate directly if the tools are later promoted to a Gradle subproject with JUnit. Rejected: deferring tests to a follow-up (the safety net would ship unverified); a Gradle subproject with JUnit now (it couples the tools to the product build, which D10 avoided, and a bug in the gate tests could break the `./gradlew build` that the green gate relies on).
+
+**Built (2026-09-21): choices the ticket left open**, which DFS-011 and DFS-012 rely on:
+- **Launchers.** `tools/story-gate/story-gate` (sh, for Git Bash, Linux and macOS) and `story-gate.cmd` (cmd and PowerShell) pick `$JAVA_HOME`'s `java`, refuse anything older than JDK 22 with a one-line message and exit 2, and run `StoryGate.java`. Running `java tools/story-gate/StoryGate.java ...` directly works only where the first `java` is 22 or later.
+- **Exit codes.** 0 pass, 1 fail, 2 the check could not run (bad arguments, missing ticket, git failure).
+- **Story files.** `plan.json` and `test-plan.md` sit in the ticket's folder. The test phase is the `phases` entry with `id: "tests"`; the freeze check reads its `commit`.
+- **`test-phase <ID>`.** The end-of-test-author gate (AC-8): `red`, then `traceability` off the reports the red run just produced. It reports the first failing verdict, so the caller still reads about ten lines.
+- **`touches` base.** Changes are measured against `--base <ref>`, by default where the current branch left `main` (or `master`), and include uncommitted and untracked files.
+- **Freeze scope.** Any added, modified or deleted path under a `src/test/` folder counts, including fixtures and new test files.
+- **Consistency mapping.** Plan `running` goes with ticket `in-progress`; `awaiting-approval` with `in-progress` or `in-review`; `blocked` with `blocked`; `done` with `in-review` or `done`. It also checks that `ticket` matches, that phases have an `id` and a valid `status`, and that `after` names existing phases.
+- **Source scans.** `stubs` and `disabled` read `<module>/src/{main,test}/**` and skip `tools/`, `docs/` and `gradle/` at the top of the repository, plus `build/`, `node_modules/` and dot-folders, so fixtures under `tools/` never look like production code. Nothing is skipped below a `src` folder (a package may be called `tools`), and a file in another encoding is read leniently. `disabled` finds `@Disabled` in its plain and fully qualified forms (not in comments, not `@DisabledOnOs`) and also reports any skipped test in the reports that no assumption explains; it reads the reports the last test run left, so run it after `red` or `green` (with no reports it says so in its verdict).
+- **Base is HEAD.** On `main` itself the default `touches` base is HEAD, which hides commits already made there. A PASS then says "base is HEAD, so only uncommitted changes were seen (pass --base <ref>)".
+- **Build failures.** When Gradle fails without a failing test (a compile error), `red` and `green` report the first compile errors and the failed task, not Gradle's output.
+- **Self-test.** Cases live in `tools/story-gate/selftest/cases/AC-<n>-<title>/` (`case.json` and `expected.txt`), and `selftest --bless` writes a missing `expected.txt` for review; it refuses to bless a disagreement between the two launchers.
 
 ## Acceptance criteria
 
@@ -291,10 +304,10 @@ Feature: Story gate checks
 
 ## Definition of done
 
-- [ ] `selftest` passes and covers every scenario of this ticket through its fixture cases
-- [ ] Each check runs through `java tools/story-gate/StoryGate.java <check> <ID>` and prints a verdict of about ten lines
-- [ ] The launcher works from Git Bash and PowerShell on this machine
-- [ ] No files changed outside the paths listed under Touches
+- [x] `selftest` passes and covers every scenario of this ticket through its fixture cases. Evidence: 71 cases pass; `selftest` itself fails when a scenario has no case named after its criterion (case `AC-12-coverage`). Four deliberate breakages of a scratch copy (no `cleanTest`, git path quoting, stub matched by type alone, no line cap) were each caught by the case meant to catch them.
+- [x] Each check runs through `java tools/story-gate/StoryGate.java <check> <ID>` and prints a verdict of about ten lines. Evidence: all nine (`test-phase` is the composite of red and traceability) run against this repo, including a real `red` and `green` Gradle run; a 100-failure verdict is exactly ten lines (`AC-3-*-compact`).
+- [x] The launcher works from Git Bash and PowerShell on this machine. Evidence: `tools/story-gate/story-gate selftest` (Git Bash) and `.\tools\story-gate\story-gate.cmd selftest` (PowerShell) both pass; with JDK 17 first on `PATH` the launcher still runs on `JAVA_HOME`'s JDK 25, while `java tools/story-gate/StoryGate.java` alone fails with a compile error, which is why the launcher exists.
+- [x] No files changed outside the paths listed under Touches. Evidence: `git status` in the worktree shows only `tools/` plus this ticket (its own story folder); the throwaway scratch test used for capturing real Gradle reports was deleted.
 
 ## Open questions
 
