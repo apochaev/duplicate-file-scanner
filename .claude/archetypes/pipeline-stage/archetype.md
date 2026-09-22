@@ -1,6 +1,6 @@
 ---
 name: pipeline-stage
-version: 1
+version: 2
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:

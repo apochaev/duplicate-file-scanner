@@ -160,3 +160,14 @@ Friction found while working on this project, with a proposed change and what wa
 - Recurrences: 1 (DFS-014)
 - Recommendation: apply. The gap follows from the design, and the change is a few lines in one step of the skill.
 - Decision: applied 2026-09-21 by the user, as recommended; commit `docs: apply L-009 and L-012` (step 4 of `reflect` mode in the `learn` skill).
+
+### L-013: A filter-stage skeleton's null-check runs before its not-implemented throw
+
+- Status: applied
+- Impact: shared (an archetype skeleton every pipeline-stage story's architect reads)
+- Target: `.claude/archetypes/pipeline-stage/skeletons/FilterStage.java.tmpl`
+- Change: reorder the skeleton's guard so `throw new UnsupportedOperationException("not implemented: <TICKET-ID>")` comes before `Objects.requireNonNull(groups, "groups")`, so every stub method is uniformly red in the test phase regardless of which acceptance criterion a test targets; the implementer moves the null-check back above the real logic during implementation.
+- Evidence: `docs/tickets/completed/CCW-004-story-agents/CCW-004-ticket.md`, "Demonstration evidence" — running the pipeline live against fixture ticket FIX-001, the architect's stub followed the skeleton verbatim (`requireNonNull` before the throw), which made FIX-001.AC-3's null-argument test pass outright against the stub instead of failing red. The architect, test-author and verifier each independently noticed and flagged it in the story's `learnings.md`/`verification.md` without being told to look for it.
+- Recurrences: 1 (CCW-004)
+- Recommendation: apply. Three independent agents converged on the same root cause and the same fix on a single run; it will recur on the first real filter-stage ticket with an argument-validation acceptance criterion. (A related half of this friction — whether a red-gate should tolerate a validation AC passing off the stub — was already addressed separately, in the same ticket, by adding explicit guidance to `.claude/agents/test-author.md`; this entry is only the remaining skeleton-ordering fix, which belongs to the archetype, not the agent.)
+- Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-013` (the stub's `requireNonNull` moved to a guiding comment after the throw in `FilterStage.java.tmpl`; `pipeline-stage`'s `archetype.md` `version` bumped 1 → 2).

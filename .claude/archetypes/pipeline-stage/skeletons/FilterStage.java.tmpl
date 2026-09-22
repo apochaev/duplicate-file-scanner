@@ -23,7 +23,10 @@ public final class <ClassName> {
      * itself is preserved.
      */
     public List<<ResultType>> filter(List<<InputType>> groups) {
-        Objects.requireNonNull(groups, "groups");
         throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+        // implementer: add `Objects.requireNonNull(groups, "groups");` as the real body's
+        // first line, before any other logic. It is deliberately not in the stub itself:
+        // a precondition check that runs before this throw would let an argument-validation
+        // test pass outright against the un-implemented stub instead of failing red (L-013).
     }
 }
