@@ -1,7 +1,7 @@
 ---
 id: CCW-005
 title: Build the story orchestrator skill
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -11,7 +11,7 @@ touches: [.claude/skills/story, .claude/agents, .claude/settings.json, docs/lear
 blocked_reason:
 created: 2026-09-21
 updated: 2026-09-22
-completed:
+completed: 2026-09-22
 ---
 
 # CCW-005: Build the story orchestrator skill
