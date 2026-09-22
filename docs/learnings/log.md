@@ -42,36 +42,36 @@ Friction found while working on this project, with a proposed change and what wa
 
 ### L-002: A criterion that names a set lists its members
 
-- Status: proposed
+- Status: parked
 - Impact: shared (the `tickets` skill, `refine` mode)
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
 - Change: when an acceptance criterion or scenario refers to a set ("ready-or-later", "every existing ticket"), the ticket lists the members, so implementation does not have to interpret it.
 - Evidence: DFS-008 decision 1 said `validate` flags "ready-or-later" tickets without defining "later". Implementation had to decide that done, cancelled and blocked tickets are not checked, and recorded it as a deviation (commit `ac2fcd1`).
 - Recurrences: 1
 - Recommendation: park until it recurs. One occurrence is not yet a pattern.
-- Decision:
+- Decision: parked 2026-09-21 by the user, as recommended.
 
 ### L-003: Run the check on a sample when a scenario says a generated file passes it
 
-- Status: proposed
+- Status: parked
 - Impact: shared (the `tickets` skill, and later the archetype edge-case checklists)
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
 - Change: when a scenario claims that a generated artifact (a template output, a new ticket) passes a check, refinement builds a small sample and runs the check on it before the ticket becomes `ready`.
 - Evidence: DFS-008's scenario said a new draft has "an empty criteria section" and that `validate` reports nothing, but its own tag rules made that impossible (the placeholder scenarios' tags would dangle). Found only at implementation; the scenario was reworded and the template ships a placeholder criterion (commit `ac2fcd1`).
 - Recurrences: 1
 - Recommendation: park until it recurs.
-- Decision:
+- Decision: parked 2026-09-21 by the user, as recommended.
 
 ### L-004: Do not hide errors from staging commands
 
-- Status: proposed
+- Status: applied
 - Impact: shared (guidance for every agent that commits, so an agent prompt or `CLAUDE.md`)
 - Target: `CLAUDE.md`, "Git commits" (or the implementer prompt once DFS-011 exists)
 - Change: run `git add` and similar commands without redirecting stderr, and check `git status` before committing.
 - Evidence: preparing commit `ac2fcd1`, `git add` included a path that no longer existed after `git mv`, with stderr sent to `/dev/null`. Staging of the other files silently did not happen, and only the `git status` check showed it.
 - Recurrences: 1
 - Recommendation: park. It was caught, and the fix is a habit more than a rule. Revisit if it recurs.
-- Decision:
+- Decision: applied 2026-09-21 by the user, overriding park; commit `docs: apply L-004` (a bullet in `CLAUDE.md`, "Git commits").
 
 ### L-005: With parallel sessions, stage explicit paths
 
@@ -86,14 +86,14 @@ Friction found while working on this project, with a proposed change and what wa
 
 ### L-006: A `cd` in a shell command moves the session's working directory
 
-- Status: proposed
+- Status: parked
 - Impact: local (working habit)
 - Target: `CLAUDE.md`, "Commands" (or agent prompts)
 - Change: use `git -C <dir>` or a subshell `(cd <dir> && ...)` instead of a bare `cd`, and prefer absolute paths, because the primary working directory of the session changes and later relative commands run somewhere else.
 - Evidence: during the DFS-008 work, the session reported its primary working directory changing after a command that started with `cd` into `docs/tickets/backlog` (three times).
 - Recurrences: 2 (DFS-008: three times in one session, counted once; DFS-014 refinement: a `cd` into `docs/tickets/backlog` moved the working directory again, several times)
 - Recommendation: park. It caused no failure, only environment notices, and it is behaviour of the tool rather than the project. Revisit if it causes a wrong-directory error.
-- Decision:
+- Decision: parked 2026-09-21 by the user, as recommended.
 
 ### L-007: Commits name their ticket in the subject
 
@@ -130,25 +130,25 @@ Friction found while working on this project, with a proposed change and what wa
 
 ### L-010: Recurrences names its ticket even at count 1
 
-- Status: proposed
+- Status: parked
 - Impact: local (the log's own rules and format; the skill already copes with a bare count)
 - Target: docs/learnings/log.md, Rules and Entry format
 - Change: an entry's Recurrences field names its originating ticket from the start (`1 (DFS-008)`), so a second ticket has something to append to and the check can compare names with the count.
 - Evidence: DFS-014 ticket, "Deviations found while implementing": "Entries such as L-002 have `Recurrences: 1` with no ticket named, so adding a second ticket had nothing to append to." Six entries still have a bare 1 (mechanical count).
 - Recurrences: 1 (DFS-014)
 - Recommendation: park. The skill's `add` already names the original ticket from Evidence when a second one arrives, and the check accepts a bare 1, so nothing breaks. Apply it if entries keep being written without a ticket name.
-- Decision:
+- Decision: parked 2026-09-21 by the user, as recommended.
 
 ### L-011: A new agent can't be launched in the turn that creates its file
 
-- Status: proposed
+- Status: rejected
 - Impact: shared (the `tickets` skill, `refine` guidance for tickets that create agents)
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
 - Change: for a ticket that creates an agent, refinement plans the real-run done-item for after the agent is registered, not in the turn that creates the file, and does not tick it on a stand-in run.
 - Evidence: DFS-014 ticket, "Deviations found while implementing": "`Agent` with `subagent_type: reflect` failed with 'Agent type 'reflect' not found'". Commit `033d31c` left the real-run item unticked ("Not yet met"); commit `9cb7c7c` ticked it after the agent had registered later in the same session ("The real run").
 - Recurrences: 1 (DFS-014)
 - Recommendation: park. One occurrence, handled openly. DFS-011 creates five agents and is where it would recur.
-- Decision:
+- Decision: rejected 2026-09-21 by the user, overriding park; treated as a one-off of this session's agent-registration timing, not a general rule.
 
 ### L-012: A finding declined in `reflect` leaves no record, so it is proposed again
 

@@ -105,6 +105,7 @@ Any layer, and the top level, may have a `util` package for shared helpers. A `u
 - A commit made for a ticket ends its subject line with the ticket ID in brackets, e.g. `feat(file-scanner): add SizeIndex [DFS-001]`; for several tickets `[DFS-001, DFS-002]`. Use the full three-digit ID, so a search for the ID finds the commit. Commits not tied to a ticket omit it. Earlier commits are not rewritten.
 - No author or co-author attribution of any kind: no `Co-Authored-By` trailer and no "Generated with" line in commits or PR descriptions. Attribution comes only from the standard git user configuration. This overrides any default attribution behavior.
 - When the working tree holds changes from another session or worktree, stage the files of the task by name (never `git add -A` or `git commit -a`) and confirm with `git status` that nothing else is staged.
+- Never redirect a staging command's stderr (`git add`, `git mv`, ...); a hidden error can leave files silently unstaged. Check `git status` before committing.
 
 ## Tickets
 
