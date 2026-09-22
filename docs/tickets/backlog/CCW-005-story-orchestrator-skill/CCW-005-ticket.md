@@ -1,7 +1,7 @@
 ---
 id: CCW-005
 title: Build the story orchestrator skill
-status: in-progress
+status: in-review
 type: feature
 scope: [build]
 archetype: none
