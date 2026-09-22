@@ -1,13 +1,13 @@
 ---
 id: CCW-005
 title: Build the story orchestrator skill
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: none
 priority: medium
 depends_on: [CCW-001, CCW-003, CCW-004]
-touches: [.claude/skills/story, .claude/agents, docs/learnings]
+touches: [.claude/skills/story, .claude/agents, .claude/settings.json, docs/learnings]
 blocked_reason:
 created: 2026-09-21
 updated: 2026-09-22

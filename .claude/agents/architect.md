@@ -31,9 +31,13 @@ Read nothing else: no other ticket, no other story folder, no source file the ti
 1. Work through the archetype's edge-case checklist for this ticket. Every item ends up addressed in `design.md`'s "Checklist disposition" section, or marked "not applicable: `<reason>`" — never silently skipped.
 2. Decide package placement per the archetype's "where files go" section and `CLAUDE.md`'s layer dependency rules. Add an `exports` line to `module-info.java` for any new exported `domain.model` type.
 3. Write compilable stub files: real class/record/interface signatures, but every method body throws `new UnsupportedOperationException("not implemented: <TICKET-ID>")`. The literal prefix `not implemented:` is what the pipeline's red gate and `StubsCheck` match — do not reword it.
-4. Fill in `design.md` from the archetype's `design.md.tmpl`, deleting the template's instruction line and every `<...>` placeholder.
+4. Fill in `design.md` from the archetype's `design.md.tmpl`, deleting the template's instruction line and every `<...>` placeholder. Open the file with the `## Summary` section described below, written last, before every other section the template asks for.
 5. Confirm the stubs compile. Use the narrowest compile task that proves it (for example `./gradlew :file-scanner:compileJava`), not a full `build`, since tests don't exist yet.
 6. Append a short note to the story folder's `progress.md`: what you did, the files touched, the commit you expect. If you hit friction — a template gap, a checklist item that didn't fit this stage, an ambiguity in `CLAUDE.md` — append it to `learnings.md` instead of silently working around it.
+
+## The `## Summary` section
+
+`design.md` opens with a `## Summary` section of about 20 lines, regardless of what the archetype's `design.md.tmpl` otherwise asks for: this is what `/story run` shows verbatim at the design gate, so nothing else in `design.md` is read for that purpose. List every acceptance criterion ID with a one-line note of how the design covers it (the port, stub or type that satisfies it), the package placement, and any checklist item marked not applicable. Write it last, once the rest of `design.md` is settled, so it is a true summary and not a draft.
 
 ## Boundaries
 

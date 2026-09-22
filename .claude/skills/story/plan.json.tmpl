@@ -1,0 +1,38 @@
+{
+  "ticket": "<TICKET-ID>",
+  "archetype": {"name": "<archetype name from the ticket's frontmatter>", "version": <archetype.md's version at the time this plan was created>},
+  "branch": "tickets/<TICKET-ID>-<slug>",
+  "state": "running",
+  "phases": [
+    <!-- One entry per id in the archetype's `phases:` list, in order, via the fixed
+         phase-id-to-agent table in SKILL.md ("Phase ids, agents and gates"). `after`
+         is the id of the phase directly before this one (empty for the first). -->
+    {
+      "id": "<phase id, e.g. design>",
+      "agent": "<agent name, e.g. architect>",
+      "after": [],
+      "status": "pending",
+      "runs": [
+        <!-- Appended by the resume protocol on every attempt, oldest first:
+        {"attempt": 1, "model": "opus", "effort": "high", "turns": 21,
+         "wallClockSeconds": 940, "outcome": "passed"}
+        outcome is one of: passed, failed-gate, maxTurns -->
+      ],
+      "artifacts": [],
+      "commit": null
+    }
+  ],
+  "gates": [
+    <!-- One entry per name in the archetype's `gates:` list. `after` is either a
+         phase id or the reserved name "done" (after the last phase in `phases:`). -->
+    {"after": "<phase id or 'done'>", "status": "pending"}
+  ],
+  "defects": [
+    <!-- Appended when a deterministic check fails after a phase's agent returns:
+    {"id": 1, "phase": "<phase id>", "route": "<agent name>",
+     "summary": "<the verdict's compact reason>", "status": "open"}
+    `status` becomes "closed" once the routed-to agent's next attempt on that phase
+    passes its check. Never removed, so plan.json keeps the full history of a story's
+    defects for /story learn and the pilot metrics (D8). -->
+  ]
+}

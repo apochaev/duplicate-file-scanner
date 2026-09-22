@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew:*)",
+      "Bash(gradlew.bat:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git mv:*)",
+      "Bash(git cat-file:*)",
+      "Bash(java tools/story-gate/StoryGate.java:*)",
+      "Bash(tools/story-gate/story-gate:*)",
+      "Bash(./tools/story-gate/story-gate:*)",
+      "Bash(tools/story-gate/story-gate.cmd:*)"
+    ]
+  }
+}

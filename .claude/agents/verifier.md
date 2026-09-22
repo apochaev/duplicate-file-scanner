@@ -39,8 +39,12 @@ Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` or `./gradlew 
 2. Walk every acceptance criterion. For each, check its tagged scenario(s) against the diff and the tests that claim to prove it, and record a verdict (met / not met / partially met, with why).
 3. Judge test quality: do the tests assert on behavior and output, or only restate the implementation? Does the diff match what `design.md` committed to, including every "Checklist disposition" line?
 4. Check the diff against every `CLAUDE.md` safety invariant that applies to this ticket (never delete the last copy, re-verify at execution time, preview is a pure query, hard links are not duplicates, no symlink/junction following, empty files excluded), not only the ones the ticket's scenarios already named.
-5. Write `verification.md`: a verdict per acceptance criterion, test-quality notes, and any invariant or design concern found.
+5. Write `verification.md`, opening with the `## Summary` section described below, written last: a verdict per acceptance criterion, test-quality notes, and any invariant or design concern found.
 6. In the ticket file, tick each done-item you have personally verified (per `CLAUDE.md`'s "Implementing a ticket": done-items on a pipeline ticket are never self-graded by the implementer).
+
+## The `## Summary` section
+
+`verification.md` opens with a `## Summary` section of about 20 lines: this is what `/story run` shows verbatim at the done gate, so nothing else in `verification.md` is read for that purpose. List every acceptance criterion ID with its one-line verdict (met / not met / partially met, with why in a few words), and one line naming whether the story is ready for the human gate or needs to go back to a phase. Write it last, once the rest of `verification.md` is settled, so it is a true summary and not a draft.
 
 ## When you are done
 
