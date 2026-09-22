@@ -1,7 +1,7 @@
 ---
 id: DFS-014
 title: Build the learn skill for the learnings log
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: none
@@ -218,12 +218,47 @@ Feature: The learn skill
 
 ## Definition of done
 
-- [ ] A walkthrough of each scenario on a scratch copy of the log and a sample ticket shows its outcome (evidence noted in this ticket)
+- [x] A walkthrough of each scenario on a scratch copy of the log and a sample ticket shows its outcome (evidence noted in this ticket)
+  - Evidence: see "Walkthrough evidence" below.
 - [ ] One real run of `/learn reflect DFS-008` on the finished ticket meets this pass condition, with the result noted here: every finding is matched to L-001, L-002 or L-003 as already logged; nothing is added and no recurrence count changes (same ticket); any other proposal cites evidence a reviewer can verify in the files
-- [ ] The docs claims this design rests on are confirmed when building: `context: fork` applies to a whole skill, `disable-model-invocation` keeps the description out of context, and an agent's effort can be set (result noted here; if one is wrong, the affected decision is amended)
-- [ ] The skill writes nothing outside `docs/learnings/` and the target file the user approved
-- [ ] No files changed outside the paths listed under Touches
+  - Not yet met. A stand-in run was made on 2026-09-21 (see "Reflect run" below) because the `reflect` agent is not registered until the session reloads its agent definitions. The real run of `/learn reflect DFS-008` is still to do; tick this item only after it.
+- [x] The docs claims this design rests on are confirmed when building: `context: fork` applies to a whole skill, `disable-model-invocation` keeps the description out of context, and an agent's effort can be set (result noted here; if one is wrong, the affected decision is amended)
+  - Evidence: read 2026-09-21 on the Claude Code docs (skills and sub-agents pages) with a fetch that asked for verbatim quotes. All three hold, so no decision is amended. `context: fork` is one frontmatter field of the whole skill ("Set to `fork` to run in a forked subagent context"), and the docs say the subagent "doesn't see your conversation history". `disable-model-invocation: true` is listed with "Description not in context, full skill loads when you invoke". A subagent definition takes `effort` (`low` to `max`), `model` and `maxTurns`. Not confirmed by the docs: that a skill can launch a subagent by name (the page does not address it); the `reflect` run below is the test of that. Still a summarising fetch, not a reading of the page.
+- [x] The skill writes nothing outside `docs/learnings/` and the target file the user approved
+  - Evidence: the skill's Rules limit writes to the log and the approved target (plus `archetype.md` for an archetype target), and forbid commits. In the walkthrough the only files written were the scratch log and the scratch target.
+- [x] No files changed outside the paths listed under Touches
+  - Evidence: `git status` at the end shows this work changed `.claude/skills/learn/` (new), `.claude/agents/reflect.md` (new), `.claude/skills/tickets/SKILL.md` and this ticket. `docs/learnings/log.md` was not touched by this work (another session's L-008 was already committed as `58f9ee5`).
 
 ## Open questions
 
 None.
+
+## Walkthrough evidence
+
+Run on 2026-09-21 on scratch copies (the real log was not written). The skill and the agent are prose, so the checks are of three kinds, and only the first two run anything.
+
+- **The mechanical rules, by a throwaway script** (not kept in the repo): it transcribes the skill's numbering, ranking, recurrence, `decide`, `apply` and check rules and runs them on the log as committed, with L-008 (added by another session while this was built) cut so that "the highest entry is L-007" holds. 29 checks, 0 failed, covering: AC-4 (a yes adds a recurrence and no entry; a no takes number 8), AC-1's repeat (a parked L-002 that recurs becomes `proposed`, count 2, no new entry), AC-5 (declined changes nothing; approved writes the target and marks the entry with the planned subject `docs: apply L-002`; an applied entry cannot be applied again), AC-6 (order L-006, L-002, L-003, L-004), AC-7 (same ticket keeps the count, another ticket raises it), AC-10 (a reused number, a skipped number, an applied entry without a decision, a count that does not match, a missing field, each reported), AC-11 (an entry from another author works in review, decide and apply), AC-12 (park and reject record the date, change nothing else, and take the entry out of review). The archetype version bump is checked only as arithmetic on a sample frontmatter.
+- **The git commands `reflect` uses, on a scratch repository** with a ticket that moved from `backlog/` to `completed/`: the commit that set `status: ready` is the oldest one `git log --follow -G'^status: ready'` lists; a history of 947 lines after it is cut to 400 by `head -400` (AC-3, the cut); a commit naming the ID in the subject and one naming it only in the body are both found by `--grep` (AC-3, the ID search); no diff is read.
+- **Text checks by `grep`:** the agent file sets `model: sonnet`, `effort: low`, `maxTurns: 15` and says the conversation is not evidence (AC-2); the skill is named `learn`, has `disable-model-invocation: true` and one section for each of the five modes (AC-9); the `done` mode ends with the offer `/learn reflect <ID>` and says to launch nothing (AC-8). These show the words are present, which is weaker than running them.
+- **Not run by anything:** the agent-side scenarios "A repeat is folded", "No friction found writes nothing" and "A rejected entry is not proposed again" are covered only by the agent's written matching rules and by the stand-in run's behaviour on DFS-008 (below). "Reflect drafts an entry with evidence and writes nothing before approval" is by construction (the agent is told to write nothing and returns a report); its tools include Bash, so this is an instruction, not a permission.
+
+The script shows the rules are unambiguous. It does not show that a model follows them.
+
+**Deviations found while implementing:**
+- **A bare count needs a named ticket.** Entries such as L-002 have `Recurrences: 1` with no ticket named, so adding a second ticket had nothing to append to. Found by the script; the skill now says to name the original ticket from the entry's Evidence first (`2 (DFS-008: see Evidence; DFS-099: ...)`). The check accepts a bare 1, and requires a count above 1 to name that many distinct tickets.
+- **"A dated line under Recurrences" is a dated item in the one-line field.** The existing entries keep Recurrences on one line, and rewriting them was outside the ticket. The item carries the ticket, the event and the date.
+- **`--reverse` breaks `--follow`.** `git log --follow --reverse` returned only the newest commit, so the agent finds the `ready` commit as the oldest match of an unreversed list, and the skill's prompt says not to add `--reverse`. Found by testing the commands on DFS-008, not from the docs.
+- **The log gained L-008 and DFS-015 from another session while this was built.** Not touched here; the walkthrough used the committed log with L-008 cut.
+- **`/tickets done` now points at `/learn add` instead of writing the entry itself,** because the ticket says `learn` is the log's only writer and `add` is what checks for recurrences. The ticket's AC-8 asked only for the offer; this follows from the writer decision, and is stated here so it can be reversed.
+- **The agent is not registered until agent definitions reload.** `Agent` with `subagent_type: reflect` failed with "Agent type 'reflect' not found" in the session that created the file. The docs page was not checked for how to reload; a new session or `/agents` is the likely route.
+
+## Reflect run
+
+A **stand-in** run, not the real one: a general-purpose Sonnet agent was told to read `.claude/agents/reflect.md` and follow it as its system prompt, on `DFS-008`. It has all tools and no turn cap, so it tests the prompt's judgement, not the agent definition (model, effort, tools, turn limit) or that the skill can launch the agent by name. It took 9 tool calls and about 58,000 tokens.
+
+Result: history 71 of 71 lines, not cut; 3 commits found; 4 findings, all with evidence that was then checked against the files (every quoted line and hash exists).
+- Three matched entries already in the log and asked for nothing to be added: L-003 and L-002 (both name DFS-008 and commit `ac2fcd1`), and L-005 (its evidence is the same commit). The first two are the ones the pass condition names; the third is a fourth entry the condition did not list, correctly matched, and applied, so nothing to decide.
+- One finding was new: that scenarios about prose instructions are checked only by reading, not running. Its evidence is real (the DFS-008 walkthrough section says so in those words) but it restates a limit the ticket states openly, so whether it is friction or noise is a judgement for the user. It was not written to the log.
+- One flaw in the report: it recommended `reject` for the already-applied L-005. The agent prompt now says the recommendation is `none` for `already counted` and `matches rejected`.
+
+Against the pass condition: nothing was added and no count changed; every finding was matched or carries checkable evidence. The condition named L-001, L-002 and L-003; one finding matched L-005 and one was new, so it holds with those two stated. Not a pass of the real run.

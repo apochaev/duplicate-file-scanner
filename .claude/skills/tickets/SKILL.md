@@ -84,7 +84,7 @@ A `## Acceptance criteria` section sits between Context and Scenarios. Its first
 
 **block `<ID>` `<reason>`** / **unblock `<ID>`**: set `blocked` with `blocked_reason`; on unblock clear the reason and return to `ready` or `in-progress` depending on whether work has begun (ask if unclear).
 
-**done `<ID>`**: require every Definition of done item ticked (or the user's explicit say-so). Set `status: done`, `completed`, `updated`, and move the folder to `completed/` (`git mv` when tracked, a plain move otherwise) so the status change and the move land together. Before closing, ask whether any friction met on the ticket is worth recording in `docs/learnings/log.md`; if so, add it there as `proposed` (format in that file's header). Never apply a logged proposal without the user's approval.
+**done `<ID>`**: require every Definition of done item ticked (or the user's explicit say-so). Set `status: done`, `completed`, `updated`, and move the folder to `completed/` (`git mv` when tracked, a plain move otherwise) so the status change and the move land together. Before closing, ask whether any friction met on the ticket is worth recording in `docs/learnings/log.md`; if so, name the command `/learn add <short description>` for the user to run (the `learn` skill is the log's only writer, and its `add` checks for recurrences). Never apply a logged proposal without the user's approval. The last line of the reply is the offer `Draft log entries from this ticket with: /learn reflect <ID>` (the real ID filled in). Launch nothing yourself: `learn` is run only by the user.
 
 **cancel `<ID>` `<reason>`**: same as `done` with `status: cancelled`, plus a `## Resolution` section at the end recording the reason.
 
