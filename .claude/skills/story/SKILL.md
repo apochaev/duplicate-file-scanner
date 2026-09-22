@@ -19,16 +19,16 @@ Shape (template: `plan.json.tmpl` in this skill's folder):
 
 ```json
 {
-  "ticket": "DFS-001",
-  "archetype": {"name": "pipeline-stage", "version": 2},
-  "branch": "tickets/DFS-001-group-scanned-files-by-size",
-  "state": "running",
-  "phases": [
-    {"id": "design", "agent": "architect", "after": [], "status": "pending",
-     "runs": [], "artifacts": [], "commit": null}
-  ],
-  "gates": [{"after": "design", "status": "pending"}, {"after": "done", "status": "pending"}],
-  "defects": []
+   "ticket": "DFS-001",
+   "archetype": {"name": "pipeline-stage", "version": 2},
+   "branch": "tickets/DFS-001-group-scanned-files-by-size",
+   "state": "running",
+   "phases": [
+      {"id": "design", "agent": "architect", "after": [], "status": "pending",
+         "runs": [], "artifacts": [], "commit": null}
+   ],
+   "gates": [{"after": "design", "status": "pending"}, {"after": "done", "status": "pending"}],
+   "defects": []
 }
 ```
 
@@ -73,7 +73,7 @@ Ported from D5, with the escalation, blocked-clearing and gate-summary rules fro
 5. If the picked phase is `in-progress` (an interrupted run): reconcile. If its last recorded `runs` attempt has artifacts and a commit, and the phase's deterministic check(s) (table above) pass against that commit, mark it `done`, record the commit, and loop back to step 4 in the same invocation. Otherwise fall through to step 6 to launch a fresh attempt, handing the agent the notes already in `progress.md`.
 6. Launch the phase's agent as a subagent (`Agent` tool, `subagent_type` the phase's agent name), giving it the story folder's path and the ticket's path explicitly at the top of the prompt — agents never derive or search for these themselves. Resolve model/effort/maxTurns in order: the ticket's `models:` override, then the archetype's `models:`, then the agent's own frontmatter (D9); on the *second* attempt of this phase, one tier above whatever that resolved to (`sonnet`→`opus` for model; one step up for effort; unchanged `maxTurns` unless the archetype says otherwise).
 7. When the agent returns, run the phase's deterministic check(s) with `java tools/story-gate/StoryGate.java <check> <TICKET-ID>` (or the `story-gate` launcher). Record the attempt in the phase's `runs` (model, effort, turns, wall-clock seconds, outcome).
-8. On every check passing: mark the phase `done`, record its commit (`git rev-parse HEAD` after the agent's own commit — agents commit their own work per `CLAUDE.md`'s convention, the orchestrator never commits on an agent's behalf). Loop back to step 4 in the same invocation.
+8. On every check passing: commit the phase's changes *yourself* — none of the five agent prompts include a commit step, and something must produce the commit `plan.json` records (`FreezeCheck`, CCW-003, reads it straight out of the plan). Stage exactly what the phase's own `touches`/story-folder/test-tree scope covers (by name, never `git add -A`, per `CLAUDE.md`), commit with a Conventional Commits message ending `[<TICKET-ID>]` (type by phase: `feat`/`refactor` for `design` and `implement`, `test` for `test`, `docs` for `verify`'s ticket-file ticks), then mark the phase `done` and record the commit (`git rev-parse HEAD`). Loop back to step 4 in the same invocation. This is a deliberate, narrow exception to "commits are made only when the user asks": the human gates (D3) are what the user is actually approving, and between them the pipeline is meant to run unattended (D3's own words) — a per-phase pause to ask "commit this?" would defeat that. Flagged as friction for `/story learn`'s first real run to confirm or challenge.
 9. On a check failing: append a defect to `plan.json`'s `defects` — `{"id": <next>, "phase": "<id>", "route": "<agent>", "summary": "<the verdict's compact reason>", "status": "open"}`. Routing: a `test-phase` failure routes to `test-author`; any other failure on the `implement` phase routes to `implementer`; a `design`-phase `touches` failure routes to `architect`; a `verify`-phase failure routes to `verifier`. If this phase's `runs` now holds two failed attempts, set state `blocked` and stop — the escalation (see "Blocked", below) is the output. Otherwise mark the phase `pending` again and loop back to step 4 in the same invocation (a same-phase retry happens without returning control to the user; only `blocked` and a human gate stop the run).
 10. Immediately after a phase is marked `done` (step 8), check whether a gate is configured right after it (its own id, or `done` if it was the last phase in `phases:`). If so: mark that gate's plan entry `approved`→no, `status: "pending"` stays, and set overall state `awaiting-approval`; stop and show the stop (see "Human gate", below) instead of looping to step 4.
 
@@ -124,6 +124,6 @@ Requires the ticket's story folder to have a `plan.json` (any state). If `learni
 
 ## What this skill never does
 
-- Never commits on an agent's behalf — every commit in the story is the phase agent's own, per `CLAUDE.md`'s convention (ticket ID in brackets), and this skill only reads the resulting hash.
 - Never edits a phase agent's artifacts (`design.md`, test files, source, `verification.md`) — only `plan.json`, and (via `tickets start`) the ticket's `status`/`updated` fields.
 - Never runs more than one phase's agent per `run` invocation before returning control at a stop — a `pending`→`done` chain across several phases in one call is expected (step 8 loops), but the moment a human gate or `blocked` is reached, it stops.
+- Commits each phase's own changes itself once that phase's deterministic check passes (see the resume protocol, step 8) — the one deliberate exception to "commits only when asked," bounded to exactly what that phase's gate just confirmed is in scope.
