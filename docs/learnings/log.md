@@ -204,3 +204,36 @@ Friction found while working on this project, with a proposed change and what wa
 - Recurrences: 1 (CCW-005)
 - Recommendation: apply. The test-author explicitly flagged this as a general trap worth documenting, and it cost extra gate iterations to discover; a one-line addition to `test-guide.md` prevents every future pipeline-stage test-author from rediscovering it.
 - Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-014, L-015 and L-016` (new bullet in `test-guide.md`'s "What not to do"; `archetype.md` `version` bumped 2 → 3).
+
+### L-017: Live demonstration found integration bugs invisible at design/refinement time
+
+- Status: parked
+- Impact: shared (`.claude/skills/tickets/SKILL.md`, `refine` mode)
+- Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
+- Change: when a ticket's Definition of done requires a live demonstration across several already-built components, refinement should flag that cross-component assumptions (shared vocabulary like phase ids, who performs a step like committing, which status transitions a downstream check expects) are the likely failure points, so the demonstration plan specifically exercises those seams rather than only the ticket's own scenarios.
+- Evidence: `docs/tickets/completed/CCW-005-story-orchestrator-skill/CCW-005-ticket.md`, "Real bugs found only by running this for real" — three integration bugs found only by live demonstration: the `test`/`tests` phase-id spelling mismatch between `pipeline-stage/archetype.md` (CCW-002) and `FreezeCheck` (CCW-003); no agent prompt (CCW-004) included a commit step though `plan.json`/`FreezeCheck` expected one; Finishing omitted `tickets review <ID>` so `consistency` failed at the finish line. Two follow-up fix commits (`5cc00ea`, `7079a6b`) were needed after the initial build commit (`3a28e3d`).
+- Recurrences: 1 (CCW-005)
+- Recommendation: park. One ticket so far; CCW-005's own Definition of done already institutionalizes "demonstrate live before done" as a general safeguard, so the narrower point (name the specific cross-component seams to test in advance) is worth watching for recurrence on the next multi-dependency skill ticket rather than codifying now.
+- Decision: parked 2026-09-22 by the user, as recommended.
+
+### L-018: A ticket's design-time assumption about another component's capability was wrong until it was run for real
+
+- Status: parked
+- Impact: shared (`.claude/skills/tickets/SKILL.md`, `refine` mode)
+- Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
+- Change: when refining a criterion that assumes another already-built component's capability (for example, what tools an agent has), check that component's real definition rather than carrying forward an earlier design-doc sketch.
+- Evidence: `docs/tickets/completed/CCW-005-story-orchestrator-skill/CCW-005-ticket.md`'s `AC-11` changed from "the retro agent... appends proposed entries to `docs/learnings/log.md`" to "...which returns proposals in its report (it never writes)" — the ticket's own text names the cause: the design doc's D6 sketch and this ticket's own Context predate CCW-004 actually building `retro.md`, whose tool list (`Read, Grep, Glob, Bash`, no `Write`) was only discovered by launching it for real.
+- Recurrences: 1 (CCW-005)
+- Recommendation: park. One occurrence; the underlying cause (a design doc describing agents before they were built) is specific to this harness-bootstrapping phase and may not recur once agents are stable.
+- Decision: parked 2026-09-22 by the user, as recommended.
+
+### L-019: A ticket's touches list widened after it became ready
+
+- Status: rejected
+- Impact: local
+- Target: none (recorded for pattern-watching only)
+- Change: none proposed; watch whether a ticket's touches list needing a mid-implementation addition recurs.
+- Evidence: commit `f4b4e94` set `CCW-005` `ready` with `touches: [.claude/skills/story, .claude/agents, docs/learnings]`; commit `3a28e3d` (the same commit as the initial build, the first thing done once `in-progress`) added `.claude/settings.json`, needed because the pipeline's background subagents needed pre-approved commands — not anticipated at refinement.
+- Recurrences: 1 (CCW-005)
+- Recommendation: reject. Single, minor, and already self-corrected within the same commit with no downstream cost; not distinct enough from ordinary scope discovery to warrant a rule.
+- Decision: rejected 2026-09-22 by the user, as recommended.
