@@ -1,0 +1,12 @@
+   {
+  "phases"   : [ { "runs" : [ {"attempt":1,  "turns" : 21, "outcome":"passed"} ],
+        "note": "a stray } and { inside a string, and \"quotes\" too",
+        "status" :"in-progress", "after":[ ],
+   "id":"design",
+   "artifacts": ["DFS-001-design.md"], "commit": "abc1234" } ],
+
+
+  "state"  :  "running" ,
+       "gates": [{"after":"design","status":"pending"}], "defects": [],
+  "archetype":{"version":1,"name":"pipeline-stage"},
+      "ticket":"DFS-001" }

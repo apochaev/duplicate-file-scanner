@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="a.GroupTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-01-01T00:00:00.000Z" hostname="localhost" time="0.01">
+  <testcase name="DFS-001.AC-1 stale run: this passed against an earlier implementation" classname="a.GroupTest" time="0.001"/>
+</testsuite>

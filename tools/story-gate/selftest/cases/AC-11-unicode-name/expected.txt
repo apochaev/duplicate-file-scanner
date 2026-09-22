@@ -1,0 +1,3 @@
+FAIL touches DFS-001: 2 problems
+- résumé-日本語-😀.txt: outside touches
+- ключ/файл.txt: outside touches

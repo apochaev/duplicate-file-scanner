@@ -1,0 +1,8 @@
+{
+  "check": "stubs",
+  "scenarios": ["No leftover stubs passes the stubs check"],
+  "files": {
+    "file-scanner/src/main/java/a/Grouper.java": "package a;\n\nclass Grouper {\n    void group() {\n    }\n}\n",
+    "file-scanner/src/main/java/a/Done.java": "package a;\n\nclass Done {}\n"
+  }
+}

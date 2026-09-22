@@ -1,0 +1,6 @@
+#!/bin/sh
+# A stand-in for the Gradle wrapper: fresh reports appear only when the run starts with cleanTest.
+case "$*" in *cleanTest*) ;; *) exit 1 ;; esac
+rm -f mod/build/test-results/test/*.xml
+cp fresh/*.xml mod/build/test-results/test/
+exit 1

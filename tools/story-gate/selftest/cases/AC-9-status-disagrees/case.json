@@ -1,0 +1,5 @@
+{
+  "check": "consistency",
+  "scenarios": ["An invalid plan fails the consistency check"],
+  "status": "ready"
+}

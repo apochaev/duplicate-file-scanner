@@ -1,0 +1,9 @@
+{
+  "check": "red",
+  "scenarios": [],
+  "results": [
+    {"class": "a.T", "name": "DFS-001.AC-1 x", "outcome": "failed", "type": "java.io.IOException",
+     "message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀bbbbbbbbbbbbbbbbbbbbbbbbbb"}
+  ],
+  "build": {"exit": 1}
+}

@@ -1,0 +1,2 @@
+FAIL green DFS-001: 1 problem
+- compile error file-scanner/src/test/java/us/pochaev/dfs/scanner/ScratchGateTest.java:22: incompatible types: String cannot be converted to int

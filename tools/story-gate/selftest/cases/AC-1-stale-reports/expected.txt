@@ -1,0 +1,1 @@
+PASS red DFS-001: 1 story tests fail with stubs, 0 other tests pass

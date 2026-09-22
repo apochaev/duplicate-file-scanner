@@ -1,0 +1,10 @@
+{
+  "check": "cli",
+  "scenarios": [],
+  "args": ["touches", "DFS-010"],
+  "repo": [
+    {"write": {"docs/tickets/backlog/DFS-010-story-gate-tools/DFS-010-ticket.md": "---\nid: DFS-010\nstatus: in-progress\ntouches: [tools/story-gate]\n---\n\n# DFS-010\n",
+               "README.md": "committed on main, outside touches\n"},
+     "commit": "base"}
+  ]
+}

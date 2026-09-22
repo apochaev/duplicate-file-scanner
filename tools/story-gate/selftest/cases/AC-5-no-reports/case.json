@@ -1,0 +1,7 @@
+{
+  "check": "disabled",
+  "scenarios": [],
+  "files": {
+    "file-scanner/src/test/java/a/CleanTest.java": "package a;\n\nclass CleanTest {\n}\n"
+  }
+}

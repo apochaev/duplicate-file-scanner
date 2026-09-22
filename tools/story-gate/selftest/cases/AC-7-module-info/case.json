@@ -1,0 +1,9 @@
+{
+  "check": "touches",
+  "scenarios": ["A package entry does not cover module-info.java"],
+  "touches": ["us.pochaev.dfs.scanner.application", "us.pochaev.dfs.scanner.domain.model"],
+  "changed": [
+    "file-scanner/src/main/java/module-info.java",
+    "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/Grouper.java"
+  ]
+}

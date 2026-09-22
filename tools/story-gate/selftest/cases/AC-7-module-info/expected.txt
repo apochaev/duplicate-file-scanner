@@ -1,0 +1,2 @@
+FAIL touches DFS-001: 1 problem
+- file-scanner/src/main/java/module-info.java: outside touches; module-info.java is in no package, so list it as a path

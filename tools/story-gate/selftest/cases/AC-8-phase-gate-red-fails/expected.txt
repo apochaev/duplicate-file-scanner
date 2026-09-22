@@ -1,0 +1,2 @@
+FAIL red DFS-001: 1 problem
+- GroupTest > DFS-001.AC-1 Equal sizes: passed against stubs

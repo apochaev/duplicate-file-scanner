@@ -1,0 +1,3 @@
+FAIL traceability DFS-001: 2 problems
+- test "DFS-001.AC-2 Different sizes": names retired DFS-001.AC-2
+- test "DFS-001.AC-7 names a criterion that never existed": names DFS-001.AC-7, which does not exist

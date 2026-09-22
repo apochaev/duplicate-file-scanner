@@ -1,0 +1,6 @@
+{
+  "check": "green",
+  "scenarios": [],
+  "results": [],
+  "build": {"exit": 1, "output": "compile-error.out", "root": "C:/proj"}
+}

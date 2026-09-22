@@ -1,0 +1,11 @@
+{
+  "check": "red",
+  "scenarios": ["Existing tests must still pass during the red phase"],
+  "results": [
+    {"class": "a.GroupTest", "name": "DFS-001.AC-1 Equal sizes", "outcome": "failed",
+     "type": "java.lang.UnsupportedOperationException", "message": "not implemented: DFS-001"},
+    {"class": "us.pochaev.dfs.scanner.infra.adapter.NioFileTreeWalkerTest", "name": "walksEveryFixtureFileExactlyOnce()",
+     "outcome": "failed", "type": "org.opentest4j.AssertionFailedError", "message": "expected: <5> but was: <4>"}
+  ],
+  "build": {"exit": 1}
+}

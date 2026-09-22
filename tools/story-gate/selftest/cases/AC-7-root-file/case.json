@@ -1,0 +1,7 @@
+{
+  "check": "touches",
+  "scenarios": ["A root file is recognised as a path"],
+  "touches": ["CLAUDE.md", "build.gradle.kts"],
+  "rootFiles": ["CLAUDE.md", "build.gradle.kts"],
+  "changed": ["CLAUDE.md", "build.gradle.kts"]
+}

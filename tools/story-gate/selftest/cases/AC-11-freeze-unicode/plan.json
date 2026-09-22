@@ -1,0 +1,2 @@
+{"ticket": "DFS-001", "state": "running",
+ "phases": [{"id": "tests", "agent": "test-author", "after": [], "status": "done", "commit": "${tests}"}]}

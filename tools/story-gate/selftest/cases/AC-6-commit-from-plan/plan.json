@@ -1,0 +1,9 @@
+{
+  "phases": [
+    {"id": "design", "agent": "architect", "after": [], "status": "done", "commit": "${old}"},
+    {"id": "tests", "agent": "test-author", "after": ["design"], "status": "done", "commit": "${tests}"},
+    {"id": "impl", "agent": "implementer", "after": ["tests"], "status": "done", "commit": "${impl}"}
+  ],
+  "state": "running",
+  "ticket": "DFS-001"
+}

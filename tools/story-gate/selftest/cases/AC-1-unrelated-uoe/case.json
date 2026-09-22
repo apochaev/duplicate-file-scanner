@@ -1,0 +1,11 @@
+{
+  "check": "red",
+  "scenarios": ["An unrelated UnsupportedOperationException is not mistaken for a stub"],
+  "results": [
+    {"class": "a.GroupTest", "name": "DFS-001.AC-1 Immutable list", "outcome": "failed",
+     "type": "java.lang.UnsupportedOperationException", "message": ""},
+    {"class": "a.GroupTest", "name": "DFS-001.AC-2 Read-only view", "outcome": "failed",
+     "type": "java.lang.UnsupportedOperationException", "message": "read-only view, not implemented: yet"}
+  ],
+  "build": {"exit": 1}
+}

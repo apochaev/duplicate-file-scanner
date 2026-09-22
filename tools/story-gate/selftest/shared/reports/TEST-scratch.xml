@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="us.pochaev.dfs.scanner.ScratchGateTest" tests="8" skipped="2" failures="4" errors="0" timestamp="2026-09-21T23:30:53.600Z" hostname="localhost" time="0.021">
+  <properties/>
+  <testcase name="assumption()" classname="us.pochaev.dfs.scanner.ScratchGateTest" time="0.007">
+    <skipped message="org.opentest4j.TestAbortedException: Assumption failed: platform says no" type="org.opentest4j.TestAbortedException">org.opentest4j.TestAbortedException: Assumption failed: platform says no
+	at org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)
+	at org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)
+	at us.pochaev.dfs.scanner.ScratchGateTest.assumption(ScratchGateTest.java:50)
+</skipped>
+  </testcase>
+  <testcase name="DFS-999.AC-2 passes against stubs" classname="us.pochaev.dfs.scanner.ScratchGateTest" time="0.001"/>
+  <testcase name="Ünïcödé 日本語 existing test" classname="us.pochaev.dfs.scanner.ScratchGateTest" time="0.0"/>
+  <testcase name="DFS-999.AC-3 null pointer" classname="us.pochaev.dfs.scanner.ScratchGateTest" time="0.001">
+    <failure message="java.lang.NullPointerException: Cannot invoke &quot;Object.toString()&quot; because &quot;o&quot; is null" type="java.lang.NullPointerException">java.lang.NullPointerException: Cannot invoke &quot;Object.toString()&quot; because &quot;o&quot; is null
+	at us.pochaev.dfs.scanner.ScratchGateTest.npe(ScratchGateTest.java:28)
+</failure>
+  </testcase>
+  <testcase name="DFS-999.AC-1 stub failure" classname="us.pochaev.dfs.scanner.ScratchGateTest" time="0.002">
+    <failure message="java.lang.UnsupportedOperationException: not implemented: DFS-999" type="java.lang.UnsupportedOperationException">java.lang.UnsupportedOperationException: not implemented: DFS-999
+	at us.pochaev.dfs.scanner.ScratchGateTest.stub(ScratchGateTest.java:16)
+</failure>
+  </testcase>
+  <testcase name="disabled()" classname="us.pochaev.dfs.scanner.ScratchGateTest" time="0.0">
+    <skipped/>
+  </testcase>
+  <testcase name="DFS-999.AC-5 assertion" classname="us.pochaev.dfs.scanner.ScratchGateTest" time="0.004">
+    <failure message="org.opentest4j.AssertionFailedError: one is not two&#10;second line ==&gt; expected: &lt;1&gt; but was: &lt;2&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: one is not two
+second line ==&gt; expected: &lt;1&gt; but was: &lt;2&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:201)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:152)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:590)
+	at us.pochaev.dfs.scanner.ScratchGateTest.assertion(ScratchGateTest.java:40)
+</failure>
+  </testcase>
+  <testcase name="DFS-999.AC-4 immutable list" classname="us.pochaev.dfs.scanner.ScratchGateTest" time="0.001">
+    <failure message="java.lang.UnsupportedOperationException" type="java.lang.UnsupportedOperationException">java.lang.UnsupportedOperationException
+	at java.base/java.util.ImmutableCollections.uoe(ImmutableCollections.java:159)
+	at java.base/java.util.ImmutableCollections$AbstractImmutableCollection.add(ImmutableCollections.java:164)
+	at us.pochaev.dfs.scanner.ScratchGateTest.immutable(ScratchGateTest.java:34)
+</failure>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

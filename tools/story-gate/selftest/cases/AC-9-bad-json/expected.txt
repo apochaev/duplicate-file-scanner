@@ -1,0 +1,2 @@
+FAIL consistency DFS-001: 1 problem
+- plan.json does not parse: expected '}' at line 3, column 3

@@ -1,0 +1,11 @@
+{
+  "check": "cli",
+  "scenarios": ["A Unicode file name is reported exactly", "Git's quoting does not hide a changed file"],
+  "args": ["touches", "DFS-010", "--base", "${base}"],
+  "repo": [
+    {"write": {"docs/tickets/backlog/DFS-010-story-gate-tools/DFS-010-ticket.md": "---\nid: DFS-010\nstatus: in-progress\ntouches: [tools/story-gate]\n---\n\n# DFS-010\n",
+               "tools/story-gate/a.txt": "kept\n"},
+     "commit": "base"},
+    {"write": {"日本語-fichier-é.txt": "outside touches\n"}}
+  ]
+}

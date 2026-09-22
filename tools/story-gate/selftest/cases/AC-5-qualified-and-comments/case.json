@@ -1,0 +1,8 @@
+{
+  "check": "disabled",
+  "scenarios": [],
+  "files": {
+    "file-scanner/src/test/java/a/QualifiedTest.java": "package a;\n\nclass QualifiedTest {\n    @org.junit.jupiter.api.Test\n    @org.junit.jupiter.api.Disabled\n    void off() {\n    }\n}\n",
+    "file-scanner/src/test/java/a/CommentTest.java": "package a;\n\nclass CommentTest {\n    void on() {\n        run(); // was @Disabled before the fix\n        /* @Disabled */\n    }\n}\n"
+  }
+}

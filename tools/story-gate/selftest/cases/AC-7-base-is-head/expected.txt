@@ -1,0 +1,2 @@
+PASS touches DFS-010: 0 changed files, all inside touches; base is HEAD, so only uncommitted changes were seen (pass --base <ref>)
+exit=0

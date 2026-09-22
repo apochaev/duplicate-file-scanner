@@ -1,0 +1,10 @@
+{
+  "check": "touches",
+  "scenarios": [],
+  "touches": ["us.pochaev.dfs.scanner.application"],
+  "changed": [
+    "file-scanner/src/main/java/us/pochaev/dfs/scanner/applicationx/Y.java",
+    "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/Z.java",
+    "file-scanner/src/test/resources/fixtures/a.txt"
+  ]
+}

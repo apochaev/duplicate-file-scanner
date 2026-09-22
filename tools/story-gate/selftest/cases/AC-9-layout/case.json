@@ -1,0 +1,5 @@
+{
+  "check": "consistency",
+  "scenarios": ["Valid plans parse whatever their layout"],
+  "status": "in-progress"
+}

@@ -1,0 +1,5 @@
+{
+  "check": "selftest",
+  "scenarios": ["The self-test fails when a verdict changes"],
+  "tree": "m"
+}

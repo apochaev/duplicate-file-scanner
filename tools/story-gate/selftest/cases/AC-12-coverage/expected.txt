@@ -1,0 +1,5 @@
+FAIL selftest: 3 problems
+- scenario "A scenario nobody wrote a case for" has no case named after its criterion
+- scenario "A scenario claimed by a case named after another criterion" has no case named after its criterion
+- cases [AC-1-example] name an unknown scenario "A typo in a scenario title"
+exit=1

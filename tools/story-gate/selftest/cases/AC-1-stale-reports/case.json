@@ -1,0 +1,6 @@
+{
+  "check": "red-run",
+  "scenarios": ["Stale reports are ignored"],
+  "tree": "tree",
+  "staleReports": "stale"
+}

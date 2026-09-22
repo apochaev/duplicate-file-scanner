@@ -1,0 +1,12 @@
+{
+  "check": "test-phase",
+  "scenarios": ["A missing criterion is caught at the end of the test phase"],
+  "results": [
+    {"class": "a.GroupTest", "name": "DFS-001.AC-1 Equal sizes", "outcome": "failed",
+     "type": "java.lang.UnsupportedOperationException", "message": "not implemented: DFS-001"},
+    {"class": "a.GroupTest", "name": "DFS-001.AC-2 Different sizes", "outcome": "failed",
+     "type": "java.lang.UnsupportedOperationException", "message": "not implemented: DFS-001"},
+    {"class": "a.OldTest", "name": "existing test passes"}
+  ],
+  "build": {"exit": 1}
+}

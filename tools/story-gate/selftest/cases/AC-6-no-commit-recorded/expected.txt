@@ -1,0 +1,2 @@
+FAIL freeze DFS-001: 1 problem
+- plan.json records no commit for the tests phase

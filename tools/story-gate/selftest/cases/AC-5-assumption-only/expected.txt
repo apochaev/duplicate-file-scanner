@@ -1,0 +1,1 @@
+PASS disabled DFS-001: no @Disabled tests; 1 skipped by an assumption

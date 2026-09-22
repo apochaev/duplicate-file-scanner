@@ -1,0 +1,2 @@
+FAIL freeze DFS-001: 1 problem
+- file-scanner/src/test/java/a/GroupTest.java: modified since the test phase

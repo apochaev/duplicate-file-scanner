@@ -1,0 +1,2 @@
+FAIL traceability DFS-001: 1 problem
+- scenario "Different sizes stay apart": @AC-2 is retired

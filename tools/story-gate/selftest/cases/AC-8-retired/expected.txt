@@ -1,0 +1,1 @@
+PASS traceability DFS-001: 2 criteria traced through 2 scenarios to tests and test-plan.md

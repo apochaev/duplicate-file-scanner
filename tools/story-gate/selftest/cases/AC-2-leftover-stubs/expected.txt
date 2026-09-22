@@ -1,0 +1,2 @@
+FAIL stubs DFS-001: 1 problem
+- file-scanner/src/main/java/a/Grouper.java:5: stub marker remains

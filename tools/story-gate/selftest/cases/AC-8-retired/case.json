@@ -1,0 +1,8 @@
+{
+  "check": "traceability",
+  "scenarios": ["A retired criterion is skipped by the traceability check"],
+  "results": [
+    {"class": "a.GroupTest", "name": "DFS-001.AC-1 Equal sizes"},
+    {"class": "a.GroupTest", "name": "DFS-001.AC-3 Empty files are excluded"}
+  ]
+}

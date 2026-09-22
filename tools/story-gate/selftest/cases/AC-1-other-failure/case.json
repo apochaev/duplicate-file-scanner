@@ -1,0 +1,11 @@
+{
+  "check": "red",
+  "scenarios": ["A test that fails for another reason fails the red gate"],
+  "results": [
+    {"class": "a.GroupTest", "name": "DFS-001.AC-1 Equal sizes", "outcome": "failed",
+     "type": "java.lang.UnsupportedOperationException", "message": "not implemented: DFS-001"},
+    {"class": "a.GroupTest", "name": "DFS-001.AC-2 Different sizes", "outcome": "failed",
+     "type": "java.lang.NullPointerException", "message": "Cannot invoke \"Object.toString()\" because \"o\" is null"}
+  ],
+  "build": {"exit": 1}
+}

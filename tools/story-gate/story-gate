@@ -1,0 +1,34 @@
+#!/bin/sh
+# Launcher for the story gates (Git Bash, Linux, macOS): runs StoryGate.java with a JDK 22 or later.
+# Multi-file source launch needs JDK 22+, and the java first on PATH here may be older, so JAVA_HOME wins.
+# Usage: tools/story-gate/story-gate <check> <ID> [options]   (see StoryGate.java)
+
+dir=$(cd "$(dirname "$0")" && pwd)
+
+if [ -n "$JAVA_HOME" ]; then
+  java="$JAVA_HOME/bin/java"
+  via="JAVA_HOME"
+  if [ ! -x "$java" ] && [ ! -f "$java" ]; then
+    echo "story-gate: JAVA_HOME is set to '$JAVA_HOME' but has no bin/java. Point it at a JDK 22 or later." >&2
+    exit 2
+  fi
+else
+  java="java"
+  via="PATH"
+fi
+
+version=$("$java" -version 2>&1 | sed -n 's/.* version "\([^"]*\)".*/\1/p' | head -n 1)
+major=${version%%.*}
+major=${major%%-*}
+case "$major" in
+  ''|*[!0-9]*)
+    echo "story-gate: cannot tell which Java version is in use ($via). Set JAVA_HOME to a JDK 22 or later." >&2
+    exit 2
+    ;;
+esac
+if [ "$major" -lt 22 ]; then
+  echo "story-gate: JDK 22 or later is required (found $version via $via). Set JAVA_HOME to a JDK 22 or later." >&2
+  exit 2
+fi
+
+exec "$java" "$dir/StoryGate.java" "$@"

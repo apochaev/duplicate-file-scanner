@@ -1,0 +1,6 @@
+{
+  "check": "launcher",
+  "scenarios": ["An old JDK gives a clear error"],
+  "fakeVersion": "11.0.15",
+  "javaHome": false
+}

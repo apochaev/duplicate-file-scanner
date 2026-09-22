@@ -1,0 +1,2 @@
+FAIL red DFS-001: 1 problem
+- GroupTest > DFS-001.AC-2 Different sizes: failed with NullPointerException: Cannot invoke "Object.toString()" because "o" is null

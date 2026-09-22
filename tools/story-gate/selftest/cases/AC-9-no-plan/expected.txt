@@ -1,0 +1,2 @@
+FAIL consistency DFS-001: 1 problem
+- plan.json not found

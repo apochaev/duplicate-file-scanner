@@ -1,0 +1,9 @@
+{
+  "check": "touches",
+  "scenarios": ["Git's quoting does not hide a changed file"],
+  "touches": ["tools/story-gate"],
+  "repo": [
+    {"write": {"tools/story-gate/a.txt": "kept\n", "dossier-é.txt": "v1\n"}, "commit": "base"},
+    {"write": {"dossier-é.txt": "v2\n", "naïve café/日本語.txt": "new\n", "tools/story-gate/b.txt": "ok\n"}}
+  ]
+}

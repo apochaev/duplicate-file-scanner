@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="a.GroupTest" tests="1" skipped="0" failures="1" errors="0" timestamp="2026-01-02T00:00:00.000Z" hostname="localhost" time="0.01">
+  <testcase name="DFS-001.AC-1 fresh run: fails against the stubs" classname="a.GroupTest" time="0.001">
+    <failure message="java.lang.UnsupportedOperationException: not implemented: DFS-001" type="java.lang.UnsupportedOperationException">java.lang.UnsupportedOperationException: not implemented: DFS-001
+	at a.Grouper.group(Grouper.java:9)
+</failure>
+  </testcase>
+</testsuite>

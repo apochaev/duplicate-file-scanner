@@ -1,0 +1,2 @@
+FAIL consistency DFS-001: 1 problem
+- ticket status is ready but plan state is running (expected [in-progress])

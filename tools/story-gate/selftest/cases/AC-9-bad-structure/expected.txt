@@ -1,0 +1,8 @@
+FAIL consistency DFS-001: 7 problems
+- plan.json ticket is DFS-002, expected DFS-001
+- plan.json state is sleeping, expected one of [awaiting-approval, blocked, done, running]
+- phase design has status finished
+- phase tests has status null
+- phase tests comes after unknown phase typo
+- a phase has no string id
+- a phase has no string id

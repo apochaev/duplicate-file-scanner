@@ -1,0 +1,12 @@
+{
+  "check": "touches",
+  "scenarios": ["A file outside the allowed paths fails the touches check"],
+  "touches": ["tools/story-gate"],
+  "changed": [
+    "tools/story-gate/StoryGate.java",
+    "docs/tickets/backlog/DFS-001-group-files-by-size/DFS-001-ticket.md",
+    "docs/tickets/completed/DFS-001-group-files-by-size/plan.json",
+    "README.md",
+    "docs/tickets/backlog/DFS-002-other/DFS-002-ticket.md"
+  ]
+}

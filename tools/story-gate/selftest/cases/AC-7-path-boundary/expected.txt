@@ -1,0 +1,3 @@
+FAIL touches DFS-001: 2 problems
+- tools/story-gate-other/X.java: outside touches
+- tools/story-gate.txt: outside touches

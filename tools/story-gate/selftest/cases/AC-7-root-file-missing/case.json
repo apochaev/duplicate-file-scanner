@@ -1,0 +1,7 @@
+{
+  "check": "touches",
+  "scenarios": [],
+  "touches": ["build.gradle.kts"],
+  "rootFiles": [],
+  "changed": ["build.gradle.kts", "file-scanner/build.gradle.kts"]
+}

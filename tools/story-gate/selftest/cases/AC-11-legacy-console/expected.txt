@@ -1,0 +1,3 @@
+FAIL touches DFS-010: 1 problem
+- 日本語-fichier-é.txt: outside touches
+exit=1

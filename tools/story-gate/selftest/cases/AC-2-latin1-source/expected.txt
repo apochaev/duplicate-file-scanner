@@ -1,0 +1,2 @@
+FAIL stubs DFS-001: 1 problem
+- m/src/main/java/a/Stubbed.java:5: stub marker remains

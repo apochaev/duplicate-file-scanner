@@ -1,0 +1,10 @@
+{
+  "ticket": "DFS-002",
+  "state": "sleeping",
+  "phases": [
+    {"id": "design", "after": [], "status": "finished"},
+    {"id": "tests", "after": ["design", "typo"], "status": null},
+    {"agent": "implementer"},
+    "not an object"
+  ]
+}

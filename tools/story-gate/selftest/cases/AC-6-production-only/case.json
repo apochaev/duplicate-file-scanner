@@ -1,0 +1,12 @@
+{
+  "check": "freeze",
+  "scenarios": [],
+  "repo": [
+    {"write": {"file-scanner/src/main/java/a/Grouper.java": "class Grouper {}\n",
+               "file-scanner/src/test/java/a/GroupTest.java": "class GroupTest {}\n"},
+     "commit": "tests"},
+    {"write": {"file-scanner/src/main/java/a/Grouper.java": "class Grouper { int x; }\n",
+               "file-scanner/src/main/java/a/Extra.java": "class Extra {}\n"},
+     "commit": "impl"}
+  ]
+}

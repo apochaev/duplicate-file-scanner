@@ -1,0 +1,8 @@
+{
+  "ticket": "DFS-001",
+  "state": "running",
+  "phases": [
+    {"id": "design", "agent": "architect", "after": [], "status": "done"},
+    {"id": "tests", "agent": "test-author", "after": ["design"], "status": "in-progress"}
+  ]
+}

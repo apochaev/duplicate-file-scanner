@@ -1,0 +1,2 @@
+story-gate: JDK 22 or later is required (found 11.0.15 via PATH). Set JAVA_HOME to a JDK 22 or later.
+exit=2

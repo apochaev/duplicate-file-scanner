@@ -1,0 +1,11 @@
+{
+  "check": "disabled",
+  "scenarios": [],
+  "results": [
+    {"class": "b.OsTest", "name": "windowsOnly()", "outcome": "skipped"},
+    {"class": "b.OsTest", "name": "needsPosix()", "outcome": "skipped", "type": "org.opentest4j.TestAbortedException"}
+  ],
+  "files": {
+    "file-scanner/src/test/java/b/OsTest.java": "package b;\n\nclass OsTest {\n    @Test\n    @DisabledOnOs(OS.WINDOWS)\n    void windowsOnly() {\n    }\n}\n"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "check": "touches",
+  "scenarios": ["A package entry covers its sources and tests"],
+  "touches": ["us.pochaev.dfs.scanner.application"],
+  "changed": [
+    "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/Grouper.java",
+    "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/GrouperTest.java",
+    "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/util/Sizes.java"
+  ]
+}

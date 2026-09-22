@@ -1,0 +1,12 @@
+{
+  "check": "disabled",
+  "scenarios": [],
+  "results": [
+    {"class": "b.CaseTest", "name": "treatsNamesDifferingOnlyInCaseAsSeparateFiles()", "outcome": "skipped",
+     "type": "org.opentest4j.TestAbortedException"},
+    {"class": "b.CaseTest", "name": "other()"}
+  ],
+  "files": {
+    "file-scanner/src/test/java/b/CaseTest.java": "package b;\n\n// Never use @Disabled here; skip with an Assumptions check instead.\nclass CaseTest {\n}\n"
+  }
+}

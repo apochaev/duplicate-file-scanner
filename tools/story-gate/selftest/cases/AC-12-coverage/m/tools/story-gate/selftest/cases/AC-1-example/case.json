@@ -1,0 +1,6 @@
+{
+  "check": "stubs",
+  "ticket": "DFS-010",
+  "scenarios": ["Example scenario", "A scenario claimed by a case named after another criterion", "A typo in a scenario title"],
+  "files": {"m/src/main/java/A.java": "class A {}\n"}
+}

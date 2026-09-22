@@ -1,0 +1,6 @@
+{
+  "check": "green",
+  "scenarios": ["The green check reports failures without stack traces"],
+  "reports": "reports",
+  "build": {"exit": 1}
+}

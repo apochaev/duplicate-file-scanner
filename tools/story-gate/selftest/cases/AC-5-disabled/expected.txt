@@ -1,0 +1,2 @@
+FAIL disabled DFS-001: 1 problem
+- file-scanner/src/test/java/us/pochaev/dfs/scanner/ScratchGateTest.java:5: @Disabled

@@ -1,0 +1,9 @@
+{
+  "check": "green",
+  "scenarios": ["The verdict stays compact"],
+  "results": [
+    {"class": "a.GroupTest", "name": "DFS-001.AC-1 failing test {i}", "outcome": "failed",
+     "type": "org.opentest4j.AssertionFailedError", "message": "expected: <1> but was: <2>", "times": 100}
+  ],
+  "build": {"exit": 1}
+}

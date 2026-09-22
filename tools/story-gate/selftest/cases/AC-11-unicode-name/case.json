@@ -1,0 +1,6 @@
+{
+  "check": "touches",
+  "scenarios": ["A Unicode file name is reported exactly"],
+  "touches": ["tools/story-gate"],
+  "changed": ["tools/story-gate/résumé.txt", "résumé-日本語-😀.txt", "ключ/файл.txt"]
+}

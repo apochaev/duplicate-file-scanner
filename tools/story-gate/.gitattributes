@@ -1,0 +1,5 @@
+# The shell launcher must stay LF and the cmd launcher CRLF, on every platform.
+story-gate text eol=lf
+story-gate.cmd text eol=crlf
+# Self-test fixtures are compared byte for byte (real Gradle output, expected verdicts): never convert line endings.
+selftest/** -text

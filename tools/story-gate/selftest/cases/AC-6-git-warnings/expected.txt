@@ -1,0 +1,3 @@
+FAIL freeze DFS-001: 2 problems
+- file-scanner/src/test/java/a/AaTest.java: deleted since the test phase
+- file-scanner/src/test/java/a/BbTest.java: modified since the test phase

@@ -1,0 +1,10 @@
+{
+  "check": "touches",
+  "scenarios": ["A path entry covers the files beneath it"],
+  "touches": ["tools/story-gate", "file-scanner/src/test/resources/fixtures/"],
+  "changed": [
+    "tools/story-gate/StoryGate.java",
+    "tools/story-gate/selftest/cases/AC-1-x/case.json",
+    "file-scanner/src/test/resources/fixtures/big/one.bin"
+  ]
+}

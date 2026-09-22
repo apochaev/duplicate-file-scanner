@@ -1,0 +1,11 @@
+{
+  "check": "freeze",
+  "scenarios": [],
+  "repo": [
+    {"write": {"file-scanner/src/test/resources/fixtures/Ünïcode-日本語.txt": "v1\n",
+               "file-scanner/src/test/java/a/GroupTest.java": "class GroupTest {}\n"},
+     "commit": "tests"},
+    {"write": {"file-scanner/src/test/resources/fixtures/Ünïcode-日本語.txt": "v2\n",
+               "file-scanner/src/test/resources/fixtures/sous-dossier/名前-é.txt": "new\n"}}
+  ]
+}

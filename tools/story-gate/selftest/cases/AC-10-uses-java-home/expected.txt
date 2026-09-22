@@ -1,0 +1,2 @@
+fake-java ran: StoryGate.java stubs DFS-010
+exit=0

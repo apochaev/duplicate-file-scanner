@@ -1,0 +1,3 @@
+FAIL touches DFS-001: 2 problems
+- README.md: outside touches
+- docs/tickets/backlog/DFS-002-other/DFS-002-ticket.md: outside touches

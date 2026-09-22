@@ -1,0 +1,6 @@
+{
+  "check": "touches",
+  "scenarios": [],
+  "touches": ["tools/story-gate"],
+  "changed": ["tools/story-gate-other/X.java", "tools/story-gate.txt"]
+}

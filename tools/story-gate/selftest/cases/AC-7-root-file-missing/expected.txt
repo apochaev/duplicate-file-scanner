@@ -1,0 +1,3 @@
+FAIL touches DFS-001: 2 problems
+- build.gradle.kts: outside touches
+- file-scanner/build.gradle.kts: outside touches

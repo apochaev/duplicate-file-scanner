@@ -1,0 +1,3 @@
+FAIL red DFS-001: 2 problems
+- compile error file-scanner/src/test/java/us/pochaev/dfs/scanner/ScratchGateTest.java:22: incompatible types: String cannot be converted to int
+- no tests ran; the build failed: Execution failed for task ':file-scanner:compileTestJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugi...

@@ -1,0 +1,8 @@
+{
+  "check": "disabled",
+  "scenarios": ["Disabled tests are rejected but platform skips are allowed"],
+  "reports": "reports",
+  "files": {
+    "file-scanner/src/test/java/us/pochaev/dfs/scanner/ScratchGateTest.java": "package us.pochaev.dfs.scanner;\n\nclass ScratchGateTest {\n    @Test\n    @Disabled(\"scratch\")\n    void disabled() {\n    }\n\n    @Test\n    void assumption() {\n        Assumptions.assumeTrue(false);\n    }\n}\n"
+  }
+}

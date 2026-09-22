@@ -1,0 +1,11 @@
+{
+  "check": "freeze",
+  "scenarios": [],
+  "repo": [
+    {"write": {"file-scanner/src/test/java/a/GroupTest.java": "class GroupTest {}\n",
+               "file-scanner/src/test/java/a/OldTest.java": "class OldTest {}\n"},
+     "commit": "tests"},
+    {"delete": ["file-scanner/src/test/java/a/OldTest.java"],
+     "write": {"file-scanner/src/test/resources/fixtures/extra.txt": "new fixture\n"}}
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "check": "red",
+  "scenarios": ["Only story tests are held to the stub rule"],
+  "results": [
+    {"class": "a.OldTest", "name": "existing one"},
+    {"class": "a.OldTest", "name": "existing two"},
+    {"class": "a.OldTest", "name": "existing skipped by an assumption", "outcome": "skipped",
+     "type": "org.opentest4j.TestAbortedException"},
+    {"class": "b.OtherTicketTest", "name": "DFS-002.AC-1 belongs to another ticket"},
+    {"class": "a.GroupTest", "name": "DFS-001.AC-1 Equal sizes", "outcome": "failed",
+     "type": "java.lang.UnsupportedOperationException", "message": "not implemented: DFS-001"}
+  ],
+  "build": {"exit": 1}
+}

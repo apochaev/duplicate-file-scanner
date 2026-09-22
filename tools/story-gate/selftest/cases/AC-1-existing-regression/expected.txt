@@ -1,0 +1,2 @@
+FAIL red DFS-001: 1 problem
+- regression: NioFileTreeWalkerTest > walksEveryFixtureFileExactlyOnce() failed (AssertionFailedError: expected: <5> but was: <4>)

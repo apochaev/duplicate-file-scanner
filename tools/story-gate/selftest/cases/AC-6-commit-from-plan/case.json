@@ -1,0 +1,9 @@
+{
+  "check": "freeze",
+  "scenarios": ["The freeze check reads its commit from the plan"],
+  "repo": [
+    {"write": {"file-scanner/src/test/java/a/GroupTest.java": "class GroupTest { /* v1 */ }\n"}, "commit": "old"},
+    {"write": {"file-scanner/src/test/java/a/GroupTest.java": "class GroupTest { /* v2 */ }\n"}, "commit": "tests"},
+    {"write": {"file-scanner/src/test/java/a/GroupTest.java": "class GroupTest { /* v3 */ }\n"}, "commit": "impl"}
+  ]
+}

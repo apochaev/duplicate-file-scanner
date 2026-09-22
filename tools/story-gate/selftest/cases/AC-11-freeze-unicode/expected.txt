@@ -1,0 +1,3 @@
+FAIL freeze DFS-001: 2 problems
+- file-scanner/src/test/resources/fixtures/Ünïcode-日本語.txt: modified since the test phase
+- file-scanner/src/test/resources/fixtures/sous-dossier/名前-é.txt: added since the test phase

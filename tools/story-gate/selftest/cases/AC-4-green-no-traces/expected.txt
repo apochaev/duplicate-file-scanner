@@ -1,0 +1,5 @@
+FAIL green DFS-001: 4 problems
+- ScratchGateTest > DFS-999.AC-1 stub failure: UnsupportedOperationException: not implemented: DFS-999
+- ScratchGateTest > DFS-999.AC-3 null pointer: NullPointerException: Cannot invoke "Object.toString()" because "o" is null
+- ScratchGateTest > DFS-999.AC-4 immutable list: UnsupportedOperationException
+- ScratchGateTest > DFS-999.AC-5 assertion: AssertionFailedError: one is not two

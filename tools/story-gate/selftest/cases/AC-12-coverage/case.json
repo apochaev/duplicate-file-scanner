@@ -1,0 +1,5 @@
+{
+  "check": "selftest",
+  "scenarios": ["The self-test covers the ticket's scenarios"],
+  "tree": "m"
+}

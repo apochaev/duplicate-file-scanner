@@ -1,0 +1,6 @@
+FAIL traceability DFS-001: 5 problems
+- scenario "Different sizes stay apart": no @AC tag
+- scenario "Work in progress carries no criterion tag": no @AC tag
+- scenario "Empty files are dropped": @AC-9 does not exist
+- AC-2: no scenario is tagged with it
+- AC-3: no scenario is tagged with it

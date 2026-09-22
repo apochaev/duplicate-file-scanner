@@ -1,0 +1,7 @@
+{
+  "check": "freeze",
+  "scenarios": [],
+  "repo": [
+    {"write": {"file-scanner/src/test/java/a/GroupTest.java": "class GroupTest {}\n"}, "commit": "tests"}
+  ]
+}

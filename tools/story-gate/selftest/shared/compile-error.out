@@ -1,0 +1,41 @@
+
+> Task :cli:cleanTest
+> Task :file-scanner:cleanTest UP-TO-DATE
+> Task :file-scanner:compileJava UP-TO-DATE
+> Task :cli:compileJava UP-TO-DATE
+> Task :cli:processResources NO-SOURCE
+> Task :cli:classes UP-TO-DATE
+> Task :cli:compileTestJava UP-TO-DATE
+> Task :cli:processTestResources NO-SOURCE
+> Task :cli:testClasses UP-TO-DATE
+> Task :file-scanner:processResources NO-SOURCE
+> Task :file-scanner:classes UP-TO-DATE
+> Task :file-scanner:jar UP-TO-DATE
+> Task :cli:test
+
+> Task :file-scanner:compileTestJava FAILED
+C:\proj\file-scanner\src\test\java\us\pochaev\dfs\scanner\ScratchGateTest.java:22: error: incompatible types: String cannot be converted to int
+        int x = "not an int";
+                ^
+1 error
+
+> Task :file-scanner:processTestResources UP-TO-DATE
+
+[Incubating] Problems report is available at: file:///C:/proj/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':file-scanner:compileTestJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+> Compilation failed; see the compiler output below.
+  C:\proj\file-scanner\src\test\java\us\pochaev\dfs\scanner\ScratchGateTest.java:22: error: incompatible types: String cannot be converted to int
+          int x = "not an int";
+                  ^
+  1 error
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 2s
+9 actionable tasks: 3 executed, 6 up-to-date

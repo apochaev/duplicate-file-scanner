@@ -1,0 +1,4 @@
+FAIL touches DFS-001: 3 problems
+- file-scanner/src/main/java/us/pochaev/dfs/scanner/applicationx/Y.java: outside touches
+- file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/Z.java: outside touches
+- file-scanner/src/test/resources/fixtures/a.txt: outside touches

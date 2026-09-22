@@ -1,0 +1,12 @@
+{
+  "check": "freeze",
+  "scenarios": [],
+  "gitConfig": {"core.autocrlf": "true"},
+  "repo": [
+    {"write": {"file-scanner/src/test/java/a/AaTest.java": "class AaTest {}\n",
+               "file-scanner/src/test/java/a/BbTest.java": "class BbTest {}\n"},
+     "commit": "tests"},
+    {"delete": ["file-scanner/src/test/java/a/AaTest.java"],
+     "write": {"file-scanner/src/test/java/a/BbTest.java": "class BbTest { /* changed */ }\n"}}
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "check": "traceability",
+  "scenarios": ["A criterion without a scenario fails the traceability check"],
+  "results": [
+    {"class": "a.GroupTest", "name": "DFS-001.AC-1 Equal sizes"},
+    {"class": "a.GroupTest", "name": "DFS-001.AC-2 Different sizes"},
+    {"class": "a.GroupTest", "name": "DFS-001.AC-3 Empty files are excluded"}
+  ]
+}

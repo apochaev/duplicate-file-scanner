@@ -1,0 +1,3 @@
+FAIL selftest: 1 problem
+- AC-1-example: line 1 expected "PASS stubs DFS-010: no stub markers in 2 production files" but got "PASS stubs DFS-010: no stub markers in 1 production files"
+exit=1

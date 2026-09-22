@@ -1,0 +1,11 @@
+{
+  "check": "freeze",
+  "scenarios": ["A changed test file fails the freeze check"],
+  "repo": [
+    {"write": {"file-scanner/src/main/java/a/Grouper.java": "class Grouper {}\n",
+               "file-scanner/src/test/java/a/GroupTest.java": "class GroupTest {}\n"},
+     "commit": "tests"},
+    {"write": {"file-scanner/src/main/java/a/Grouper.java": "class Grouper { int x; }\n",
+               "file-scanner/src/test/java/a/GroupTest.java": "class GroupTest { /* weakened */ }\n"}}
+  ]
+}

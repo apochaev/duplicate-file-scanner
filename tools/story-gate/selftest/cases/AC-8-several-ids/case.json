@@ -1,0 +1,8 @@
+{
+  "check": "traceability",
+  "scenarios": [],
+  "results": [
+    {"class": "a.GroupTest", "name": "DFS-001.AC-10 Ten is not one"},
+    {"class": "a.GroupTest", "name": "DFS-001.AC-2, DFS-001.AC-3 One test proves two criteria"}
+  ]
+}

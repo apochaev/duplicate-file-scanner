@@ -1,0 +1,1 @@
+PASS consistency DFS-001: plan.json parses; state awaiting-approval agrees with ticket status in-review
