@@ -1,5 +1,5 @@
 ---
-id: DFS-008
+id: CCW-001
 title: Extend the tickets skill for archetypes, models and verifier ticking
 status: done
 type: feature
@@ -10,11 +10,13 @@ depends_on: []
 touches: [.claude/skills/tickets, CLAUDE.md]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 completed: 2026-09-21
 ---
 
-# DFS-008: Extend the tickets skill for archetypes, models and verifier ticking
+# CCW-001: Extend the tickets skill for archetypes, models and verifier ticking
+
+*(Formerly DFS-008; relabeled 2026-09-22 by DFS-016, which introduced the CCW namespace.)*
 
 ## Story
 
@@ -28,28 +30,28 @@ Implements the ticket-side changes decided in `docs/design/story-orchestration.m
 - **D4:** each ticket gets an `archetype:` frontmatter field naming a directory under `.claude/archetypes/`. The `ready` gate adds "archetype set", and `refine` reuses the archetype's edge-case checklist.
 - **D9:** an optional `models:` field, resolved in this order: the ticket, then the archetype, then the agent's own frontmatter. Shape: `models: {architect: {model: opus, effort: high, maxTurns: 25}}`, any subset of `model`, `effort` and `maxTurns` per agent.
 - **D7:** done-items are ticked by the verifier after it has verified them, not by the implementer, so the "Implementing a ticket (for agents)" rules in the skill change.
-- **Acceptance criteria (D11, decided while refining DFS-010):** refinement produces a numbered list, `## Acceptance criteria`, between Context and Scenarios. Each criterion is a one-line testable statement with the ID `<TICKET-ID>.AC-<n>` (for example `DFS-011.AC-1`). Scenarios carry `@AC-n` tags; every scenario needs at least one tag and every criterion at least one scenario. IDs are never renumbered or reused (a retired criterion keeps its number and is marked retired). The `ready` gate adds "every scenario tagged and every criterion covered".
+- **Acceptance criteria (D11, decided while refining CCW-003):** refinement produces a numbered list, `## Acceptance criteria`, between Context and Scenarios. Each criterion is a one-line testable statement with the ID `<TICKET-ID>.AC-<n>` (for example `CCW-004.AC-1`). Scenarios carry `@AC-n` tags; every scenario needs at least one tag and every criterion at least one scenario. IDs are never renumbered or reused (a retired criterion keeps its number and is marked retired). The `ready` gate adds "every scenario tagged and every criterion covered".
 
 The skill is instructions only (no script), so "tests" here are walkthroughs of each mode on a scratch copy of the backlog.
 
 **Decisions made while refining this ticket:**
-- **Enforcement (decided 2026-09-21):** the `ready` gate requires the archetype and the criterion and tag coverage at promotion. `validate` additionally flags every `ready`-or-later ticket that lacks them, and grandfathers drafts, since refinement is what produces these fields. Today that reports DFS-001 (no archetype, no criteria) and DFS-010 (no archetype) until this ticket and DFS-009 fix them. Rejected: checking at promotion only (a `ready` ticket can drift below the gate unnoticed); flagging drafts too (noise about gaps refinement fills by design).
+- **Enforcement (decided 2026-09-21):** the `ready` gate requires the archetype and the criterion and tag coverage at promotion. `validate` additionally flags every `ready`-or-later ticket that lacks them, and grandfathers drafts, since refinement is what produces these fields. Today that reports DFS-001 (no archetype, no criteria) and CCW-003 (no archetype) until this ticket and CCW-002 fix them. Rejected: checking at promotion only (a `ready` ticket can drift below the gate unnoticed); flagging drafts too (noise about gaps refinement fills by design).
 
-- **Tickets outside the pipeline (decided 2026-09-21):** `archetype: none` is a reserved value meaning "implemented by hand, not run through the story pipeline". It satisfies the `ready` gate's "archetype set" and `validate` accepts it without looking for a directory; `/story run` (DFS-012) refuses a `none` ticket. DFS-008 and DFS-010 are `none`; DFS-001 becomes `pipeline-stage` in DFS-009. Rejected: an archetype for every kind of ticket (builds unused archetypes against D4 and forces the design, test and stub templates onto work they do not fit); an optional field (drops the gate item, and a forgotten field looks like a deliberate choice). If a kind of ticket keeps showing up as `none`, that is the evidence for writing its archetype.
+- **Tickets outside the pipeline (decided 2026-09-21):** `archetype: none` is a reserved value meaning "implemented by hand, not run through the story pipeline". It satisfies the `ready` gate's "archetype set" and `validate` accepts it without looking for a directory; `/story run` (CCW-005) refuses a `none` ticket. CCW-001 and CCW-003 are `none`; DFS-001 becomes `pipeline-stage` in CCW-002. Rejected: an archetype for every kind of ticket (builds unused archetypes against D4 and forces the design, test and stub templates onto work they do not fit); an optional field (drops the gate item, and a forgotten field looks like a deliberate choice). If a kind of ticket keeps showing up as `none`, that is the evidence for writing its archetype.
 
-- **Ticking done-items (decided 2026-09-21):** two paths in the skill's rules for implementers. Pipeline tickets: the verifier ticks each item after verifying it and the implementer never does. `archetype: none` tickets, implemented by hand: the implementing session ticks each item as it is met and notes the evidence, and `done` still requires every item ticked or the user's say-so. Rejected: verifier-only with the user as the verifier until one exists (an extra step on every hand-built ticket for a mechanical check); keeping the current rule until DFS-012 (the skill would state the wrong rule when the pipeline goes live, and it is easy to forget).
+- **Ticking done-items (decided 2026-09-21):** two paths in the skill's rules for implementers. Pipeline tickets: the verifier ticks each item after verifying it and the implementer never does. `archetype: none` tickets, implemented by hand: the implementing session ticks each item as it is met and notes the evidence, and `done` still requires every item ticked or the user's say-so. Rejected: verifier-only with the user as the verifier until one exists (an extra step on every hand-built ticket for a mechanical check); keeping the current rule until CCW-005 (the skill would state the wrong rule when the pipeline goes live, and it is easy to forget).
 
-- **Validating `models` (decided 2026-09-21):** the valid agent names are a fixed list in `SKILL.md` (architect, test-author, implementer, verifier, retro), and the valid fields are `model`, `effort` and `maxTurns`. Rejected: reading `.claude/agents/` (nothing to read until DFS-011, and that directory may hold agents that are not pipeline roles); fixed list now and a switch later (a follow-up added to another ticket). A sixth agent would be a design change that edits the skill anyway.
+- **Validating `models` (decided 2026-09-21):** the valid agent names are a fixed list in `SKILL.md` (architect, test-author, implementer, verifier, retro), and the valid fields are `model`, `effort` and `maxTurns`. Rejected: reading `.claude/agents/` (nothing to read until CCW-004, and that directory may hold agents that are not pipeline roles); fixed list now and a switch later (a follow-up added to another ticket). A sixth agent would be a design change that edits the skill anyway.
 
 - **Template shape (decided 2026-09-21):** `TEMPLATE.md` has a blank `archetype:` line (visible, filled during refinement, like `blocked_reason:`) and a commented `# models: {architect: {model: opus, effort: high, maxTurns: 25}}` example; the body gains an `## Acceptance criteria` section between Context and Scenarios, and the scenario examples carry `@AC-n` tags. Rejected: both fields blank (a blank `models:` parses as null and needs its own rule, and every ticket carries a key nobody uses); both commented (the required archetype would not show up as a gap in the file).
 
-- **Criterion format and retirement (decided 2026-09-21):** a criterion is a line `- **AC-<n>** text` under a line stating the full ID (`<TICKET-ID>.AC-<n>`), the same shape as DFS-010; the tools derive the full ID from the ticket ID. A retired criterion stays in the list as `- **AC-<n> (retired)** text`, followed by the date and reason. It keeps its number, needs no scenario or test, and a tag that names it is an error. `validate` checks that numbers run 1 to n without gaps (a gap means a criterion was deleted, not retired), without duplicates. One case cannot be caught inside the file: deleting the last criterion and reusing its number; only git history shows it, so the skill states it as a rule for whoever refines. DFS-010's traceability check is extended to match (retired criteria skipped). Rejected: the full ID on every line (repetitive, differs from the `@AC-n` tags, would rewrite DFS-010); a separate `### Retired` subsection (every gap and duplicate check would read two places, and retiring becomes a move).
+- **Criterion format and retirement (decided 2026-09-21):** a criterion is a line `- **AC-<n>** text` under a line stating the full ID (`<TICKET-ID>.AC-<n>`), the same shape as CCW-003; the tools derive the full ID from the ticket ID. A retired criterion stays in the list as `- **AC-<n> (retired)** text`, followed by the date and reason. It keeps its number, needs no scenario or test, and a tag that names it is an error. `validate` checks that numbers run 1 to n without gaps (a gap means a criterion was deleted, not retired), without duplicates. One case cannot be caught inside the file: deleting the last criterion and reusing its number; only git history shows it, so the skill states it as a rule for whoever refines. CCW-003's traceability check is extended to match (retired criteria skipped). Rejected: the full ID on every line (repetitive, differs from the `@AC-n` tags, would rewrite CCW-003); a separate `### Retired` subsection (every gap and duplicate check would read two places, and retiring becomes a move).
 
 - **Coverage of the remaining scenarios (decided 2026-09-21):** criteria AC-7 to AC-13 cover the rest, including two gaps found in review: `list` shows an archetype column and marks `none` tickets as manual in "Dispatchable now" (so the sets do not promise what `/story run` refuses), and the `CLAUDE.md` Tickets section is checked by a scenario, not only a done-item. Rejected: leaving both to the done-items (the `list` gap stays open and the deliverable is not traceable). No scanner safety invariant applies to a skill-editing ticket, so the gate's "every invariant that applies" is vacuous here and no scenario is invented for it.
 
 ## Acceptance criteria
 
-The full ID of each criterion is `DFS-008.AC-<n>`.
+The full ID of each criterion is `CCW-001.AC-<n>`.
 
 - **AC-1** `validate` reports every `ready`-or-later ticket that lacks an archetype, criteria, or tags on its scenarios, and reports nothing for drafts.
 - **AC-2** `archetype: none` satisfies the `ready` gate and `validate`, and the skill documents it as "implemented by hand, not run through the pipeline".
@@ -215,11 +217,11 @@ Feature: Ticket workflow with archetypes and models
 - `.claude/skills/tickets/SKILL.md` and `TEMPLATE.md`: the new fields, the gate item, the `validate` checks, the verifier rule
 - `CLAUDE.md`: the Tickets section mentions the archetype, models and acceptance-criteria fields
 
-**Already done during refinement (2026-09-21):** DFS-001 was given criteria AC-1 to AC-7 (mapping confirmed by the author) and `@AC-n` tags on its 17 scenarios, since the pilot compares against DFS-001. DFS-010 was given `archetype: none` and the retired-criterion rule. Neither is part of the implementation.
+**Already done during refinement (2026-09-21):** DFS-001 was given criteria AC-1 to AC-7 (mapping confirmed by the author) and `@AC-n` tags on its 17 scenarios, since the pilot compares against DFS-001. CCW-003 was given `archetype: none` and the retired-criterion rule. Neither is part of the implementation.
 
 **Out of scope:**
-- Writing any archetype (DFS-009) or agent (DFS-011)
-- Assigning `archetype` to existing tickets (DFS-009)
+- Writing any archetype (CCW-002) or agent (CCW-004)
+- Assigning `archetype` to existing tickets (CCW-002)
 
 ## Definition of done
 
@@ -229,10 +231,10 @@ Feature: Ticket workflow with archetypes and models
   - Evidence: see "Walkthrough evidence" below.
 - [x] The `CLAUDE.md` Tickets section mentions the archetype and models fields
   - Evidence: the Tickets paragraph now names `archetype` (and `none`), `models`, the numbered criteria and the `@AC-n` tags.
-- [x] The walkthrough of `validate` shows DFS-001 and DFS-010 with no criteria or tag findings (only the archetype finding for DFS-001, until DFS-009)
-  - Evidence: on the scratch copy `validate` reports only "no archetype" for DFS-001; DFS-010 and DFS-008 have no findings; no draft is flagged.
+- [x] The walkthrough of `validate` shows DFS-001 and CCW-003 with no criteria or tag findings (only the archetype finding for DFS-001, until CCW-002)
+  - Evidence: on the scratch copy `validate` reports only "no archetype" for DFS-001; CCW-003 and CCW-001 have no findings; no draft is flagged.
 - [x] No files changed outside the paths listed under Touches
-  - Evidence: `git status` shows this implementation touched only `SKILL.md`, `TEMPLATE.md`, `CLAUDE.md` and this ticket. The one-line status change in DFS-010 and the untracked `.claude/worktrees/` come from another session, not from this work.
+  - Evidence: `git status` shows this implementation touched only `SKILL.md`, `TEMPLATE.md`, `CLAUDE.md` and this ticket. The one-line status change in CCW-003 and the untracked `.claude/worktrees/` come from another session, not from this work.
 
 ## Open questions
 
@@ -243,7 +245,7 @@ None.
 Run on 2026-09-21 on a scratch copy of `docs/tickets/`, `.claude/skills/` and `CLAUDE.md` (the real backlog was not touched). The skill is prose, so a throwaway script transcribed its written `validate` and gate rules literally and applied them to one fixture ticket per scenario and to every existing ticket. The script is not kept in the repo. It shows the rules are unambiguous and produce no false findings on the existing backlog; it does not show that a model follows them. Scenarios about instructions (refine, the implementer rule, `list`, `CLAUDE.md`) were checked by confirming the skill and `CLAUDE.md` state the rule in words, which is a weaker check than running them.
 
 - **Fixtures:** 26 checks, 0 failed, covering all 23 scenarios (S1 to S23): a ticket with no archetype is unmet at the gate; known, unknown and `none` archetypes; well-formed, unknown-agent and unknown-field `models`; untagged scenario and uncovered criterion at the gate; duplicate, gap, dangling and retired-tag findings; a retired criterion needing no scenario; the touches note; ready-or-later flagged and drafts not; a draft made from `TEMPLATE.md` validates cleanly.
-- **Existing tickets:** DFS-001 (`ready`): one finding, "no archetype", as predicted until DFS-009. DFS-008 and DFS-010: no findings. DFS-002 to DFS-007 and DFS-009, DFS-011 to DFS-013 (drafts): no findings. Touches notes only for entries that name files not yet created (DFS-007, DFS-009, DFS-010, DFS-011, DFS-012); DFS-001's package resolves.
+- **Existing tickets:** DFS-001 (`ready`): one finding, "no archetype", as predicted until CCW-002. CCW-001 and CCW-003: no findings. DFS-002 to DFS-007 and CCW-002, CCW-004 to CCW-006 (drafts): no findings. Touches notes only for entries that name files not yet created (DFS-007, CCW-002, CCW-003, CCW-004, CCW-005); DFS-001's package resolves.
 
 **Two deviations found while implementing, both small:**
 - The template ships one placeholder criterion (AC-1) that the placeholder scenarios are tagged with. An empty criteria section would leave those tags dangling, and `validate` would flag every new draft. The scenario "A new ticket starts from the updated template" was reworded to match.

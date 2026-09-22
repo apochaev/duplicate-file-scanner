@@ -19,23 +19,33 @@ docs/tickets/
 
 - The frontmatter `status` is authoritative. The folder is derived from it: only `done` and `cancelled` live in `completed/`. Create the directories if missing.
 - The ticket folder may hold attachments (diagrams, sample data). `{ID}-ticket.md` must be complete on its own.
-- **ID**: `DFS-NNN`, one global sequence, zero-padded to three digits. Next ID is the highest number found in both `backlog/` and `completed/` plus one. Never reuse an ID.
+- **ID**: `DFS-NNN` or `CCW-NNN`, zero-padded to three digits; see Namespaces below for which prefix applies and how each sequence numbers itself. Never reuse an ID, in either sequence.
 - **Slug**: lowercase ASCII kebab-case from the title, 2 to 6 words.
 - New tickets start from `TEMPLATE.md` in this skill's folder; copy it verbatim and fill it in.
 - Dates are absolute ISO (`2026-09-21`). Set `updated` on every edit. Keep the frontmatter valid YAML.
+
+## Namespaces
+
+Two independent ID sequences share one backlog. `DFS-NNN` is for tickets that build the duplicate-file-scanner product; `CCW-NNN` ("Claude Code Workflow") is for tickets that build or change the harness itself — skills, agents, archetypes, the `tickets`/`learn` machinery, the story pipeline. `CCW-NNN` and `DFS-NNN` folders sit side by side, unchanged, directly under `docs/tickets/{backlog,completed}/`; there is no separate subtree per namespace.
+
+A ticket's namespace is decided by what its Story is about, not by `touches` alone: `touches` can't decide a `CLAUDE.md` edit on its own, since that file holds both product design decisions and process rules. `new` infers the namespace from the title and conversation context, and asks explicitly only when it cannot decide.
+
+Each namespace numbers itself independently: the next ID for a prefix is the highest number of that prefix found across both `backlog/` and `completed/`, plus one. An ID already used in either sequence — including one whose ticket was later relabeled into the other namespace — is never reused, so a relabel leaves a permanent gap in its old sequence rather than freeing the number.
+
+`depends_on` may name an ID from either namespace; the dependency graph, the cycle check, and the "not all dependencies done" gate treat an ID the same way regardless of its prefix. `validate` notes a cross-namespace link (informational only, not a finding), since it's legitimate but worth a human glance.
 
 ## Frontmatter
 
 | Field | Values |
 |---|---|
-| `id` | `DFS-NNN` |
+| `id` | `DFS-NNN` or `CCW-NNN` (see Namespaces) |
 | `title` | short imperative title |
 | `status` | `draft`, `ready`, `in-progress`, `in-review`, `blocked`, `done`, `cancelled` |
 | `type` | `feature`, `fix`, `refactor`, `test`, `build`, `docs`, `chore`, `spike` |
 | `scope` | list of `file-scanner`, `cli`, `build`, `docs` |
 | `archetype` | a directory name under `.claude/archetypes/` (the template set the story pipeline uses), or `none`: implemented by hand, not run through the pipeline. Blank in drafts, required from `ready` on |
 | `priority` | `high`, `medium`, `low` |
-| `depends_on` | list of ticket IDs |
+| `depends_on` | list of ticket IDs; may cross namespaces (see Namespaces) |
 | `touches` | packages or paths this ticket edits (used to judge parallel safety) |
 | `models` | optional per-agent overrides, e.g. `models: {architect: {model: opus, effort: high, maxTurns: 25}}`. Agents: `architect`, `test-author`, `implementer`, `verifier`, `retro`. Fields: any subset of `model`, `effort`, `maxTurns`. Resolved in this order: the ticket, then the archetype's `models`, then the agent's own definition |
 | `blocked_reason` | required when `blocked`, empty otherwise |
@@ -72,11 +82,11 @@ A `## Acceptance criteria` section sits between Context and Scenarios. Its first
 
 ## Modes
 
-**new `<title>`**: allocate the next ID and slug, create `backlog/{ID}-{slug}/{ID}-ticket.md` from the template with `status: draft`, and fill in whatever the conversation already settles. Do not invent scenarios; leave placeholders and list gaps under Open questions. Report the path.
+**new `<title>`**: infer the namespace (`DFS` or `CCW`, see Namespaces) from the title and conversation context, asking explicitly only when it cannot decide; allocate the next ID from that prefix's own sequence and a slug, create `backlog/{ID}-{slug}/{ID}-ticket.md` from the template with `status: draft`, and fill in whatever the conversation already settles. Do not invent scenarios; leave placeholders and list gaps under Open questions. Report the path.
 
 **refine `<ID>`**: read the ticket and `CLAUDE.md`, then interview the user to close the gaps against the `ready` gate. Ask in plain terminal text, never with the AskUserQuestion popup, one decision at a time: a short summary of the decision, numbered options each with trade-offs, and a recommendation with its reason. The user answers with a number or keeps discussing. Update the ticket after each answer. If the archetype is blank, make it a decision (a name, or `none`). If the archetype is not `none`, read its `archetype.md` and turn each unresolved edge-case checklist item into a question. Each time a decision closes, add or update an acceptance criterion (next number, see "Acceptance criteria") and tag the scenarios that cover it. State any count (scenarios, criteria, files) only from a mechanical count such as `grep -c`, never from memory or an earlier note. For a ticket that edits instructions (a skill or an agent prompt), record for each scenario whether it will be run mechanically or only checked by reading, and do not present a read-through as a walkthrough of every mode. When the gate is satisfied, show the user the result and ask for confirmation before setting `ready`.
 
-**list `[status|scope]`**: read the frontmatter of every ticket in both folders and print a table (ID, title, status, scope, archetype, priority, depends_on). Hide `completed/` unless asked. Then print "Dispatchable now": `ready` tickets whose `depends_on` are all `done`, grouped into sets whose `touches` do not overlap, so each set can safely run in parallel. Mark `archetype: none` tickets "manual" there: the story pipeline refuses them, so they are dispatched by hand.
+**list `[status|scope]`**: read the frontmatter of every ticket in both folders and print one table (ID, title, status, scope, archetype, priority, depends_on) covering both the `DFS` and `CCW` namespaces together, not a separate table per namespace. Hide `completed/` unless asked. Then print "Dispatchable now": `ready` tickets whose `depends_on` are all `done`, grouped into sets whose `touches` do not overlap, so each set can safely run in parallel. Mark `archetype: none` tickets "manual" there: the story pipeline refuses them, so they are dispatched by hand.
 
 **start `<ID>`**: require `ready` (or `in-progress` when resuming) and all dependencies `done`; otherwise refuse and say why. Set `in-progress`.
 
@@ -94,6 +104,8 @@ A `## Acceptance criteria` section sits between Context and Scenarios. Its first
 - **Criteria:** duplicate numbers; a gap in the numbering 1 to n (a criterion was deleted, not retired); a scenario tag naming a missing or retired criterion. Name the ticket and the ID.
 - **Ready-or-later tickets** (`ready`, `in-progress`, `in-review`; drafts, blocked, done and cancelled are not checked): no archetype, no criteria, a scenario without a tag, or a live criterion no scenario covers. Name the ticket and what is missing.
 - **Touches (informational note, not a finding):** an entry that resolves to nothing. An entry is a path if it contains `/` or exists at the repository root; otherwise a lowercase dotted name is a Java package, `<module>/src/{main,test}/java/<package as path>`. Entries for files a ticket will create resolve to nothing until the work is done.
+- **Namespace boundary (informational note, not a finding):** a `CCW` ticket whose `touches` includes a `file-scanner/` or `cli/` path, or a `DFS` ticket whose `touches` is confined entirely to `.claude/`, `docs/design/` or `docs/learnings/` paths — a hint the ticket may be filed under the wrong prefix (see Namespaces), not an error.
+- **Cross-namespace dependency (informational note, not a finding):** a `depends_on` entry whose ID is in the other namespace from the ticket itself. Legitimate; noted only so it isn't missed.
 
 Offer to fix mechanical issues.
 

@@ -1,19 +1,21 @@
 ---
-id: DFS-012
+id: CCW-005
 title: Build the story orchestrator skill
 status: draft
 type: feature
 scope: [build]
 priority: medium
-depends_on: [DFS-008, DFS-010, DFS-011]
+depends_on: [CCW-001, CCW-003, CCW-004]
 touches: [.claude/skills/story, docs/learnings]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 completed:
 ---
 
-# DFS-012: Build the story orchestrator skill
+# CCW-005: Build the story orchestrator skill
+
+*(Formerly DFS-012; relabeled 2026-09-22 by DFS-016, which introduced the CCW namespace.)*
 
 ## Story
 
@@ -30,7 +32,7 @@ A skill in the main session that launches the phase agents as subagents (D1). Ea
 - **Gates (D3):** two by default, after design and before `done`, configurable per archetype; each shows a summary of about twenty lines that lists the acceptance criteria with their coverage status.
 - **Gate tools (D7, D10):** calls `tools/story-gate` after each phase.
 - **Models (D9):** resolved ticket over archetype over agent; a second attempt runs one tier up through the per-invocation model.
-- **Learning (D6):** `/story learn <ID>` shows ranked proposals; the user applies, parks or rejects each; decisions go in `docs/learnings/log.md`; applied changes bump the archetype version. Every proposal cites evidence. `docs/learnings/log.md` already exists as a manual log (2026-09-21, entries `L-<n>`); `/story learn` is a thin wrapper (decided while refining DFS-014, 2026-09-21): it runs the `retro` agent, which appends `proposed` entries in that format, then hands over to `/learn review`, `decide` and `apply` (DFS-014), which stay the log's only writer. Details are for this ticket's refinement.
+- **Learning (D6):** `/story learn <ID>` shows ranked proposals; the user applies, parks or rejects each; decisions go in `docs/learnings/log.md`; applied changes bump the archetype version. Every proposal cites evidence. `docs/learnings/log.md` already exists as a manual log (2026-09-21, entries `L-<n>`); `/story learn` is a thin wrapper (decided while refining CCW-007, 2026-09-21): it runs the `retro` agent, which appends `proposed` entries in that format, then hands over to `/learn review`, `decide` and `apply` (CCW-007), which stay the log's only writer. Details are for this ticket's refinement.
 - **Pilot data (D8):** the run records in `plan.json` are the raw material for the metrics.
 
 ## Scenarios
@@ -97,7 +99,7 @@ Feature: Story orchestrator
 
 **Out of scope:**
 - Running several stories at once (a later layer over the same runner)
-- The gate tools, agents and archetypes (DFS-010, DFS-011, DFS-009)
+- The gate tools, agents and archetypes (CCW-003, CCW-004, CCW-002)
 - Agent teams, an autonomous learning loop and parallel worktrees (parked in the design log)
 
 ## Definition of done

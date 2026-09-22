@@ -1,5 +1,5 @@
 ---
-id: DFS-010
+id: CCW-003
 title: Build the story gate tools
 status: done
 type: feature
@@ -10,11 +10,13 @@ depends_on: []
 touches: [tools/story-gate]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 completed: 2026-09-21
 ---
 
-# DFS-010: Build the story gate tools
+# CCW-003: Build the story gate tools
+
+*(Formerly DFS-010; relabeled 2026-09-22 by DFS-016, which introduced the CCW namespace.)*
 
 ## Story
 
@@ -38,11 +40,11 @@ Checks:
 - **stubs:** no `not implemented:` marker remains in production source.
 - **consistency:** the ticket status matches the plan, and `plan.json` parses.
 
-**Decided (2026-09-21): the stub convention.** A stub throws `new UnsupportedOperationException("not implemented: <TICKET-ID>")`. The red check accepts a failure only when the exception type is `java.lang.UnsupportedOperationException` and the message starts with `not implemented:`. The prefix matters because real code also throws `UnsupportedOperationException` (immutable collections, which the scanner's own immutability tests exercise), so the type alone could mistake a broken test for a stub. The `stubs` check greps production source for the marker at the end, proving every stub was replaced. The architect's template and prompt use the same convention (DFS-009, DFS-011). Rejected: a dedicated exception class (it would live in production source and stay unused afterwards); the type alone (the immutable-collection trap); stack-trace inspection against `design.md` (the most complex, and it couples the gate to design parsing).
+**Decided (2026-09-21): the stub convention.** A stub throws `new UnsupportedOperationException("not implemented: <TICKET-ID>")`. The red check accepts a failure only when the exception type is `java.lang.UnsupportedOperationException` and the message starts with `not implemented:`. The prefix matters because real code also throws `UnsupportedOperationException` (immutable collections, which the scanner's own immutability tests exercise), so the type alone could mistake a broken test for a stub. The `stubs` check greps production source for the marker at the end, proving every stub was replaced. The architect's template and prompt use the same convention (CCW-002, CCW-004). Rejected: a dedicated exception class (it would live in production source and stay unused afterwards); the type alone (the immutable-collection trap); stack-trace inspection against `design.md` (the most complex, and it couples the gate to design parsing).
 
-**Decided (2026-09-21): traceability by acceptance-criterion ID (D11).** Every acceptance criterion has an ID of the form `<TICKET-ID>.AC-<n>` (for example `DFS-011.AC-1`). Scenarios carry `@AC-n` tags. A test's `@DisplayName` starts with the ID(s) it proves, followed by a readable title, for example `@DisplayName("DFS-001.AC-3 Files of equal size form one candidate group")`. The traceability check reads the JUnit XML, where the display name is the test case name, and matches by ID, so retitling a scenario does not break the link. One criterion may have several tests, and a test may name several criteria. The check also runs at the end of the test-author phase, off the XML the red gate produced, so a missing criterion is caught before the implementer starts. The ticket template, the skill (DFS-008), the archetype (DFS-009) and the test author (DFS-011) follow the same convention.
+**Decided (2026-09-21): traceability by acceptance-criterion ID (D11).** Every acceptance criterion has an ID of the form `<TICKET-ID>.AC-<n>` (for example `CCW-004.AC-1`). Scenarios carry `@AC-n` tags. A test's `@DisplayName` starts with the ID(s) it proves, followed by a readable title, for example `@DisplayName("DFS-001.AC-3 Files of equal size form one candidate group")`. The traceability check reads the JUnit XML, where the display name is the test case name, and matches by ID, so retitling a scenario does not break the link. One criterion may have several tests, and a test may name several criteria. The check also runs at the end of the test-author phase, off the XML the red gate produced, so a missing criterion is caught before the implementer starts. The ticket template, the skill (CCW-001), the archetype (CCW-002) and the test author (CCW-004) follow the same convention.
 
-**Decided (2026-09-21): how `touches` maps to files.** An entry is a path if it contains a slash or already exists at the repository root; otherwise a lowercase dotted name is a Java package, mapped to `<module>/src/{main,test}/java/<package as path>/**`, recursively, in whichever module has it. Tests of a touched package and the ticket's own story folder are always allowed. Everything else must be listed as an explicit path: `module-info.java` (a new exported package needs an `exports` line, and the file sits outside every package folder), test resources such as fixtures, and build files. The rule is a heuristic, but its failure is loud: a changed file that no entry covers is named by the check, so a misread entry cannot let an edit slip through. `validate` (DFS-008) gives an informational note for entries that resolve to nothing. Rejected: paths only (verbose, hard-codes the module layout into every ticket, and means rewriting the existing tickets); typed entries such as `pkg:` and `path:` (unambiguous, but noisier, and the same rewrite).
+**Decided (2026-09-21): how `touches` maps to files.** An entry is a path if it contains a slash or already exists at the repository root; otherwise a lowercase dotted name is a Java package, mapped to `<module>/src/{main,test}/java/<package as path>/**`, recursively, in whichever module has it. Tests of a touched package and the ticket's own story folder are always allowed. Everything else must be listed as an explicit path: `module-info.java` (a new exported package needs an `exports` line, and the file sits outside every package folder), test resources such as fixtures, and build files. The rule is a heuristic, but its failure is loud: a changed file that no entry covers is named by the check, so a misread entry cannot let an edit slip through. `validate` (CCW-001) gives an informational note for entries that resolve to nothing. Rejected: paths only (verbose, hard-codes the module layout into every ticket, and means rewriting the existing tickets); typed entries such as `pkg:` and `path:` (unambiguous, but noisier, and the same rewrite).
 
 **Decided (2026-09-21): a complete small JSON parser.** One file of about 150 lines parses any valid JSON into maps, lists, strings, numbers, booleans and null. The consistency check uses it to validate `plan.json` and compare statuses, and the freeze check reads the test phase's `commit` through it. Rejected: the validator plus regex extraction (fragile: key order, nesting, or a brace inside a string can return the wrong commit, and a wrong value could make the freeze check pass silently); passing the commit as an argument (the consistency check needs the parser anyway, and the value then depends on the orchestrator passing the right one); a JSON library (breaks the JDK-only reason for D10). The parser gets its own tests when the tools get a test project.
 
@@ -52,7 +54,7 @@ Checks:
 
 **Decided (2026-09-21): a fixture-driven self-test built into the tools.** `java tools/story-gate/StoryGate.java selftest` runs each check on small fixture cases and compares each verdict with an expected file. Each check is split into a thin runner (which runs Gradle or git) and a core that evaluates plain inputs. The fixtures feed the cores pre-made JUnit XML, sample plans, sample tickets, and a temporary git repository that the self-test creates and modifies. The cases are the evidence for the definition of done, and each maps to a scenario. The orchestrator can run `selftest` as a pre-flight before trusting the gates. The cases translate directly if the tools are later promoted to a Gradle subproject with JUnit. Rejected: deferring tests to a follow-up (the safety net would ship unverified); a Gradle subproject with JUnit now (it couples the tools to the product build, which D10 avoided, and a bug in the gate tests could break the `./gradlew build` that the green gate relies on).
 
-**Built (2026-09-21): choices the ticket left open**, which DFS-011 and DFS-012 rely on:
+**Built (2026-09-21): choices the ticket left open**, which CCW-004 and CCW-005 rely on:
 - **Launchers.** `tools/story-gate/story-gate` (sh, for Git Bash, Linux and macOS) and `story-gate.cmd` (cmd and PowerShell) pick `$JAVA_HOME`'s `java`, refuse anything older than JDK 22 with a one-line message and exit 2, and run `StoryGate.java`. Running `java tools/story-gate/StoryGate.java ...` directly works only where the first `java` is 22 or later.
 - **Exit codes.** 0 pass, 1 fail, 2 the check could not run (bad arguments, missing ticket, git failure).
 - **Story files.** `plan.json` and `test-plan.md` sit in the ticket's folder. The test phase is the `phases` entry with `id: "tests"`; the freeze check reads its `commit`.
@@ -67,7 +69,7 @@ Checks:
 
 ## Acceptance criteria
 
-The full ID of each criterion is `DFS-010.AC-<n>`.
+The full ID of each criterion is `CCW-003.AC-<n>`.
 
 - **AC-1** The red check passes only when every story test (display name starting with the ticket ID) fails with `UnsupportedOperationException("not implemented: …")` and every other test passes, and otherwise names each offending test with its reason.
 - **AC-2** The stubs check fails while any `not implemented:` marker remains in production source.
@@ -298,7 +300,7 @@ Feature: Story gate checks
 - `tools/story-gate/`: the launcher, the checks, the self-test and its fixture cases (new)
 
 **Out of scope:**
-- The agents and the `/story` skill that call the gates (DFS-011, DFS-012)
+- The agents and the `/story` skill that call the gates (CCW-004, CCW-005)
 - A Gradle subproject with JUnit tests for the tools (a later ticket, if they grow; the fixture cases translate directly)
 - Mutation testing (parked in the design log)
 

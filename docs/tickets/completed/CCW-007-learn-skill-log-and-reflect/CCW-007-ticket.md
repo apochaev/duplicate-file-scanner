@@ -1,5 +1,5 @@
 ---
-id: DFS-014
+id: CCW-007
 title: Build the learn skill for the learnings log
 status: done
 type: feature
@@ -11,11 +11,13 @@ depends_on: []
 touches: [.claude/skills/learn, .claude/agents/reflect.md, .claude/skills/tickets/SKILL.md, docs/learnings]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 completed: 2026-09-21
 ---
 
-# DFS-014: Build the learn skill for the learnings log
+# CCW-007: Build the learn skill for the learnings log
+
+*(Formerly DFS-014; relabeled 2026-09-22 by DFS-016, which introduced the CCW namespace.)*
 
 ## Story
 
@@ -25,16 +27,16 @@ So that friction found while working is not lost, recurring friction is counted,
 
 ## Context
 
-A stand-alone, hand-driven version of the learning loop in D6 (`docs/design/story-orchestration.md`), usable before the pipeline exists. The log is `docs/learnings/log.md` (header: rules, statuses, entry format; entries `L-<n>`, seven so far, L-001, L-005 and L-007 applied). The `tickets` skill's `done` mode already asks whether any friction is worth logging. The `retro` agent (DFS-011) and `/story learn` (DFS-012) are the pipeline versions; they read and extend the same file and keep its format, and they can reuse this skill's procedure.
+A stand-alone, hand-driven version of the learning loop in D6 (`docs/design/story-orchestration.md`), usable before the pipeline exists. The log is `docs/learnings/log.md` (header: rules, statuses, entry format; entries `L-<n>`, seven so far, L-001, L-005 and L-007 applied). The `tickets` skill's `done` mode already asks whether any friction is worth logging. The `retro` agent (CCW-004) and `/story learn` (CCW-005) are the pipeline versions; they read and extend the same file and keep its format, and they can reuse this skill's procedure.
 
 Rules that carry over from D6: every proposal cites evidence; nothing is applied without the user's approval; a recurring parked entry is re-proposed with the recurrence as evidence; changes to shared files (`CLAUDE.md`, agent prompts, skills) are flagged as higher impact. Evidence comes from files only (tickets, commits, the log), never from a session transcript.
 
 **Decisions made while refining this ticket:**
 - **Scope (decided 2026-09-21):** the skill manages the log (`add`, `review`, `decide`, `apply`) and has a `reflect <ID>` mode that finds friction itself: it reads a ticket (deviations, evidence, done-item notes), the commits made for it and the current log, drafts entries with evidence and a recommendation, folds repeats into existing entries, and writes only what the user approves. `reflect` is the only mode that spends tokens, and it runs only when called. Rejected: managing the log only (nothing would notice friction unless someone remembers; the gap the log leaves open); automatic capture through hooks (interrupts every stop, a hook cannot judge what counts as friction, and six entries do not justify it). If `reflect` proves noisy, it can be dropped and the log modes kept.
 - **How `reflect` runs (decided 2026-09-21; the mechanism was amended by the next decision):** as a forked skill (`context: fork`) on a cheap model at low effort (Sonnet, low, matching the planned `retro` agent), reading only files. A fork does not receive the conversation history, which enforces the files-only evidence rule structurally, and it returns one compact message of proposals that the main session then walks the user through. The docs (read 2026-09-21, through a summarising fetch, so re-check the exact wording when building) say a skill can set its own `model` and `effort`, and with `context: fork` the model applies to the forked subagent. Rejected: inline in the main session (runs on the expensive model, piles tokens into the main context, and tempts use of what the session remembers, which is how a wrong scenario count was repeated); both with a flag (two code paths to build and test before either is known to be used).
-- **Mechanism for `reflect` (decided 2026-09-21, amends the previous decision):** the previous decision assumed a skill can be forked for one mode, but `context: fork` applies to a whole skill (reading of the docs, to confirm when building), and `add`, `decide` and `apply` need a conversation with the user. So `learn` is an inline skill, and `/learn reflect <ID>` launches an agent defined in `.claude/agents/reflect.md` (Sonnet, low effort, 15 turns, reading only the files it is told to). The agent returns a compact list of proposals, and the skill, still in the main session, walks the user through each one with the `add` matching and writes only the approved entries. The goal of the previous decision stands: a fresh, cheap, files-only run. This is the same pattern as D1 (a skill in the main session launching agents), and the agent is the seed of the `retro` agent, so DFS-011 builds on it (noted there). Rejected: two skills, `learn` and a forked `learn-reflect` (two commands, and the forked run ends with one message, so approving each proposal would mean running `add` again); inline `reflect` (loses the fresh context, the cheap model and the files-only guarantee).
-- **Relation to `/story learn` (decided 2026-09-21):** `learn` stays the only writer of the log. DFS-012's `/story learn <ID>` is a thin wrapper: it runs the `retro` agent, which appends `proposed` entries in the log's format, then hands over to `/learn review`, `decide` and `apply`. So those modes work on any entries in the log, whoever appended them, and friction from hand-built work and from stories goes through one implementation of ranking, recurrence and editing. Rejected: `/story learn` replacing `learn` (the log modes would be rebuilt inside a skill about stories, and hand-built tickets such as DFS-008 need them too); leaving it to DFS-012 (that ticket may reinvent the log handling). Noted in DFS-012.
-- **Scenarios and acceptance test (decided 2026-09-21):** 12 criteria and 21 scenarios (counted mechanically), including AC-12, added because `decide` and D6's "a rejected entry is not proposed again" had no criterion. The skill and the `reflect` agent are prose run by a model, so the tests are walkthroughs, plus one real run of `/learn reflect DFS-008` as the acceptance test of `reflect`'s judgement: every finding must match L-001, L-002 or L-003 as already logged, and nothing may be added or counted again, since it is the same ticket. Rejected: the same without the real run (the part most likely to be wrong would go untested); a core set of about 12 scenarios (drops the edge cases where such a skill goes wrong: the read cap, a declined edit, the version bump, no friction found). A pass on one ticket shows `reflect` is not obviously broken, not that it is good.
+- **Mechanism for `reflect` (decided 2026-09-21, amends the previous decision):** the previous decision assumed a skill can be forked for one mode, but `context: fork` applies to a whole skill (reading of the docs, to confirm when building), and `add`, `decide` and `apply` need a conversation with the user. So `learn` is an inline skill, and `/learn reflect <ID>` launches an agent defined in `.claude/agents/reflect.md` (Sonnet, low effort, 15 turns, reading only the files it is told to). The agent returns a compact list of proposals, and the skill, still in the main session, walks the user through each one with the `add` matching and writes only the approved entries. The goal of the previous decision stands: a fresh, cheap, files-only run. This is the same pattern as D1 (a skill in the main session launching agents), and the agent is the seed of the `retro` agent, so CCW-004 builds on it (noted there). Rejected: two skills, `learn` and a forked `learn-reflect` (two commands, and the forked run ends with one message, so approving each proposal would mean running `add` again); inline `reflect` (loses the fresh context, the cheap model and the files-only guarantee).
+- **Relation to `/story learn` (decided 2026-09-21):** `learn` stays the only writer of the log. CCW-005's `/story learn <ID>` is a thin wrapper: it runs the `retro` agent, which appends `proposed` entries in the log's format, then hands over to `/learn review`, `decide` and `apply`. So those modes work on any entries in the log, whoever appended them, and friction from hand-built work and from stories goes through one implementation of ranking, recurrence and editing. Rejected: `/story learn` replacing `learn` (the log modes would be rebuilt inside a skill about stories, and hand-built tickets such as CCW-001 need them too); leaving it to CCW-005 (that ticket may reinvent the log handling). Noted in CCW-005.
+- **Scenarios and acceptance test (decided 2026-09-21):** 12 criteria and 21 scenarios (counted mechanically), including AC-12, added because `decide` and D6's "a rejected entry is not proposed again" had no criterion. The skill and the `reflect` agent are prose run by a model, so the tests are walkthroughs, plus one real run of `/learn reflect CCW-001` as the acceptance test of `reflect`'s judgement: every finding must match L-001, L-002 or L-003 as already logged, and nothing may be added or counted again, since it is the same ticket. Rejected: the same without the real run (the part most likely to be wrong would go untested); a core set of about 12 scenarios (drops the edge cases where such a skill goes wrong: the read cap, a declined edit, the version bump, no friction found). A pass on one ticket shows `reflect` is not obviously broken, not that it is good.
 - **What `reflect` reads (decided 2026-09-21):** the ticket; the ticket file's own history since the commit that set it `ready` (its diffs, capped at 400 lines as a starting figure, and if more it lists the files and says the read was cut); the list of commits found by `git log --grep=<ID>` (subject and file list, no diffs); and the log. What changed after a ticket was declared fully refined is the best friction signal, including changes nobody wrote down, and it works from the ticket's path. Rejected: the ticket and commit list only (misses unwritten friction, and depends on commit messages naming the ID); an explicit range from the user (pushes finding the range onto the user, and the skill could not run quietly from `done`). **Commit convention (decided 2026-09-21, made in `CLAUDE.md`, see log entry L-007):** a commit made for a ticket ends its subject line with the ticket ID in brackets, so the ID search finds it. Earlier commits are not rewritten; those without the ID are found through their message body or the ticket's history.
 - **Recurrence detection in `add` (decided 2026-09-21):** the skill proposes up to three candidate entries by comparing the description with the entries' titles, changes and targets, and shows each candidate's `Change` and `Evidence` lines when asking "same friction?". The user answers yes, no, or show all (the full list of open entries). On yes, it adds a dated line under that entry's Recurrences and increments the count, and writes no new entry. On no, it writes a new entry with the next `L-<n>`. Rejected: asking the user to scan the full list every time (skimmed at scale); matching on the target file only (misses the same cause in another file, and the target is often unknown until the change is worked out). The main risk is a lazy "yes" merging two different frictions; showing the candidate's lines and adding a dated, easily reverted recurrence line limits it.
 - **Ranking and counting in `review` (decided 2026-09-21):** recurrences are counted in distinct tickets; a repeat within the same ticket is noted on that ticket's line and does not raise the count. `review` lists the open entries (`proposed` or `parked`) ranked by that count, then shared-impact entries first, then by number, with columns for ID, title, status, recurrences, impact and recommendation. The log's header and entry format were updated with this rule when it was decided, and L-006 (three repeats in one session) was corrected to a count of 1. Rejected: grouping by recommendation then recorded count (keeps the inflated count, and ranks by the skill's own recommendation, the thing being decided); no ranking (D6 asks for ranked proposals, and the list will not stay short).
@@ -45,7 +47,7 @@ Rules that carry over from D6: every proposal cites evidence; nothing is applied
 
 ## Acceptance criteria
 
-The full ID of each criterion is `DFS-014.AC-<n>`.
+The full ID of each criterion is `CCW-007.AC-<n>`.
 
 - **AC-1** `reflect <ID>` drafts log entries from the ticket, its commits and the current log, folds repeats into existing entries, and writes only what the user approves.
 - **AC-2** `reflect` runs as an agent (`.claude/agents/reflect.md`, Sonnet, low effort, 15 turns) launched by the inline skill, with no access to the conversation history, so its evidence is limited to the files it reads; the skill then walks the user through its proposals in the main session.
@@ -101,7 +103,7 @@ Feature: The learn skill
 
   @AC-3
   Scenario: Commits are found by ticket ID in the subject or the body
-    Given one commit whose subject ends `[DFS-014]` and one commit whose body mentions DFS-014 only
+    Given one commit whose subject ends `[CCW-007]` and one commit whose body mentions CCW-007 only
     When reflect lists the ticket's commits
     Then both are listed with their subject and file list, and no diff is read
 
@@ -146,21 +148,21 @@ Feature: The learn skill
 
   @AC-7
   Scenario: A repeat within one ticket does not raise the count
-    Given L-006 with Recurrences 1 (DFS-008) and the same friction occurring again during DFS-008
+    Given L-006 with Recurrences 1 (CCW-001) and the same friction occurring again during CCW-001
     When it is added
-    Then the DFS-008 line records the repeat and the count stays 1
+    Then the CCW-001 line records the repeat and the count stays 1
 
   @AC-7
   Scenario: A repeat in another ticket raises the count
-    Given L-006 with Recurrences 1 (DFS-008) and the same friction in DFS-014
+    Given L-006 with Recurrences 1 (CCW-001) and the same friction in CCW-007
     When it is added
-    Then a DFS-014 line is added and the count is 2
+    Then a CCW-007 line is added and the count is 2
 
   @AC-8
   Scenario: Done offers the command and runs nothing
     Given a ticket ready to close with every done-item ticked
-    When `/tickets done DFS-014` completes
-    Then its last line offers `/learn reflect DFS-014`
+    When `/tickets done CCW-007` completes
+    Then its last line offers `/learn reflect CCW-007`
     And no agent has been launched and the log is unchanged
 
   @AC-9
@@ -207,12 +209,12 @@ Feature: The learn skill
 
 **Touches:**
 - `.claude/skills/learn/`: the skill
-- `.claude/agents/reflect.md`: the agent `reflect` launches; the seed of the `retro` agent (DFS-011 builds on it)
+- `.claude/agents/reflect.md`: the agent `reflect` launches; the seed of the `retro` agent (CCW-004 builds on it)
 - `.claude/skills/tickets/SKILL.md`: the `done` mode offers `reflect`
 - `docs/learnings/`: the log (entries added or decided by the skill; format changes only if a decision requires them)
 
 **Out of scope:**
-- The `retro` agent (DFS-011) and `/story learn` (DFS-012)
+- The `retro` agent (CCW-004) and `/story learn` (CCW-005)
 - Hooks or any automatic capture
 - Applying a change without the user's approval
 
@@ -220,7 +222,7 @@ Feature: The learn skill
 
 - [x] A walkthrough of each scenario on a scratch copy of the log and a sample ticket shows its outcome (evidence noted in this ticket)
   - Evidence: see "Walkthrough evidence" below.
-- [x] One real run of `/learn reflect DFS-008` on the finished ticket meets this pass condition, with the result noted here: every finding is matched to L-001, L-002 or L-003 as already logged; nothing is added and no recurrence count changes (same ticket); any other proposal cites evidence a reviewer can verify in the files
+- [x] One real run of `/learn reflect CCW-001` on the finished ticket meets this pass condition, with the result noted here: every finding is matched to L-001, L-002 or L-003 as already logged; nothing is added and no recurrence count changes (same ticket); any other proposal cites evidence a reviewer can verify in the files
   - Evidence: see "Reflect run" below. The real run (2026-09-21) matched L-002 and L-003, changed no count, and made one new proposal whose evidence was checked against the files. The stand-in run before it is described there too.
 - [x] The docs claims this design rests on are confirmed when building: `context: fork` applies to a whole skill, `disable-model-invocation` keeps the description out of context, and an agent's effort can be set (result noted here; if one is wrong, the affected decision is amended)
   - Evidence: read 2026-09-21 on the Claude Code docs (skills and sub-agents pages) with a fetch that asked for verbatim quotes. All three hold, so no decision is amended. `context: fork` is one frontmatter field of the whole skill ("Set to `fork` to run in a forked subagent context"), and the docs say the subagent "doesn't see your conversation history". `disable-model-invocation: true` is listed with "Description not in context, full skill loads when you invoke". A subagent definition takes `effort` (`low` to `max`), `model` and `maxTurns`. Not confirmed by the docs: that a skill can launch a subagent by name (the page does not address it); the `reflect` run below is the test of that. Still a summarising fetch, not a reading of the page.
@@ -240,37 +242,37 @@ Run on 2026-09-21 on scratch copies (the real log was not written). The skill an
 - **The mechanical rules, by a throwaway script** (not kept in the repo): it transcribes the skill's numbering, ranking, recurrence, `decide`, `apply` and check rules and runs them on the log as committed, with L-008 (added by another session while this was built) cut so that "the highest entry is L-007" holds. 29 checks, 0 failed, covering: AC-4 (a yes adds a recurrence and no entry; a no takes number 8), AC-1's repeat (a parked L-002 that recurs becomes `proposed`, count 2, no new entry), AC-5 (declined changes nothing; approved writes the target and marks the entry with the planned subject `docs: apply L-002`; an applied entry cannot be applied again), AC-6 (order L-006, L-002, L-003, L-004), AC-7 (same ticket keeps the count, another ticket raises it), AC-10 (a reused number, a skipped number, an applied entry without a decision, a count that does not match, a missing field, each reported), AC-11 (an entry from another author works in review, decide and apply), AC-12 (park and reject record the date, change nothing else, and take the entry out of review). The archetype version bump is checked only as arithmetic on a sample frontmatter.
 - **The git commands `reflect` uses, on a scratch repository** with a ticket that moved from `backlog/` to `completed/`: the commit that set `status: ready` is the oldest one `git log --follow -G'^status: ready'` lists; a history of 947 lines after it is cut to 400 by `head -400` (AC-3, the cut); a commit naming the ID in the subject and one naming it only in the body are both found by `--grep` (AC-3, the ID search); no diff is read.
 - **Text checks by `grep`:** the agent file sets `model: sonnet`, `effort: low`, `maxTurns: 15` and says the conversation is not evidence (AC-2); the skill is named `learn`, has `disable-model-invocation: true` and one section for each of the five modes (AC-9); the `done` mode ends with the offer `/learn reflect <ID>` and says to launch nothing (AC-8). These show the words are present, which is weaker than running them.
-- **Not run by anything:** the agent-side scenarios "A repeat is folded", "No friction found writes nothing" and "A rejected entry is not proposed again" are covered only by the agent's written matching rules and by the stand-in run's behaviour on DFS-008 (below). "Reflect drafts an entry with evidence and writes nothing before approval" is by construction (the agent is told to write nothing and returns a report); its tools include Bash, so this is an instruction, not a permission.
+- **Not run by anything:** the agent-side scenarios "A repeat is folded", "No friction found writes nothing" and "A rejected entry is not proposed again" are covered only by the agent's written matching rules and by the stand-in run's behaviour on CCW-001 (below). "Reflect drafts an entry with evidence and writes nothing before approval" is by construction (the agent is told to write nothing and returns a report); its tools include Bash, so this is an instruction, not a permission.
 
 The script shows the rules are unambiguous. It does not show that a model follows them.
 
 **Deviations found while implementing:**
-- **A bare count needs a named ticket.** Entries such as L-002 have `Recurrences: 1` with no ticket named, so adding a second ticket had nothing to append to. Found by the script; the skill now says to name the original ticket from the entry's Evidence first (`2 (DFS-008: see Evidence; DFS-099: ...)`). The check accepts a bare 1, and requires a count above 1 to name that many distinct tickets.
+- **A bare count needs a named ticket.** Entries such as L-002 have `Recurrences: 1` with no ticket named, so adding a second ticket had nothing to append to. Found by the script; the skill now says to name the original ticket from the entry's Evidence first (`2 (CCW-001: see Evidence; DFS-099: ...)`). The check accepts a bare 1, and requires a count above 1 to name that many distinct tickets.
 - **"A dated line under Recurrences" is a dated item in the one-line field.** The existing entries keep Recurrences on one line, and rewriting them was outside the ticket. The item carries the ticket, the event and the date.
-- **`--reverse` breaks `--follow`.** `git log --follow --reverse` returned only the newest commit, so the agent finds the `ready` commit as the oldest match of an unreversed list, and the skill's prompt says not to add `--reverse`. Found by testing the commands on DFS-008, not from the docs.
-- **The log gained L-008 and DFS-015 from another session while this was built.** Not touched here; the walkthrough used the committed log with L-008 cut.
+- **`--reverse` breaks `--follow`.** `git log --follow --reverse` returned only the newest commit, so the agent finds the `ready` commit as the oldest match of an unreversed list, and the skill's prompt says not to add `--reverse`. Found by testing the commands on CCW-001, not from the docs.
+- **The log gained L-008 and CCW-008 from another session while this was built.** Not touched here; the walkthrough used the committed log with L-008 cut.
 - **`/tickets done` now points at `/learn add` instead of writing the entry itself,** because the ticket says `learn` is the log's only writer and `add` is what checks for recurrences. The ticket's AC-8 asked only for the offer; this follows from the writer decision, and is stated here so it can be reversed.
 - **The agent is not registered until agent definitions reload.** `Agent` with `subagent_type: reflect` failed with "Agent type 'reflect' not found" in the session that created the file. The docs page was not checked for how to reload; a new session or `/agents` is the likely route.
 
 ## Reflect run
 
-A **stand-in** run, not the real one: a general-purpose Sonnet agent was told to read `.claude/agents/reflect.md` and follow it as its system prompt, on `DFS-008`. It has all tools and no turn cap, so it tests the prompt's judgement, not the agent definition (model, effort, tools, turn limit) or that the skill can launch the agent by name. It took 9 tool calls and about 58,000 tokens.
+A **stand-in** run, not the real one: a general-purpose Sonnet agent was told to read `.claude/agents/reflect.md` and follow it as its system prompt, on `CCW-001`. It has all tools and no turn cap, so it tests the prompt's judgement, not the agent definition (model, effort, tools, turn limit) or that the skill can launch the agent by name. It took 9 tool calls and about 58,000 tokens.
 
 Result: history 71 of 71 lines, not cut; 3 commits found; 4 findings, all with evidence that was then checked against the files (every quoted line and hash exists).
-- Three matched entries already in the log and asked for nothing to be added: L-003 and L-002 (both name DFS-008 and commit `ac2fcd1`), and L-005 (its evidence is the same commit). The first two are the ones the pass condition names; the third is a fourth entry the condition did not list, correctly matched, and applied, so nothing to decide.
-- One finding was new: that scenarios about prose instructions are checked only by reading, not running. Its evidence is real (the DFS-008 walkthrough section says so in those words) but it restates a limit the ticket states openly, so whether it is friction or noise is a judgement for the user. It was not written to the log.
+- Three matched entries already in the log and asked for nothing to be added: L-003 and L-002 (both name CCW-001 and commit `ac2fcd1`), and L-005 (its evidence is the same commit). The first two are the ones the pass condition names; the third is a fourth entry the condition did not list, correctly matched, and applied, so nothing to decide.
+- One finding was new: that scenarios about prose instructions are checked only by reading, not running. Its evidence is real (the CCW-001 walkthrough section says so in those words) but it restates a limit the ticket states openly, so whether it is friction or noise is a judgement for the user. It was not written to the log.
 - One flaw in the report: it recommended `reject` for the already-applied L-005. The agent prompt now says the recommendation is `none` for `already counted` and `matches rejected`.
 
 Against the pass condition: nothing was added and no count changed; every finding was matched or carries checkable evidence. The condition named L-001, L-002 and L-003; one finding matched L-005 and one was new, so it holds with those two stated. Not a pass of the real run.
 
 ### The real run
 
-After commit `033d31c` the session registered the `reflect` agent (it did not exist at the time of the stand-in run), and `/learn reflect DFS-008` was run through the skill, which launched the agent by name and gave it only the ticket ID and path. So a skill can launch an agent by name, which the docs page did not say. It took 6 tool calls and about 31,000 tokens (27 s).
+After commit `033d31c` the session registered the `reflect` agent (it did not exist at the time of the stand-in run), and `/learn reflect CCW-001` was run through the skill, which launched the agent by name and gave it only the ticket ID and path. So a skill can launch an agent by name, which the docs page did not say. It took 6 tool calls and about 31,000 tokens (27 s).
 
 - **Report:** history 71 of 71 lines, not cut; 3 commits found; 3 findings. Two were `already counted` (L-002, L-003), with recommendation `none` as the amended prompt asks. One was `new`.
-- **Verification by the skill's step 4:** the cited commit `ac2fcd1` exists; L-002 and L-003 both name DFS-008 and that commit; every quoted line is in the ticket or in the `ac2fcd1` diff (one quote differed from the ticket only in its quote marks). One claim was not supported: the new finding says scenarios "AC-3, AC-9, AC-10, AC-12 and AC-13" could not be run, but the ticket names only the categories, not those numbers. It was left out of the entry.
+- **Verification by the skill's step 4:** the cited commit `ac2fcd1` exists; L-002 and L-003 both name CCW-001 and that commit; every quoted line is in the ticket or in the `ac2fcd1` diff (one quote differed from the ticket only in its quote marks). One claim was not supported: the new finding says scenarios "AC-3, AC-9, AC-10, AC-12 and AC-13" could not be run, but the ticket names only the categories, not those numbers. It was left out of the entry.
 - **The new finding**, that scenarios about instructions are only read and not run, was written by the user's decision as L-009 (`proposed`, recurrences 1, recommendation park), after the check on the log found no problem (9 entries, each number once, all fields, no count mismatch). It is the same finding the stand-in run raised, so two runs agree on it; whether it is friction or a stated limit is the user's judgement, and the user chose to record it.
-- **Not tested:** the fold-in path (a finding that matches an entry for another ticket). L-009 is placed so that `/learn reflect DFS-014` should find it as a recurrence; that run has not been made.
+- **Not tested:** the fold-in path (a finding that matches an entry for another ticket). L-009 is placed so that `/learn reflect CCW-007` should find it as a recurrence; that run has not been made.
 - **Pass condition:** L-002 and L-003 matched as the condition names them; no count changed; the proposal beyond them cites evidence a reviewer can verify. A pass on one ticket shows `reflect` is not obviously broken, not that it is good.
 
 **Gap noticed after the build (not fixed, a candidate follow-up):** `reflect` leaves no trace of a finding the user declines, and nothing records which tickets it has run on, so a declined finding is proposed again the next time. Recording a decline as a `rejected` entry would close it.

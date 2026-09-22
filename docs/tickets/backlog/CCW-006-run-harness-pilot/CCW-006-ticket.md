@@ -1,19 +1,21 @@
 ---
-id: DFS-013
+id: CCW-006
 title: Run the harness pilot
 status: draft
 type: spike
 scope: [build]
 priority: medium
-depends_on: [DFS-012]
-touches: [docs/tickets/backlog/DFS-013-run-harness-pilot, docs/design/story-orchestration.md]
+depends_on: [CCW-005]
+touches: [docs/tickets/backlog/CCW-006-run-harness-pilot, docs/design/story-orchestration.md]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 completed:
 ---
 
-# DFS-013: Run the harness pilot
+# CCW-006: Run the harness pilot
+
+*(Formerly DFS-013; relabeled 2026-09-22 by DFS-016, which introduced the CCW namespace.)*
 
 ## Story
 

@@ -10,7 +10,7 @@ depends_on: []
 touches: [us.pochaev.dfs.scanner.application]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 completed:
 ---
 
@@ -45,7 +45,7 @@ Stage 1 of the detection pipeline (CLAUDE.md design decision 3): group by size, 
 
 ## Acceptance criteria
 
-The full ID of each criterion is `DFS-001.AC-<n>`. Derived from the scenarios and confirmed by the author on 2026-09-21 (DFS-008).
+The full ID of each criterion is `DFS-001.AC-<n>`. Derived from the scenarios and confirmed by the author on 2026-09-21 (CCW-001).
 
 - **AC-1** Files whose size is unique are dropped, and files of equal size form one candidate group, across folders.
 - **AC-2** Empty files are excluded by default, and files below a configurable minimum size are excluded.

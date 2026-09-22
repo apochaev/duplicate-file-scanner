@@ -1,7 +1,7 @@
 ---
 id: DFS-016
 title: Introduce a CCW ticket namespace for process and tooling work
-status: ready
+status: in-review
 type: feature
 scope: [build, docs]
 archetype: none
@@ -198,12 +198,61 @@ Feature: CCW ticket namespace
 
 ## Definition of done
 
-- [ ] A walkthrough of every scenario above, on a scratch copy of `docs/tickets/`, shows the outcome (evidence noted in this ticket, DFS-014's/DFS-015's precedent)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] The eight-ticket migration is tracked in a file in this ticket's own folder (AC-12): old id, new id, old path, new path, files updated
-- [ ] `CLAUDE.md`'s Tickets section states the boundary rule and both namespaces
-- [ ] `git status` after the migration shows exactly the renamed/moved ticket folders plus the files named under Touches, nothing else
+- [x] A walkthrough of every scenario above, on a scratch copy of `docs/tickets/`, shows the outcome (evidence noted in this ticket, DFS-014's/DFS-015's precedent)
+  - Evidence: see "Walkthrough evidence" below.
+- [x] No files changed outside the paths listed under Touches
+  - Evidence: `git status --porcelain` (below) lists exactly `.claude/skills/tickets/SKILL.md`, `CLAUDE.md`, `docs/design/story-orchestration.md`, the eight renamed ticket folders, `DFS-001-ticket.md`, `DFS-005-ticket.md`, and this ticket's own folder (its status edit and the new `migration-log.md`) — every one of them named under Touches, nothing else.
+- [x] The eight-ticket migration is tracked in a file in this ticket's own folder (AC-12): old id, new id, old path, new path, files updated
+  - Evidence: `docs/tickets/backlog/DFS-016-ccw-ticket-namespace/migration-log.md`.
+- [x] `CLAUDE.md`'s Tickets section states the boundary rule and both namespaces
+  - Evidence: the Tickets paragraph now opens with "one backlog holding two independent ID sequences, `DFS-NNN`... and `CCW-NNN`...", states the boundary rule ("decided by what its Story is about, not by what it `touches` alone"), and the ID-reuse rule extended to a relabeled ID.
+- [x] `git status` after the migration shows exactly the renamed/moved ticket folders plus the files named under Touches, nothing else
+  - Evidence: see the `git status --porcelain` output quoted in "Walkthrough evidence" below.
 
 ## Open questions
 
 None.
+
+## Walkthrough evidence
+
+Run on 2026-09-22. The actual eight-ticket migration (AC-7, AC-8, AC-10) was performed for real, directly on the working backlog, not simulated — DFS-016's whole point is to actually relabel these tickets, the same way DFS-008 made real, permanent edits to DFS-001 and DFS-010 while verifying its general rules on a scratch copy (its own "Walkthrough evidence" section). The skill's *behavioral* rules (new-ticket ID allocation, `validate`'s two new informational checks) were verified separately on a disposable scratch copy of `docs/tickets/` plus three throwaway fixture tickets, deleted afterward, so as not to leave test artifacts in the real backlog.
+
+**Mechanically run, against the real (migrated) backlog:**
+- S12 (@AC-7, eight tickets renamed): `git status --porcelain` shows all eight as clean `RM` (100% similarity) renames; each file's `id` frontmatter and heading now read `CCW-00N`, and each carries the "Formerly DFS-0NN" note (`grep` confirmed exactly one such line per file, no other stray old-ID tokens: zero matches for `DFS-0(08|09|10|11|12|13|14|15)` anywhere under `docs/` or `CLAUDE.md` outside `docs/learnings/log.md` and this ticket's own `migration-log.md`, both deliberately excluded).
+- S13 (@AC-8, `depends_on` updated): confirmed the final `depends_on` line of all eight files by `grep`; each resolves correctly to the new `CCW-00N` chain (`CCW-002: [CCW-001]`, `CCW-004: [CCW-002, CCW-003]`, `CCW-005: [CCW-001, CCW-003, CCW-004]`, `CCW-006: [CCW-005]`) with no dangling old IDs.
+- S14 (@AC-8, prose mentions updated): `docs/design/story-orchestration.md` (31 occurrences), `DFS-001-ticket.md` (1), `DFS-005-ticket.md` (1) all replaced; re-`grep`ped afterward for zero remaining matches.
+- S16 (@AC-10, DFS-016 keeps its own id): `git status --porcelain` shows no rename entry for `docs/tickets/backlog/DFS-016-ccw-ticket-namespace/`; the file is still `id: DFS-016`.
+- S18 (@AC-12, migration tracked in the ticket's own folder): `docs/tickets/backlog/DFS-016-ccw-ticket-namespace/migration-log.md` exists with the old id/new id/old path/new path table and the references-updated list.
+
+**Mechanically run, on a disposable scratch copy plus throwaway fixtures (`CCW-099`, `DFS-098`, `DFS-097`), deleted after the run:**
+- S6 (@AC-3, next CCW number): highest CCW number in the (already-migrated) backlog is 008, so the next allocation is CCW-009, as expected.
+- S7 (@AC-3, relabeled id never reused): `DFS-009` no longer exists as a folder/id anywhere in the backlog, so a fresh highest-number scan can never reallocate it; the next `DFS` id is DFS-017 (DFS-016 being the current highest surviving `DFS` ticket).
+- S8 (@AC-4, folders side by side): directly observed — `CCW-*` and `DFS-*` folders list together, unsorted by namespace, directly under both `backlog/` and `completed/`.
+- S4 (@AC-2, CCW ticket touching product code): fixture `CCW-099` (touches `file-scanner/...`) correctly produced the informational note; the same check run against the whole real backlog produced zero false notes on any genuine `CCW` ticket.
+- S5 (@AC-2, DFS ticket confined to harness paths): fixture `DFS-098` (touches only `.claude/skills/tickets`) correctly produced the note. Run against the real backlog, the same check correctly flagged `DFS-016` itself — a true positive, not a false one: DFS-016 legitimately touches only harness paths but was deliberately kept in the `DFS` sequence (decision recorded above), which is exactly the "worth a human glance, not an error" case the rule exists for.
+- S15 (@AC-9, cross-namespace dependency is informational only): fixture `DFS-097` (`depends_on: [CCW-005]`) correctly produced the note and no error; run against the real backlog, zero cross-namespace dependencies currently exist (none were created by this round), so no false positives to check.
+
+**Checked by reading only, not run** (per `L-009`: these describe judgment a model applies when interpreting a ticket's Story or a title, which a script cannot decide, so this is a weaker check than the mechanical runs above):
+- S1, S2, S3 (@AC-1, classification by intent, including the `CLAUDE.md`-edit case): confirmed the `SKILL.md` "Namespaces" section and `CLAUDE.md`'s updated Tickets paragraph both state the rule in words matching these scenarios; not exercised by actually filing a ticket through a live `/tickets new` invocation.
+- S9, S10 (@AC-5, `new` infers vs. asks): confirmed `SKILL.md`'s `new` mode text states both behaviors; not run live.
+- S11 (@AC-6, `list` shows one merged table): confirmed `SKILL.md`'s `list` mode text now explicitly says "one table... covering both the `DFS` and `CCW` namespaces together, not a separate table per namespace"; not run live. (The merged-table behavior was already implicit before this ticket, since `list` has always read both folders into one scan — this scenario mainly guards against a future edit accidentally splitting it into two tables.)
+- S17 (@AC-11, `CLAUDE.md` documents the split): confirmed by reading the updated Tickets paragraph directly (quoted under Definition of done above).
+
+```
+$ git status --porcelain
+ M .claude/skills/tickets/SKILL.md
+ M CLAUDE.md
+ M docs/design/story-orchestration.md
+RM docs/tickets/backlog/DFS-011-story-agents/DFS-011-ticket.md -> docs/tickets/backlog/CCW-004-story-agents/CCW-004-ticket.md
+RM docs/tickets/backlog/DFS-012-story-orchestrator-skill/DFS-012-ticket.md -> docs/tickets/backlog/CCW-005-story-orchestrator-skill/CCW-005-ticket.md
+RM docs/tickets/backlog/DFS-013-run-harness-pilot/DFS-013-ticket.md -> docs/tickets/backlog/CCW-006-run-harness-pilot/CCW-006-ticket.md
+RM docs/tickets/backlog/DFS-015-worktree-aware-tickets-lifecycle/DFS-015-ticket.md -> docs/tickets/backlog/CCW-008-worktree-aware-tickets-lifecycle/CCW-008-ticket.md
+ M docs/tickets/backlog/DFS-001-group-files-by-size/DFS-001-ticket.md
+ M docs/tickets/backlog/DFS-005-start-scan-and-wiring/DFS-005-ticket.md
+ M docs/tickets/backlog/DFS-016-ccw-ticket-namespace/DFS-016-ticket.md
+RM docs/tickets/completed/DFS-008-tickets-skill-archetypes-and-models/DFS-008-ticket.md -> docs/tickets/completed/CCW-001-tickets-skill-archetypes-and-models/CCW-001-ticket.md
+RM docs/tickets/completed/DFS-009-pipeline-stage-archetype/DFS-009-ticket.md -> docs/tickets/completed/CCW-002-pipeline-stage-archetype/CCW-002-ticket.md
+RM docs/tickets/completed/DFS-010-story-gate-tools/DFS-010-ticket.md -> docs/tickets/completed/CCW-003-story-gate-tools/CCW-003-ticket.md
+RM docs/tickets/completed/DFS-014-learn-skill-log-and-reflect/DFS-014-ticket.md -> docs/tickets/completed/CCW-007-learn-skill-log-and-reflect/CCW-007-ticket.md
+?? docs/tickets/backlog/DFS-016-ccw-ticket-namespace/migration-log.md
+```

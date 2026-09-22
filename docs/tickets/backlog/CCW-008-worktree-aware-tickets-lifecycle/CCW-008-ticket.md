@@ -1,5 +1,5 @@
 ---
-id: DFS-015
+id: CCW-008
 title: Make the tickets lifecycle worktree-aware
 status: ready
 type: feature
@@ -15,7 +15,9 @@ updated: 2026-09-22
 completed:
 ---
 
-# DFS-015: Make the tickets lifecycle worktree-aware
+# CCW-008: Make the tickets lifecycle worktree-aware
+
+*(Formerly DFS-015; relabeled 2026-09-22 by DFS-016, which introduced the CCW namespace.)*
 
 ## Story
 
@@ -25,17 +27,17 @@ So that a closed ticket's files end up on `main`, and no worktree or branch is l
 
 ## Context
 
-The `tickets` skill changes a ticket's status and moves its folder in whichever working tree it runs in. It has no notion of branches or worktrees, and `done` neither checks that the work reached `main` nor cleans up. Working a ticket in a worktree (which parallel sessions and the story pipeline both do) exposed three gaps on DFS-010 (2026-09-21), recorded as `L-008` in `docs/learnings/log.md`:
+The `tickets` skill changes a ticket's status and moves its folder in whichever working tree it runs in. It has no notion of branches or worktrees, and `done` neither checks that the work reached `main` nor cleans up. Working a ticket in a worktree (which parallel sessions and the story pipeline both do) exposed three gaps on CCW-003 (2026-09-21), recorded as `L-008` in `docs/learnings/log.md`:
 
 - **`start` ran in the wrong tree.** It set `in-progress` in the main checkout before the worktree existed. The branch then carried its own change to the same ticket file, and the merge would have been refused until that uncommitted edit was discarded.
 - **`main` moved during the work.** A fast-forward was no longer possible, so the branch's commits were replayed onto the new `main` (and reworded to follow the ticket-ID subject rule that arrived meanwhile).
 - **`done` has no cleanup.** After the merge the worktree and two branches (`worktree-dfs-010-story-gate`, `dfs-010-story-gate-tools`) remained.
 
-Related work: the story pipeline (D5, DFS-012) records a `branch` per story in `plan.json` and needs the same start and done semantics, so this ticket and DFS-012 must agree on one implementation (see Open questions). Constraints already in `CLAUDE.md` bind the skill: commits only when the user asks, the ticket ID ends the commit subject, and files are staged by name whenever the working tree holds other changes.
+Related work: the story pipeline (D5, CCW-005) records a `branch` per story in `plan.json` and needs the same start and done semantics, so this ticket and CCW-005 must agree on one implementation (see Open questions). Constraints already in `CLAUDE.md` bind the skill: commits only when the user asks, the ticket ID ends the commit subject, and files are staged by name whenever the working tree holds other changes.
 
 Intended shape, still to be refined: `start` creates or enters the worktree and marks `in-progress` there; `review` records its status on the branch; `done` runs against `main`, verifies the ticket's work is on `main`, moves the ticket folder to `completed/` there, and removes the worktree and branch after confirmation.
 
-**Decided (2026-09-21): `done`'s "is this on `main`" check is `git merge-base --is-ancestor <branch> main`, falling back to a grep of `main`'s log for the ticket ID if that fails.** The plain ancestor check alone covers DFS-010's own rebase-and-fast-forward landing; the fallback catches a squash merge, where the branch tip is never an ancestor even though its content landed. The maintainer's landing style varies by ticket ("depends"), so both checks are needed rather than just the cheaper one.
+**Decided (2026-09-21): `done`'s "is this on `main`" check is `git merge-base --is-ancestor <branch> main`, falling back to a grep of `main`'s log for the ticket ID if that fails.** The plain ancestor check alone covers CCW-003's own rebase-and-fast-forward landing; the fallback catches a squash merge, where the branch tip is never an ancestor even though its content landed. The maintainer's landing style varies by ticket ("depends"), so both checks are needed rather than just the cheaper one.
 
 **Decided (2026-09-21): `done` only verifies; it never merges, fast-forwards, or rebases anything itself.** If neither check above passes, it refuses, reports which check failed, and tells the user to merge or rebase and re-run `done`. This keeps CLAUDE.md's "commits only when the user asks" rule intact without a carve-out — a fast-forward moves `main`'s ref, which is the kind of state change that rule protects — and it means "`main` moved during the work" (the ticket's open question 5) is the same situation as "who merges" (question 2), not a separate case: `done` refuses and says so either way.
 
@@ -43,15 +45,15 @@ Intended shape, still to be refined: `start` creates or enters the worktree and 
 
 **Decided (2026-09-21): `done` commits the ticket-folder move and frontmatter update on `main` itself**, files staged by name, subject `docs(tickets): close DFS-nnn [DFS-nnn]`, with no separate confirmation prompt for that specific commit. Running `/tickets done DFS-nnn` is itself the user asking; this follows the same precedent `/learn apply`'s own `docs: apply L-n` commit already sets for a mode that is itself an explicit user command.
 
-**Decided (2026-09-21): `start` keeps today's plain in-place behavior when no worktree is involved, and only creates-or-enters a worktree when one already exists for the ticket or is requested.** The worktree is named `worktree-dfs-nnn-<slug>` on a new branch `dfs-nnn-<slug>`, sibling to the repo checkout, matching DFS-010's own naming (`worktree-dfs-010-story-gate`, branch `dfs-010-story-gate-tools`). The `in-progress` edit is made inside that worktree, not the tree `start` was invoked from — the exact step DFS-010 got wrong. The plain case (a ticket worked directly on `main`) is unchanged, satisfying the ticket's own constraint that it must keep working.
+**Decided (2026-09-21): `start` keeps today's plain in-place behavior when no worktree is involved, and only creates-or-enters a worktree when one already exists for the ticket or is requested.** The worktree is named `worktree-dfs-nnn-<slug>` on a new branch `dfs-nnn-<slug>`, sibling to the repo checkout, matching CCW-003's own naming (`worktree-dfs-010-story-gate`, branch `dfs-010-story-gate-tools`). The `in-progress` edit is made inside that worktree, not the tree `start` was invoked from — the exact step CCW-003 got wrong. The plain case (a ticket worked directly on `main`) is unchanged, satisfying the ticket's own constraint that it must keep working.
 
-**Decided (2026-09-21): DFS-015 lands first; DFS-012 (`/story run`), when it is refined, adds `depends_on: [DFS-015]` and calls the same skill modes rather than reinventing worktree handling.** DFS-012 isn't refined yet (design-only per `docs/design/story-orchestration.md`), while DFS-015 fixes a bug that is live today, independent of the pipeline.
+**Decided (2026-09-21): CCW-008 lands first; CCW-005 (`/story run`), when it is refined, adds `depends_on: [CCW-008]` and calls the same skill modes rather than reinventing worktree handling.** CCW-005 isn't refined yet (design-only per `docs/design/story-orchestration.md`), while CCW-008 fixes a bug that is live today, independent of the pipeline.
 
-**Decided (2026-09-21): `archetype: none`, verified by a walkthrough of every scenario on a scratch worktree/branch, evidence noted in this ticket (DFS-014's precedent), not a read-through of the skill text alone.** `pipeline-stage` (the only existing archetype) is a Java-code template set and does not fit an instructions-only change. This ticket adds real git operations with real failure modes (`git branch -d`'s refusal, a dirty worktree, a squash-merged branch) that only running them can actually exercise — reading the words alone is exactly the weaker check `L-009` was written to close.
+**Decided (2026-09-21): `archetype: none`, verified by a walkthrough of every scenario on a scratch worktree/branch, evidence noted in this ticket (CCW-007's precedent), not a read-through of the skill text alone.** `pipeline-stage` (the only existing archetype) is a Java-code template set and does not fit an instructions-only change. This ticket adds real git operations with real failure modes (`git branch -d`'s refusal, a dirty worktree, a squash-merged branch) that only running them can actually exercise — reading the words alone is exactly the weaker check `L-009` was written to close.
 
 ## Acceptance criteria
 
-The full ID of each criterion is `DFS-015.AC-<n>`.
+The full ID of each criterion is `CCW-008.AC-<n>`.
 
 - **AC-1** Before doing anything else, `done` checks whether the ticket's branch is on `main`: `git merge-base --is-ancestor <branch> main`, falling back to a grep of `main`'s log for the ticket ID if the ancestor check fails.
 - **AC-2** If neither check in AC-1 passes, `done` refuses, changes nothing (no commit, no folder move, no worktree/branch removal), and reports which check failed and that the user must merge or rebase and re-run `done`.
@@ -172,15 +174,15 @@ Feature: Worktree-aware tickets lifecycle
 - `CLAUDE.md`: a short note on working a ticket in a worktree (naming convention, and that `done`'s close commit is pre-authorized by the `done` command itself)
 
 **Out of scope:**
-- The `/story` skill's own branch handling (DFS-012); DFS-012 depends on this ticket instead
+- The `/story` skill's own branch handling (CCW-005); CCW-005 depends on this ticket instead
 - Pushing or pull requests
 - Sweeping rebase backup refs (`refs/original/*`)
 
 ## Definition of done
 
-- [ ] A walkthrough of every scenario above, on a scratch worktree/branch, shows the outcome (evidence noted in this ticket, DFS-014's precedent)
+- [ ] A walkthrough of every scenario above, on a scratch worktree/branch, shows the outcome (evidence noted in this ticket, CCW-007's precedent)
 - [ ] No files changed outside the paths listed under Touches
-- [ ] The worktree and branch naming convention (`worktree-dfs-nnn-<slug>`, `dfs-nnn-<slug>`) is stated in the skill text, matching DFS-010's own naming
+- [ ] The worktree and branch naming convention (`worktree-dfs-nnn-<slug>`, `dfs-nnn-<slug>`) is stated in the skill text, matching CCW-003's own naming
 - [ ] `CLAUDE.md` states that `done`'s close commit needs no separate confirmation, since running `/tickets done` is itself the request
 
 ## Open questions

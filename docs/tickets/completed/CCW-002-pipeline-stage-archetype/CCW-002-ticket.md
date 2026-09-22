@@ -1,20 +1,22 @@
 ---
-id: DFS-009
+id: CCW-002
 title: Write the pipeline-stage archetype
 status: done
 type: docs
 scope: [build]
 archetype: none
 priority: medium
-depends_on: [DFS-008]
+depends_on: [CCW-001]
 touches: [.claude/archetypes/pipeline-stage, docs/tickets/backlog/DFS-001-group-files-by-size, docs/tickets/backlog/DFS-002-partial-hash-stage, docs/tickets/backlog/DFS-003-full-hash-stage]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 completed: 2026-09-21
 ---
 
-# DFS-009: Write the pipeline-stage archetype
+# CCW-002: Write the pipeline-stage archetype
+
+*(Formerly DFS-009; relabeled 2026-09-22 by DFS-016, which introduced the CCW namespace.)*
 
 ## Story
 
@@ -28,11 +30,11 @@ The first archetype in the catalog (D4), under `.claude/archetypes/pipeline-stag
 - `archetype.md`: frontmatter (`name`, `version`, `phases`, `gates`, per-agent `models`), then when it applies, the edge-case checklist, extra done-items, and where its files go in the hexagonal layers (`application` for the stage, `domain.model` only for exported results, ports in `infra.port`).
 - `design.md.tmpl`, `test-plan.md.tmpl`, `impl-guide.md`, `test-guide.md`, and `skeletons/*.java.tmpl`.
 
-The content comes from refining DFS-001, whose decisions are the checklist: accumulation that can be merged (so it can be parallelised later), deterministic output order, immutable results, invalid-argument rejection, the same input appearing twice, configuration defaults and where they live, and memory measured, not assumed. It also draws on the `CLAUDE.md` conventions (records and sealed interfaces, tests against fakes, ArchUnit layering, large fixtures generated in code). Defaults from D3, D9 and D2: gates `[design, done]`, the D9 model tiers, and stubs owned by the architect that throw `new UnsupportedOperationException("not implemented: <TICKET-ID>")` (the convention is decided in DFS-010).
+The content comes from refining DFS-001, whose decisions are the checklist: accumulation that can be merged (so it can be parallelised later), deterministic output order, immutable results, invalid-argument rejection, the same input appearing twice, configuration defaults and where they live, and memory measured, not assumed. It also draws on the `CLAUDE.md` conventions (records and sealed interfaces, tests against fakes, ArchUnit layering, large fixtures generated in code). Defaults from D3, D9 and D2: gates `[design, done]`, the D9 model tiers, and stubs owned by the architect that throw `new UnsupportedOperationException("not implemented: <TICKET-ID>")` (the convention is decided in CCW-003).
 
 It applies to DFS-001, DFS-002 and DFS-003, which get `archetype: pipeline-stage` here.
 
-Test naming (D11, decided while refining DFS-010): a test's `@DisplayName` starts with the acceptance-criterion ID(s) it proves, for example `DFS-001.AC-3 Files of equal size form one candidate group`. `test-plan.md.tmpl` maps criterion, scenarios and tests, and `test-guide.md` states the convention.
+Test naming (D11, decided while refining CCW-003): a test's `@DisplayName` starts with the acceptance-criterion ID(s) it proves, for example `DFS-001.AC-3 Files of equal size form one candidate group`. `test-plan.md.tmpl` maps criterion, scenarios and tests, and `test-guide.md` states the convention.
 
 **Decided (2026-09-21): the Java skeletons are structural, not bare shells or worked examples.** Each `skeletons/*.java.tmpl` gives the class/record shape the pipeline-stage pattern requires (a mergeable accumulator with `add`/`merge`/a result accessor, an immutable internal record) with method signatures already present, bodies throwing `new UnsupportedOperationException("not implemented: <TICKET-ID>")` per D2, and Javadoc placeholders pointing at the checklist items (mergeable, deterministic order, immutable result, reject invalid args). The architect renames types and fields and fills in logic; the shape and the reminders are already there.
 
@@ -42,7 +44,7 @@ This ticket edits instructions (archetype templates and guides) rather than prod
 
 ## Acceptance criteria
 
-The full ID of each criterion is `DFS-009.AC-<n>`.
+The full ID of each criterion is `CCW-002.AC-<n>`.
 
 - **AC-1** The archetype directory `.claude/archetypes/pipeline-stage/` contains `archetype.md`, `design.md.tmpl`, `test-plan.md.tmpl`, `impl-guide.md`, `test-guide.md` and `skeletons/`.
 - **AC-2** `archetype.md`'s frontmatter declares `name: pipeline-stage`, `version: 1`, `phases` (the four standard pipeline phases: design, test, implement, verify), `gates: [design, done]`, and `models` with the D9 tiers (architect opus/high, verifier opus/medium, implementer sonnet/medium, test-author sonnet/medium, retro sonnet/low).
@@ -110,7 +112,7 @@ Feature: The pipeline-stage archetype
 
 **Out of scope:**
 - The other archetypes (`port-and-adapter`, `use-case` and so on): written when a story needs them
-- Skill support for the `archetype` field (DFS-008)
+- Skill support for the `archetype` field (CCW-001)
 
 ## Definition of done
 

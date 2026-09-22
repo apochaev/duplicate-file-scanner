@@ -1,19 +1,21 @@
 ---
-id: DFS-011
+id: CCW-004
 title: Define the five story agents
 status: draft
 type: feature
 scope: [build]
 priority: medium
-depends_on: [DFS-009, DFS-010]
+depends_on: [CCW-002, CCW-003]
 touches: [.claude/agents]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 completed:
 ---
 
-# DFS-011: Define the five story agents
+# CCW-004: Define the five story agents
+
+*(Formerly DFS-011; relabeled 2026-09-22 by DFS-016, which introduced the CCW namespace.)*
 
 ## Story
 
@@ -82,8 +84,8 @@ Feature: Story agents
 - `.claude/agents/`: the five agent files
 
 **Out of scope:**
-- The orchestrator skill that launches them (DFS-012)
-- The gate tools (DFS-010) and the archetype content (DFS-009)
+- The orchestrator skill that launches them (CCW-005)
+- The gate tools (CCW-003) and the archetype content (CCW-002)
 
 ## Definition of done
 
@@ -96,6 +98,6 @@ Feature: Story agents
 - Scenarios are a first draft derived from the design log only; review and complete them.
 - Tool allowlists per agent, and whether path guards are needed (the verifier needs Edit for the ticket and Write for its report but must not touch source; a `PreToolUse` hook scoped to the verifier, or the touches check alone?).
 - How does an agent learn the story folder path (passed in the launch prompt by the orchestrator)?
-- DFS-014 (the `learn` skill) creates `.claude/agents/reflect.md` (Sonnet, low, 15 turns), which reads a ticket, its history and the learnings log. It is the seed of `retro`. Does `retro` reuse it, extend it with the plan and `progress.md` inputs, or replace it? `touches` overlaps at `.claude/agents`, so sequence the two tickets.
+- CCW-007 (the `learn` skill) creates `.claude/agents/reflect.md` (Sonnet, low, 15 turns), which reads a ticket, its history and the learnings log. It is the seed of `retro`. Does `retro` reuse it, extend it with the plan and `progress.md` inputs, or replace it? `touches` overlaps at `.claude/agents`, so sequence the two tickets.
 - Is `omitClaudeMd` worth using for `retro` to save tokens?
 - Is there a way to evaluate agent prompts beyond the pilot run?
