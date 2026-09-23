@@ -2,7 +2,7 @@
   "ticket": "DFS-001",
   "archetype": {"name": "pipeline-stage", "version": 3},
   "branch": "tickets/DFS-001-group-files-by-size",
-  "state": "running",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -52,15 +52,19 @@
       "id": "verify",
       "agent": "verifier",
       "after": ["implement"],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {"attempt": 1, "model": "opus", "effort": "medium", "turns": 10, "wallClockSeconds": 103, "outcome": "passed"}
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-001-group-files-by-size/verification.md"
+      ],
+      "commit": "dbd737b1b9d808494dfc61e27a16c539cde953bb"
     }
   ],
   "gates": [
     {"after": "design", "status": "approved"},
-    {"after": "done", "status": "pending"}
+    {"after": "done", "status": "approved"}
   ],
   "defects": []
 }

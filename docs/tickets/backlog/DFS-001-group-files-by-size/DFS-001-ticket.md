@@ -1,7 +1,7 @@
 ---
 id: DFS-001
 title: Group scanned files by size
-status: in-progress
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
