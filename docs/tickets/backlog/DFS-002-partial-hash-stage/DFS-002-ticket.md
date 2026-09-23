@@ -1,7 +1,7 @@
 ---
 id: DFS-002
 title: Filter candidates by head-and-tail partial hash
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
