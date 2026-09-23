@@ -207,14 +207,14 @@ Friction found while working on this project, with a proposed change and what wa
 
 ### L-017: Live demonstration found integration bugs invisible at design/refinement time
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`.claude/skills/tickets/SKILL.md`, `refine` mode)
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
-- Change: when a ticket's Definition of done requires a live demonstration across several already-built components, refinement should flag that cross-component assumptions (shared vocabulary like phase ids, who performs a step like committing, which status transitions a downstream check expects) are the likely failure points, so the demonstration plan specifically exercises those seams rather than only the ticket's own scenarios.
+- Change: at refinement, make sure the scenarios test the ticket's own purpose (its "So that") against the real state of the repository and environment it will run in, not only against a clean setup; and when the Definition of done needs a live run across already-built components, name the assumptions between them that the run must exercise (shared names, who performs a step, which status a downstream check expects).
 - Evidence: `docs/tickets/completed/CCW-005-story-orchestrator-skill/CCW-005-ticket.md`, "Real bugs found only by running this for real" — three integration bugs found only by live demonstration: the `test`/`tests` phase-id spelling mismatch between `pipeline-stage/archetype.md` (CCW-002) and `FreezeCheck` (CCW-003); no agent prompt (CCW-004) included a commit step though `plan.json`/`FreezeCheck` expected one; Finishing omitted `tickets review <ID>` so `consistency` failed at the finish line. Two follow-up fix commits (`5cc00ea`, `7079a6b`) were needed after the initial build commit (`3a28e3d`).
 - Recurrences: 2 (CCW-005: see Evidence; CCW-008: first version of the parallel-work feature assumed a tree always has `main` checked out, false in the repo it was built in; fixed by decision 4, AC-19 to AC-21 (2026-09-22))
 - Recommendation: re-proposed on a second ticket. Apply a broader form: at refinement, turn the ticket's stated purpose and the real repo/environment state into at least one scenario, not only the seams between components.
-- Decision: parked 2026-09-22 by the user, as recommended.
+- Decision: parked 2026-09-22 by the user, as recommended; re-proposed with CCW-008; applied 2026-09-22 by the user; commit `docs: apply L-017`.
 
 ### L-018: A ticket's design-time assumption about another component's capability was wrong until it was run for real
 
