@@ -270,3 +270,14 @@ Friction found while working on this project, with a proposed change and what wa
 - Recurrences: 1 (DFS-001) — third skeleton file independently found with the L-013-shaped bug (after `FilterStage.java.tmpl`, `StageResult.java.tmpl`); worth a glance at whether `pipeline-stage`'s remaining skeletons need the same audit rather than waiting for each to surface one at a time.
 - Recommendation: apply, consistent with L-013/L-014.
 - Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-021 and L-022`.
+
+### L-023: A DoD item requiring a measured figure should get a committed, reproducible benchmark, not a throwaway class
+
+- Status: applied
+- Impact: shared (`pipeline-stage`'s `impl-guide.md`, the archetype every implementer reads)
+- Target: `.claude/archetypes/pipeline-stage/impl-guide.md`
+- Change: when a ticket's Definition of done requires a measured figure (heap, timing, throughput) recorded before closing, the implementer writes it as a committed, `@Disabled` (or otherwise excluded-from-default-run) benchmark in the test tree, not a throwaway class run outside the build — so the figure is reproducible by anyone later, including the verifier or a human closing the ticket, instead of resting on an unverifiable one-off run.
+- Evidence: `docs/tickets/completed/DFS-001-group-files-by-size/DFS-001-ticket.md` — the implementer's heap measurement used "a throwaway `HeapMeasure` class run directly against `file-scanner`'s compiled classes (not committed, not part of the build)"; the verifier explicitly could not reproduce it and left the done-item unticked for that reason. The closing session (2026-09-22) had to write `SizeIndexHeapBenchmark.java` after the fact and re-run it to actually tick the item. Independently, the pilot's control-branch implementation of the same ticket made the identical choice (its own throwaway, uncommitted `HeapMeasure`-equivalent) — two separate implementations converged on the same non-reproducible pattern with no guidance against it.
+- Recurrences: 1 (DFS-001) — though the pattern recurred within one ticket, in both the pipeline and control implementations independently; not counted twice per the log's own rule (repeats within one ticket are noted, not double-counted).
+- Recommendation: apply. Two independent implementations made the same non-reproducible choice with no template guidance either way; a one-line addition to `impl-guide.md` (or wherever the archetype's benchmark guidance best fits) closes the gap before it recurs on DFS-002 or any future pipeline-stage ticket with a measured DoD item.
+- Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-023`.
