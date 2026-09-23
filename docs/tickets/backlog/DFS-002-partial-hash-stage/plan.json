@@ -8,17 +8,26 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {"attempt": 1, "model": "opus", "effort": "high", "turns": 23, "wallClockSeconds": 146, "outcome": "passed"}
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-002-partial-hash-stage/design.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PartialHashFilter.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ContentHasher.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentHasher.java"
+      ],
+      "commit": "ae1187dd7574dcded43ad31e7c036d4048f6a401"
     },
     {
       "id": "tests",
       "agent": "test-author",
       "after": ["design"],
-      "status": "pending",
-      "runs": [],
+      "status": "in-progress",
+      "runs": [
+        {"attempt": 1, "model": "sonnet", "effort": "medium", "turns": 30, "wallClockSeconds": 315, "outcome": "failed-gate"}
+      ],
       "artifacts": [],
       "commit": null
     },
@@ -42,8 +51,10 @@
     }
   ],
   "gates": [
-    {"after": "design", "status": "pending"},
+    {"after": "design", "status": "approved"},
     {"after": "done", "status": "pending"}
   ],
-  "defects": []
+  "defects": [
+    {"id": 1, "phase": "tests", "route": "test-author", "summary": "NioContentHasherTest > DFS-002.AC-8: failed with AssertionFailedError (message should name DFS-003), not the raw stub exception — RedCheck requires every story test's failure to be exactly UnsupportedOperationException(\"not implemented: ...\"), which the current AC-8 assertion cannot satisfy while it checks the eventual, differently-worded final message against the still-generic stub.", "status": "open"}
+  ]
 }
