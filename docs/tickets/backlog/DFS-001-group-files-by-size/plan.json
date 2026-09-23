@@ -38,16 +38,21 @@
       "id": "implement",
       "agent": "implementer",
       "after": ["tests"],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {"attempt": 1, "model": "sonnet", "effort": "medium", "turns": 33, "wallClockSeconds": 131, "outcome": "passed"}
+      ],
+      "artifacts": [
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/SizeIndex.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/CandidateGroup.java"
+      ],
+      "commit": "f04f9253d7e5bed7e0cbe4e9027b6158db2016e2"
     },
     {
       "id": "verify",
       "agent": "verifier",
       "after": ["implement"],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
