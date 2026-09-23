@@ -2,7 +2,7 @@
   "ticket": "DFS-002",
   "archetype": {"name": "pipeline-stage", "version": 5},
   "branch": "tickets/DFS-002-partial-hash-stage",
-  "state": "running",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -27,7 +27,8 @@
       "status": "done",
       "runs": [
         {"attempt": 1, "model": "sonnet", "effort": "medium", "turns": 30, "wallClockSeconds": 315, "outcome": "failed-gate"},
-        {"attempt": 2, "model": "opus", "effort": "high", "turns": 14, "wallClockSeconds": 85, "outcome": "passed"}
+        {"attempt": 2, "model": "opus", "effort": "high", "turns": 14, "wallClockSeconds": 85, "outcome": "passed"},
+        {"attempt": 3, "model": "sonnet", "effort": "medium", "turns": 35, "wallClockSeconds": 348, "outcome": "passed", "note": "human-directed reopen after the done gate (AC-1/AC-9 additions), not an automatic-retry escalation. Hit the 30-turn cap once without a report (turns/time combine both invocations); resumed the same agent after correcting an orchestrator mistake (re-verifying test-phase/RedCheck, which is meaningless once src/main already has the real implementation on this branch) rather than discarding its work."}
       ],
       "artifacts": [
         "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PartialHashFilterTest.java",
@@ -35,8 +36,8 @@
         "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NioContentHasherTest.java",
         "docs/tickets/backlog/DFS-002-partial-hash-stage/test-plan.md"
       ],
-      "commit": "66ca6632d3aa14e3b11eca111a6d457f81962883",
-      "note": "commit updated from c1ada344 after an out-of-scope test-tree fix (SizeIndexHeapBenchmark.java, DFS-001/L-023 vs DisabledCheck) landed on top of it — see defect 2"
+      "commit": "421f402d25aee71d2ecfe0316f1d818dcb1828f9",
+      "note": "reopened after the done gate — human feedback sent it back for two targeted test additions (AC-1, AC-9); see progress.md/learnings.md."
     },
     {
       "id": "implement",
@@ -50,21 +51,27 @@
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PartialHashFilter.java",
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentHasher.java"
       ],
-      "commit": "56f83cc70710ae754b05f985ab9451ebb4c3c5c2"
+      "commit": "56f83cc70710ae754b05f985ab9451ebb4c3c5c2",
+      "note": "reconciled, not relaunched — no source change needed after tests reopened; all 7 checks re-verified passing against this existing commit"
     },
     {
       "id": "verify",
       "agent": "verifier",
       "after": ["implement"],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {"attempt": 1, "model": "opus", "effort": "medium", "turns": 9, "wallClockSeconds": 99, "outcome": "passed"},
+        {"attempt": 2, "model": "opus", "effort": "medium", "turns": 9, "wallClockSeconds": 67, "outcome": "passed", "note": "fresh re-verification after the AC-1/AC-9 tests were added; all 9 criteria now met"}
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-002-partial-hash-stage/verification.md"
+      ],
+      "commit": "020535f7c6c3cba54ae424d7f1c67c04a4d6fa93"
     }
   ],
   "gates": [
     {"after": "design", "status": "approved"},
-    {"after": "done", "status": "pending"}
+    {"after": "done", "status": "approved"}
   ],
   "defects": [
     {"id": 1, "phase": "tests", "route": "test-author", "summary": "NioContentHasherTest > DFS-002.AC-8: failed with AssertionFailedError (message should name DFS-003), not the raw stub exception — RedCheck requires every story test's failure to be exactly UnsupportedOperationException(\"not implemented: ...\"), which the current AC-8 assertion cannot satisfy while it checks the eventual, differently-worded final message against the still-generic stub.", "status": "closed"},
