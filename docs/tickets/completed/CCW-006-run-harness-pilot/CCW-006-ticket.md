@@ -1,7 +1,7 @@
 ---
 id: CCW-006
 title: Run the harness pilot
-status: in-progress
+status: done
 type: spike
 scope: [build]
 archetype: none
@@ -11,7 +11,7 @@ touches: [docs/tickets/backlog/CCW-006-run-harness-pilot, docs/design/story-orch
 blocked_reason:
 created: 2026-09-21
 updated: 2026-09-23
-completed:
+completed: 2026-09-23
 ---
 
 # CCW-006: Run the harness pilot
@@ -207,7 +207,7 @@ Two short additions proposed to `docs/design/story-orchestration.md`, D5 and D7,
 
 ## Definition of done
 
-- [ ] Every scenario above is satisfied (verification is by reading this ticket's own metrics table and verdicts against each scenario — there is no automated test for a pilot's own record-keeping; `./gradlew build` staying green is a precondition of the DFS-001/DFS-002 runs themselves, not of this ticket). Not yet: AC-2 is unmet for the DFS-002 run specifically — its per-phase token figures are permanently unavailable (accepted gap, 2026-09-23, see "DFS-002 pipeline run"), so the scenario "the tokens for each phase are read from the agent invocation's own usage report" cannot be satisfied for that run. Every other scenario is met.
+- [ ] Every scenario above is satisfied (verification is by reading this ticket's own metrics table and verdicts against each scenario — there is no automated test for a pilot's own record-keeping; `./gradlew build` staying green is a precondition of the DFS-001/DFS-002 runs themselves, not of this ticket). Not met: AC-2 is unmet for the DFS-002 run specifically — its per-phase token figures are permanently unavailable (the DFS-002 run's own agent usage reports aged out of session context before this ticket's record-keeping resumed; `plan.json` deliberately keeps no token count). Every other scenario is met. **Closed anyway, by explicit user say-so, 2026-09-23** — the gap is permanent, not something further work would close.
 - [x] The metrics table is recorded in this ticket with real numbers, for both runs, except DFS-002's tokens (accepted, permanent gap — see above)
 - [x] Every component has a keep or optional verdict with its evidence (AC-9 table)
 - [x] The design log is updated with any decision that changes (D5, D7 addenda in `docs/design/story-orchestration.md`, 2026-09-23)
