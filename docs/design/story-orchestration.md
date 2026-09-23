@@ -104,6 +104,8 @@ Resume protocol, run by each `/story run`:
 
 Rejected: agents editing their own phase fields (they can mark themselves done, the self-evaluation bias this design guards against, and malformed edits need schema validation); one state file per phase (more files to read at every start, and resume must assemble the picture from several).
 
+**Addendum (2026-09-23, CCW-006 pilot, DFS-002 run).** The resume protocol above had no scripted path for "a phase already `done`, past a human gate, needs to go back for targeted rework" — only the two-failed-attempts-to-`blocked` path and the plain approve-and-continue path existed. DFS-002's verifier sent the tests phase back after the done gate for two targeted test additions, driven entirely by hand. `.claude/skills/story/SKILL.md`'s `approve <ID> [feedback]` mode now scripts this: the named phase and everything after it up to the gate resets to `pending` (or `in-progress` for a phase needing only reconciliation) with a fresh, non-escalated attempt count, and a reopened `tests` phase is verified with `green` rather than `test-phase`, since the red gate's "must fail against stubs" precondition cannot hold once a later phase's commit already exists on the branch (L-025, folded with L-026).
+
 ### D6. Learning loop (decided 2026-09-21)
 
 Every agent appends suggestions to `learnings.md` when it hits friction (a template gap, a skeleton that did not fit, an ambiguity in CLAUDE.md). The `retro` agent turns them into proposed diffs against archetype files, agent prompts, skills or CLAUDE.md. It runs only when there is something to learn (`learnings.md` non-empty or the story had defects) and reads only the plan, `progress.md` and the learnings, not transcripts.
@@ -140,6 +142,8 @@ Deterministic gate (scripts, no tokens; an agent sees only a compact verdict):
 LLM review (a per-archetype switch, on for `pipeline-stage` in the pilot): the diff against the scenarios, the CLAUDE.md invariants and `design.md`, plus test quality (meaningful assertions, behaviour rather than restated code). It stays only if the pilot shows it finds things the scripts do not (see D8).
 
 Rejected: a minimal gate (leaves mechanical checks to a model); mutation testing now (slow, adds a plugin, JUnit 6 compatibility risk, heavy for small stories), parked below.
+
+**Addendum (2026-09-23, CCW-006 pilot, DFS-002 run).** The condition above is met: DFS-002's verifier found that AC-1 and AC-9 were each proven only in their matching/positive shape, never a distinguishing/negative one (a constant-returning fake `sampleHash`, or a silently-ignored custom threshold, would have passed the entire deterministic battery — green, disabled, freeze, traceability, all of it). The LLM review stays (CCW-006, AC-9 verdict table).
 
 ### D8. Pilot (decided 2026-09-21)
 

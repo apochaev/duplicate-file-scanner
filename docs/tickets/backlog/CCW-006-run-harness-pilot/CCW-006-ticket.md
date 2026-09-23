@@ -10,7 +10,7 @@ depends_on: [CCW-005]
 touches: [docs/tickets/backlog/CCW-006-run-harness-pilot, docs/design/story-orchestration.md]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-22
+updated: 2026-09-23
 completed:
 ---
 
@@ -159,13 +159,59 @@ One substantive difference found during the blind read: the control's `merge` ha
 
 **Branch reconciliation (AC-6):** the pipeline branch merged into `main` (merge commit `merge: DFS-001 group-files-by-size into main [DFS-001] [CCW-006]`), regardless of the quality verdict, per the pre-agreed protocol — build verified green on `main` afterward (`./gradlew build`, independently re-run, not just the merge agent's own claim). The control branch (`pilot/DFS-001-control`) was not merged; its work was committed to that branch alone (`feat(file-scanner): plain single-session implementation of DFS-001 (pilot control, not merged) [DFS-001] [CCW-006]`) and kept as a reference rather than discarded, so the comparison above remains checkable later.
 
+### DFS-002 pipeline run (2026-09-23)
+
+No control branch (per the ticket's own protocol — only DFS-001 gets an A/B; DFS-002 measures whether the learning loop pays, building on the pipeline's own DFS-001 output).
+
+**Token figures for this run are permanently unavailable (AC-2 gap, accepted 2026-09-23).** They were only ever visible in each agent invocation's own completion notification during the live run; `plan.json` deliberately records no token count (D9/this ticket's own scope is what was meant to settle that), and by the time this ticket's record-keeping resumed, those notifications had aged out of the session's context. Turns and wall-clock time (below) are mechanical, from `plan.json`, and are unaffected.
+
+| Phase | Model | Effort | Turns | Wall-clock | Outcome |
+|---|---|---|---|---|---|
+| design (architect) | opus | high | 23 | 146s | passed, attempt 1 |
+| tests (test-author), attempt 1 | sonnet | medium | 30 | 315s | **failed-gate** — defect 1: AC-8's assertion couldn't satisfy the red gate's literal-stub-exception rule (a deferred-to-a-later-ticket stub method, an undesigned case; see L-024) |
+| tests (test-author), attempt 2 | opus | high | 14 | 85s | passed — D9 escalation |
+| tests (test-author), attempt 3 | sonnet | medium | 35 | 348s | passed — human-directed reopen after the done gate (the verifier's AC-1/AC-9 finding, below), includes one turn-cap resume folded into this one `runs` entry |
+| implement (implementer) | sonnet | medium | 24 | 83s | passed, attempt 1; reconciled (not relaunched) after the tests-phase reopen, since no source change was needed |
+| verify (verifier), attempt 1 | opus | medium | 9 | 99s | passed |
+| verify (verifier), attempt 2 | opus | medium | 9 | 67s | passed — fresh re-verification after the AC-1/AC-9 additions landed |
+| **Pipeline total (4 phases, 7 runs)** | | | **144** | **1143s (~19 min)** | 2 defects (both closed) + 1 human-directed rework cycle |
+| **DFS-001 pipeline, for comparison** | | | 88 | 567s (9.5 min) | 0 defects |
+
+**Defects:** 2, both closed (`plan.json`). Defect 1 (tests phase, routed to test-author): the red gate's literal-stub-exception rule had no accommodation for a method deliberately deferred to a later ticket (DFS-003) — resolved by a conditional-rethrow test pattern, later documented as a named convention (L-024). Defect 2 (implement phase, routed to the orchestrator, not the implementer, since it wasn't that phase's fault): `disabled` and then `freeze` both false-positived on `SizeIndexHeapBenchmark.java`, a file DFS-001 had already committed and closed, unrelated to anything DFS-002 touched — both checks scan/diff the whole test tree with no per-ticket scope. Fixed by hand at the time; the durable fix is CCW-009.
+
+**The done-gate reopen (not a defect — a qualitative verdict, not a deterministic gate failure):** the verifier's `verification.md` sent the tests phase back for two targeted additions: AC-1 was only proven against a fake hasher (nothing showed the *real* `NioContentHasher.sampleHash` actually gives different digests for a head/tail difference — a constant-returning fake would have passed the whole suite), and AC-9 proved the custom sample size reached the hasher but not that the custom skip threshold was honored (a silently-ignored override would still have passed). The user agreed with the verdict and the phase was reopened by hand (D5's resume protocol had no scripted path for this yet — see AC-10, below). Both gaps were closed by two small, targeted test additions; no production code changed.
+
+**Environment friction:** none observed (checked `progress.md` and `learnings.md` for Windows path-length or Gradle-daemon mentions — none found).
+
+**Retro (`/story learn DFS-002`):** 6 findings proposed, vs. DFS-001's 2. 3 applied (L-024, L-025, L-026 — L-026 folded into L-025's edit rather than a separate change), 1 spun off into its own ticket rather than applied directly (L-027 → CCW-009, following the precedent L-008 set), 2 parked (L-028, L-029).
+
+### AC-7: does the learning loop pay
+
+DFS-001's applied learnings going into this run were L-021 (a missing archetype-template checklist item), L-022 (an accumulator-skeleton contradiction) and L-023 (committed, reproducible benchmarks). Only **L-021 was actually exercisable by DFS-002** — checked mechanically: `grep` of DFS-002's `learnings.md` for the checklist-item-14 gap L-021 fixed finds no recurrence, so the fix held. L-022 and L-023 were not exercised either way: DFS-002 is a pure filter stage with nothing to accumulate (L-022's fix doesn't apply), and its Definition of done has no measured-figure item (L-023's fix doesn't apply). This pilot's two stories do not yet test whether those two learnings help; that would need a third story shaped to exercise them. DFS-002's own new friction (both defects, all 6 new learnings) fell in territory DFS-001 never touched — new discoveries, not a repeat of an already-fixed mistake going uncaught.
+
+### AC-9: pruning verdicts (both stories)
+
+| Component | Verdict | Evidence |
+|---|---|---|
+| Design phase's structured edge-case checklist | **Keep** | DFS-001: caught the `merge(this)` no-op guard before any code existed, missed by both branches' tests. DFS-002: correctly dispositioned "not applicable" for accumulation — a checked judgment, not a rubber stamp. |
+| Red gate / stub-exception convention (`RedCheck`) | **Keep** | DFS-002 defect 1: forced a genuinely red, non-vacuous AC-8 test rather than accepting a near-miss assertion; exposed a real, previously-undesigned edge case (a deferred-to-a-later-ticket stub), since closed by L-024. |
+| `disabled`/`freeze` checks | **Keep, implementation bug tracked separately** | DFS-002 defect 2: both false-positived twice on an unrelated, already-closed ticket's file, costing real orchestrator time. Not a reason to drop either check — both catch real problems in principle (an actually-disabled test; a test actually edited after the fact) — but their whole-tree scope is a genuine bug, now CCW-009. |
+| Verifier's qualitative LLM review | **Keep — the strongest evidence in the pilot** | DFS-002: caught that AC-1 and AC-9 only proved the *matching* case, never the *distinguishing* one — a constant-returning fake `sampleHash`, or a silently-ignored custom threshold, would have passed the entire deterministic battery (green, disabled, freeze, traceability, all of it). Exactly D7's own bar ("stays only if the pilot shows it finds things the scripts do not") and D8's pruning rule. |
+| D9 escalation (retry one tier up after a failed attempt) | **Keep** | DFS-002 tests phase: the escalated attempt 2 (opus/high) resolved the defect in 14 turns, under half attempt 1's 30. |
+| Human gates (design, done) | **Keep** | DFS-002's done gate is the direct reason the verifier's finding became real rework instead of a noted-and-ignored comment — the user read the verdict and sent it back rather than approving through it. |
+| Retro / learn loop | **Keep** | DFS-001: 2 findings, both template-completeness gaps. DFS-002: 6 findings, including two previously-undesigned *process* gaps (a deferred-stub convention, "send a passed phase back" in the resume protocol) found from real friction hit during the run, not hypotheticals. |
+
+### AC-10: design log
+
+Two short additions proposed to `docs/design/story-orchestration.md`, D5 and D7, recording what changed as a result of this pilot — see that file's D5/D7 sections for the actual text.
+
 ## Definition of done
 
-- [ ] Every scenario above is satisfied (verification is by reading this ticket's own metrics table and verdicts against each scenario — there is no automated test for a pilot's own record-keeping; `./gradlew build` staying green is a precondition of the DFS-001/DFS-002 runs themselves, not of this ticket)
-- [ ] The metrics table is recorded in this ticket with real numbers
-- [ ] Every component has a keep or optional verdict with its evidence
-- [ ] The design log is updated with any decision that changes
-- [ ] No files changed outside `touches`
+- [ ] Every scenario above is satisfied (verification is by reading this ticket's own metrics table and verdicts against each scenario — there is no automated test for a pilot's own record-keeping; `./gradlew build` staying green is a precondition of the DFS-001/DFS-002 runs themselves, not of this ticket). Not yet: AC-2 is unmet for the DFS-002 run specifically — its per-phase token figures are permanently unavailable (accepted gap, 2026-09-23, see "DFS-002 pipeline run"), so the scenario "the tokens for each phase are read from the agent invocation's own usage report" cannot be satisfied for that run. Every other scenario is met.
+- [x] The metrics table is recorded in this ticket with real numbers, for both runs, except DFS-002's tokens (accepted, permanent gap — see above)
+- [x] Every component has a keep or optional verdict with its evidence (AC-9 table)
+- [x] The design log is updated with any decision that changes (D5, D7 addenda in `docs/design/story-orchestration.md`, 2026-09-23)
+- [x] No files changed outside `touches` — `git status` shows only this ticket's folder and `docs/design/story-orchestration.md`
 
 ## Open questions
 
