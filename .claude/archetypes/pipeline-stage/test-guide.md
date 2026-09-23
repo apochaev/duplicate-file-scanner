@@ -28,6 +28,25 @@ A test that proves more than one criterion lists every ID, comma-separated, at t
 - Invalid input: whatever the design doc's public API section says is rejected (a null, a negative size, a construction invariant) has a test that expects rejection.
 - A near-duplicate, over-threshold fixture (same size, differs only past the sample boundary) for any stage whose behavior depends on file content past 128 KB — generate it in code (a helper that writes N bytes with one byte changed), never commit it.
 
+## Testing a port method deferred to a later ticket
+
+Some stages stub a port method that is not this ticket's job to implement (for example `ContentHasher.fullHash`, deferred by DFS-002 to DFS-003 — see `archetype.md`, "Where files go"). At the point your tests run, the implementer's permanent replacement message does not exist yet: the stub still reads the generic `not implemented: <TICKET-ID>`. Do not assert the eventual, differently-worded message — checked against the still-generic stub, that turns today's legitimate stub failure into your own `AssertionFailedError`, which `RedCheck` rejects (it requires the raw stub exception, not an assertion failure). A bare `catch (UnsupportedOperationException expected) {}` does not fix this either: it also swallows the stub's own exception and passes vacuously, before the method is ever really implemented.
+
+Instead, catch the exception and re-throw it unchanged only while its message still starts with `not implemented:`:
+
+```java
+try {
+    hasher.fullHash(file);
+    fail("expected fullHash to throw UnsupportedOperationException");
+} catch (UnsupportedOperationException expected) {
+    if (expected.getMessage() != null && expected.getMessage().startsWith("not implemented:")) {
+        throw expected;
+    }
+}
+```
+
+This fails red now (the generic stub message starts with `not implemented:`, so the catch rethrows it and `RedCheck` recognizes it as the stub failure), and turns green on its own once the implementer's permanent message lands (the message no longer starts with `not implemented:`, so the catch no longer rethrows). Leave the exact final wording for the verifier to confirm by eye against the ticket's Definition of done, not an automated assertion.
+
 ## What not to do
 
 - Do not write a test that only restates the implementation ("calls method X"); assert on behavior and output.
