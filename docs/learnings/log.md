@@ -207,13 +207,13 @@ Friction found while working on this project, with a proposed change and what wa
 
 ### L-017: Live demonstration found integration bugs invisible at design/refinement time
 
-- Status: parked
+- Status: proposed
 - Impact: shared (`.claude/skills/tickets/SKILL.md`, `refine` mode)
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
 - Change: when a ticket's Definition of done requires a live demonstration across several already-built components, refinement should flag that cross-component assumptions (shared vocabulary like phase ids, who performs a step like committing, which status transitions a downstream check expects) are the likely failure points, so the demonstration plan specifically exercises those seams rather than only the ticket's own scenarios.
 - Evidence: `docs/tickets/completed/CCW-005-story-orchestrator-skill/CCW-005-ticket.md`, "Real bugs found only by running this for real" — three integration bugs found only by live demonstration: the `test`/`tests` phase-id spelling mismatch between `pipeline-stage/archetype.md` (CCW-002) and `FreezeCheck` (CCW-003); no agent prompt (CCW-004) included a commit step though `plan.json`/`FreezeCheck` expected one; Finishing omitted `tickets review <ID>` so `consistency` failed at the finish line. Two follow-up fix commits (`5cc00ea`, `7079a6b`) were needed after the initial build commit (`3a28e3d`).
-- Recurrences: 1 (CCW-005)
-- Recommendation: park. One ticket so far; CCW-005's own Definition of done already institutionalizes "demonstrate live before done" as a general safeguard, so the narrower point (name the specific cross-component seams to test in advance) is worth watching for recurrence on the next multi-dependency skill ticket rather than codifying now.
+- Recurrences: 2 (CCW-005: see Evidence; CCW-008: first version of the parallel-work feature assumed a tree always has `main` checked out, false in the repo it was built in; fixed by decision 4, AC-19 to AC-21 (2026-09-22))
+- Recommendation: re-proposed on a second ticket. Apply a broader form: at refinement, turn the ticket's stated purpose and the real repo/environment state into at least one scenario, not only the seams between components.
 - Decision: parked 2026-09-22 by the user, as recommended.
 
 ### L-018: A ticket's design-time assumption about another component's capability was wrong until it was run for real
@@ -281,3 +281,14 @@ Friction found while working on this project, with a proposed change and what wa
 - Recurrences: 1 (DFS-001) — though the pattern recurred within one ticket, in both the pipeline and control implementations independently; not counted twice per the log's own rule (repeats within one ticket are noted, not double-counted).
 - Recommendation: apply. Two independent implementations made the same non-reproducible choice with no template guidance either way; a one-line addition to `impl-guide.md` (or wherever the archetype's benchmark guidance best fits) closes the gap before it recurs on DFS-002 or any future pipeline-stage ticket with a measured DoD item.
 - Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-023`.
+
+### L-024: A refined ticket had to be reconciled mid-implementation with a same-day learning applied to the same skill
+
+- Status: rejected
+- Impact: local (no target; a watch-only observation)
+- Target: none
+- Change: none; watch whether a ticket that waits in the backlog while `/learn apply` changes its target skill needs re-reconciling again.
+- Evidence: `docs/tickets/completed/CCW-008-worktree-aware-tickets-lifecycle/CCW-008-ticket.md`, "Revised (2026-09-22), at implementation time": L-020 (commit `7bc54cc`) changed `done` after CCW-008 was refined, so the merge behavior, naming convention and close-commit subject were re-decided, six criteria retired (AC-2, AC-3, AC-4, AC-7, AC-9, AC-10) and replaced by AC-12 to AC-17.
+- Recurrences: 1 (CCW-008)
+- Recommendation: park. Single occurrence, corrected within the same ticket; L-020's own Recommendation had already flagged the overlap with CCW-008, so the existing safeguard worked.
+- Decision: rejected 2026-09-22 by the user.
