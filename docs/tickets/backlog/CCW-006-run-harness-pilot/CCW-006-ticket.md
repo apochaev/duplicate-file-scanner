@@ -1,7 +1,7 @@
 ---
 id: CCW-006
 title: Run the harness pilot
-status: ready
+status: in-progress
 type: spike
 scope: [build]
 archetype: none
