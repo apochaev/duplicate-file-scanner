@@ -1,7 +1,7 @@
 ---
 id: CCW-008
 title: Make the tickets lifecycle worktree-aware
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -12,7 +12,7 @@ touches: [.claude/skills/tickets, CLAUDE.md]
 blocked_reason:
 created: 2026-09-21
 updated: 2026-09-22
-completed:
+completed: 2026-09-22
 ---
 
 # CCW-008: Make the tickets lifecycle worktree-aware
