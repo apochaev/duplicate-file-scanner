@@ -292,3 +292,14 @@ Friction found while working on this project, with a proposed change and what wa
 - Recurrences: 1 (CCW-008)
 - Recommendation: park. Single occurrence, corrected within the same ticket; L-020's own Recommendation had already flagged the overlap with CCW-008, so the existing safeguard worked.
 - Decision: rejected 2026-09-22 by the user.
+
+### L-025: `/story run` checks its branch out in place instead of using a worktree
+
+- Status: proposed
+- Impact: shared (`.claude/skills/story/SKILL.md`, a skill)
+- Target: `.claude/skills/story/SKILL.md`, Preflight step 2
+- Change: Preflight step 2 creates the story branch off `main` (not the current branch tip). It then runs `/tickets start <ID> --worktree`, so the branch lives in its own worktree `../<repo-dir>-<ID>-<slug>`, where every phase agent then works. The repo checkout stays on `main`, as `CLAUDE.md`'s parallel-work convention (CCW-008) expects.
+- Evidence: Preflight step 2 on `main` reads "Create it off the current branch tip if it does not exist; check it out if it does." `/story run DFS-002` left the repo checkout on `tickets/DFS-002-partial-hash-stage`. While CCW-008 was being built, no tree had `main` checked out. The first version of CCW-008's `done` refused in exactly that state, and closing CCW-008 needed the temporary close tree (`docs/tickets/completed/CCW-008-worktree-aware-tickets-lifecycle/CCW-008-ticket.md`, decision 4 and Out of scope). Branching "off the current branch tip" also means a story started from another ticket's branch inherits that branch's unmerged commits.
+- Recurrences: 1 (CCW-008)
+- Recommendation: apply, as a ticket rather than a one-line edit. The preflight, the resume protocol and the per-phase commits all assume one checkout, and agents would have to be pointed at the worktree path, which `/story run` needs to test for real (L-017). Until then, `done`'s close tree keeps closes working.
+- Decision:
