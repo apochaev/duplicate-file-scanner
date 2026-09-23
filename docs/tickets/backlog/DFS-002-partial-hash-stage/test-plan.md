@@ -13,15 +13,18 @@
 | `DFS-002.AC-7` | An unreadable file is dropped, not its whole group | `DFS-002.AC-7 An unreadable file is dropped, not its whole group` |
 | `DFS-002.AC-7` | An unreadable file leaves its group with fewer than two members | `DFS-002.AC-7 An unreadable file leaving fewer than two members drops the group` |
 | `DFS-002.AC-8` | The full-hash method is stubbed for DFS-003 | `DFS-002.AC-8 fullHash throws UnsupportedOperationException naming DFS-003` |
-| `DFS-002.AC-9` | A custom sample size and threshold change stage behavior | `DFS-002.AC-9 The configured sample size is passed to the hasher instead of the default` (cheap, fake hasher: verifies the parameter reaches the hasher) and `DFS-002.AC-9 A custom sample size and threshold change stage behavior` (real bytes: verifies the actual outcome at the custom threshold) |
+| `DFS-002.AC-9` | A custom sample size and threshold change stage behavior | `DFS-002.AC-9 The configured sample size is passed to the hasher instead of the default` (cheap, fake hasher: verifies the parameter reaches the hasher *and* that both files above the custom threshold are actually sampled, not silently bypassed) and `DFS-002.AC-9 A custom sample size and threshold change stage behavior` (real bytes: verifies the actual outcome at the custom threshold) |
 
 One row per scenario; AC-9's one ticket scenario is covered by two tests (a cheap parameter check and a real-byte correctness check — CLAUDE.md's "cheap tests first" rule plus the near-duplicate-content rule), and AC-7 has two ticket scenarios, each with its own test.
+
+`DFS-002.AC-1` is additionally covered, on the real adapter, by `DFS-002.AC-1 sampleHash gives a different digest when files differ in the head` and `DFS-002.AC-1 sampleHash gives a different digest when files differ in the tail` in `NioContentHasherTest` — the fake-hasher test above only proves the stage separates groups when told two digests differ; these prove the real `NioContentHasher.sampleHash` itself produces different digests for a real head or tail difference, which a constant-returning `sampleHash` would fail.
 
 ## Fakes and fixtures used
 
 - `ContentHasher`: faked with `RecordingContentHasher`, a private nested fake in `PartialHashFilterTest` that returns a digest configured per `Path` (or throws a simulated `IOException` for a path marked unreadable) and records every `sampleHash` call (path and sample size) for order/parameter assertions. Used for AC-1, AC-3, AC-4, AC-5, AC-6, AC-7 (both scenarios) and the cheap half of AC-9.
 - Fixture files: none from `file-scanner/src/test/resources/fixtures/` — every test uses hand-built `FileEntry` values (fake-hasher tests) or files generated at test time in `@TempDir` (real-byte tests), since no scenario needs the shared fixture tree's shapes.
 - Generated-in-code files (never committed): `PartialHashFilterRealFileTest` writes two same-size files per test with a repeating single-byte pattern, flipping one byte past the sample boundary in the second file — a 300 KB pair (AC-2, default 64 KB sample / 128 KB threshold) and a 10 KB pair (AC-9, custom 4 KB sample / 8 KB threshold). These exercise the real `NioContentHasher` adapter through `PartialHashFilter`, per CLAUDE.md's rule that content-dependent, over-threshold behavior needs real bytes, not a fake digest.
+- `NioContentHasherTest` additionally generates, at test time and never committed, a 1000-byte pair differing only at byte 0 (head) and a 1000-byte pair differing only at the last byte (tail), calling `sampleHash` directly (200-byte sample) to prove the real adapter's digests differ when told the real bytes differ, not just when a fake is told to say so.
 
 ## Notes for the implementer
 

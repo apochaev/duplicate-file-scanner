@@ -196,6 +196,11 @@ class PartialHashFilterTest {
 
         filter.filter(List.of(group));
 
+        // Both members are above the 8 KB custom threshold, so both must actually be sampled: a
+        // threshold that silently fell back to the 128 KB default would also bypass the sample
+        // for this 10 KB group and leave the hasher with zero calls, which this count catches.
+        assertEquals(2, hasher.calls().size(),
+                "both files are above the custom 8 KB threshold, so both should be sampled");
         assertTrue(hasher.calls().stream().allMatch(call -> call.sampleSize() == 4 * 1024),
                 "every call should use the configured 4 KB sample size, not the 64 KB default");
     }

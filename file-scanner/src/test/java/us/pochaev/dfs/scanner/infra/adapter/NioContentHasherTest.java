@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -41,6 +43,72 @@ class NioContentHasherTest {
             String message = expected.getMessage();
             if (message != null && message.startsWith("not implemented:")) {
                 throw expected; // still the generic story stub, so propagate it untouched
+            }
+        }
+    }
+
+    /**
+     * DFS-002.AC-1, real-adapter half: {@link PartialHashFilterTest} proves the separation
+     * behavior against a fake that is simply told to return different digests for different
+     * files. That alone would also pass if {@code sampleHash} returned a constant for every
+     * file, so this proves the real adapter itself produces a different digest when two
+     * same-size files differ within the sampled head, using real bytes in a {@code @TempDir}
+     * (never committed), per CLAUDE.md's rule that content-dependent adapter behavior needs
+     * real bytes.
+     */
+    @Test
+    @DisplayName("DFS-002.AC-1 sampleHash gives a different digest when files differ in the head")
+    void sampleHashDiffersWhenHeadDiffers(@TempDir Path dir) throws IOException {
+        int size = 1000;
+        int sampleSize = 200;
+        Path fileA = dir.resolve("a.bin");
+        Path fileB = dir.resolve("b.bin");
+        writePattern(fileA, size, -1);
+        writePattern(fileB, size, 0); // differs at the first byte, inside the sampled head
+
+        NioContentHasher hasher = new NioContentHasher();
+
+        String digestA = hasher.sampleHash(fileA, sampleSize);
+        String digestB = hasher.sampleHash(fileB, sampleSize);
+
+        assertNotEquals(digestA, digestB);
+    }
+
+    /**
+     * DFS-002.AC-1, real-adapter half: same as above, but the differing byte is inside the
+     * sampled tail instead of the head.
+     */
+    @Test
+    @DisplayName("DFS-002.AC-1 sampleHash gives a different digest when files differ in the tail")
+    void sampleHashDiffersWhenTailDiffers(@TempDir Path dir) throws IOException {
+        int size = 1000;
+        int sampleSize = 200;
+        Path fileA = dir.resolve("a.bin");
+        Path fileB = dir.resolve("b.bin");
+        writePattern(fileA, size, -1);
+        writePattern(fileB, size, size - 1); // differs at the last byte, inside the sampled tail
+
+        NioContentHasher hasher = new NioContentHasher();
+
+        String digestA = hasher.sampleHash(fileA, sampleSize);
+        String digestB = hasher.sampleHash(fileB, sampleSize);
+
+        assertNotEquals(digestA, digestB);
+    }
+
+    /**
+     * Writes {@code size} bytes of a repeating pattern, optionally flipping one byte at
+     * {@code diffOffset} (pass -1 for no difference). Generated at test time; nothing is
+     * committed.
+     */
+    private static void writePattern(Path path, int size, int diffOffset) throws IOException {
+        try (OutputStream out = Files.newOutputStream(path)) {
+            for (int i = 0; i < size; i++) {
+                byte b = (byte) i;
+                if (i == diffOffset) {
+                    b = (byte) (b + 1);
+                }
+                out.write(b);
             }
         }
     }
