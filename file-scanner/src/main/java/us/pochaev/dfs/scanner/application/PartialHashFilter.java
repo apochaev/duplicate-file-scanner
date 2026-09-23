@@ -1,8 +1,14 @@
 package us.pochaev.dfs.scanner.application;
 
+import us.pochaev.dfs.scanner.domain.model.FileEntry;
 import us.pochaev.dfs.scanner.infra.port.ContentHasher;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Stage 2 of the detection pipeline: splits {@link CandidateGroup}s by a head-and-tail sample
@@ -50,11 +56,16 @@ public final class PartialHashFilter {
      *                                  {@code skipThreshold} is negative
      */
     public PartialHashFilter(ContentHasher hasher, int sampleSize, long skipThreshold) {
-        throw new UnsupportedOperationException("not implemented: DFS-002");
-        // implementer: requireNonNull(hasher, "hasher"), reject sampleSize <= 0 and
-        // skipThreshold < 0 with IllegalArgumentException, then assign the three fields.
-        // Deliberately not in the stub: a check before this throw would let an argument-
-        // validation test pass against the un-implemented stub instead of failing red (L-013).
+        Objects.requireNonNull(hasher, "hasher");
+        if (sampleSize <= 0) {
+            throw new IllegalArgumentException("sampleSize must be positive: " + sampleSize);
+        }
+        if (skipThreshold < 0) {
+            throw new IllegalArgumentException("skipThreshold must not be negative: " + skipThreshold);
+        }
+        this.hasher = hasher;
+        this.sampleSize = sampleSize;
+        this.skipThreshold = skipThreshold;
     }
 
     /**
@@ -67,8 +78,41 @@ public final class PartialHashFilter {
      * @throws NullPointerException if {@code groups} is null or contains null
      */
     public List<CandidateGroup> filter(List<CandidateGroup> groups) {
-        throw new UnsupportedOperationException("not implemented: DFS-002");
-        // implementer: add `Objects.requireNonNull(groups, "groups");` as the real body's
-        // first line, before any other logic (L-013: deliberately not in the stub).
+        Objects.requireNonNull(groups, "groups");
+        List<CandidateGroup> result = new ArrayList<>();
+        for (CandidateGroup group : groups) {
+            Objects.requireNonNull(group, "group");
+            if (group.size() <= skipThreshold) {
+                result.add(group);
+                continue;
+            }
+            result.addAll(splitBySample(group));
+        }
+        return List.copyOf(result);
+    }
+
+    private List<CandidateGroup> splitBySample(CandidateGroup group) {
+        List<FileEntry> sorted = new ArrayList<>(group.files());
+        sorted.sort((a, b) -> a.path().compareTo(b.path()));
+
+        Map<String, List<FileEntry>> byDigest = new LinkedHashMap<>();
+        for (FileEntry file : sorted) {
+            String digest;
+            try {
+                digest = hasher.sampleHash(file.path(), sampleSize);
+            } catch (IOException e) {
+                // Dropped without failing the rest of the group (DFS-002.AC-7).
+                continue;
+            }
+            byDigest.computeIfAbsent(digest, k -> new ArrayList<>()).add(file);
+        }
+
+        List<CandidateGroup> subgroups = new ArrayList<>();
+        for (List<FileEntry> members : byDigest.values()) {
+            if (members.size() >= 2) {
+                subgroups.add(new CandidateGroup(group.size(), members));
+            }
+        }
+        return subgroups;
     }
 }

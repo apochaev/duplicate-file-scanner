@@ -34,3 +34,11 @@ Fix for this retry: rewrite the AC-8 test (`NioContentHasherTest`) to assert onl
 - Updated the AC-8 note for the implementer in `test-plan.md`, and added a retry entry to `learnings.md`.
 - Ran the three story test classes: 11 tests, 11 failures, all `java.lang.UnsupportedOperationException: not implemented: DFS-002` (checked in the JUnit XML reports). `java tools/story-gate/StoryGate.java test-phase DFS-002` exits 0.
 - Expected commit: `test(file-scanner): add partial-hash stage tests [DFS-002]`, the same as before, now including this fix.
+
+## implement (implementer, 2026-09-22)
+
+- Implemented `PartialHashFilter(ContentHasher, int, long)` (argument validation: non-null hasher, positive sample size, non-negative threshold) and `PartialHashFilter.filter` (skip-threshold bypass returning the same instance, ascending-path sampling via `LinkedHashMap<String, List<FileEntry>>` keyed by sample digest so subgroup order follows first-occurrence/smallest-path, dropping an unreadable member on `IOException` without failing its group, dropping any resulting subgroup with fewer than two members).
+- Implemented `NioContentHasher.sampleHash` (positional `FileChannel` reads of the head and tail, each capped at the channel's size at read time so short files overlap correctly, concatenated into one SHA-256 digest, returned as lowercase hex via `HexFormat`) and replaced `NioContentHasher.fullHash`'s stub message with `"full hash is implemented by DFS-003"` (no `not implemented:` prefix), per the ticket's explicit instruction.
+- `./gradlew build` is green (file-scanner and cli, including ArchUnit and `ModuleExportsTest`). No `not implemented:` marker remains under `file-scanner/src/main`. No test file was changed.
+- Files changed: `file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PartialHashFilter.java`, `file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentHasher.java`. `ContentHasher.java` needed no change (its interface stubs were already just declarations).
+- Expected commit: `feat(file-scanner): implement partial-hash stage [DFS-002]`.
