@@ -8,16 +8,22 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {"attempt": 1, "model": "opus", "effort": "high", "turns": 18, "wallClockSeconds": 128, "outcome": "passed"}
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-001-group-files-by-size/design.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/SizeIndex.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/CandidateGroup.java"
+      ],
+      "commit": "1f8547a240a16e16795e3bfb8de88a1fae946d02"
     },
     {
       "id": "tests",
       "agent": "test-author",
       "after": ["design"],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
@@ -42,7 +48,7 @@
     }
   ],
   "gates": [
-    {"after": "design", "status": "pending"},
+    {"after": "design", "status": "approved"},
     {"after": "done", "status": "pending"}
   ],
   "defects": []
