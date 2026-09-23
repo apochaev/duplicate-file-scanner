@@ -16,15 +16,32 @@ public final class <ClassName> {
     private final List<<InputType>> entries = new ArrayList<>();
 
     public <ClassName>() {
-        // architect: set any configuration default here (checklist item 6).
+        // architect: set any configuration default here (checklist item 6). If this stage
+        // takes validated configuration (a minimum size, a threshold), give it its own
+        // constructor that throws the not-implemented exception itself, and have this
+        // no-arg constructor delegate to it — so a negative/invalid-argument test still
+        // fails red instead of passing against a constructor with no logic to fail in:
+        //
+        //     public <ClassName>(long minSize) {
+        //         throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+        //         // implementer: validate minSize (checklist item 6) after this throw,
+        //         // before assigning the field, for the same L-013 reason as add/merge.
+        //     }
+        //     public <ClassName>() {
+        //         this(DEFAULT_MIN_SIZE);
+        //     }
     }
 
     /**
      * Adds one entry. Rejects {@code null}.
      */
     public void add(<InputType> entry) {
-        Objects.requireNonNull(entry, "entry");
         throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+        // implementer: add `Objects.requireNonNull(entry, "entry");` as the real body's
+        // first line, before any other logic. Deliberately not in the stub itself, for the
+        // same reason as below: a precondition check before this throw would let an
+        // argument-validation test pass outright against the un-implemented stub instead of
+        // failing red (L-013).
     }
 
     /**
@@ -33,8 +50,9 @@ public final class <ClassName> {
      * without affecting this instance.
      */
     public void merge(<ClassName> other) {
-        Objects.requireNonNull(other, "other");
         throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+        // implementer: add `Objects.requireNonNull(other, "other");` as the real body's
+        // first line, before any other logic, for the same L-013 reason as `add` above.
     }
 
     /**

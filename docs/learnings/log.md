@@ -248,3 +248,25 @@ Friction found while working on this project, with a proposed change and what wa
 - Recurrences: 2 (CCW-004: original, corrected by `a6a2624`; CCW-005: recurred identically, caught by explicit re-staging)
 - Recommendation: apply. Two occurrences of the identical stale-index failure across two tickets is a real mechanical pattern; the merge-into-main half serves the same close-out moment and the user asked for both together. Overlaps with CCW-008 ("Make the tickets lifecycle worktree-aware") — worth a glance when that ticket is next refined, in case it wants to extend this further rather than duplicate it.
 - Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-020` (the `done` mode addition in `.claude/skills/tickets/SKILL.md`).
+
+### L-021: `design.md.tmpl` missing checklist disposition item 14
+
+- Status: applied
+- Impact: shared (archetype template every pipeline-stage architect writes from)
+- Target: `.claude/archetypes/pipeline-stage/design.md.tmpl`
+- Change: add item 14 ("Input/output currency named") to the template's "Checklist disposition" list, matching `archetype.md`'s 14-item checklist (added by L-015).
+- Evidence: `docs/tickets/backlog/DFS-001-group-files-by-size/learnings.md`, design section — "Template gap: checklist item 14 is missing from `design.md.tmpl`... I added item 14 to this `design.md` by hand. The template should list it too."
+- Recurrences: 1 (DFS-001)
+- Recommendation: apply — direct fallout from L-015 not being propagated to the template that actually renders it; will recur on every pipeline-stage ticket until fixed.
+- Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-021 and L-022`.
+
+### L-022: `Accumulator.java.tmpl` contradicts L-013 and lacks a validated-configuration constructor pattern
+
+- Status: applied
+- Impact: shared (archetype skeleton every accumulator-shaped pipeline-stage story's architect reads)
+- Target: `.claude/archetypes/pipeline-stage/skeletons/Accumulator.java.tmpl`
+- Change: (1) drop the pre-throw `Objects.requireNonNull(...)` in `add`/`merge`'s stub bodies — the same L-013/L-014 ordering bug, now found on a third skeleton — replacing with the same "implementer: add requireNonNull" guiding comment used in the other two; (2) add an example of a constructor taking validated configuration (e.g. `SizeIndex(long minSize)`) that itself throws the not-implemented exception, with a no-arg constructor delegating to it, so a validation-bearing constructor fails red correctly.
+- Evidence: `docs/tickets/backlog/DFS-001-group-files-by-size/learnings.md`, design section — both `Accumulator.java.tmpl` bullets: "`skeletons/Accumulator.java.tmpl` contradicts L-013... I left the checks out of the `SizeIndex` stub. The skeleton should drop them and carry the same 'implementer: add requireNonNull' comment as the other two." and "The skeletons do not cover an accumulator whose constructor takes validated configuration... I made the constructor throw too... The skeleton could show this pattern."
+- Recurrences: 1 (DFS-001) — third skeleton file independently found with the L-013-shaped bug (after `FilterStage.java.tmpl`, `StageResult.java.tmpl`); worth a glance at whether `pipeline-stage`'s remaining skeletons need the same audit rather than waiting for each to surface one at a time.
+- Recommendation: apply, consistent with L-013/L-014.
+- Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-021 and L-022`.
