@@ -26,6 +26,7 @@ A test that proves more than one criterion lists every ID, comma-separated, at t
 - Determinism: same input in a different order (or arrival order, for an accumulating stage) produces the same output.
 - Immutability: a value returned by the stage is unaffected by later mutation of the stage's internal state.
 - Invalid input: whatever the design doc's public API section says is rejected (a null, a negative size, a construction invariant) has a test that expects rejection.
+- Discrimination: for any adapter whose job is to distinguish inputs (a hasher, a comparator, any port mapping distinct inputs to distinct outputs), at least one test that feeds it two different real inputs and asserts the outputs actually differ — not only that identical inputs produce matching outputs. A suite proving only the matching case cannot catch a constant-returning or partially-ignoring implementation (found on DFS-002: `NioContentHasher.sampleHash` reached the done gate proven only for identical bytes; a constant-returning implementation would have passed the whole suite).
 - A near-duplicate, over-threshold fixture (same size, differs only past the sample boundary) for any stage whose behavior depends on file content past 128 KB — generate it in code (a helper that writes N bytes with one byte changed), never commit it.
 
 ## Testing a port method deferred to a later ticket

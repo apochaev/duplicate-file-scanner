@@ -114,7 +114,7 @@ Friction found while working on this project, with a proposed change and what wa
 - Change: `start` creates or enters the ticket's worktree and marks `in-progress` there, so no status edit is left in the main checkout; `done` runs against `main`, verifies the ticket's work is on `main`, moves the ticket folder there, and removes the worktree and branch after confirmation.
 - Evidence: DFS-010 (2026-09-21). `start` edited the main checkout before the worktree existed, and the merge would have been refused until that edit was discarded. `main` advanced during the work (`b64bda7` to `36ab0f7`), so the branch was replayed onto it (commits `bbe0841`, `2fd6948`). After the merge the worktree and two branches were still there.
 - Recurrences: 1
-- Recommendation: apply, as a ticket (DFS-015) rather than a one-line edit, because it changes three modes and adds a destructive step (removing worktrees and branches) that needs its own safeguards and decisions. DFS-012 (`/story`) needs the same semantics, so the two should share one design.
+- Recommendation: apply, as a ticket — already done. The proposed ticket (originally allocated `DFS-015`) was relabeled `CCW-008` by DFS-016's namespace migration (2026-09-22), and is already fully refined and `ready`, written directly from this entry (its own Context section cites L-008 as the origin of all three gaps). Confirmed 2026-09-23, checking for overlap before spinning off a new ticket for L-027. No new ticket needed; tracked via CCW-008 from here.
 - Decision:
 
 ### L-009: Scenarios about instructions are only read, not run
@@ -349,11 +349,11 @@ Friction found while working on this project, with a proposed change and what wa
 
 ### L-030: test-guide.md never prompts a discrimination test for an adapter that must distinguish inputs
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`pipeline-stage`'s `test-guide.md`, every pipeline-stage test-author reads)
 - Target: `.claude/archetypes/pipeline-stage/test-guide.md`, "Cover, per scenario" section
 - Change: add a bullet requiring, for any adapter whose job is to distinguish inputs (a hasher, a comparator, any port mapping distinct inputs to distinct outputs), at least one test that feeds it two different real inputs and asserts the outputs actually differ — not only that identical inputs produce matching outputs. A test suite proving only the matching case cannot catch a constant-returning or partially-ignoring implementation.
 - Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/verification.md`, "Friction" — "the test guide does not require discrimination tests for a hashing adapter. This retry was needed only because of that gap." Directly caused the done-gate reopen: AC-1 and AC-9 originally proved only that matching/identical inputs behaved correctly; a constant-returning `sampleHash`, or a silently-ignored custom threshold, would have passed the entire deterministic battery (green, disabled, freeze, traceability) undetected. Caught only by the verifier's qualitative review, not by any script.
 - Recurrences: 1 (DFS-002)
 - Recommendation: apply. This is the specific gap that forced a whole extra tests-phase attempt (35 turns, 348s) and a second verify pass on DFS-002; a one-line addition to the test-guide would have caught it during the original tests phase instead of at the human gate.
-- Decision:
+- Decision: applied 2026-09-23 by the user; commit `docs: apply L-030` (new "Discrimination" bullet in `test-guide.md`'s "Cover, per scenario" section; `pipeline-stage`'s `archetype.md` `version` bumped 6 → 7).
