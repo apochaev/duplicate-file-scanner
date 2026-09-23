@@ -1,7 +1,7 @@
 ---
 id: DFS-001
 title: Group scanned files by size
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
@@ -11,7 +11,7 @@ touches: [us.pochaev.dfs.scanner.application]
 blocked_reason:
 created: 2026-09-21
 updated: 2026-09-22
-completed:
+completed: 2026-09-22
 ---
 
 # DFS-001: Group scanned files by size
