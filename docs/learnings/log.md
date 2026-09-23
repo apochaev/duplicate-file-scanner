@@ -346,3 +346,14 @@ Friction found while working on this project, with a proposed change and what wa
 - Recurrences: 1 (DFS-002)
 - Recommendation: park. Resolved correctly without a gate failure this time, but the ambiguity itself is real and shared across every pipeline-stage ticket.
 - Decision: parked 2026-09-22 by the user, as recommended.
+
+### L-030: test-guide.md never prompts a discrimination test for an adapter that must distinguish inputs
+
+- Status: proposed
+- Impact: shared (`pipeline-stage`'s `test-guide.md`, every pipeline-stage test-author reads)
+- Target: `.claude/archetypes/pipeline-stage/test-guide.md`, "Cover, per scenario" section
+- Change: add a bullet requiring, for any adapter whose job is to distinguish inputs (a hasher, a comparator, any port mapping distinct inputs to distinct outputs), at least one test that feeds it two different real inputs and asserts the outputs actually differ — not only that identical inputs produce matching outputs. A test suite proving only the matching case cannot catch a constant-returning or partially-ignoring implementation.
+- Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/verification.md`, "Friction" — "the test guide does not require discrimination tests for a hashing adapter. This retry was needed only because of that gap." Directly caused the done-gate reopen: AC-1 and AC-9 originally proved only that matching/identical inputs behaved correctly; a constant-returning `sampleHash`, or a silently-ignored custom threshold, would have passed the entire deterministic battery (green, disabled, freeze, traceability) undetected. Caught only by the verifier's qualitative review, not by any script.
+- Recurrences: 1 (DFS-002)
+- Recommendation: apply. This is the specific gap that forced a whole extra tests-phase attempt (35 turns, 348s) and a second verify pass on DFS-002; a one-line addition to the test-guide would have caught it during the original tests phase instead of at the human gate.
+- Decision:
