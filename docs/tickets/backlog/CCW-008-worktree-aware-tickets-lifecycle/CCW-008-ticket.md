@@ -59,6 +59,8 @@ Intended shape, still to be refined: `start` creates or enters the worktree and 
 
 Two details settled in implementation, no new decision: `done` finds the tree with `main` checked out and works there with `git -C` (refusing if none has), so it also works when invoked from the ticket's worktree; and the squash fallback greps only `<branch>..main`, so ticket commits made on `main` before the branch forked (refinement commits) cannot count as a landing. A ticket with no `tickets/<ID>-<slug>` branch closes in place as before (AC-18).
 
+4. **Parallel work (decided 2026-09-22, after the first review).** The point of this ticket is to let several tickets run and land in parallel, and the first version still blocked it: `done` refused when no tree had `main` checked out (the state the repo was in while this ticket was built, with the checkout on DFS-002's branch), and `list` offered a ticket already started in another worktree, because `start`'s uncommitted edit leaves `main`'s copy `ready`. Chosen: both a convention and a fallback. The convention: keep the repo checkout on `main`, one worktree per ticket. The fallback: `done` opens a temporary close tree `../<repo-dir>-close-<ID>` on `main` when no tree has it, reuses one left by a conflict or interruption, and removes it at the end (AC-19). `list` shows a ticket whose branch exists under "Started elsewhere" (AC-20). A shared `main` checkout with another session's uncommitted files is used as is, with only the ticket file staged (AC-21). `main`'s ref is never moved from outside the tree that has it checked out.
+
 ## Acceptance criteria
 
 The full ID of each criterion is `CCW-008.AC-<n>`.
@@ -81,6 +83,9 @@ The full ID of each criterion is `CCW-008.AC-<n>`.
 - **AC-16** `start`, run when a worktree for the ticket already exists or one is requested (`--worktree`), creates-or-enters `../<repo-dir>-<ID>-<slug>` on branch `tickets/<ID>-<slug>` (a new branch off `main` when none exists) and makes the `in-progress` edit inside that worktree, not the tree `start` was invoked from.
 - **AC-17** `cancel` follows `done`'s landing check (AC-1), cleanup (AC-5, AC-6, AC-14) and commit (AC-15) rules, except it never merges the branch; an unmerged branch then survives cleanup through `git branch -d`'s own refusal, which is reported.
 - **AC-18** `done` on a ticket with no `tickets/<ID>-<slug>` branch closes in place in the tree it was invoked from, with no landing check, merge or cleanup, as before this ticket.
+- **AC-19** When no tree has `main` checked out, `done` (and `cancel`) opens a temporary close tree `../<repo-dir>-close-<ID>` on `main`, does its merge and close there, and removes it at the end without asking; after a merge conflict it leaves the close tree for the user to resolve in, and a re-run reuses it (stopping first if it still has an unresolved merge or other uncommitted changes).
+- **AC-20** `list` leaves out of "Dispatchable now" any ticket whose branch `tickets/<ID>-<slug>` exists, showing it under "Started elsewhere" with its worktree path (or "branch only").
+- **AC-21** When `main` is checked out in a shared tree holding another session's uncommitted changes, `done` merges and closes there without staging, committing or discarding those changes.
 
 ## Scenarios
 
@@ -183,6 +188,34 @@ Feature: Worktree-aware tickets lifecycle
     Then no merge is made, the close is committed on main as cancelled, the worktree is removed
     And "git branch -d" refuses the unmerged branch, which is reported and kept
 
+  @AC-19
+  Scenario: No tree has main checked out
+    Given the repo checkout is on branch other-ticket and nothing has main checked out
+    When "/tickets done XYZ-001" runs
+    Then done opens ../repo-close-XYZ-001 on main, merges and commits the close there, and removes it at the end
+    And the repo checkout is still on other-ticket
+
+  @AC-19
+  Scenario: A conflict in the close tree is resolved there and the re-run reuses it
+    Given nothing has main checked out and the branch conflicts with main
+    When "/tickets done XYZ-001" runs
+    Then done stops with the conflict unresolved inside ../repo-close-XYZ-001, which is kept
+    And a re-run before resolving stops at step 1
+    And after the user commits the resolution there, a re-run reuses the close tree, closes, and removes it
+
+  @AC-20
+  Scenario: list hides a ticket started in another worktree
+    Given "/tickets start XYZ-001 --worktree" ran, so main's copy of XYZ-001 still says ready
+    When "/tickets list" runs
+    Then XYZ-001 is shown under "Started elsewhere" with its worktree, not under "Dispatchable now"
+
+  @AC-21
+  Scenario: A shared main checkout keeps another session's uncommitted work
+    Given main's checkout has an unrelated modified file and an untracked file from another session
+    When "/tickets done XYZ-001" runs
+    Then the merge and close commit land on main with only the ticket file staged
+    And the other session's modified and untracked files are still there, uncommitted
+
   @AC-11
   Scenario: review touches no worktree
     Given the ticket XYZ-001 is in-progress inside ../repo-XYZ-001-demo
@@ -201,17 +234,19 @@ Feature: Worktree-aware tickets lifecycle
 - The `/story` skill's own branch handling (CCW-005); CCW-005 depends on this ticket instead
 - Pushing or pull requests
 - Sweeping rebase backup refs (`refs/original/*`)
+- Making `/story run` work in a worktree instead of checking its branch out in place (it lives in the `story` skill; a follow-up for CCW-005's owner, so that the parallel-work convention also holds for pipeline tickets)
 
 ## Definition of done
 
 - [x] A walkthrough of every scenario above, on a scratch worktree/branch, shows the outcome (evidence noted in this ticket, CCW-007's precedent). Evidence: see Walkthrough below.
 - [x] No files changed outside the paths listed under Touches. Evidence: `git status` on the branch lists only `.claude/skills/tickets/SKILL.md`, `CLAUDE.md` and this ticket's own folder (ticket, `walkthrough.sh`, `walkthrough.log`).
 - [x] The worktree and branch naming convention (`../<repo-dir>-<ID>-<slug>`, `tickets/<ID>-<slug>`) is stated in the skill text, matching `/story run`'s branch name (revised 2026-09-22, decision 2). Evidence: SKILL.md, section "Branches and worktrees".
+- [x] `CLAUDE.md` and the skill state the parallel-work convention (repo checkout on `main`, one worktree per ticket) and the close-tree fallback. Evidence: SKILL.md "Branches and worktrees", "Parallel work" paragraph; CLAUDE.md, same paragraph as the next item.
 - [x] `CLAUDE.md` states that `done`'s close commit needs no separate confirmation, since running `/tickets done` is itself the request. Evidence: the paragraph after the Tickets section's first paragraph.
 
 ## Walkthrough (2026-09-22)
 
-`walkthrough.sh` in this folder runs the git steps of the new `start`, `review`, `done` and `cancel` text literally, against a throwaway repo it creates and deletes (ticket `XYZ-001`, slug `demo`, plus `XYZ-002` worked on `main`). One block per scenario; the full output is `walkthrough.log`. Re-run with `bash walkthrough.sh`.
+`walkthrough.sh` in this folder runs the git steps of the new `start`, `review`, `done` and `cancel` text literally, against a throwaway repo it creates and deletes (ticket `XYZ-001`, slug `demo`, plus `XYZ-002` worked on `main`). One block per scenario (S14 to S17 added with decision 4); the full output is `walkthrough.log`. Re-run with `bash walkthrough.sh`.
 
 Limits, stated plainly: the script is a transcription of the skill's steps into shell, not the skill run by an agent. Two things are agent behavior that no script can exercise and were checked by reading only: that the cleanup confirmation is asked exactly **once** (the script takes it as a parameter; S4 exercises "declined"), and that **no** yes/no prompt precedes the close commit (AC-15).
 
@@ -230,7 +265,10 @@ Limits, stated plainly: the script is a transcription of the skill's steps into 
 | S11 | AC-17 | `cancel` on an unmerged branch: "never merges", close committed as `cancelled` with a Resolution section, worktree removed, `git branch -d` refused and branch kept |
 | S12 | AC-11 | `review` inside the worktree: `in-review` on `tickets/XYZ-001-demo`, repo copy untouched, worktree count unchanged |
 | S13 | (step 1) | `done` invoked from inside the ticket's worktree: found `main`'s tree, merged, closed there, and removed the worktree it was invoked from (Windows, Git Bash) |
-| S14 | (step 1) | No tree had `main` checked out: refused before changing anything |
+| S14 | AC-19 | Repo checkout on `other-ticket`, nothing on `main`: `done` opened `repo-close-XYZ-001`, merged and closed there, cleaned up, removed the close tree; checkout still on `other-ticket` |
+| S15 | AC-19 | Conflict with nothing on `main`: stopped (exit 2) with the close tree kept (three worktrees); re-run before resolving stopped at step 1 (exit 3); after the resolution was committed in the close tree, the re-run reused it, found the branch landed, closed, and removed it |
+| S16 | AC-20 | Before `start`, both tickets dispatchable; after `start --worktree` (`main`'s copy still `ready`), XYZ-001 listed as "started elsewhere: in repo-XYZ-001-demo" |
+| S17 | AC-21 | `main`'s checkout had ` M a.txt` and `?? other-session.txt` from "another session": merge and close landed staging only the ticket file; both files still uncommitted afterwards |
 
 ## Open questions
 

@@ -37,7 +37,7 @@ start() {
 # review <ID> <slug>   (SKILL.md "review": current tree only)
 review() { setstatus "$(git rev-parse --show-toplevel)/$(TF $1 $2)" in-review; echo "review: in-review on $(git branch --show-current)"; }
 
-# done|cancel <ID> <slug> [confirm=yes|no]   (SKILL.md "done" steps 1-5, "cancel")
+# done|cancel <ID> <slug> [confirm=yes|no]   (SKILL.md "done" steps 1-6, "cancel")
 close_in() {
   local T=$1 f=$(TF $id $slug) nf=docs/tickets/completed/$id-$slug/$id-ticket.md st=done
   [ $mode = cancel ] && st=cancelled
@@ -50,10 +50,15 @@ close_in() {
   git -C "$T" commit -qm "docs: close $id [$id]" && echo "  close commit: $(git -C "$T" log -1 --format='%h %s')"
 }
 done_() {
-  mode=$1 id=$2 slug=$3; local confirm=${4:-yes} br=tickets/$2-$3 M wt hits
+  mode=$1 id=$2 slug=$3; confirm=${4:-yes} br=tickets/$2-$3 M= ; local hits
   if ! git show-ref -q --verify refs/heads/$br; then echo "$mode: no $br, closing in place"; close_in "$(git rev-parse --show-toplevel)"; return; fi
   M=$(git worktree list --porcelain | awk '/^worktree /{w=substr($0,10)} $0=="branch refs/heads/main"{print w}')
-  [ -z "$M" ] && { echo "$mode: REFUSE, no tree has main checked out"; return 1; }
+  CT=$(dirname "$R")/repo-close-$id
+  if [ -z "$M" ]; then git worktree add -q "$CT" main && M=$CT && echo "  step 1: no tree has main, opened close tree $CT"
+  elif [ "$M" = "$(cd "$CT" 2>/dev/null && pwd -W)" ] || [ "$M" = "$CT" ]; then
+    [ -n "$(git -C "$M" status --porcelain)" ] && { echo "  step 1: leftover close tree has uncommitted changes, STOP"; return 3; }
+    echo "  step 1: reusing leftover close tree $M"
+  fi
   if git -C "$M" merge-base --is-ancestor $br main; then echo "  landed: ancestor check passed"
   elif hits=$(git -C "$M" log --oneline -F --grep="[$id]" $br..main) && [ -n "$hits" ]; then echo "  landed: ancestor failed, fallback grep found: $hits"
   else echo "  not landed: neither check passed"
@@ -61,7 +66,10 @@ done_() {
     elif git -C "$M" merge -q --no-edit $br; then echo "  merged: $(git -C "$M" log -1 --format='%h %s (parents %p)')"
     else echo "  $mode: STOP, merge conflict left unresolved; resolve, commit and re-run $mode"; return 2; fi
   fi
-  close_in "$M"
+  close_in "$M"; cleanup; closetree
+}
+closetree() { case "$M" in *-close-$id) git -C "$R" worktree remove "$M" && echo "  step 6: close tree removed";; esac; }
+cleanup() {
   wt=$(wt_of $br)
   echo "  cleanup: will remove worktree '${wt:-none}' and branch $br -- confirm? $confirm"
   [ $confirm = yes ] || { echo "  cleanup declined"; return; }
@@ -69,6 +77,9 @@ done_() {
   if [ -n "$wt" ]; then git -C "$M" worktree remove "$wt" && echo "  worktree removed" || { echo "  worktree remove failed; branch kept"; return; }; fi
   git -C "$M" branch -d $br >/dev/null 2>"$S/err" && echo "  branch deleted (-d)" || echo "  branch -d refused, kept: $(head -1 "$S/err")"
 }
+# list: "Started elsewhere" = ready tickets whose tickets/<ID>-<slug> branch exists   (SKILL.md "list")
+list_() { for f in docs/tickets/backlog/*/*-ticket.md; do d=$(basename $(dirname $f)); id=${d:0:7}; [ "$(status_of $f)" = ready ] || continue
+  if git show-ref -q --verify refs/heads/tickets/$d; then echo "  started elsewhere: $id in $(wt_of tickets/$d | sed 's|.*/||')"; else echo "  dispatchable: $id"; fi; done; }
 state() { echo "  -> main: $(git -C "$R" log --oneline main | head -4 | tr '\n' '|')"
   echo "  -> worktrees: $(git -C "$R" worktree list | wc -l), branch exists: $(git -C "$R" show-ref -q --verify refs/heads/tickets/XYZ-001-demo && echo yes || echo no)"; }
 work() { cd "$(wt_of tickets/XYZ-001-demo)"; printf "$1" > ${2:-b.txt}; git add -A; git commit -qm "feat: work [XYZ-001]"; cd "$R"; }
@@ -132,6 +143,21 @@ echo "  worktree copy: $(status_of $WT/$(TF XYZ-001 demo)), repo copy: $(status_
 echo "== S13 done invoked from inside the ticket's worktree"
 mk; start XYZ-001 demo --worktree; work 'x\n'; cd "$WT"; done_ done XYZ-001 demo; cd "$R"; state
 
-echo "== S14 no tree has main checked out"
-mk; start XYZ-001 demo --worktree; git switch -q -c other; done_ done XYZ-001 demo; echo "  exit $?"; state
+echo "== S14 @AC-19 no tree has main checked out: close tree"
+mk; start XYZ-001 demo --worktree; work 'x\n'; git switch -q -c other-ticket; done_ done XYZ-001 demo; echo "  exit $?"; state
+echo "  repo checkout still on: $(git branch --show-current); main has close commit: $(git log -1 --format=%s main)"
+
+echo "== S15 @AC-19 conflict in the close tree, resolve, re-run reuses and removes it"
+mk; start XYZ-001 demo --worktree; work 'branch\n' a.txt; printf 'main\n' > a.txt; git commit -qam "chore: main edit"; git switch -q -c other-ticket
+done_ done XYZ-001 demo; echo "  exit $?; close tree still there: $([ -d "$CT" ] && echo yes || echo no); worktrees: $(git worktree list | wc -l)"
+done_ done XYZ-001 demo; echo "  re-run before resolving: exit $?"
+printf 'resolved\n' > "$CT/a.txt"; git -C "$CT" add a.txt; git -C "$CT" commit -q --no-edit; echo "  user resolved and committed in close tree"
+done_ done XYZ-001 demo; state; echo "  close tree gone: $([ -d "$CT" ] && echo no || echo yes)"
+
+echo "== S16 @AC-20 list hides a ticket started in another worktree"
+mk; list_; start XYZ-001 demo --worktree; echo "  after start --worktree (main copy still: $(status_of $(TF XYZ-001 demo))):"; list_
+
+echo "== S17 @AC-21 shared main checkout with another session's uncommitted work"
+mk; start XYZ-001 demo --worktree; work 'x\n'; printf 'other\n' > other-session.txt; printf 'line1\nedited by other session\n' > a.txt
+done_ done XYZ-001 demo; state; echo "  main tree still has: $(git status --porcelain | tr '\n' ' ')"
 cd /; rm -rf "$S"

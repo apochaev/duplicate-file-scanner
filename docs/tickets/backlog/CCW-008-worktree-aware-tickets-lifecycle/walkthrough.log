@@ -4,45 +4,45 @@ start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-00
   landed: ancestor check passed
   staged == working tree
   staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
-  close commit: 80c2486 docs: close XYZ-001 [XYZ-001]
+  close commit: 60b09ba docs: close XYZ-001 [XYZ-001]
   cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? yes
   worktree removed
   branch deleted (-d)
-  -> main: 80c2486 docs: close XYZ-001 [XYZ-001]|95ebbfb feat: work [XYZ-001]|43f3673 docs(tickets): refine XYZ-001 [XYZ-001]|3e0715e init|
+  -> main: 60b09ba docs: close XYZ-001 [XYZ-001]|e9d0ff0 feat: work [XYZ-001]|51e9eee docs(tickets): refine XYZ-001 [XYZ-001]|78fc9df init|
   -> worktrees: 1, branch exists: no
   close commit files: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
 == S2 @AC-1 @AC-5 squash-merged
 start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-001-demo
 Squash commit -- not updating HEAD
-  landed: ancestor failed, fallback grep found: 2cfb7b2 feat: squashed work [XYZ-001]
+  landed: ancestor failed, fallback grep found: baefe76 feat: squashed work [XYZ-001]
   staged == working tree
   staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
-  close commit: 3fdf522 docs: close XYZ-001 [XYZ-001]
+  close commit: bdc2550 docs: close XYZ-001 [XYZ-001]
   cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? yes
   worktree removed
   branch -d refused, kept: error: The branch 'tickets/XYZ-001-demo' is not fully merged.
-  -> main: 3fdf522 docs: close XYZ-001 [XYZ-001]|2cfb7b2 feat: squashed work [XYZ-001]|a5f7751 docs(tickets): refine XYZ-001 [XYZ-001]|eb8a158 init|
+  -> main: bdc2550 docs: close XYZ-001 [XYZ-001]|baefe76 feat: squashed work [XYZ-001]|de45474 docs(tickets): refine XYZ-001 [XYZ-001]|7a7a758 init|
   -> worktrees: 1, branch exists: yes
 == S3 @AC-1 @AC-12 refinement commit before fork does not count
 start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-001-demo
-  unranged grep would hit: 4499ffb docs(tickets): refine XYZ-001 [XYZ-001]
+  unranged grep would hit: eb635eb docs(tickets): refine XYZ-001 [XYZ-001]
   not landed: neither check passed
-  merged: 4b325f6 feat: work [XYZ-001] (parents 4499ffb)
+  merged: 65ccbb9 feat: work [XYZ-001] (parents eb635eb)
   staged == working tree
   staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
-  close commit: 81cdc78 docs: close XYZ-001 [XYZ-001]
+  close commit: 28f52a0 docs: close XYZ-001 [XYZ-001]
   cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? yes
   worktree removed
   branch deleted (-d)
-  -> main: 81cdc78 docs: close XYZ-001 [XYZ-001]|4b325f6 feat: work [XYZ-001]|4499ffb docs(tickets): refine XYZ-001 [XYZ-001]|50a744c init|
+  -> main: 28f52a0 docs: close XYZ-001 [XYZ-001]|65ccbb9 feat: work [XYZ-001]|eb635eb docs(tickets): refine XYZ-001 [XYZ-001]|b9c1af9 init|
   -> worktrees: 1, branch exists: no
 == S4 @AC-12 @AC-13 main moved, no conflict
 start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-001-demo
   not landed: neither check passed
-  merged: 0c22cfa Merge branch 'tickets/XYZ-001-demo' (parents b59f983 fdba01a)
+  merged: 9c97bcc Merge branch 'tickets/XYZ-001-demo' (parents a9aca67 e63d544)
   staged == working tree
   staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
-  close commit: 392dfee docs: close XYZ-001 [XYZ-001]
+  close commit: 85765c6 docs: close XYZ-001 [XYZ-001]
   cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? no
   cleanup declined
   branch tip unchanged (not rebased): yes
@@ -56,36 +56,36 @@ Automatic merge failed; fix conflicts and then commit the result.
   done: STOP, merge conflict left unresolved; resolve, commit and re-run done
   exit 2
   unmerged: a.txt , ticket still in backlog: yes
-  -> main: cd744d0 chore: main edit|6663d45 docs(tickets): refine XYZ-001 [XYZ-001]|54cd34d init|
+  -> main: d54ecab chore: main edit|5bc1b48 docs(tickets): refine XYZ-001 [XYZ-001]|3c79bf6 init|
   -> worktrees: 2, branch exists: yes
 == S6 @AC-5 dirty worktree
 start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-001-demo
   landed: ancestor check passed
   staged == working tree
   staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
-  close commit: 236cdcf docs: close XYZ-001 [XYZ-001]
+  close commit: 6d3b61f docs: close XYZ-001 [XYZ-001]
   cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? yes
   cleanup REFUSED, dirty worktree: ?? dirty.txt 
-  -> main: 236cdcf docs: close XYZ-001 [XYZ-001]|4576ad4 feat: work [XYZ-001]|dfe0180 docs(tickets): refine XYZ-001 [XYZ-001]|54220a4 init|
+  -> main: 6d3b61f docs: close XYZ-001 [XYZ-001]|42b0653 feat: work [XYZ-001]|5707dbc docs(tickets): refine XYZ-001 [XYZ-001]|671b527 init|
   -> worktrees: 2, branch exists: yes
 == S7 @AC-6 @AC-14 refs/original survives
 start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-001-demo
   landed: ancestor check passed
   staged == working tree
   staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
-  close commit: 7431f9b docs: close XYZ-001 [XYZ-001]
+  close commit: 2e461e9 docs: close XYZ-001 [XYZ-001]
   cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? yes
   worktree removed
   branch deleted (-d)
-  -> main: 7431f9b docs: close XYZ-001 [XYZ-001]|62894e4 feat: work [XYZ-001]|1609df5 docs(tickets): refine XYZ-001 [XYZ-001]|65ced43 init|
+  -> main: 2e461e9 docs: close XYZ-001 [XYZ-001]|4880002 feat: work [XYZ-001]|720f993 docs(tickets): refine XYZ-001 [XYZ-001]|4777c98 init|
   -> worktrees: 1, branch exists: no
   refs/original: refs/original/refs/heads/tickets/XYZ-001-demo
 == S8 @AC-18 done on a ticket worked on main
 done: no tickets/XYZ-002-plain, closing in place
   staged == working tree
   staged: D docs/tickets/backlog/XYZ-002-plain/XYZ-002-ticket.md A docs/tickets/completed/XYZ-002-plain/XYZ-002-ticket.md 
-  close commit: 6e28c58 docs: close XYZ-002 [XYZ-002]
-  -> main: 6e28c58 docs: close XYZ-002 [XYZ-002]|d3a45d3 docs(tickets): refine XYZ-001 [XYZ-001]|b433e0b init|
+  close commit: a04618c docs: close XYZ-002 [XYZ-002]
+  -> main: a04618c docs: close XYZ-002 [XYZ-002]|5356baf docs(tickets): refine XYZ-001 [XYZ-001]|cf4db0e init|
   -> worktrees: 1, branch exists: no
 == S9 @AC-8 start in place
 start: in place in $TMPDIR/ccw-008-walk/repo (main)
@@ -100,11 +100,11 @@ start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-00
   cancel: never merges
   staged == working tree
   staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
-  close commit: 003d8d6 docs: close XYZ-001 [XYZ-001]
+  close commit: 6fdc76e docs: close XYZ-001 [XYZ-001]
   cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? yes
   worktree removed
   branch -d refused, kept: error: The branch 'tickets/XYZ-001-demo' is not fully merged.
-  -> main: 003d8d6 docs: close XYZ-001 [XYZ-001]|c0bc8e2 docs(tickets): refine XYZ-001 [XYZ-001]|be08740 init|
+  -> main: 6fdc76e docs: close XYZ-001 [XYZ-001]|40bff4a docs(tickets): refine XYZ-001 [XYZ-001]|c33629e init|
   -> worktrees: 1, branch exists: yes
   ticket: status: cancelled, resolution: 1
 == S12 @AC-11 review in the worktree
@@ -114,18 +114,72 @@ review: in-review on tickets/XYZ-001-demo
 == S13 done invoked from inside the ticket's worktree
 start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-001-demo
   not landed: neither check passed
-  merged: 0ebdb0f feat: work [XYZ-001] (parents bd7470a)
+  merged: 81e9dc8 feat: work [XYZ-001] (parents 5da1b8d)
   staged == working tree
   staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
-  close commit: 04845f4 docs: close XYZ-001 [XYZ-001]
+  close commit: 3ddf332 docs: close XYZ-001 [XYZ-001]
   cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? yes
   worktree removed
   branch deleted (-d)
-  -> main: 04845f4 docs: close XYZ-001 [XYZ-001]|0ebdb0f feat: work [XYZ-001]|bd7470a docs(tickets): refine XYZ-001 [XYZ-001]|5388da7 init|
+  -> main: 3ddf332 docs: close XYZ-001 [XYZ-001]|81e9dc8 feat: work [XYZ-001]|5da1b8d docs(tickets): refine XYZ-001 [XYZ-001]|38ace6c init|
   -> worktrees: 1, branch exists: no
-== S14 no tree has main checked out
+== S14 @AC-19 no tree has main checked out: close tree
 start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-001-demo
-done: REFUSE, no tree has main checked out
-  exit 1
-  -> main: e4f40f6 docs(tickets): refine XYZ-001 [XYZ-001]|e2773f4 init|
-  -> worktrees: 2, branch exists: yes
+  step 1: no tree has main, opened close tree $TMPDIR/ccw-008-walk/repo-close-XYZ-001
+  not landed: neither check passed
+  merged: 1d7c214 feat: work [XYZ-001] (parents cce7870)
+  staged == working tree
+  staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
+  close commit: dfbe399 docs: close XYZ-001 [XYZ-001]
+  cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? yes
+  worktree removed
+  branch deleted (-d)
+  step 6: close tree removed
+  exit 0
+  -> main: dfbe399 docs: close XYZ-001 [XYZ-001]|1d7c214 feat: work [XYZ-001]|cce7870 docs(tickets): refine XYZ-001 [XYZ-001]|083783a init|
+  -> worktrees: 1, branch exists: no
+  repo checkout still on: other-ticket; main has close commit: docs: close XYZ-001 [XYZ-001]
+== S15 @AC-19 conflict in the close tree, resolve, re-run reuses and removes it
+start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-001-demo
+  step 1: no tree has main, opened close tree $TMPDIR/ccw-008-walk/repo-close-XYZ-001
+  not landed: neither check passed
+Auto-merging a.txt
+CONFLICT (content): Merge conflict in a.txt
+Automatic merge failed; fix conflicts and then commit the result.
+  done: STOP, merge conflict left unresolved; resolve, commit and re-run done
+  exit 2; close tree still there: yes; worktrees: 3
+  step 1: leftover close tree has uncommitted changes, STOP
+  re-run before resolving: exit 3
+  user resolved and committed in close tree
+  step 1: reusing leftover close tree $TMPDIR/ccw-008-walk/repo-close-XYZ-001
+  landed: ancestor check passed
+  staged == working tree
+  staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
+  close commit: 58daa14 docs: close XYZ-001 [XYZ-001]
+  cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? yes
+  worktree removed
+  branch deleted (-d)
+  step 6: close tree removed
+  -> main: 58daa14 docs: close XYZ-001 [XYZ-001]|1efea83 Merge branch 'tickets/XYZ-001-demo'|7539381 chore: main edit|795f31a feat: work [XYZ-001]|
+  -> worktrees: 1, branch exists: no
+  close tree gone: yes
+== S16 @AC-20 list hides a ticket started in another worktree
+  dispatchable: XYZ-001
+  dispatchable: XYZ-002
+start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-001-demo
+  after start --worktree (main copy still: ready):
+  started elsewhere: XYZ-001 in repo-XYZ-001-demo
+  dispatchable: XYZ-002
+== S17 @AC-21 shared main checkout with another session's uncommitted work
+start: created worktree $TMPDIR/ccw-008-walk/repo-XYZ-001-demo on tickets/XYZ-001-demo
+  not landed: neither check passed
+  merged: a41d826 feat: work [XYZ-001] (parents 9cff594)
+  staged == working tree
+  staged: D docs/tickets/backlog/XYZ-001-demo/XYZ-001-ticket.md A docs/tickets/completed/XYZ-001-demo/XYZ-001-ticket.md 
+  close commit: f3b9929 docs: close XYZ-001 [XYZ-001]
+  cleanup: will remove worktree '$TMPDIR/ccw-008-walk/repo-XYZ-001-demo' and branch tickets/XYZ-001-demo -- confirm? yes
+  worktree removed
+  branch deleted (-d)
+  -> main: f3b9929 docs: close XYZ-001 [XYZ-001]|a41d826 feat: work [XYZ-001]|9cff594 docs(tickets): refine XYZ-001 [XYZ-001]|c5ead90 init|
+  -> worktrees: 1, branch exists: no
+  main tree still has:  M a.txt ?? other-session.txt 
