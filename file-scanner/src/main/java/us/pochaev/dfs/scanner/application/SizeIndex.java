@@ -1,6 +1,12 @@
 package us.pochaev.dfs.scanner.application;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
 
 /**
@@ -20,6 +26,9 @@ public final class SizeIndex {
     /** The default minimum size in bytes: empty files are excluded. */
     public static final long DEFAULT_MIN_SIZE = 1L;
 
+    private final long minSize;
+    private final Map<Long, List<FileEntry>> bySize = new HashMap<>();
+
     /** Creates an index with the default minimum size, {@value #DEFAULT_MIN_SIZE}. */
     public SizeIndex() {
         this(DEFAULT_MIN_SIZE);
@@ -31,7 +40,10 @@ public final class SizeIndex {
      * @throws IllegalArgumentException if {@code minSize} is negative
      */
     public SizeIndex(long minSize) {
-        throw new UnsupportedOperationException("not implemented: DFS-001");
+        if (minSize < 0) {
+            throw new IllegalArgumentException("minSize must not be negative: " + minSize);
+        }
+        this.minSize = minSize;
     }
 
     /**
@@ -40,7 +52,11 @@ public final class SizeIndex {
      * @throws NullPointerException if {@code entry} is null
      */
     public void add(FileEntry entry) {
-        throw new UnsupportedOperationException("not implemented: DFS-001");
+        Objects.requireNonNull(entry, "entry");
+        if (entry.size() < minSize) {
+            return;
+        }
+        bySize.computeIfAbsent(entry.size(), size -> new ArrayList<>()).add(entry);
     }
 
     /**
@@ -51,7 +67,17 @@ public final class SizeIndex {
      * @throws IllegalArgumentException if {@code other} was built with a different minimum size
      */
     public void merge(SizeIndex other) {
-        throw new UnsupportedOperationException("not implemented: DFS-001");
+        Objects.requireNonNull(other, "other");
+        if (other.minSize != this.minSize) {
+            throw new IllegalArgumentException(
+                    "cannot merge indexes with different minimum sizes: " + this.minSize + " vs " + other.minSize);
+        }
+        if (other == this) {
+            return;
+        }
+        for (Map.Entry<Long, List<FileEntry>> group : other.bySize.entrySet()) {
+            bySize.computeIfAbsent(group.getKey(), size -> new ArrayList<>()).addAll(group.getValue());
+        }
     }
 
     /**
@@ -63,6 +89,32 @@ public final class SizeIndex {
      * order entries were added or merged in. The index itself is not cleared.
      */
     public List<CandidateGroup> groups() {
-        throw new UnsupportedOperationException("not implemented: DFS-001");
+        List<CandidateGroup> result = new ArrayList<>();
+        for (Map.Entry<Long, List<FileEntry>> group : bySize.entrySet()) {
+            long size = group.getKey();
+            List<FileEntry> sorted = new ArrayList<>(group.getValue());
+            sorted.sort(Comparator.comparing(FileEntry::path));
+
+            List<FileEntry> collapsed = new ArrayList<>();
+            for (FileEntry entry : sorted) {
+                if (!collapsed.isEmpty()) {
+                    FileEntry last = collapsed.getLast();
+                    if (last.path().equals(entry.path())) {
+                        if (entry.lastModified().isAfter(last.lastModified())) {
+                            collapsed.set(collapsed.size() - 1, entry);
+                        }
+                        continue;
+                    }
+                }
+                collapsed.add(entry);
+            }
+
+            if (collapsed.size() >= 2) {
+                result.add(new CandidateGroup(size, collapsed));
+            }
+        }
+
+        result.sort(Comparator.comparingLong(CandidateGroup::size).reversed());
+        return List.copyOf(result);
     }
 }

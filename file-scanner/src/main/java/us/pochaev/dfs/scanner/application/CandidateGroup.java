@@ -1,6 +1,7 @@
 package us.pochaev.dfs.scanner.application;
 
 import java.util.List;
+import java.util.Objects;
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
 
 /**
@@ -22,6 +23,16 @@ import us.pochaev.dfs.scanner.domain.model.FileEntry;
 public record CandidateGroup(long size, List<FileEntry> files) {
 
     public CandidateGroup {
-        throw new UnsupportedOperationException("not implemented: DFS-001");
+        Objects.requireNonNull(files, "files");
+        files = List.copyOf(files);
+        if (files.size() < 2) {
+            throw new IllegalArgumentException("a candidate group needs at least two files: " + files.size());
+        }
+        for (FileEntry file : files) {
+            if (file.size() != size) {
+                throw new IllegalArgumentException(
+                        "file size " + file.size() + " does not match group size " + size);
+            }
+        }
     }
 }

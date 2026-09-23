@@ -23,16 +23,22 @@
       "id": "tests",
       "agent": "test-author",
       "after": ["design"],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {"attempt": 1, "model": "sonnet", "effort": "medium", "turns": 27, "wallClockSeconds": 205, "outcome": "passed"}
+      ],
+      "artifacts": [
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/SizeIndexTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/CandidateGroupTest.java",
+        "docs/tickets/backlog/DFS-001-group-files-by-size/test-plan.md"
+      ],
+      "commit": "fb842f03e07ea72a29deaa72231d33debc9a0091"
     },
     {
       "id": "implement",
       "agent": "implementer",
       "after": ["tests"],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
