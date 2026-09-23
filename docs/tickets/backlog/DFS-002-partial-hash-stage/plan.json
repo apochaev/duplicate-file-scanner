@@ -42,16 +42,21 @@
       "id": "implement",
       "agent": "implementer",
       "after": ["tests"],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {"attempt": 1, "model": "sonnet", "effort": "medium", "turns": 24, "wallClockSeconds": 83, "outcome": "passed"}
+      ],
+      "artifacts": [
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PartialHashFilter.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentHasher.java"
+      ],
+      "commit": "56f83cc70710ae754b05f985ab9451ebb4c3c5c2"
     },
     {
       "id": "verify",
       "agent": "verifier",
       "after": ["implement"],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
