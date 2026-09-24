@@ -1,7 +1,7 @@
 ---
 id: DFS-002
 title: Filter candidates by head-and-tail partial hash
-status: ready
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
@@ -137,12 +137,12 @@ Feature: Partial-hash stage
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] The near-duplicate large-file case is generated in code, not committed
-- [ ] `ContentHasher.fullHash` throws `UnsupportedOperationException` naming DFS-003 as the ticket that implements it
-- [ ] Every item of the `pipeline-stage` archetype's edge-case checklist is addressed in the design doc or marked not applicable with a one-line reason
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] The near-duplicate large-file case is generated in code, not committed
+- [x] `ContentHasher.fullHash` throws `UnsupportedOperationException` naming DFS-003 as the ticket that implements it
+- [x] Every item of the `pipeline-stage` archetype's edge-case checklist is addressed in the design doc or marked not applicable with a one-line reason
 
 ## Open questions
 

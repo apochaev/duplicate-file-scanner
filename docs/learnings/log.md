@@ -282,7 +282,83 @@ Friction found while working on this project, with a proposed change and what wa
 - Recommendation: apply. Two independent implementations made the same non-reproducible choice with no template guidance either way; a one-line addition to `impl-guide.md` (or wherever the archetype's benchmark guidance best fits) closes the gap before it recurs on DFS-002 or any future pipeline-stage ticket with a measured DoD item.
 - Decision: applied 2026-09-22 by the user, as recommended; commit `docs: apply L-023`.
 
-### L-024: A refined ticket had to be reconciled mid-implementation with a same-day learning applied to the same skill
+### L-024: No convention for a port method deliberately deferred to a later ticket
+
+- Status: applied
+- Impact: shared (the `pipeline-stage` archetype's stub convention every architect and test-author reads)
+- Target: `.claude/archetypes/pipeline-stage/archetype.md`, "Where files go" (documents the two-stage stub-message convention) and `test-guide.md` (documents the conditional-rethrow test pattern)
+- Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/learnings.md`, design section — "the archetype and `impl-guide` do not cover a port method that is intentionally left unimplemented for a later ticket... A convention would help, for example a distinct prefix such as `deferred to:` that `StubsCheck` ignores." Independently re-raised in the test-phase learnings ("Retry (defect 1): a method stubbed until a future ticket is not designed for in this archetype"), and directly caused `plan.json` defect 1 (test-phase attempt 1 failed the gate, escalated to opus for attempt 2).
+- Recurrences: 1 (DFS-002) — hit independently by both the architect and the test-author in one story
+- Recommendation: apply. Two independent phases hit the same undesigned case and it caused a real gate failure and an unnecessary model escalation, not just friction. Applied as documentation rather than the originally proposed `RedCheck`/`StubsCheck`/`TestResult` code change: a code-level `"deferred to:"` prefix does not actually solve the problem, since `RedCheck` only runs *before* implementation, while the stub still carries the generic message — a test asserting the eventual, differently-worded message still mismatches at that point regardless of what prefix `RedCheck` recognizes. It also would have collided with `GreenCheck`, which fails unconditionally on any `FAILED` test — a test designed to stay red forever would permanently break `green`. The pattern that actually resolved this in DFS-002 (test-author's conditional rethrow: catch, and re-throw unchanged only while the message still starts with `not implemented:`) needs no gate code change at all — it turns green on its own once the implementer's permanent message lands, exactly like every other AC test. The fix is documenting that pattern as a named convention so future test-authors don't have to reinvent it under gate pressure.
+- Decision: applied 2026-09-23 by the user; commit `docs: apply L-024, L-025 and L-026` (new bullet in `archetype.md`'s "Where files go"; new "Testing a port method deferred to a later ticket" section in `test-guide.md`; `pipeline-stage`'s `archetype.md` `version` bumped 5 → 6).
+
+### L-025: Resume protocol has no scripted path for sending a passed/gated phase back for targeted rework
+
+- Status: applied
+- Impact: shared (`.claude/skills/story/SKILL.md`, D5 resume protocol)
+- Target: `.claude/skills/story/SKILL.md`, `approve <ID> [feedback]` mode
+- Change: add a named step (analogous to the existing `blocked`-retry carve-out) for "a phase already `done`, past a human gate, needs to go back for more work": which downstream phases reset to `pending` vs `in-progress` (for reconciliation) vs are left alone, that the attempt counter/D9 escalation does not apply (this is human-directed, not automatic), and how the deterministic checks should be re-run given a later phase's commit already exists on the branch.
+- Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/learnings.md` — "D5's resume protocol (`SKILL.md`) has no built-in path for 'a phase already marked `done`, past a human gate, needs to go back for more work'... This time it was driven by hand... Candidate for `/story learn`: give this case an actual named step in the resume protocol." Corroborated by `plan.json`'s tests-phase note: "human-directed reopen after the done gate... not an automatic-retry escalation."
+- Recurrences: 1 (DFS-002)
+- Recommendation: apply. The orchestrator explicitly flagged this as ad hoc while doing it by hand and asked for a scripted procedure; will recur any time a verifier's "send it back" verdict is accepted. L-026 folded into this same edit rather than applied as a separate `tools/story-gate` code change (see its own entry below).
+- Decision: applied 2026-09-23 by the user; commit `docs: apply L-024, L-025 and L-026` (rewrote the `approve <ID> [feedback]` "With feedback" bullet in `SKILL.md` with the scripted reset-and-reconcile procedure; added a cross-reference in resume-protocol step 3).
+
+### L-026: `story-gate`'s `test-phase` check cannot validate tests reopened after implementation already exists
+
+- Status: applied
+- Impact: shared (`.claude/skills/story/SKILL.md`, folded into L-025's edit)
+- Target: `.claude/skills/story/SKILL.md`, `approve <ID> [feedback]` mode (not `tools/story-gate` — see Decision)
+- Change: give `story-gate` a way to validate newly added/changed tests in a reopened tests phase without requiring the whole working tree's `src/main` to be pre-implementation — for example diffing test results against the recorded stub commit's tree in isolation, or an explicit "reopened, verify green not red" mode instead of always demanding the red-gate shape.
+- Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/learnings.md`, "test retry 2" entry — "`RedCheck`... has no notion of 'the tests phase was reopened after implementation already happened'... `RedCheck` reports 13 'passed against stubs' problems — the exact inverse of what it is designed to catch."
+- Recurrences: 1 (DFS-002) — the same underlying "reopen a passed phase" scenario as L-025, but a distinct, purely mechanical tooling gap in the check itself rather than the orchestrator's process
+- Recommendation: apply. Confirmed tooling gap; contributed to the test-author agent burning through its turn budget trying to satisfy an unsatisfiable check. Applied as an orchestrator-side procedural rule, not a `RedCheck`/`TestPhaseGate` code change: a code fix that makes "these tests would fail against a wrong implementation" checkable without `src/main` reverted to stubs is mutation-testing-shaped, which CLAUDE.md's parked ideas already reject as too slow and an engine-compatibility risk. What actually resolved this in DFS-002 was simpler — verify a reopened tests phase with a plain green run (`green`), since `red`'s whole model assumes pre-implementation and does not apply once a later phase's commit already exists. Folded into L-025's `SKILL.md` edit since both are the same "send a passed phase back" scripted step.
+- Decision: applied 2026-09-23 by the user; commit `docs: apply L-024, L-025 and L-026` (the same `SKILL.md` edit as L-025, which documents using `green` rather than `test-phase` to verify a reopened `tests` phase).
+
+### L-027: `DisabledCheck`/`FreezeCheck` scan the whole test tree, not just the current story's own scope
+
+- Status: proposed
+- Impact: shared (`tools/story-gate/DisabledCheck.java`, `FreezeCheck.java`)
+- Target: `tools/story-gate/DisabledCheck.java`, `tools/story-gate/FreezeCheck.java`
+- Change: scope both checks to the ticket's `touches` (or at minimum give `DisabledCheck` a carve-out for a deliberately-committed manual benchmark, distinct from a real skipped/incomplete test) instead of scanning/diffing the entire test tree regardless of which ticket is running.
+- Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/plan.json`, defect 2 — "`disabled` check failed on `SizeIndexHeapBenchmark.java` (DFS-001's own committed benchmark, unrelated to anything DFS-002 touched)... Then `freeze` failed for the same reason."
+- Recurrences: 1 (DFS-002) — two consecutive false-positive gate failures from a completely unrelated file
+- Recommendation: apply, as a ticket (CCW-009) rather than a direct edit — real code across two files with genuine design questions (what "the ticket's own scope" resolves to for these checks), the same reasoning L-008 already set precedent for. Concrete, reproduced false-positive gate failure; will recur for any story that runs after a prior story's test-tree-touching learning gets committed.
+- Decision:
+
+### L-028: Checklist item 10 conflates "unreadable" and "changes size" as one undesigned case
+
+- Status: parked
+- Impact: local (this ticket's design only)
+- Target: `.claude/archetypes/pipeline-stage/archetype.md`, edge-case checklist item 10
+- Change: split checklist item 10 into two explicit prompts (unreadable-during-read vs. size-changes-during-read) so a ticket's refinement is asked to decide both, rather than leaving one undecided for the architect to defer unprompted.
+- Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/learnings.md`, design section — "Checklist item 10 asks about both 'unreadable' and 'changes size'. The ticket only decided the unreadable case. I deferred the size-change case in `design.md` rather than invent behavior that no AC tests."
+- Recurrences: 1 (DFS-002)
+- Recommendation: park. Single occurrence with no gate failure attached; worth revisiting if a future pipeline-stage ticket hits the same ambiguity.
+- Decision: parked 2026-09-22 by the user, as recommended.
+
+### L-029: Ambiguity between test-guide's "cover rejected inputs" prompt and the no-invented-scenarios rule
+
+- Status: parked
+- Impact: shared (`.claude/archetypes/pipeline-stage/test-guide.md` and the test-author's own top-level instructions)
+- Target: `.claude/archetypes/pipeline-stage/test-guide.md`, "Cover, per scenario" section
+- Change: clarify that the test-guide's invalid-input prompt only applies when the ticket's own acceptance criteria name an invalid-input scenario, removing the ambiguity the test-author had to resolve unprompted.
+- Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/learnings.md`, test section — "the `pipeline-stage` test-guide... says to test whatever the design doc's public API/Configuration sections say is rejected... But the top-level test-author instructions say not to invent scenarios beyond the ticket's own ACs... I followed the top-level instruction and left these untested... Flagged in the final report as a possible refinement gap."
+- Recurrences: 1 (DFS-002)
+- Recommendation: park. Resolved correctly without a gate failure this time, but the ambiguity itself is real and shared across every pipeline-stage ticket.
+- Decision: parked 2026-09-22 by the user, as recommended.
+
+### L-030: test-guide.md never prompts a discrimination test for an adapter that must distinguish inputs
+
+- Status: applied
+- Impact: shared (`pipeline-stage`'s `test-guide.md`, every pipeline-stage test-author reads)
+- Target: `.claude/archetypes/pipeline-stage/test-guide.md`, "Cover, per scenario" section
+- Change: add a bullet requiring, for any adapter whose job is to distinguish inputs (a hasher, a comparator, any port mapping distinct inputs to distinct outputs), at least one test that feeds it two different real inputs and asserts the outputs actually differ — not only that identical inputs produce matching outputs. A test suite proving only the matching case cannot catch a constant-returning or partially-ignoring implementation.
+- Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/verification.md`, "Friction" — "the test guide does not require discrimination tests for a hashing adapter. This retry was needed only because of that gap." Directly caused the done-gate reopen: AC-1 and AC-9 originally proved only that matching/identical inputs behaved correctly; a constant-returning `sampleHash`, or a silently-ignored custom threshold, would have passed the entire deterministic battery (green, disabled, freeze, traceability) undetected. Caught only by the verifier's qualitative review, not by any script.
+- Recurrences: 1 (DFS-002)
+- Recommendation: apply. This is the specific gap that forced a whole extra tests-phase attempt (35 turns, 348s) and a second verify pass on DFS-002; a one-line addition to the test-guide would have caught it during the original tests phase instead of at the human gate.
+- Decision: applied 2026-09-23 by the user; commit `docs: apply L-030` (new "Discrimination" bullet in `test-guide.md`'s "Cover, per scenario" section; `pipeline-stage`'s `archetype.md` `version` bumped 6 → 7).
+
+### L-031: A refined ticket had to be reconciled mid-implementation with a same-day learning applied to the same skill
 
 - Status: rejected
 - Impact: local (no target; a watch-only observation)
@@ -293,7 +369,9 @@ Friction found while working on this project, with a proposed change and what wa
 - Recommendation: park. Single occurrence, corrected within the same ticket; L-020's own Recommendation had already flagged the overlap with CCW-008, so the existing safeguard worked.
 - Decision: rejected 2026-09-22 by the user.
 
-### L-025: `/story run` checks its branch out in place instead of using a worktree
+*(Numbered `L-024` on the branch this entry was written on (`main`); renumbered to `L-031` on 2026-09-23 while merging `tickets/DFS-002-partial-hash-stage` into `main`, since that number was independently taken there by a different entry (now this log's actual `L-024`) before either branch saw the other's commits. See `L-033` for the general friction this collision itself surfaced.)*
+
+### L-032: `/story run` checks its branch out in place instead of using a worktree
 
 - Status: proposed
 - Impact: shared (`.claude/skills/story/SKILL.md`, a skill)
@@ -302,4 +380,17 @@ Friction found while working on this project, with a proposed change and what wa
 - Evidence: Preflight step 2 on `main` reads "Create it off the current branch tip if it does not exist; check it out if it does." `/story run DFS-002` left the repo checkout on `tickets/DFS-002-partial-hash-stage`. While CCW-008 was being built, no tree had `main` checked out. The first version of CCW-008's `done` refused in exactly that state, and closing CCW-008 needed the temporary close tree (`docs/tickets/completed/CCW-008-worktree-aware-tickets-lifecycle/CCW-008-ticket.md`, decision 4 and Out of scope). Branching "off the current branch tip" also means a story started from another ticket's branch inherits that branch's unmerged commits.
 - Recurrences: 1 (CCW-008)
 - Recommendation: apply, as a ticket rather than a one-line edit. The preflight, the resume protocol and the per-phase commits all assume one checkout, and agents would have to be pointed at the worktree path, which `/story run` needs to test for real (L-017). Until then, `done`'s close tree keeps closes working.
+- Decision:
+
+*(Numbered `L-025` on `main`; renumbered to `L-032` for the same reason as `L-031`, above.)*
+
+### L-033: Two sessions working on diverged branches independently allocate the same next learnings-log number
+
+- Status: proposed
+- Impact: shared (`.claude/skills/learn/SKILL.md`, `add`/`apply`/`reflect` steps that allocate the next `L-<n>`; `.claude/skills/story/SKILL.md`'s `learn` mode does the same)
+- Target: `.claude/skills/learn/SKILL.md` (and `.claude/skills/story/SKILL.md`'s `learn` mode, which allocates the same way)
+- Change: a per-story learnings log, kept in the story's own folder alongside `learnings.md`/`progress.md`, rather than every session computing "highest `L-<n>` in the shared `docs/learnings/log.md`, plus one" directly against a file that a parallel session on a different branch may have already advanced. Global numbering and merging into the one shared log would happen at a single serialization point (closing the ticket, or merging its branch), not at proposal time. Discussed in conversation before this collision was hit for real, not yet designed.
+- Evidence: closing DFS-002, `main` had diverged with a full CCW-008 implementation done in a parallel session on the same machine, overlapping this session's working hours (commits `e2238ac` through `c0a2555`, 2026-09-22 23:25 to 2026-09-23 07:15). Both sessions independently proposed a next entry by reading their own branch's copy of `docs/learnings/log.md` and computing "highest number plus one" — each landed on `L-024` and `L-025` for two entirely unrelated findings (this session: the deferred-stub convention and the resume-protocol gap; the other: a mid-implementation reconciliation observation and a worktree-checkout gap). Neither session could have detected the collision without seeing the other's uncommitted or unmerged work. Resolved by hand at merge time: the other session's two entries renumbered to `L-031`/`L-032` (see their own notes).
+- Recurrences: 1 (DFS-002/CCW-008, discovered together at merge time — one collision, two colliding entries)
+- Recommendation: apply. This is a structural gap, not a one-off mistake — any two sessions working on diverged branches that both propose learnings will collide the same way, and the log's own rule ("numbers are never reused") was already broken once between two branches before either was merged. Needs real design (how/when the per-story entries get a global number, what a story's own learnings file looks like before that point) rather than a one-line fix, so likely its own ticket.
 - Decision:
