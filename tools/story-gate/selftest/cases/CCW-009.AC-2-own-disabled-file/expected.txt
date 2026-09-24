@@ -1,0 +1,3 @@
+FAIL disabled DFS-902: 1 problem
+- m/src/test/java/a/OwnTest.java:5: @Disabled
+exit=1

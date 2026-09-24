@@ -1,2 +1,2 @@
-PASS selftest: 2 cases match their expected verdicts; every scenario of DFS-010 is covered
+PASS selftest: 2 cases match their expected verdicts; every scenario of CCW-003 is covered
 exit=0

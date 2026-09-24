@@ -1,0 +1,2 @@
+PASS disabled DFS-902: no @Disabled tests in the 1 test files of the tests phase; 1 skipped by an assumption
+exit=0

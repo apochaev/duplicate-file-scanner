@@ -1,0 +1,10 @@
+{
+  "check": "cli",
+  "scenarios": [],
+  "args": ["disabled", "DFS-902"],
+  "repo": [
+    {"write": {"docs/tickets/backlog/DFS-902-second/DFS-902-ticket.md": "---\nid: DFS-902\nstatus: ready\n---\n\n# DFS-902\n",
+               "m/src/test/java/a/OldTicketBenchmark.java": "package a;\n\nclass OldTicketBenchmark {\n    @Test\n    @Disabled(\"manual benchmark\")\n    void run() {\n    }\n}\n"},
+     "commit": "base"}
+  ]
+}

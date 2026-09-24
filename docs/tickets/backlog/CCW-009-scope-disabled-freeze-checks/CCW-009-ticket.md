@@ -1,7 +1,7 @@
 ---
 id: CCW-009
 title: Scope DisabledCheck and FreezeCheck to the running story
-status: ready
+status: in-progress
 type: fix
 scope: [build]
 archetype: none
@@ -132,11 +132,11 @@ Feature: Scoped disabled/freeze checks and a multi-ticket selftest harness
 
 ## Definition of done
 
-- [ ] `selftest` passes and covers every scenario of this ticket through its own prefixed fixture cases, alongside CCW-003's existing unprefixed ones (matching the precedent CCW-003 itself set for this item)
-- [ ] Each touched check still runs through `java tools/story-gate/StoryGate.java <check> <ID>` and prints a verdict of about ten lines
-- [ ] No files changed outside the paths listed under Touches
-- [ ] The DFS-001/DFS-002 false positive (AC-6) is reproduced directly as a fixture case and confirmed fixed
-- [ ] `selftest` itself runs clean end-to-end (AC-8) — not just the individual checks it exercises
+- [x] `selftest` passes and covers every scenario of this ticket through its own prefixed fixture cases, alongside CCW-003's existing unprefixed ones (matching the precedent CCW-003 itself set for this item) — 2026-09-23: 13 `CCW-009.AC-*` case folders (`AC-1` x2, `AC-2`, `AC-3`, `AC-4`, `AC-5` x3, `AC-6` x2, `AC-7` x2, `AC-8`); `selftest` reports "every scenario of CCW-003, CCW-009 is covered". AC-1/2/5/6's disabled cases run through `cli` (the real `DisabledCheck.run`, reading `plan.json` from the ticket folder), since the map-based `disabled` case type lives in `SelfTestCase.java`, outside touches, and passes no plan. The `AC-5-*-empty-artifacts` cases reuse AC-1's and AC-3's exact inputs with only the artifacts list emptied, and fail, so the scoped cases genuinely discriminate.
+- [x] Each touched check still runs through `java tools/story-gate/StoryGate.java <check> <ID>` and prints a verdict of about ten lines — 2026-09-23, live on this repo: `disabled`/`freeze` for DFS-001 and DFS-002 each print one `PASS` line ("no @Disabled tests in the 2|3 test files of the tests phase", "none of the 2|3 test files of the tests phase changed since fb842f03|421f402d"), exit 0. Fallback (no artifacts) output is byte-identical to before: every pre-existing `AC-5-*`/`AC-6-*` case passes unchanged.
+- [x] No files changed outside the paths listed under Touches — 2026-09-23: `git status` shows only the four `.java` files, `selftest/cases/**`, and this ticket's own file. Inside `selftest/cases`, the three `AC-12-*` nested fixture tickets were moved from `DFS-010-story-gate-tools/DFS-010-ticket.md` to `CCW-003-story-gate-tools/CCW-003-ticket.md` (`id:` updated), and `AC-12-passes/expected.txt` now names CCW-003. This follows the stale-reference fix, and no unprefixed case folder was renamed. Two harmless `DFS-010` mentions remain outside touches: `SelfTestCase.java:317` (the launcher cases' fake-JDK argument, never resolved to a ticket) and the `StoryGate.java` class javadoc.
+- [x] The DFS-001/DFS-002 false positive (AC-6) is reproduced directly as a fixture case and confirmed fixed — 2026-09-23: `CCW-009.AC-6-dfs-001-002-disabled` (both tickets' `touches: [us.pochaev.dfs.scanner.application]`, DFS-001's committed `SizeIndexHeapBenchmark.java` carrying `@Disabled`) and `CCW-009.AC-6-dfs-001-002-freeze` (the benchmark edited after DFS-002's tests commit, as the orchestrator's hand fix did) both `PASS` for DFS-002.
+- [x] `selftest` itself runs clean end-to-end (AC-8) — not just the individual checks it exercises — 2026-09-23: `java tools/story-gate/StoryGate.java selftest` → "PASS selftest: 84 cases match their expected verdicts; every scenario of CCW-003, CCW-009 is covered", exit 0 (it previously errored with "no ticket folder for DFS-010").
 
 ## Open questions
 

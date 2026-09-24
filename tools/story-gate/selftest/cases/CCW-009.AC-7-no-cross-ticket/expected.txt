@@ -1,0 +1,4 @@
+FAIL selftest: 2 problems
+- CCW-009 scenario "Prefixed scenario" has no case named after its criterion
+- cases [CCW-009.AC-1-wrong-ticket] name an unknown CCW-009 scenario "Example scenario"
+exit=1

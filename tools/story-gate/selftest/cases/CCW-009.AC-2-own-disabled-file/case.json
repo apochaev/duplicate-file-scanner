@@ -1,0 +1,12 @@
+{
+  "check": "cli",
+  "scenarios": ["This ticket's own disabled test file still fails the check"],
+  "args": ["disabled", "DFS-902"],
+  "repo": [
+    {"write": {"docs/tickets/backlog/DFS-902-second/DFS-902-ticket.md": "---\nid: DFS-902\nstatus: in-progress\n---\n\n# DFS-902\n",
+               "docs/tickets/backlog/DFS-902-second/plan.json": "{\"ticket\": \"DFS-902\", \"phases\": [{\"id\": \"tests\", \"commit\": \"abc\", \"artifacts\": [\"m/src/test/java/a/OwnTest.java\"]}]}\n",
+               "m/src/test/java/a/OldTicketBenchmark.java": "package a;\n\nclass OldTicketBenchmark {\n    @Test\n    @Disabled(\"manual benchmark\")\n    void run() {\n    }\n}\n",
+               "m/src/test/java/a/OwnTest.java": "package a;\n\nclass OwnTest {\n    @Test\n    @Disabled(\"later\")\n    void works() {\n    }\n}\n"},
+     "commit": "base"}
+  ]
+}

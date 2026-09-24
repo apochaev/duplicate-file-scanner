@@ -7,24 +7,28 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
  * {@code selftest}: runs every check on the small fixture cases under {@code tools/story-gate/selftest/cases} and
- * compares each verdict with the case's {@code expected.txt}. A case is a folder named after the criterion it proves
- * ({@code AC-7-...}), holding {@code case.json} (see {@link SelfTestCase}) and {@code expected.txt}. Every scenario
- * of this ticket must be claimed by a case, so a scenario cannot lose its evidence unnoticed.
+ * compares each verdict with the case's {@code expected.txt}. A case is a folder named after the ticket and criterion
+ * it proves ({@code CCW-009.AC-7-...}, or {@code AC-7-...} for the {@link #DEFAULT_TICKET} the harness was built
+ * under), holding {@code case.json} (see {@link SelfTestCase}) and {@code expected.txt}. Every scenario of every
+ * ticket that has a case must be claimed by a case of that ticket, so a scenario cannot lose its evidence unnoticed.
  *
  * <p>The orchestrator runs it as a pre-flight before trusting the gates. {@code --bless} writes a missing
  * {@code expected.txt} from the actual verdict: review the file before keeping it.
  */
 final class SelfTest {
 
-    static final String TICKET = "DFS-010";
+    /** The ticket an unprefixed case belongs to: the one that built this harness. */
+    static final String DEFAULT_TICKET = "CCW-003";
 
-    private static final Pattern CASE_NAME = Pattern.compile("^AC-(\\d+)-.+");
+    /** Group 1: the optional ticket prefix; group 2: the criterion number. */
+    private static final Pattern CASE_NAME = Pattern.compile("^(?:([A-Z]+-\\d{3})\\.)?AC-(\\d+)-.+");
 
     private SelfTest() {}
 
@@ -34,7 +38,8 @@ final class SelfTest {
         if (!Files.isDirectory(casesDir)) throw new GateError("no self-test cases at " + casesDir);
 
         List<String> problems = new ArrayList<>();
-        Map<String, Set<String>> claimed = new LinkedHashMap<>(); // scenario title -> case names
+        // ticket -> scenario title -> case names
+        Map<String, Map<String, Set<String>>> claimed = new TreeMap<>();
         int cases = 0;
         for (Path dir : caseDirs(casesDir)) {
             cases++;
@@ -46,15 +51,23 @@ final class SelfTest {
 
         if (!problems.isEmpty()) return Verdict.fail("selftest", "", problems);
         return Verdict.pass("selftest", "", cases + " cases match their expected verdicts; every scenario of "
-                + TICKET + " is covered");
+                + String.join(", ", claimed.keySet()) + " is covered");
+    }
+
+    /** The ticket a case folder belongs to, from its prefix; null when the name is malformed. */
+    static String ticketOf(String caseName) {
+        Matcher m = CASE_NAME.matcher(caseName);
+        if (!m.matches()) return null;
+        return m.group(1) == null ? DEFAULT_TICKET : m.group(1);
     }
 
     private static List<String> runCase(Path dir, Path shared, Path root, boolean bless,
-                                        Map<String, Set<String>> claimed) {
+                                        Map<String, Map<String, Set<String>>> claimed) {
         String name = dir.getFileName().toString();
         List<String> problems = new ArrayList<>();
-        if (!CASE_NAME.matcher(name).matches()) {
-            problems.add(name + ": a case is named after its criterion, like AC-7-some-title");
+        String ticket = ticketOf(name);
+        if (ticket == null) {
+            problems.add(name + ": a case is named after its criterion, like AC-7-some-title or CCW-009.AC-7-some-title");
         }
         Map<String, Object> spec;
         try {
@@ -63,8 +76,11 @@ final class SelfTest {
             return List.of(name + ": case.json unreadable: " + e.getMessage());
         }
         if (spec == null) return List.of(name + ": case.json is not an object");
-        for (Object title : SelfTestCase.list(spec, "scenarios")) {
-            claimed.computeIfAbsent(String.valueOf(title), k -> new HashSet<>()).add(name);
+        if (ticket != null) {
+            Map<String, Set<String>> titles = claimed.computeIfAbsent(ticket, k -> new LinkedHashMap<>());
+            for (Object title : SelfTestCase.list(spec, "scenarios")) {
+                titles.computeIfAbsent(String.valueOf(title), k -> new HashSet<>()).add(name);
+            }
         }
 
         String actual;
@@ -107,22 +123,32 @@ final class SelfTest {
         return "outputs differ";
     }
 
-    /** Each scenario of the ticket needs a case named after one of its criteria; each claim must name a real one. */
-    private static List<String> coverage(Path root, Map<String, Set<String>> claimed) {
-        Ticket ticket = Story.find(root, TICKET).ticket();
+    /**
+     * For each ticket that has a case: each of its scenarios needs one of its cases named after one of the
+     * scenario's criteria, and each claim must name a real scenario of that ticket. A case is never checked against
+     * another ticket's scenarios.
+     */
+    private static List<String> coverage(Path root, Map<String, Map<String, Set<String>>> claimed) {
         List<String> problems = new ArrayList<>();
-        Set<String> known = new HashSet<>();
-        for (Ticket.Scenario s : ticket.scenarios()) {
-            known.add(s.title());
-            Set<String> cases = claimed.getOrDefault(s.title(), Set.of());
-            boolean covered = cases.stream().anyMatch(c -> {
-                Matcher m = CASE_NAME.matcher(c);
-                return m.matches() && s.tags().contains(Integer.parseInt(m.group(1)));
+        boolean several = claimed.size() > 1;
+        claimed.forEach((id, titles) -> {
+            String of = several ? id + " " : ""; // one ticket reads as before
+            Ticket ticket = Story.find(root, id).ticket();
+            Set<String> known = new HashSet<>();
+            for (Ticket.Scenario s : ticket.scenarios()) {
+                known.add(s.title());
+                Set<String> cases = titles.getOrDefault(s.title(), Set.of());
+                boolean covered = cases.stream().anyMatch(c -> {
+                    Matcher m = CASE_NAME.matcher(c);
+                    return m.matches() && s.tags().contains(Integer.parseInt(m.group(2)));
+                });
+                if (!covered) problems.add(of + "scenario \"" + s.title() + "\" has no case named after its criterion");
+            }
+            titles.forEach((title, cases) -> {
+                if (!known.contains(title)) {
+                    problems.add("cases " + cases + " name an unknown " + of + "scenario \"" + title + "\"");
+                }
             });
-            if (!covered) problems.add("scenario \"" + s.title() + "\" has no case named after its criterion");
-        }
-        claimed.forEach((title, cases) -> {
-            if (!known.contains(title)) problems.add("cases " + cases + " name an unknown scenario \"" + title + "\"");
         });
         return problems;
     }

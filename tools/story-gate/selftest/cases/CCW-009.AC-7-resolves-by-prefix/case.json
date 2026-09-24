@@ -1,0 +1,5 @@
+{
+  "check": "selftest",
+  "scenarios": ["A prefixed case is checked against its own ticket's scenarios", "An unprefixed case still defaults to CCW-003"],
+  "tree": "m"
+}

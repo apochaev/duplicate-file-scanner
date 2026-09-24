@@ -1,0 +1,5 @@
+{
+  "check": "selftest",
+  "scenarios": ["selftest runs clean end-to-end after the fix"],
+  "tree": "m"
+}

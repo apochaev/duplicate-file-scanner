@@ -1,10 +1,15 @@
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Test freeze: no test file has been added, changed or deleted since the commit the {@code tests} phase recorded in
  * plan.json, so the implementer cannot turn the tests green by editing them.
+ *
+ * <p>Only the story's own test files are judged: those the {@code tests} phase lists under {@code artifacts}. A file
+ * another ticket committed inside the diff window is not this story's defect. When the phase lists no artifacts,
+ * every test file is judged, as before.
  */
 final class FreezeCheck {
 
@@ -27,16 +32,26 @@ final class FreezeCheck {
         if (commit == null) {
             return Verdict.fail("freeze", id, List.of("plan.json records no commit for the tests phase"));
         }
-        return evaluate(id, commit, Git.changesSince(root, commit));
+        return evaluate(id, commit, Git.changesSince(root, commit), Story.testsArtifacts(plan));
     }
 
     static Verdict evaluate(String id, String commit, List<Git.Change> changes) {
+        return evaluate(id, commit, changes, Set.of());
+    }
+
+    /** {@code artifacts}: the tests phase's files; empty means every test file. */
+    static Verdict evaluate(String id, String commit, List<Git.Change> changes, Set<String> artifacts) {
+        boolean scoped = !artifacts.isEmpty();
         List<String> problems = new ArrayList<>();
         for (Git.Change c : changes) {
-            if (Sources.isTestPath(c.path())) problems.add(c.path() + ": " + c.status() + " since the test phase");
+            if (!Sources.isTestPath(c.path()) || (scoped && !artifacts.contains(c.path()))) continue;
+            problems.add(c.path() + ": " + c.status() + " since the test phase");
         }
         String shortCommit = commit.length() > 8 ? commit.substring(0, 8) : commit;
         if (!problems.isEmpty()) return Verdict.fail("freeze", id, problems);
-        return Verdict.pass("freeze", id, "no test file changed since " + shortCommit);
+        if (!scoped) return Verdict.pass("freeze", id, "no test file changed since " + shortCommit);
+        long own = artifacts.stream().filter(Sources::isTestPath).count();
+        return Verdict.pass("freeze", id, "none of the " + own + " test files of the tests phase changed since "
+                + shortCommit);
     }
 }

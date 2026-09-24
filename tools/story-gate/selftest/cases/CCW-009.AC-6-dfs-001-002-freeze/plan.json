@@ -1,0 +1,4 @@
+{"ticket": "DFS-002", "state": "running",
+ "phases": [{"id": "tests", "agent": "test-author", "after": [], "status": "done", "commit": "${tests}",
+             "artifacts": ["file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PartialHashFilterTest.java",
+                           "docs/tickets/backlog/DFS-002-partial-hash-stage/test-plan.md"]}]}

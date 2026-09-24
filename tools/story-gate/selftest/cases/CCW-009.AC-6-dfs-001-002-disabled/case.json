@@ -1,0 +1,16 @@
+{
+  "check": "cli",
+  "scenarios": ["The exact DFS-001/DFS-002 shape is reproduced and fixed"],
+  "args": ["disabled", "DFS-002"],
+  "repo": [
+    {"write": {"docs/tickets/completed/DFS-001-group-files-by-size/DFS-001-ticket.md": "---\nid: DFS-001\nstatus: done\ntouches: [us.pochaev.dfs.scanner.application]\n---\n\n# DFS-001\n",
+               "docs/tickets/completed/DFS-001-group-files-by-size/plan.json": "{\"ticket\": \"DFS-001\", \"phases\": [{\"id\": \"tests\", \"commit\": \"abc\", \"artifacts\": [\"file-scanner/src/test/java/us/pochaev/dfs/scanner/application/SizeIndexTest.java\", \"file-scanner/src/test/java/us/pochaev/dfs/scanner/application/SizeIndexHeapBenchmark.java\"]}]}\n",
+               "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/SizeIndexTest.java": "package us.pochaev.dfs.scanner.application;\n\nclass SizeIndexTest {\n    @Test\n    void groups() {\n    }\n}\n",
+               "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/SizeIndexHeapBenchmark.java": "package us.pochaev.dfs.scanner.application;\n\nclass SizeIndexHeapBenchmark {\n    @Test\n    @Disabled(\"manual benchmark\")\n    void measure() {\n    }\n}\n"},
+     "commit": "dfs-001-closed"},
+    {"write": {"docs/tickets/backlog/DFS-002-partial-hash-stage/DFS-002-ticket.md": "---\nid: DFS-002\nstatus: in-progress\ntouches: [us.pochaev.dfs.scanner.application]\n---\n\n# DFS-002\n",
+               "docs/tickets/backlog/DFS-002-partial-hash-stage/plan.json": "{\"ticket\": \"DFS-002\", \"phases\": [{\"id\": \"tests\", \"commit\": \"def\", \"artifacts\": [\"file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PartialHashFilterTest.java\", \"docs/tickets/backlog/DFS-002-partial-hash-stage/test-plan.md\"]}]}\n",
+               "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PartialHashFilterTest.java": "package us.pochaev.dfs.scanner.application;\n\nclass PartialHashFilterTest {\n    @Test\n    void filters() {\n    }\n}\n"},
+     "commit": "dfs-002-tests"}
+  ]
+}

@@ -1,20 +1,20 @@
 ---
-id: DFS-010
+id: CCW-009
 status: in-progress
 touches: []
 ---
 
 ## Acceptance criteria
 
-- **AC-1** The example check reports a pass.
+- **AC-1** A prefixed case is checked against this ticket.
 
 ## Scenarios
 
 ```gherkin
-Feature: Example
+Feature: Prefixed example
 
   @AC-1
-  Scenario: Example scenario
+  Scenario: Prefixed scenario
     Given source with no stubs
     Then the stubs check passes
 ```

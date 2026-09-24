@@ -1,0 +1,14 @@
+{
+  "check": "freeze",
+  "ticket": "DFS-002",
+  "scenarios": ["The exact DFS-001/DFS-002 shape is reproduced and fixed"],
+  "repo": [
+    {"write": {"file-scanner/src/test/java/us/pochaev/dfs/scanner/application/SizeIndexHeapBenchmark.java": "class SizeIndexHeapBenchmark { @Test @Disabled void measure() {} }\n"},
+     "commit": "dfs-001-closed"},
+    {"write": {"file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PartialHashFilterTest.java": "class PartialHashFilterTest {}\n"},
+     "commit": "tests"},
+    {"write": {"file-scanner/src/test/java/us/pochaev/dfs/scanner/application/SizeIndexHeapBenchmark.java": "class SizeIndexHeapBenchmark { void measure() {} }\n",
+               "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PartialHashFilter.java": "class PartialHashFilter {}\n"},
+     "commit": "impl"}
+  ]
+}

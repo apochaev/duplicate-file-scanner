@@ -1,0 +1,6 @@
+{
+  "check": "stubs",
+  "ticket": "CCW-009",
+  "scenarios": ["Example scenario"],
+  "files": {"m/src/main/java/B.java": "class B {}\n"}
+}

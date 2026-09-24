@@ -1,0 +1,2 @@
+FAIL freeze DFS-902: 1 problem
+- m/src/test/java/a/OwnTest.java: modified since the test phase

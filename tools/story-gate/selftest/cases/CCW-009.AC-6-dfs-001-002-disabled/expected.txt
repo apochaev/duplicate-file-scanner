@@ -1,0 +1,2 @@
+PASS disabled DFS-002: no @Disabled tests in the 1 test files of the tests phase; 0 skipped by an assumption; no test reports found, so skips were not checked
+exit=0

@@ -1,0 +1,13 @@
+{
+  "check": "freeze",
+  "ticket": "DFS-902",
+  "scenarios": ["This ticket's own changed test file still fails the freeze check"],
+  "repo": [
+    {"write": {"m/src/test/java/a/OldTicketBenchmark.java": "class OldTicketBenchmark { /* v1 */ }\n",
+               "m/src/test/java/a/OwnTest.java": "class OwnTest {}\n"},
+     "commit": "tests"},
+    {"write": {"m/src/test/java/a/OldTicketBenchmark.java": "class OldTicketBenchmark { /* v2 */ }\n",
+               "m/src/test/java/a/OwnTest.java": "class OwnTest { /* weakened */ }\n"},
+     "commit": "impl"}
+  ]
+}

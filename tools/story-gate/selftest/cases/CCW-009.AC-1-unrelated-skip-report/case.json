@@ -1,0 +1,14 @@
+{
+  "check": "cli",
+  "scenarios": [],
+  "args": ["disabled", "DFS-902"],
+  "repo": [
+    {"write": {"docs/tickets/backlog/DFS-902-second/DFS-902-ticket.md": "---\nid: DFS-902\nstatus: in-progress\n---\n\n# DFS-902\n",
+               "docs/tickets/backlog/DFS-902-second/plan.json": "{\"ticket\": \"DFS-902\", \"phases\": [{\"id\": \"tests\", \"commit\": \"abc\", \"artifacts\": [\"m/src/test/java/a/OwnTest.java\"]}]}\n",
+               "m/src/test/java/a/OldTicketBenchmark.java": "package a;\n\nclass OldTicketBenchmark {\n    @Test\n    @DisabledOnOs(OS.WINDOWS)\n    void run() {\n    }\n}\n",
+               "m/src/test/java/a/OwnTest.java": "package a;\n\nclass OwnTest {\n    @Test\n    void posixOnly() {\n        Assumptions.assumeTrue(false);\n    }\n}\n",
+               "m/build/test-results/test/TEST-a.OldTicketBenchmark.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<testsuite name=\"a.OldTicketBenchmark\" tests=\"1\" skipped=\"1\" failures=\"0\" errors=\"0\">\n  <testcase name=\"run()\" classname=\"a.OldTicketBenchmark\" time=\"0.0\">\n    <skipped/>\n  </testcase>\n</testsuite>\n",
+               "m/build/test-results/test/TEST-a.OwnTest.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<testsuite name=\"a.OwnTest\" tests=\"1\" skipped=\"1\" failures=\"0\" errors=\"0\">\n  <testcase name=\"posixOnly()\" classname=\"a.OwnTest\" time=\"0.0\">\n    <skipped message=\"org.opentest4j.TestAbortedException: Assumption failed\" type=\"org.opentest4j.TestAbortedException\"/>\n  </testcase>\n</testsuite>\n"},
+     "commit": "base"}
+  ]
+}
