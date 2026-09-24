@@ -126,6 +126,8 @@ Rejected: review-and-apply with no memory (skipped proposals return, one-offs ge
 
 **Manual stand-in (added 2026-09-21).** Until the `retro` agent and `/story learn` exist (CCW-004, CCW-005), `docs/learnings/log.md` is kept by hand in the same format: friction is logged as `proposed` with evidence, the `tickets` skill's `done` mode asks whether there is any, and the user decides apply, park or reject. It gives the first `retro` run real entries and the recurrence counts to work from.
 
+**Addendum (2026-09-23, CCW-010).** Decisions are no longer recorded in one shared `docs/learnings/log.md`. Two sessions on diverged branches each computed the same "next" `L-<n>` for unrelated findings (DFS-002.L-8). Each ticket now keeps its structured entries in its own `learnings.md`, identified `<ID>.L-<n>` and numbered only within that file, so there is no shared counter to race. Counting recurrences is now a scan across tickets' files, not a lookup in one file. The old log is a pointer with an old-to-new lookup table for the 33 migrated entries.
+
 ### D7. Verifier scope (decided 2026-09-21)
 
 Two layers.
