@@ -1,7 +1,7 @@
 ---
 id: DFS-002
 title: Filter candidates by head-and-tail partial hash
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
@@ -10,8 +10,8 @@ depends_on: [DFS-001]
 touches: [us.pochaev.dfs.scanner.application, us.pochaev.dfs.scanner.infra.port, us.pochaev.dfs.scanner.infra.adapter]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-21
-completed:
+updated: 2026-09-23
+completed: 2026-09-23
 ---
 
 # DFS-002: Filter candidates by head-and-tail partial hash
