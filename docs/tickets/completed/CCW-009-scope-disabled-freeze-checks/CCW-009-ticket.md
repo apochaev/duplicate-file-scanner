@@ -1,7 +1,7 @@
 ---
 id: CCW-009
 title: Scope DisabledCheck and FreezeCheck to the running story
-status: in-progress
+status: done
 type: fix
 scope: [build]
 archetype: none
@@ -12,7 +12,7 @@ touches: [tools/story-gate/DisabledCheck.java, tools/story-gate/FreezeCheck.java
 blocked_reason:
 created: 2026-09-23
 updated: 2026-09-23
-completed:
+completed: 2026-09-23
 ---
 
 # CCW-009: Scope DisabledCheck and FreezeCheck to the running story
