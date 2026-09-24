@@ -1,7 +1,7 @@
 ---
 id: CCW-010
 title: Avoid learnings-log number collisions across parallel sessions
-status: in-review
+status: done
 type: fix
 scope: [build]
 archetype: none
@@ -12,7 +12,7 @@ touches: [.claude/skills/learn/SKILL.md, .claude/skills/story/SKILL.md, .claude/
 blocked_reason:
 created: 2026-09-23
 updated: 2026-09-23
-completed:
+completed: 2026-09-23
 ---
 
 # CCW-010: Avoid learnings-log number collisions across parallel sessions
