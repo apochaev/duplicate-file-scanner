@@ -171,13 +171,13 @@ Feature: Full-hash stage
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `DuplicateSet` is in an exported domain package (`domain.model`) and `ModuleExportsTest` still passes, with `module-info.java` unchanged
-- [ ] The near-duplicate large-file cases (300 KB, differing only in the middle byte) are generated in code, not committed
-- [ ] `design.md` names `NioContentHasherTest.java` among the files the test-author reads, and DFS-002's `fullHash` stand-in test is gone after the tests phase (AC-9)
-- [ ] Every item of the `pipeline-stage` archetype's edge-case checklist is addressed in the design doc or marked not applicable with a one-line reason, including item 10's size half (not checked, per Context)
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] `DuplicateSet` is in an exported domain package (`domain.model`) and `ModuleExportsTest` still passes, with `module-info.java` unchanged
+- [x] The near-duplicate large-file cases (300 KB, differing only in the middle byte) are generated in code, not committed
+- [x] `design.md` names `NioContentHasherTest.java` among the files the test-author reads, and DFS-002's `fullHash` stand-in test is gone after the tests phase (AC-9)
+- [x] Every item of the `pipeline-stage` archetype's edge-case checklist is addressed in the design doc or marked not applicable with a one-line reason, including item 10's size half (not checked, per Context)
 
 ## Open questions
 
