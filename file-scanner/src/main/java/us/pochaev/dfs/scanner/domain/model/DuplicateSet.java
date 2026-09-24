@@ -1,6 +1,7 @@
 package us.pochaev.dfs.scanner.domain.model;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Files with identical content, confirmed by a full-content hash: the exported result of the
@@ -25,16 +26,20 @@ import java.util.List;
 public record DuplicateSet(long size, String digest, List<FileEntry> files) {
 
     public DuplicateSet {
-        throw new UnsupportedOperationException("not implemented: DFS-003");
-        // implementer: enforce the invariants above here, after removing this throw:
-        //   - Objects.requireNonNull(digest, "digest"); reject digest.isBlank()
-        //   - Objects.requireNonNull(files, "files"); files = List.copyOf(files)
-        //     (List.copyOf also rejects a null element)
-        //   - reject files.size() < 2
-        //   - reject any entry whose size() != size
-        // Each IllegalArgumentException / NullPointerException message names the broken rule
-        // (DFS-003.AC-6). Do not sort here: ascending path order is the stage's job, as for
-        // CandidateGroup. Deliberately not in the stub itself: a precondition check that runs
-        // before this throw would let an argument-validation test pass against the stub (L-013).
+        Objects.requireNonNull(digest, "digest");
+        if (digest.isBlank()) {
+            throw new IllegalArgumentException("digest must not be blank");
+        }
+        Objects.requireNonNull(files, "files");
+        files = List.copyOf(files);
+        if (files.size() < 2) {
+            throw new IllegalArgumentException("a duplicate set needs at least two files: " + files.size());
+        }
+        for (FileEntry file : files) {
+            if (file.size() != size) {
+                throw new IllegalArgumentException(
+                        "file size " + file.size() + " does not match set size " + size);
+            }
+        }
     }
 }

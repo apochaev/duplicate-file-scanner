@@ -48,11 +48,17 @@ public final class NioContentHasher implements ContentHasher {
      */
     @Override
     public String fullHash(Path file) throws IOException {
-        throw new UnsupportedOperationException("not implemented: DFS-003");
-        // implementer: Objects.requireNonNull(file, "file"); a fresh newSha256(); read the file
-        // in fixed-size chunks (for example a 64 KB buffer over a FileChannel or InputStream,
-        // never Files.readAllBytes: files can be gigabytes) until end of stream, updating the
-        // digest; return HexFormat.of().formatHex(digest.digest()).
+        Objects.requireNonNull(file, "file");
+        MessageDigest digest = newSha256();
+        ByteBuffer buffer = ByteBuffer.allocate(64 * 1024);
+        try (FileChannel channel = FileChannel.open(file, StandardOpenOption.READ)) {
+            while (channel.read(buffer) >= 0) {
+                buffer.flip();
+                digest.update(buffer);
+                buffer.clear();
+            }
+        }
+        return HexFormat.of().formatHex(digest.digest());
     }
 
     private static byte[] readAt(FileChannel channel, long position, long length) throws IOException {

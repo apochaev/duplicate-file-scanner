@@ -1,9 +1,14 @@
 package us.pochaev.dfs.scanner.application;
 
 import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
+import us.pochaev.dfs.scanner.domain.model.FileEntry;
 import us.pochaev.dfs.scanner.infra.port.ContentHasher;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -42,10 +47,38 @@ public final class FullHashConfirmer {
      * @throws NullPointerException if {@code groups} is null or contains null
      */
     public List<DuplicateSet> confirm(List<CandidateGroup> groups) {
-        throw new UnsupportedOperationException("not implemented: DFS-003");
-        // implementer: add `Objects.requireNonNull(groups, "groups");` as the real body's
-        // first line, before any other logic. It is deliberately not in the stub itself:
-        // a precondition check that runs before this throw would let an argument-validation
-        // test pass outright against the un-implemented stub instead of failing red (L-013).
+        Objects.requireNonNull(groups, "groups");
+        List<DuplicateSet> result = new ArrayList<>();
+        for (CandidateGroup group : groups) {
+            Objects.requireNonNull(group, "group");
+            result.addAll(splitByFullHash(group));
+        }
+        return List.copyOf(result);
+    }
+
+    private List<DuplicateSet> splitByFullHash(CandidateGroup group) {
+        List<FileEntry> sorted = new ArrayList<>(group.files());
+        sorted.sort((a, b) -> a.path().compareTo(b.path()));
+
+        Map<String, List<FileEntry>> byDigest = new LinkedHashMap<>();
+        for (FileEntry file : sorted) {
+            String digest;
+            try {
+                digest = hasher.fullHash(file.path());
+            } catch (IOException e) {
+                // Dropped without failing the rest of the group (DFS-003.AC-7).
+                continue;
+            }
+            byDigest.computeIfAbsent(digest, k -> new ArrayList<>()).add(file);
+        }
+
+        List<DuplicateSet> sets = new ArrayList<>();
+        for (Map.Entry<String, List<FileEntry>> entry : byDigest.entrySet()) {
+            List<FileEntry> members = entry.getValue();
+            if (members.size() >= 2) {
+                sets.add(new DuplicateSet(group.size(), entry.getKey(), members));
+            }
+        }
+        return sets;
     }
 }

@@ -21,3 +21,11 @@
 
 - Fixed defect 1 (traceability, AC-9): added `NioContentHasherTest.fullHashReturnsADigestInsteadOfThrowing` (`DFS-003.AC-9 fullHash returns a digest instead of throwing`): `fullHash` on a real `@TempDir` file must return a 64-char lowercase hex digest; the stub's exception is not caught. Updated the AC-9 row of `test-plan.md`. No other test changed.
 - Re-ran the three story test classes: 22 tests, 20 failed, all with `UnsupportedOperationException: not implemented: DFS-003` (JUnit XML); the 2 passing are DFS-002's `sampleHash` tests. Expected commit unchanged: `test(file-scanner): add full-hash stage tests [DFS-003]`.
+
+## implement (implementer, 2026-09-24)
+
+- `domain/model/DuplicateSet.java`: compact constructor now enforces AC-6's invariants (non-null/non-blank digest, non-null files with no null element via `List.copyOf`, at least two files, every entry's size equal to `size`); no sorting, as design.md specifies.
+- `application/FullHashConfirmer.java`: `confirm` null-checks `groups` and each element, then for each `CandidateGroup` sorts members by ascending path, calls `hasher.fullHash` per member (dropping one on `IOException` without failing the rest, per AC-7), groups by digest in a `LinkedHashMap` (preserving ascending-smallest-path order, matching `PartialHashFilter`'s pattern), and emits one `DuplicateSet` per digest with two or more members, dropping singletons (AC-3). Output list is `List.copyOf`.
+- `infra/adapter/NioContentHasher.java`: `fullHash` streams the file through a fresh SHA-256 `MessageDigest` via a `FileChannel` and a 64 KB `ByteBuffer`, never loading the whole file into memory; returns lowercase hex via `HexFormat`.
+- `./gradlew build` is green (file-scanner and cli, including ArchUnit and `ModuleExportsTest`). No `not implemented: DFS-003` markers remain under `src/main`. No test file was touched.
+- Expected commit: `feat(file-scanner): implement full-hash stage [DFS-003]` (made by the orchestrator).

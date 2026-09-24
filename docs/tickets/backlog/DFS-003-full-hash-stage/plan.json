@@ -13,7 +13,7 @@
        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentHasher.java"
      ],
      "commit": "a52b558ae9b8582e978713d29bc0e89e1cad36c7"},
-    {"id": "tests", "agent": "test-author", "after": ["design"], "status": "in-progress",
+    {"id": "tests", "agent": "test-author", "after": ["design"], "status": "done",
      "runs": [{"attempt": 1, "model": "sonnet", "effort": "medium", "turns": null, "wallClockSeconds": 234, "outcome": "failed-gate", "note": "red passed; traceability failed on AC-9. Turns not reported; completion notice gave 30 tool uses, 83719 subagent tokens"},
               {"attempt": 2, "model": "opus", "effort": "high", "turns": null, "wallClockSeconds": 47, "outcome": "passed", "note": "added the DFS-003.AC-9 test only; completion notice gave 10 tool uses, 32200 subagent tokens"}],
      "artifacts": [
@@ -22,8 +22,15 @@
        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NioContentHasherTest.java",
        "docs/tickets/backlog/DFS-003-full-hash-stage/test-plan.md"
      ],
+     "commit": "519bbd360d0db65dcba610f9386e84113e6edb83"},
+    {"id": "implement", "agent": "implementer", "after": ["tests"], "status": "in-progress",
+     "runs": [{"attempt": 1, "model": "sonnet", "effort": "medium", "turns": null, "wallClockSeconds": 94, "outcome": "passed", "note": "all 7 checks passed first time; completion notice gave 23 tool uses, 57894 subagent tokens"}],
+     "artifacts": [
+       "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DuplicateSet.java",
+       "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/FullHashConfirmer.java",
+       "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentHasher.java"
+     ],
      "commit": null},
-    {"id": "implement", "agent": "implementer", "after": ["tests"], "status": "pending", "runs": [], "artifacts": [], "commit": null},
     {"id": "verify", "agent": "verifier", "after": ["implement"], "status": "pending", "runs": [], "artifacts": [], "commit": null}
   ],
   "gates": [
