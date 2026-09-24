@@ -1,7 +1,7 @@
 ---
 id: DFS-003
 title: Confirm duplicates with full SHA-256 hash
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
