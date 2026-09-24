@@ -1,7 +1,7 @@
 ---
 id: CCW-010
 title: Avoid learnings-log number collisions across parallel sessions
-status: ready
+status: in-progress
 type: fix
 scope: [build]
 archetype: none
@@ -116,6 +116,7 @@ Feature: Per-ticket learnings identity
 **Touches:**
 - `.claude/skills/learn/SKILL.md`: every mode (`add`, `review`, `decide`, `apply`, `reflect`) and the check, rewritten for per-ticket files and `<ID>.L-<n>` identity
 - `.claude/skills/story/SKILL.md`: `learn` mode's write step, same change
+- `.claude/agents/reflect.md`: reads its own ticket's `learnings.md` instead of the shared log, and matches only within it — found while implementing, not in the original refinement: the agent's own "Matching against the log" step is a real functional dependency on the shared file, not just stale wording, and retiring that file without fixing it would make `reflect` unable to detect any recurrence at all
 - `docs/tickets`: every existing ticket's `learnings.md` gains migrated entries where `docs/learnings/log.md`'s Evidence names it
 - `docs/learnings/log.md`: replaced with a short pointer to the new convention
 
@@ -126,10 +127,10 @@ Feature: Per-ticket learnings identity
 
 ## Definition of done
 
-- [ ] Every scenario above is checked by reading the skill text and a real walkthrough (propose an entry for a scratch ticket, confirm the file/identifier; run `/learn review` and confirm it aggregates across tickets) — this is an instructions-only change, so most scenarios are checked by reading per L-009, and the migration scenarios (AC-5) are checked by running the actual migration on the real backlog, not a scratch copy, since the whole point is migrating the real 33 entries
-- [ ] No files changed outside the paths listed under Touches
-- [ ] Every one of the 33 entries currently in `docs/learnings/log.md` is accounted for after migration — either present in exactly one ticket's `learnings.md`, or its absence explained (mechanically verified: a count of entries found across all `docs/tickets/**/learnings.md` after migration equals 33, per the format's own header count check)
-- [ ] `docs/learnings/log.md`'s replacement pointer is readable on its own and states the new convention clearly enough that a session unfamiliar with this ticket can find where a given ticket's learnings live
+- [x] Every scenario above is checked by reading the skill text and a real walkthrough. Evidence: created a scratch ticket `ZZZ-999`, wrote `ZZZ-999.L-1` to its own `learnings.md` (AC-1); ran the actual cross-ticket scan `/learn review` performs (`grep`-based, across every `docs/tickets/{backlog,completed}/*/learnings.md`) and confirmed it correctly listed 11 open entries across 6 real tickets plus the scratch one, each with its full `<ID>.L-<n>` (AC-3); deleted the scratch ticket afterward with no trace (`git status` confirmed clean). AC-5 (migration) was run for real against the actual 33 entries, not a scratch copy — see the next item.
+- [x] No files changed outside the paths listed under Touches. Evidence: `git status --porcelain` after all edits shows only `.claude/agents/reflect.md`, `.claude/skills/learn/SKILL.md`, `.claude/skills/story/SKILL.md`, `docs/learnings/log.md`, and files under `docs/tickets` — nothing else.
+- [x] Every one of the 33 entries currently in `docs/learnings/log.md` is accounted for after migration. Evidence: mechanical count (`grep -rho '^### [A-Z]*-[0-9]*\.L-[0-9]*'` across `docs/tickets/{backlog,completed}`) gives exactly 33, no duplicate or gapped local number within any one ticket's file, and every entry's Status/Decision pairing checked consistent.
+- [x] `docs/learnings/log.md`'s replacement pointer is readable on its own and states the new convention clearly enough that a session unfamiliar with this ticket can find where a given ticket's learnings live. Evidence: rewritten with a plain-language explanation, the new file-path/identifier convention, and a full old-`L-<n>`-to-new-identifier lookup table for all 33 migrated entries.
 
 ## Open questions
 
