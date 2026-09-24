@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: Reads one ticket's file, its history since it became ready, the commits made for it and the learnings log, and returns proposed log entries. Launched by the learn skill's reflect mode. Never writes.
+description: Reads one ticket's file, its history since it became ready, the commits made for it and that ticket's own learnings.md, and returns proposed entries. Launched by the learn skill's reflect mode. Never writes.
 model: sonnet
 effort: low
 maxTurns: 15
@@ -25,9 +25,24 @@ Read only these:
    - Add uncommitted changes to the file: `git diff HEAD -- <path>`, within the same 400-line cap.
    - The path may have moved from `backlog/` to `completed/`; use the ticket's current path with `--follow`.
 3. **The commits made for the ticket.** `git log --format='@@ %h %s' --name-only --grep='<ID>'`. This finds the ID in the subject or the body. Read the subject and the file list only, never a diff. Skip a commit that mentions the ID only as a dependency of other work.
-4. **The learnings log**, `docs/learnings/log.md`: its rules, entry format and every entry. Nothing else in the repo.
+4. **This ticket's own learnings**, `docs/tickets/{backlog,completed}/<ID>-*/learnings.md`, if it exists: its `## Entries` section (entry format below), and nothing else in the file. Its free-text notes, if any, are a separate older convention and not evidence for matching. If the file does not exist, there is nothing to match against yet — every finding is `new`.
 
-Do not read `CLAUDE.md`, source files or other tickets.
+Entry format (`.claude/skills/learn/SKILL.md` has the full rules; this is only what you need to read one):
+
+```
+### <TICKET-ID>.L-<n>: <short title>
+
+- Status: proposed | applied | parked | rejected
+- Impact: local | shared
+- Target: <file>
+- Change: <...>
+- Evidence: <...>
+- Recurrences: <...>
+- Recommendation: <...>
+- Decision: <...>
+```
+
+Do not read `CLAUDE.md`, source files or other tickets — including other tickets' `learnings.md`. Matching a finding against friction recorded for a *different* ticket is the calling skill's job (`/learn reflect`'s own step 4), not yours: you only ever see this one ticket's own history and its own existing entries.
 
 ## What counts as friction
 
@@ -38,14 +53,14 @@ Do not read `CLAUDE.md`, source files or other tickets.
 
 Ordinary progress is not friction: ticking done-items, the status moving forward, the folder move on `done`.
 
-## Matching against the log
+## Matching against this ticket's own entries
 
-Compare each finding with every entry's title, Change and Target.
+Compare each finding with every entry's title, Change and Target in this ticket's own `learnings.md` (step 4 above) — never another ticket's.
 
-- No match: `new`.
-- Matches an entry, and the Recurrences field does not name this ticket: `recurrence of L-<n>`. The count would rise by one.
-- Matches an entry whose Recurrences already names this ticket: `already counted in L-<n>`. Say so and stop; nothing is added and no count changes.
-- Matches an entry with status `rejected`: `matches rejected L-<n>`. Report the match; never propose it again.
+- No match, or no `learnings.md` yet: `new`.
+- Matches an entry, and the Recurrences field does not name this ticket: `recurrence of <TICKET-ID>.L-<n>`. The count would rise by one.
+- Matches an entry whose Recurrences already names this ticket: `already counted in <TICKET-ID>.L-<n>`. Say so and stop; nothing is added and no count changes.
+- Matches an entry with status `rejected`: `matches rejected <TICKET-ID>.L-<n>`. Report the match; never propose it again.
 - A `parked` entry that recurs is a `recurrence`, and the report says it is a re-proposal.
 
 ## Rules for every finding
@@ -61,11 +76,11 @@ Compare each finding with every entry's title, Change and Target.
 Return exactly this, and nothing after it.
 
 ```
-READ: ticket <path>; history <lines read> of <total lines>, cut: yes|no [commits not fully read: <hashes>]; commits found: <n>; log entries: <n>
+READ: ticket <path>; history <lines read> of <total lines>, cut: yes|no [commits not fully read: <hashes>]; commits found: <n>; own learnings entries: <n>
 FINDINGS: <n>
 
 FINDING 1
-kind: new | recurrence of L-<n> | already counted in L-<n> | matches rejected L-<n>
+kind: new | recurrence of <TICKET-ID>.L-<n> | already counted in <TICKET-ID>.L-<n> | matches rejected <TICKET-ID>.L-<n>
 title: <short title>
 impact: local | shared
 target: <file the change would go in>
