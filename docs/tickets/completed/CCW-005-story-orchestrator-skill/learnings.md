@@ -50,14 +50,14 @@ Migrated from `docs/learnings/log.md` (2026-09-23, CCW-010) — see that file fo
 
 ### CCW-005.L-5: A ticket's design-time assumption about another component's capability was wrong until it was run for real
 
-- Status: parked
+- Status: proposed
 - Impact: shared (`.claude/skills/tickets/SKILL.md`, `refine` mode)
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode
 - Change: when refining a criterion that assumes another already-built component's capability (for example, what tools an agent has), check that component's real definition rather than carrying forward an earlier design-doc sketch.
 - Evidence: `docs/tickets/completed/CCW-005-story-orchestrator-skill/CCW-005-ticket.md`'s `AC-11` changed from "the retro agent... appends proposed entries to `docs/learnings/log.md`" to "...which returns proposals in its report (it never writes)" — the ticket's own text names the cause: the design doc's D6 sketch and this ticket's own Context predate CCW-004 actually building `retro.md`, whose tool list (`Read, Grep, Glob, Bash`, no `Write`) was only discovered by launching it for real.
-- Recurrences: 1 (CCW-005)
-- Recommendation: park. One occurrence; the underlying cause (a design doc describing agents before they were built) is specific to this harness-bootstrapping phase and may not recur once agents are stable.
-- Decision: parked 2026-09-22 by the user, as recommended.
+- Recurrences: 2 (CCW-005: see Evidence; CCW-009: refinement assumed adding regression cases needed only `SelfTest.java` and the case folders, without checking which file runs each case type — the map-based `disabled` case type lives in `SelfTestCase.java`, outside `touches`, and cannot pass a `plan.json`, so the scoped cases had to route through `cli` (`CCW-009-ticket.md`, first Definition-of-done note; commit `157d548`) (2026-09-23))
+- Recommendation: re-proposed on a second ticket; apply. The cause was not specific to bootstrapping agents: CCW-009 hit the same gap with plain Java tooling. A broader form fits `refine`: when a scenario or done-item depends on how an already-built component behaves (an agent's tools, which file dispatches a test case, what a check reads), read that component's real definition, and either put the file that would need changing into `touches` or record the workaround as a decision in the ticket.
+- Decision: parked 2026-09-22 by the user, as recommended; re-proposed with CCW-009 (2026-09-23).
 
 ### CCW-005.L-6: A ticket's touches list widened after it became ready
 
