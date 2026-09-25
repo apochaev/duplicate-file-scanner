@@ -2,7 +2,7 @@
   "ticket": "DFS-003",
   "archetype": {"name": "pipeline-stage", "version": 7},
   "branch": "tickets/DFS-003-full-hash-stage",
-  "state": "running",
+  "state": "done",
   "phases": [
     {"id": "design", "agent": "architect", "after": [], "status": "done",
      "runs": [{"attempt": 1, "model": "opus", "effort": "high", "turns": null, "wallClockSeconds": 133, "outcome": "passed", "note": "turns not reported; the harness's completion notice gave 27 tool uses and 50766 subagent tokens"}],
@@ -31,17 +31,17 @@
        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentHasher.java"
      ],
      "commit": "ff1d6d41b65036661f185771d78a96a99feb1acb"},
-    {"id": "verify", "agent": "verifier", "after": ["implement"], "status": "in-progress",
+    {"id": "verify", "agent": "verifier", "after": ["implement"], "status": "done",
      "runs": [{"attempt": 1, "model": "opus", "effort": "medium", "turns": null, "wallClockSeconds": 92, "outcome": "passed", "note": "completion notice gave 12 tool uses, 56076 subagent tokens"}],
      "artifacts": [
        "docs/tickets/backlog/DFS-003-full-hash-stage/verification.md",
        "docs/tickets/backlog/DFS-003-full-hash-stage/DFS-003-ticket.md"
      ],
-     "commit": null}
+     "commit": "50d4b99be0930cbb5133007e6ea0882ad521b940"}
   ],
   "gates": [
     {"after": "design", "status": "approved"},
-    {"after": "done", "status": "pending"}
+    {"after": "done", "status": "approved"}
   ],
   "defects": [
     {"id": 1, "phase": "tests", "route": "test-author", "summary": "traceability: AC-9 has no test whose display name starts with DFS-003.AC-9 (the tests phase treated AC-9 as proven by the stand-in test's absence, but traceability requires every live criterion to have a test)", "status": "closed"}
