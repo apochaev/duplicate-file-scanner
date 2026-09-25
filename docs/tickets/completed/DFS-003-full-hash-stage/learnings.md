@@ -18,22 +18,22 @@
 
 ### DFS-003.L-2: The deferred-port convention does not say what the implementing ticket must do
 
-- Status: proposed
+- Status: applied
 - Impact: shared (the `pipeline-stage` archetype and its test guide, read by every architect and test-author)
 - Target: `.claude/archetypes/pipeline-stage/archetype.md`, "Where files go" (the deferred-port bullet) and `test-guide.md`, "Testing a port method deferred to a later ticket"
 - Change: complete the convention DFS-002.L-1 started with the implementing ticket's two steps: its architect re-stubs the deferred method back to `not implemented: <ID>` (and names the deferring ticket's test file in `design.md`, since the test-author reads only files the design names); its test-author removes the deferring ticket's stand-in test, which otherwise fails `RedCheck` as a regression and later fails `green`.
 - Evidence: DFS-003, architect note in `learnings.md`; the ticket's Context decision "DFS-003's test-author deletes DFS-002's `fullHash` stand-in test", found at refinement only by reading `NioContentHasherTest` and `tools/story-gate/RedCheck.java` (CCW-005.L-5). Both steps were then done correctly (`design.md` "Open design notes"; commit `519bbd3`), so no gate failed on this. Origin: DFS-002.L-1 documented only the deferring ticket's side.
 - Recurrences: 1 (DFS-003)
 - Recommendation: apply. It completes a convention that is already half documented, so the next deferred method does not depend on refinement rediscovering it. If refinement misses it, the pipeline blocks twice (a red-gate regression, then a green failure).
-- Decision:
+- Decision: applied 2026-09-25 by the user; commit `docs: apply DFS-003.L-2 and DFS-003.L-3`.
 
 ### DFS-003.L-3: A criterion stated only as something being absent cannot be traced to a test
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`.claude/skills/tickets/SKILL.md`, the `ready` gate every refinement checks)
 - Target: `.claude/skills/tickets/SKILL.md`, "Acceptance criteria"
 - Change: add that every criterion must be observable by a test that can carry its ID; a criterion about removing or retiring something (a test, a stub, a behavior) is stated as the behavior the removal enables (for example "`fullHash` returns a digest instead of throwing"), not as the absence itself.
 - Evidence: DFS-003, `plan.json` defect 1: traceability failed with "AC-9: no test display name starts with DFS-003.AC-9". AC-9 as refined read "No test asserts that `fullHash` throws: DFS-002's stand-in test ... is removed"; the tests phase's first attempt treated it as proven by the deletion, and a second attempt, escalated to opus, added `DFS-003.AC-9 fullHash returns a digest instead of throwing` (commit `519bbd3`).
 - Recurrences: 1 (DFS-003)
 - Recommendation: apply. One sentence in the `ready` gate; it cost a failed gate and an escalated retry, and refinement is where it is cheapest to catch.
-- Decision:
+- Decision: applied 2026-09-25 by the user; commit `docs: apply DFS-003.L-2 and DFS-003.L-3`.

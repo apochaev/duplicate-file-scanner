@@ -77,6 +77,7 @@ A `## Acceptance criteria` section sits between Context and Scenarios. Its first
 
 - Scenarios carry `@AC-<n>` tags on the line above `Scenario:` (several tags are allowed). Every scenario needs at least one tag, and every live criterion needs at least one scenario.
 - Tests start their `@DisplayName` with the full ID, e.g. `DFS-001.AC-3 Files of equal size form one candidate group`. The pipeline's gates trace criterion, scenario and test by ID.
+- Every criterion must be observable by a test that can carry its ID. A criterion about removing or retiring something (a test, a stub, a behavior) is stated as the behavior the removal enables — "`fullHash` returns a digest instead of throwing", not "no test asserts that `fullHash` throws" — since no test can carry the ID of its own absence (DFS-003.L-3).
 - Numbers are never renumbered or reused. To drop a criterion, retire it: `- **AC-<n> (retired)** <statement>. Retired <date>: <reason>`. A retired criterion needs no scenario or test, and a tag that names it is an error.
 - Never delete a criterion. A new one takes the number one above the highest used, retired included. Deleting the last criterion and reusing its number cannot be detected in the file (only git history shows it), so do not.
 

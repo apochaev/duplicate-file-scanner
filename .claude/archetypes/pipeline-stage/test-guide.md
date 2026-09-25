@@ -48,6 +48,8 @@ try {
 
 This fails red now (the generic stub message starts with `not implemented:`, so the catch rethrows it and `RedCheck` recognizes it as the stub failure), and turns green on its own once the implementer's permanent message lands (the message no longer starts with `not implemented:`, so the catch no longer rethrows). Leave the exact final wording for the verifier to confirm by eye against the ticket's Definition of done, not an automated assertion.
 
+**When your ticket is the one that implements the deferred method.** The deferring ticket's stand-in test (the conditional rethrow above) guards a state your ticket ends. Remove that test method; `design.md` names its file. Left in place, it fails the red gate as a `regression` once your architect re-stubs the method, and fails `green` once the method works. Replace it with tests for the method's real behavior, each named with your own criterion IDs (DFS-003.L-2).
+
 ## What not to do
 
 - Do not write a test that only restates the implementation ("calls method X"); assert on behavior and output.
