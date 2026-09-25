@@ -1,7 +1,7 @@
 ---
 id: DFS-003
 title: Confirm duplicates with full SHA-256 hash
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
@@ -10,8 +10,8 @@ depends_on: [DFS-002]
 touches: [us.pochaev.dfs.scanner.application, us.pochaev.dfs.scanner.domain.model, us.pochaev.dfs.scanner.infra.port, us.pochaev.dfs.scanner.infra.adapter]
 blocked_reason:
 created: 2026-09-21
-updated: 2026-09-24
-completed:
+updated: 2026-09-25
+completed: 2026-09-25
 ---
 
 # DFS-003: Confirm duplicates with full SHA-256 hash
