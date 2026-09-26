@@ -13,7 +13,10 @@ public final class <ClassName> {
     private final <PortType> hasher;
 
     public <ClassName>(<PortType> hasher) {
-        this.hasher = Objects.requireNonNull(hasher, "hasher");
+        throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+        // implementer: replace the throw with `this.hasher = Objects.requireNonNull(hasher, "hasher");`.
+        // The stub throws instead of null-checking so a null-argument test fails red rather
+        // than passing against the stub (the L-013 reason, as for filter below; DFS-004.L-1).
     }
 
     /**
