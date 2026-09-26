@@ -13,3 +13,11 @@
 - `./gradlew :file-scanner:test`: all 9 new tests fail with exactly `java.lang.UnsupportedOperationException: not implemented: DFS-004`; the other 92 pre-existing tests (1 pre-existing skip, unrelated) still pass.
 - No null-argument tests added (not tagged to any live AC); flagged in `learnings.md`.
 - Expected commit: `test(file-scanner): add hard-link detection tests [DFS-004]` (orchestrator commits).
+
+## implement (implementer, attempt 1)
+
+- Implemented `NioFileIdentity.isSameFile`: `Objects.requireNonNull` on both arguments, then `Files.isSameFile(a, b)`.
+- Implemented `HardLinkDetector`: constructor does `Objects.requireNonNull(identity, "identity")`; `detect` sorts each set's files ascending by path, clusters each file into the first existing copy whose first link `isSameFile` confirms (or starts a new copy), drops the candidate file on `IOException` without checking further copies, drops the whole set if fewer than two copies remain, and otherwise rebuilds the surviving files (re-sorted ascending) and `PhysicalCopy` list through the canonical 4-argument `DuplicateSet` constructor. Output list built via `List.copyOf`.
+- `FileIdentity` needed no change (its stub was just the interface declaration with no body).
+- `./gradlew build` is green, including ArchUnit and `ModuleExportsTest`. No `not implemented: DFS-004` markers remain under `src/main`. No test file was touched.
+- Expected commit: `feat(file-scanner): implement hard-link detection stage [DFS-004]` (orchestrator commits).

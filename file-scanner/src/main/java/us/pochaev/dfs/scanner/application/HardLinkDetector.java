@@ -1,10 +1,15 @@
 package us.pochaev.dfs.scanner.application;
 
 import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
+import us.pochaev.dfs.scanner.domain.model.FileEntry;
 import us.pochaev.dfs.scanner.domain.model.PhysicalCopy;
 import us.pochaev.dfs.scanner.infra.port.FileIdentity;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Stage 4 of the detection pipeline (DFS-004): groups the paths of each confirmed
@@ -30,9 +35,7 @@ public final class HardLinkDetector {
      * @throws NullPointerException if {@code identity} is null
      */
     public HardLinkDetector(FileIdentity identity) {
-        throw new UnsupportedOperationException("not implemented: DFS-004");
-        // implementer: this.identity = Objects.requireNonNull(identity, "identity");
-        // Deliberately a throwing stub, so a null-argument test fails red too (L-013).
+        this.identity = Objects.requireNonNull(identity, "identity");
     }
 
     /**
@@ -44,8 +47,62 @@ public final class HardLinkDetector {
      * @throws NullPointerException if {@code sets} is null or contains null
      */
     public List<DuplicateSet> detect(List<DuplicateSet> sets) {
-        throw new UnsupportedOperationException("not implemented: DFS-004");
-        // implementer: Objects.requireNonNull(sets, "sets") as the real body's first line, and
-        // requireNonNull on each element (L-013: not before this throw).
+        Objects.requireNonNull(sets, "sets");
+        List<DuplicateSet> result = new ArrayList<>();
+        for (DuplicateSet set : sets) {
+            Objects.requireNonNull(set, "set");
+            DuplicateSet regrouped = regroup(set);
+            if (regrouped != null) {
+                result.add(regrouped);
+            }
+        }
+        return List.copyOf(result);
+    }
+
+    private DuplicateSet regroup(DuplicateSet set) {
+        List<FileEntry> files = new ArrayList<>(set.files());
+        files.sort(Comparator.comparing(FileEntry::path));
+
+        List<List<FileEntry>> copies = new ArrayList<>();
+        for (FileEntry file : files) {
+            List<FileEntry> matchedCopy = null;
+            boolean dropped = false;
+            for (List<FileEntry> copy : copies) {
+                FileEntry firstLink = copy.get(0);
+                try {
+                    if (identity.isSameFile(file.path(), firstLink.path())) {
+                        matchedCopy = copy;
+                        break;
+                    }
+                } catch (IOException e) {
+                    dropped = true;
+                    break;
+                }
+            }
+            if (dropped) {
+                continue;
+            }
+            if (matchedCopy != null) {
+                matchedCopy.add(file);
+            } else {
+                List<FileEntry> newCopy = new ArrayList<>();
+                newCopy.add(file);
+                copies.add(newCopy);
+            }
+        }
+
+        if (copies.size() < 2) {
+            return null;
+        }
+
+        List<FileEntry> survivingFiles = new ArrayList<>();
+        List<PhysicalCopy> physicalCopies = new ArrayList<>();
+        for (List<FileEntry> copy : copies) {
+            physicalCopies.add(new PhysicalCopy(List.copyOf(copy)));
+            survivingFiles.addAll(copy);
+        }
+        survivingFiles.sort(Comparator.comparing(FileEntry::path));
+
+        return new DuplicateSet(set.size(), set.digest(), survivingFiles, physicalCopies);
     }
 }
