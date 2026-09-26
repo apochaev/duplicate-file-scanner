@@ -140,12 +140,12 @@ Feature: Hard-link detection
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] The adapter test creates the hard link at test time and skips via `Assumptions` when it cannot
-- [ ] `domain.model`, `FullHashConfirmer` and DFS-001 to DFS-003's tests are unchanged
-- [ ] Every item of the `pipeline-stage` archetype's edge-case checklist is addressed in the design doc or marked not applicable with a one-line reason
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] The adapter test creates the hard link at test time and skips via `Assumptions` when it cannot
+- [x] `domain.model`, `FullHashConfirmer` and DFS-001 to DFS-003's tests are unchanged
+- [x] Every item of the `pipeline-stage` archetype's edge-case checklist is addressed in the design doc or marked not applicable with a one-line reason
 
 ## Open questions
 

@@ -62,7 +62,7 @@
       "after": [
         "tests"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -78,7 +78,7 @@
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/HardLinkDetector.java",
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileIdentity.java"
       ],
-      "commit": null
+      "commit": "c59dc3505e53e9520c8425d8f6f60a92c0f316ba"
     },
     {
       "id": "verify",
@@ -86,9 +86,22 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 9,
+          "wallClockSeconds": 103,
+          "outcome": "passed",
+          "note": "turns self-reported; completion notice gave 11 tool uses, 50366 subagent tokens"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-004-detect-hard-links/verification.md",
+        "docs/tickets/backlog/DFS-004-detect-hard-links/DFS-004-ticket.md"
+      ],
       "commit": null
     }
   ],
