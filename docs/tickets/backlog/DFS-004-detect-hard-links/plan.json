@@ -5,7 +5,7 @@
     "version": 8
   },
   "branch": "tickets/DFS-004-detect-hard-links",
-  "state": "running",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -86,7 +86,7 @@
       "after": [
         "implement"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -102,7 +102,7 @@
         "docs/tickets/backlog/DFS-004-detect-hard-links/verification.md",
         "docs/tickets/backlog/DFS-004-detect-hard-links/DFS-004-ticket.md"
       ],
-      "commit": null
+      "commit": "638830dd91c85ff458fa83c459d39ff8160d79aa"
     }
   ],
   "gates": [
@@ -112,7 +112,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": []

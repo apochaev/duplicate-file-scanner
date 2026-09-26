@@ -1,7 +1,7 @@
 ---
 id: DFS-004
 title: Detect hard links within candidate groups
-status: in-progress
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
