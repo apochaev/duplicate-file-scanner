@@ -1,7 +1,7 @@
 ---
 id: DFS-017
 title: Group duplicate-set links into physical copies
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner]
 archetype: none
@@ -84,11 +84,11 @@ Each scenario is run mechanically, as a JUnit test whose `@DisplayName` starts w
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] DFS-003's `DuplicateSetTest` and `FullHashConfirmerTest` pass without being edited, and `FullHashConfirmer` is unchanged (AC-2)
-- [ ] `module-info.java` is unchanged and `ModuleExportsTest` still passes
+- [x] Every scenario above is an automated test and passes — 2026-09-25: AC-1 by `PhysicalCopyTest` (4 tests) and 8 tests in `DuplicateSetCopiesTest`; AC-2 by 2 tests there (single-link copies from the 3-argument form; `NullPointerException` for a null files list); AC-3 by 1 test there. JUnit reports: `PhysicalCopyTest` 4/4, `DuplicateSetCopiesTest` 11/11, every display name starting `DFS-017.AC-`.
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests) — 2026-09-25: `BUILD SUCCESSFUL`; `ArchitectureTest` 3/3, `ModuleExportsTest` 3/3.
+- [x] No files changed outside the paths listed under Touches — 2026-09-25: `git status` shows only `domain/model/DuplicateSet.java`, the new `domain/model/PhysicalCopy.java`, the new `PhysicalCopyTest` and `DuplicateSetCopiesTest` in the `domain.model` test package, and this ticket's own file.
+- [x] DFS-003's `DuplicateSetTest` and `FullHashConfirmerTest` pass without being edited, and `FullHashConfirmer` is unchanged (AC-2) — 2026-09-25: `git diff HEAD` on all three is empty; JUnit reports `DuplicateSetTest` 7/7 and `FullHashConfirmerTest` 10/10, including `DFS-003.AC-6 A null files list is rejected` (`new DuplicateSet(10, "digest", null)`, still `NullPointerException` through the 3-argument form).
+- [x] `module-info.java` is unchanged and `ModuleExportsTest` still passes — 2026-09-25: `git diff HEAD` on `module-info.java` is empty (`domain.model` was already exported); `ModuleExportsTest` 3/3.
 
 ## Open questions
 
