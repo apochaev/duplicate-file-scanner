@@ -1,7 +1,7 @@
 ---
 id: DFS-004
 title: Detect hard links within candidate groups
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
@@ -11,7 +11,7 @@ touches: [us.pochaev.dfs.scanner.application, us.pochaev.dfs.scanner.infra.port,
 blocked_reason:
 created: 2026-09-21
 updated: 2026-09-26
-completed:
+completed: 2026-09-26
 ---
 
 # DFS-004: Detect hard links within candidate groups
