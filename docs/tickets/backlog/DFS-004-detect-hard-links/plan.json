@@ -11,16 +11,16 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
           "model": "opus",
           "effort": "high",
           "turns": 9,
-          "wallClockSeconds": null,
+          "wallClockSeconds": 133,
           "outcome": "passed",
-          "note": "turns self-reported by the architect; wall-clock not captured"
+          "note": "turns self-reported by the architect (9); completion notice gave 13 tool uses, 47859 subagent tokens"
         }
       ],
       "artifacts": [
@@ -29,7 +29,7 @@
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/FileIdentity.java",
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileIdentity.java"
       ],
-      "commit": null
+      "commit": "4c79d75350e8ecb352a4cff3668cb77977d7216e"
     },
     {
       "id": "tests",
@@ -37,9 +37,23 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": null,
+          "wallClockSeconds": 428,
+          "outcome": "passed",
+          "note": "red and traceability passed first time; turns not reported exactly (agent said roughly 20); completion notice gave 35 tool uses, 79171 subagent tokens"
+        }
+      ],
+      "artifacts": [
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/HardLinkDetectorTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NioFileIdentityTest.java",
+        "docs/tickets/backlog/DFS-004-detect-hard-links/test-plan.md"
+      ],
       "commit": null
     },
     {
@@ -68,7 +82,7 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
