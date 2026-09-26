@@ -1,7 +1,7 @@
 ---
 id: DFS-017
 title: Group duplicate-set links into physical copies
-status: in-progress
+status: done
 type: feature
 scope: [file-scanner]
 archetype: none
@@ -11,8 +11,8 @@ depends_on: [DFS-003]
 touches: [us.pochaev.dfs.scanner.domain.model]
 blocked_reason:
 created: 2026-09-25
-updated: 2026-09-25
-completed:
+updated: 2026-09-26
+completed: 2026-09-26
 ---
 
 # DFS-017: Group duplicate-set links into physical copies
