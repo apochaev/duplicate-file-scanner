@@ -11,7 +11,7 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -37,7 +37,7 @@
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/FullHashConfirmer.java",
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/HardLinkDetector.java"
       ],
-      "commit": null
+      "commit": "990786a8a0f8aed504a06f331060b42aca1a5ea3"
     },
     {
       "id": "tests",
@@ -45,9 +45,26 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 30,
+          "wallClockSeconds": 789,
+          "outcome": "passed",
+          "note": "hit the 30-turn cap with tests written but no test-plan.md or report; red already passed (29 story tests failing on the stub, 102 others passing), so the same agent was resumed via SendMessage to write test-plan.md and report (SKILL.md step 6). Turns/wall-clock are the first invocation only; the wrap-up round is not included. Completion notice for the first invocation: 60 tool uses, 148212 subagent tokens"
+        }
+      ],
+      "artifacts": [
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanConfigTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanPipelineTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/StageDropReportingTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NioLocationResolverTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/ScanPipelineEndToEndTest.java",
+        "docs/tickets/backlog/DFS-005-run-scan-end-to-end/test-plan.md"
+      ],
       "commit": null
     },
     {
@@ -76,7 +93,7 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
