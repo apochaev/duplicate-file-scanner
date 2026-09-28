@@ -38,6 +38,7 @@ public final class PartialHashFilter {
     private final ContentHasher hasher;
     private final int sampleSize;
     private final long skipThreshold;
+    private final Consumer<WalkEvent.Skipped> onDrop;
 
     /**
      * Creates a filter with the default sample size ({@value #DEFAULT_SAMPLE_SIZE} bytes) and
@@ -58,16 +59,7 @@ public final class PartialHashFilter {
      *                                  {@code skipThreshold} is negative
      */
     public PartialHashFilter(ContentHasher hasher, int sampleSize, long skipThreshold) {
-        Objects.requireNonNull(hasher, "hasher");
-        if (sampleSize <= 0) {
-            throw new IllegalArgumentException("sampleSize must be positive: " + sampleSize);
-        }
-        if (skipThreshold < 0) {
-            throw new IllegalArgumentException("skipThreshold must not be negative: " + skipThreshold);
-        }
-        this.hasher = hasher;
-        this.sampleSize = sampleSize;
-        this.skipThreshold = skipThreshold;
+        this(hasher, sampleSize, skipThreshold, skipped -> { });
     }
 
     /**
@@ -81,9 +73,18 @@ public final class PartialHashFilter {
      */
     public PartialHashFilter(ContentHasher hasher, int sampleSize, long skipThreshold,
                              Consumer<WalkEvent.Skipped> onDrop) {
-        throw new UnsupportedOperationException("not implemented: DFS-005");
-        // implementer: validate as the 3-argument constructor does, requireNonNull(onDrop), keep
-        // it in a field; the other constructors may then delegate here with a no-op sink.
+        Objects.requireNonNull(hasher, "hasher");
+        Objects.requireNonNull(onDrop, "onDrop");
+        if (sampleSize <= 0) {
+            throw new IllegalArgumentException("sampleSize must be positive: " + sampleSize);
+        }
+        if (skipThreshold < 0) {
+            throw new IllegalArgumentException("skipThreshold must not be negative: " + skipThreshold);
+        }
+        this.hasher = hasher;
+        this.sampleSize = sampleSize;
+        this.skipThreshold = skipThreshold;
+        this.onDrop = onDrop;
     }
 
     /**
@@ -120,6 +121,9 @@ public final class PartialHashFilter {
                 digest = hasher.sampleHash(file.path(), sampleSize);
             } catch (IOException e) {
                 // Dropped without failing the rest of the group (DFS-002.AC-7).
+                onDrop.accept(new WalkEvent.Skipped(file.path(),
+                        us.pochaev.dfs.scanner.domain.model.SkipReason.UNREADABLE,
+                        "partial hash failed: " + detail(e)));
                 continue;
             }
             byDigest.computeIfAbsent(digest, k -> new ArrayList<>()).add(file);
@@ -132,5 +136,10 @@ public final class PartialHashFilter {
             }
         }
         return subgroups;
+    }
+
+    static String detail(IOException e) {
+        String message = e.getMessage();
+        return message != null ? message : e.getClass().getSimpleName();
     }
 }

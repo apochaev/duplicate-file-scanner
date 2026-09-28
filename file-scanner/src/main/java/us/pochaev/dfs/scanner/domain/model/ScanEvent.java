@@ -1,5 +1,7 @@
 package us.pochaev.dfs.scanner.domain.model;
 
+import java.util.Objects;
+
 /** A progress event of a scan, sent to a {@link ScanListener} (DFS-005). */
 public sealed interface ScanEvent {
 
@@ -7,8 +9,7 @@ public sealed interface ScanEvent {
     record PhaseStarted(ScanPhase phase) implements ScanEvent {
 
         public PhaseStarted {
-            throw new UnsupportedOperationException("not implemented: DFS-005");
-            // implementer: requireNonNull(phase).
+            Objects.requireNonNull(phase, "phase");
         }
     }
 
@@ -16,8 +17,9 @@ public sealed interface ScanEvent {
     record FileWalked(long filesSoFar) implements ScanEvent {
 
         public FileWalked {
-            throw new UnsupportedOperationException("not implemented: DFS-005");
-            // implementer: reject filesSoFar < 1 with IllegalArgumentException.
+            if (filesSoFar < 1) {
+                throw new IllegalArgumentException("filesSoFar must be at least 1: " + filesSoFar);
+            }
         }
     }
 
@@ -28,9 +30,13 @@ public sealed interface ScanEvent {
     record GroupDone(ScanPhase phase, int done, int total) implements ScanEvent {
 
         public GroupDone {
-            throw new UnsupportedOperationException("not implemented: DFS-005");
-            // implementer: requireNonNull(phase), reject phase == WALK, and reject
-            // done < 1 or done > total with IllegalArgumentException.
+            Objects.requireNonNull(phase, "phase");
+            if (phase == ScanPhase.WALK) {
+                throw new IllegalArgumentException("GroupDone is not sent for WALK");
+            }
+            if (done < 1 || done > total) {
+                throw new IllegalArgumentException("done must be between 1 and total (" + total + "): " + done);
+            }
         }
     }
 
@@ -38,8 +44,7 @@ public sealed interface ScanEvent {
     record Skipped(WalkEvent.Skipped skipped) implements ScanEvent {
 
         public Skipped {
-            throw new UnsupportedOperationException("not implemented: DFS-005");
-            // implementer: requireNonNull(skipped).
+            Objects.requireNonNull(skipped, "skipped");
         }
     }
 }

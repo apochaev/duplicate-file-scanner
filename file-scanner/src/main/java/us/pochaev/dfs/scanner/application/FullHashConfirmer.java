@@ -32,12 +32,13 @@ import java.util.function.Consumer;
 public final class FullHashConfirmer {
 
     private final ContentHasher hasher;
+    private final Consumer<WalkEvent.Skipped> onDrop;
 
     /**
      * @throws NullPointerException if {@code hasher} is null
      */
     public FullHashConfirmer(ContentHasher hasher) {
-        this.hasher = Objects.requireNonNull(hasher, "hasher");
+        this(hasher, skipped -> { });
     }
 
     /**
@@ -48,9 +49,8 @@ public final class FullHashConfirmer {
      * @throws NullPointerException if {@code hasher} or {@code onDrop} is null
      */
     public FullHashConfirmer(ContentHasher hasher, Consumer<WalkEvent.Skipped> onDrop) {
-        throw new UnsupportedOperationException("not implemented: DFS-005");
-        // implementer: requireNonNull both, keep onDrop in a field; the 1-argument constructor may
-        // then delegate here with a no-op sink.
+        this.hasher = Objects.requireNonNull(hasher, "hasher");
+        this.onDrop = Objects.requireNonNull(onDrop, "onDrop");
     }
 
     /**
@@ -82,6 +82,9 @@ public final class FullHashConfirmer {
                 digest = hasher.fullHash(file.path());
             } catch (IOException e) {
                 // Dropped without failing the rest of the group (DFS-003.AC-7).
+                onDrop.accept(new WalkEvent.Skipped(file.path(),
+                        us.pochaev.dfs.scanner.domain.model.SkipReason.UNREADABLE,
+                        "full hash failed: " + PartialHashFilter.detail(e)));
                 continue;
             }
             byDigest.computeIfAbsent(digest, k -> new ArrayList<>()).add(file);

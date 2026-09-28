@@ -32,12 +32,13 @@ import java.util.function.Consumer;
 public final class HardLinkDetector {
 
     private final FileIdentity identity;
+    private final Consumer<WalkEvent.Skipped> onDrop;
 
     /**
      * @throws NullPointerException if {@code identity} is null
      */
     public HardLinkDetector(FileIdentity identity) {
-        this.identity = Objects.requireNonNull(identity, "identity");
+        this(identity, skipped -> { });
     }
 
     /**
@@ -48,9 +49,8 @@ public final class HardLinkDetector {
      * @throws NullPointerException if {@code identity} or {@code onDrop} is null
      */
     public HardLinkDetector(FileIdentity identity, Consumer<WalkEvent.Skipped> onDrop) {
-        throw new UnsupportedOperationException("not implemented: DFS-005");
-        // implementer: requireNonNull both, keep onDrop in a field; the 1-argument constructor may
-        // then delegate here with a no-op sink.
+        this.identity = Objects.requireNonNull(identity, "identity");
+        this.onDrop = Objects.requireNonNull(onDrop, "onDrop");
     }
 
     /**
@@ -90,6 +90,9 @@ public final class HardLinkDetector {
                         break;
                     }
                 } catch (IOException e) {
+                    onDrop.accept(new WalkEvent.Skipped(file.path(),
+                            us.pochaev.dfs.scanner.domain.model.SkipReason.UNREADABLE,
+                            "hard-link check failed: " + PartialHashFilter.detail(e)));
                     dropped = true;
                     break;
                 }

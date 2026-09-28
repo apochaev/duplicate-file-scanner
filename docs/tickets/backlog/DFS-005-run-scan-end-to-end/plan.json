@@ -45,7 +45,7 @@
       "after": [
         "design"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -65,7 +65,7 @@
         "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/ScanPipelineEndToEndTest.java",
         "docs/tickets/backlog/DFS-005-run-scan-end-to-end/test-plan.md"
       ],
-      "commit": null
+      "commit": "99896c109e3c7ee0e91cc31bf887539efe0964b3"
     },
     {
       "id": "implement",
@@ -74,7 +74,17 @@
         "tests"
       ],
       "status": "pending",
-      "runs": [],
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 19,
+          "wallClockSeconds": 860,
+          "outcome": "failed-gate",
+          "note": "green failed on 2 tests; disabled, freeze, touches, stubs, traceability, consistency passed. The implementer reported both as test defects; the orchestrator confirmed both by reading the committed tests (99896c1). Completion notice: 56 tool uses, 133314 subagent tokens"
+        }
+      ],
       "artifacts": [],
       "commit": null
     },
@@ -100,5 +110,20 @@
       "status": "pending"
     }
   ],
-  "defects": []
+  "defects": [
+    {
+      "id": 1,
+      "phase": "implement",
+      "route": "test-author",
+      "summary": "green: ScanPipelineTest AC-14 expects walk-listener returns [false,false,false] for the first 3 events, contradicting its own message and the scenario ('returns false for the 3rd walk event'); should be [true,true,false]",
+      "status": "open"
+    },
+    {
+      "id": 2,
+      "phase": "implement",
+      "route": "test-author",
+      "summary": "green: ScanPipelineEndToEndTest AC-17 writes near1.bin with the same pattern as same1/same2 (writePattern(near1, size, -1)), so near1 is a true duplicate of same1 and a correct pipeline groups it; the near pair must differ from the same pair",
+      "status": "open"
+    }
+  ]
 }

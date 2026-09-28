@@ -16,10 +16,15 @@ public record ScanConfig(long minSize, int sampleSize, long partialHashThreshold
      *                                  {@code partialHashThreshold} is not positive
      */
     public ScanConfig {
-        throw new UnsupportedOperationException("not implemented: DFS-005");
-        // implementer: reject minSize < 1, sampleSize <= 0 and partialHashThreshold <= 0 with
-        // IllegalArgumentException (DFS-005.AC-8). Deliberately not in the stub, so an
-        // invalid-argument test fails red instead of passing against it (L-013).
+        if (minSize < 1) {
+            throw new IllegalArgumentException("minSize must be at least 1: " + minSize);
+        }
+        if (sampleSize <= 0) {
+            throw new IllegalArgumentException("sampleSize must be positive: " + sampleSize);
+        }
+        if (partialHashThreshold <= 0) {
+            throw new IllegalArgumentException("partialHashThreshold must be positive: " + partialHashThreshold);
+        }
     }
 
     /**
@@ -29,6 +34,6 @@ public record ScanConfig(long minSize, int sampleSize, long partialHashThreshold
      * test pins them equal).
      */
     public static ScanConfig defaults() {
-        throw new UnsupportedOperationException("not implemented: DFS-005");
+        return new ScanConfig(1, 65536, 131072);
     }
 }

@@ -15,8 +15,9 @@ import java.util.List;
 public record ScanResult(List<DuplicateSet> sets, List<WalkEvent.Skipped> skipped) {
 
     public ScanResult {
-        throw new UnsupportedOperationException("not implemented: DFS-005");
-        // implementer: requireNonNull both lists and take immutable copies (List.copyOf, which
-        // also rejects null elements).
+        java.util.Objects.requireNonNull(sets, "sets");
+        java.util.Objects.requireNonNull(skipped, "skipped");
+        sets = List.copyOf(sets);
+        skipped = List.copyOf(skipped);
     }
 }
