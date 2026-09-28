@@ -1,0 +1,87 @@
+{
+  "ticket": "DFS-005",
+  "archetype": {
+    "name": "pipeline-stage",
+    "version": 9
+  },
+  "branch": "tickets/DFS-005-run-scan-end-to-end",
+  "state": "running",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 9,
+          "wallClockSeconds": 248,
+          "outcome": "passed",
+          "note": "turns self-reported; completion notice gave 13 tool uses, 73612 subagent tokens"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-005-run-scan-end-to-end/design.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ScanConfig.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ScanResult.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ScanEvent.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ScanPhase.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ScanListener.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/LocationResolver.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioLocationResolver.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ScanPipeline.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PartialHashFilter.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/FullHashConfirmer.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/HardLinkDetector.java"
+      ],
+      "commit": null
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    }
+  ],
+  "gates": [
+    {
+      "after": "design",
+      "status": "pending"
+    },
+    {
+      "after": "done",
+      "status": "pending"
+    }
+  ],
+  "defects": []
+}

@@ -1,6 +1,7 @@
 package us.pochaev.dfs.scanner.application;
 
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
+import us.pochaev.dfs.scanner.domain.model.WalkEvent;
 import us.pochaev.dfs.scanner.infra.port.ContentHasher;
 
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Stage 2 of the detection pipeline: splits {@link CandidateGroup}s by a head-and-tail sample
@@ -66,6 +68,22 @@ public final class PartialHashFilter {
         this.hasher = hasher;
         this.sampleSize = sampleSize;
         this.skipThreshold = skipThreshold;
+    }
+
+    /**
+     * Creates a filter like {@link #PartialHashFilter(ContentHasher, int, long)} that also reports
+     * each member it drops on an {@link IOException} to {@code onDrop}, as
+     * {@code Skipped(path, UNREADABLE, "partial hash failed: <message>")} (DFS-005.AC-3).
+     *
+     * @throws NullPointerException     if {@code hasher} or {@code onDrop} is null
+     * @throws IllegalArgumentException if {@code sampleSize} is not positive or
+     *                                  {@code skipThreshold} is negative
+     */
+    public PartialHashFilter(ContentHasher hasher, int sampleSize, long skipThreshold,
+                             Consumer<WalkEvent.Skipped> onDrop) {
+        throw new UnsupportedOperationException("not implemented: DFS-005");
+        // implementer: validate as the 3-argument constructor does, requireNonNull(onDrop), keep
+        // it in a field; the other constructors may then delegate here with a no-op sink.
     }
 
     /**

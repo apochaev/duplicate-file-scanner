@@ -2,6 +2,7 @@ package us.pochaev.dfs.scanner.application;
 
 import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
+import us.pochaev.dfs.scanner.domain.model.WalkEvent;
 import us.pochaev.dfs.scanner.infra.port.ContentHasher;
 
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Stage 3 of the detection pipeline: confirms {@link CandidateGroup}s by a full SHA-256 hash of
@@ -36,6 +38,19 @@ public final class FullHashConfirmer {
      */
     public FullHashConfirmer(ContentHasher hasher) {
         this.hasher = Objects.requireNonNull(hasher, "hasher");
+    }
+
+    /**
+     * Creates a confirmer that also reports each member it drops on an {@link IOException} to
+     * {@code onDrop}, as {@code Skipped(path, UNREADABLE, "full hash failed: <message>")}
+     * (DFS-005.AC-3).
+     *
+     * @throws NullPointerException if {@code hasher} or {@code onDrop} is null
+     */
+    public FullHashConfirmer(ContentHasher hasher, Consumer<WalkEvent.Skipped> onDrop) {
+        throw new UnsupportedOperationException("not implemented: DFS-005");
+        // implementer: requireNonNull both, keep onDrop in a field; the 1-argument constructor may
+        // then delegate here with a no-op sink.
     }
 
     /**

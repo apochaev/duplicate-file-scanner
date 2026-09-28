@@ -1,0 +1,5 @@
+# DFS-005 learnings
+
+- (architect) The `pipeline-stage` archetype was stretched to cover a service that composes the stages (ticket decision 1). None of its skeletons fit, and checklist items 2 and 7 had nothing to say about a composing service. The `design.md.tmpl` wording ("this stage") also reads oddly for it. When DFS-018 is refined, consider a `use-case`/`service` archetype that has its own checklist: stop/cancellation, the order of listener events, validation that fails fast before side effects, and stateless reuse.
+- (architect) Checklist item 10 still says "before DFS-005's progress listener exists". Now that the listener exists, the item could ask for a drop to be reported through a stage's `onDrop` sink.
+- (architect) For a record's compact constructor, "stub throws" means every use of the new type fails red, including a test that only builds an expected value (for example `ScanEvent.GroupDone`). That is intended here, but the archetype does not say it. It only works because no pre-existing test touches the new types.

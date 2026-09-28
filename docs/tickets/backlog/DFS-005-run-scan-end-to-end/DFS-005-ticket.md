@@ -1,7 +1,7 @@
 ---
 id: DFS-005
 title: Run a scan end to end
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
