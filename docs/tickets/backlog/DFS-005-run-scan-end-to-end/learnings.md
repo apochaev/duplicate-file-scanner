@@ -59,25 +59,25 @@
 
 ### DFS-005.L-5: The story skill tells every agent to append learnings, but the verifier role forbids it
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`.claude/skills/story/SKILL.md`, `.claude/agents/verifier.md`)
 - Target: `.claude/skills/story/SKILL.md`, "Story folder and `plan.json`" paragraph; `.claude/agents/verifier.md`, its write boundaries
 - Change: make the two agree. Preferably add `learnings.md` (append only) to the verifier's allowed writes, as every other phase agent has; otherwise have the verifier report friction in `verification.md` and the orchestrator relay it.
 - Evidence: the DFS-005 verifier's final report: its launch prompt asked it to append to `learnings.md`, but its role forbids writing anything other than the ticket and `verification.md`, so it reported three friction notes instead and the orchestrator relayed them by hand (the "(orchestrator, relaying the verifier)" notes above).
 - Recurrences: 1 (DFS-005)
 - Recommendation: apply.
-- Decision:
+- Decision: applied 2026-10-05 by the user; commit `docs: apply DFS-005.L-5 and DFS-005.L-6`
 
 ### DFS-005.L-6: A test defect found at the implement gate has no documented route
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`.claude/skills/story/SKILL.md`)
 - Target: `.claude/skills/story/SKILL.md`, resume protocol step 9 (defect routing) and the reopened-tests procedure under `approve <ID> [feedback]`
 - Change: when an implement-gate failure is traced to a test rather than the implementation, route the defect to `test-author` and reopen `tests` with the existing send-back procedure: verify the reopened phase with `green`, and set `implement` to `in-progress` so it is reconciled against its existing commit instead of rerun. Today step 9 routes every implement failure to the implementer, who may not edit tests.
 - Evidence: `plan.json` defects 1 and 2 (both routed to `test-author` by hand), the `tests` attempt-2 note, and the implement run's reconcile note. Related but distinct trigger: DFS-002.L-2 and DFS-002.L-3 (applied) cover a phase reopened by human feedback at a gate, not by a gate failure.
 - Recurrences: 1 (DFS-005)
 - Recommendation: apply.
-- Decision:
+- Decision: applied 2026-10-05 by the user; commit `docs: apply DFS-005.L-5 and DFS-005.L-6`
 
 ### DFS-005.L-7: Checklist item 10 still refers to a listener that "does not exist yet"
 

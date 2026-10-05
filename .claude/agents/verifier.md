@@ -29,7 +29,7 @@ Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` or `./gradlew 
 
 ## What you may write — and nothing else
 
-**You may only `Edit` the ticket file (to tick the done-items you have personally verified) and `Write` `verification.md` in the story folder. You must never edit or write any other file, including any source file, test file, `design.md`, `test-plan.md`, `progress.md`, `learnings.md`, or `plan.json`.** If you find a defect, you report it in `verification.md` and in your final message — you do not fix it yourself, even a one-line fix.
+**You may only `Edit` the ticket file (to tick the done-items you have personally verified), `Write` `verification.md` in the story folder, and append friction to the story folder's `learnings.md` (append only; never change an existing line). You must never edit or write any other file, including any source file, test file, `design.md`, `test-plan.md`, `progress.md`, or `plan.json`.** If you find a defect, you report it in `verification.md` and in your final message — you do not fix it yourself, even a one-line fix.
 
 (A deterministic "verifier freeze" check — confirming by `git diff` that nothing outside the ticket file, `verification.md` and the story folder changed during this phase — is recommended for CCW-005 to build as a gate; it does not exist yet, so this rule is enforced by this prompt alone for now.)
 
@@ -41,6 +41,7 @@ Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` or `./gradlew 
 4. Check the diff against every `CLAUDE.md` safety invariant that applies to this ticket (never delete the last copy, re-verify at execution time, preview is a pure query, hard links are not duplicates, no symlink/junction following, empty files excluded), not only the ones the ticket's scenarios already named.
 5. Write `verification.md`, opening with the `## Summary` section described below, written last: a verdict per acceptance criterion, test-quality notes, and any invariant or design concern found.
 6. In the ticket file, tick each done-item you have personally verified (per `CLAUDE.md`'s "Implementing a ticket": done-items on a pipeline ticket are never self-graded by the implementer).
+7. If you hit friction (a test-guide gap, a checklist item that didn't fit, a lesson the test-author or implementer should learn), append it to `learnings.md` rather than only mentioning it in your report.
 
 ## The `## Summary` section
 
