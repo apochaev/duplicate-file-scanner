@@ -37,14 +37,14 @@
 
 ### DFS-005.L-3: An expected value in a stop test contradicted its own message
 
-- Status: proposed
+- Status: parked
 - Impact: local (`test-guide.md`)
 - Target: `.claude/archetypes/pipeline-stage/test-guide.md`
 - Change: derive the expected listener-return sequence of a stop or cancellation test from the stop rule written in `design.md`, and keep the failure message consistent with it.
 - Evidence: `plan.json` defect 1: AC-14 (`ScanPipelineTest.stoppingDuringWalkThrowsCancellationAndSkipsNextLocation`) asserted `[false, false, false]` where the design gives `[true, true, false]`; its own message said "starting at the 3rd event". Fixed in `23db805`.
 - Recurrences: 1 (DFS-005)
 - Recommendation: park. A one-off slip that the green gate already caught; a guide bullet for it is noise until it recurs.
-- Decision:
+- Decision: parked 2026-10-05 by the user
 
 ### DFS-005.L-4: Real-file tests build expected paths from the unresolved temp directory
 
