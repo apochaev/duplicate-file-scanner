@@ -1,7 +1,7 @@
 ---
 id: DFS-005
 title: Run a scan end to end
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: pipeline-stage
@@ -11,7 +11,7 @@ touches: [us.pochaev.dfs.scanner.domain.model, us.pochaev.dfs.scanner.applicatio
 blocked_reason:
 created: 2026-09-21
 updated: 2026-10-05
-completed:
+completed: 2026-10-05
 ---
 
 # DFS-005: Run a scan end to end
