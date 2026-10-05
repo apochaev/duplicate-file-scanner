@@ -427,7 +427,7 @@ class ScanPipelineTest {
         } catch (CancellationException expected) {
             // expected once implemented
         }
-        assertEquals(List.of(false, false, false), walker.listenerReturns().subList(0, Math.min(3, walker.listenerReturns().size())),
+        assertEquals(List.of(true, true, false),walker.listenerReturns().subList(0, Math.min(3, walker.listenerReturns().size())),
                 "the walk listener should return false starting at the 3rd event");
         assertEquals(List.of(locationA), walker.walkedRoots(), "D:/b should never be walked");
     }

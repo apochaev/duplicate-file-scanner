@@ -54,10 +54,11 @@ class ScanPipelineEndToEndTest {
         Path same2 = big.resolve("same2.bin");
         Path near1 = big.resolve("near1.bin");
         Path near2 = big.resolve("near2.bin");
-        writePattern(same1, size, -1);
-        writePattern(same2, size, -1);
-        writePattern(near1, size, -1);
-        writePattern(near2, size, size / 2); // differs only in the middle byte
+        writePattern(same1, size, 0, -1);
+        writePattern(same2, size, 0, -1);
+        // the near pair uses its own base so it differs from the same pair too
+        writePattern(near1, size, 1, -1);
+        writePattern(near2, size, 1, size / 2); // differs from near1 only in the middle byte
 
         Path link = big.resolve("link.bin");
         Fixtures.createHardLinkOrSkip(link, same1);
@@ -92,10 +93,10 @@ class ScanPipelineEndToEndTest {
         }
     }
 
-    private static void writePattern(Path path, int size, int diffOffset) throws IOException {
+    private static void writePattern(Path path, int size, int base, int diffOffset) throws IOException {
         try (OutputStream out = Files.newOutputStream(path)) {
             for (int i = 0; i < size; i++) {
-                byte b = (byte) i;
+                byte b = (byte) (i + base);
                 if (i == diffOffset) {
                     b = (byte) (b + 1);
                 }
