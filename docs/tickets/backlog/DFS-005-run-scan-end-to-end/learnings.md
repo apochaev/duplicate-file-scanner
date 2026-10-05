@@ -15,25 +15,25 @@
 
 ### DFS-005.L-1: The test-author ran out of turns on a large story
 
-- Status: proposed
+- Status: applied
 - Impact: local (`pipeline-stage` archetype)
 - Target: `.claude/archetypes/pipeline-stage/archetype.md`, `models.test-author.maxTurns`
 - Change: raise the test-author's `maxTurns` from 30 to 40, matching the implementer.
 - Evidence: `plan.json`, tests attempt 1: hit the 30-turn cap with the tests written but no `test-plan.md` and no report; the same agent was resumed with SendMessage to finish. The story's suite was 29 tests in 5 files. The step-6 resume rule in `.claude/skills/story/SKILL.md` exists because CCW-005 hit the same cap, though that occurrence was never logged as an entry.
 - Recurrences: 1 (DFS-005)
 - Recommendation: apply. It costs one line, and it removes a manual resume step.
-- Decision:
+- Decision: applied 2026-10-05 by the user; commit `docs: apply DFS-005.L-1, DFS-005.L-2, DFS-005.L-4 and DFS-005.L-7`
 
 ### DFS-005.L-2: A near-duplicate fixture can be an exact copy of the identical pair
 
-- Status: proposed
+- Status: applied
 - Impact: local (`pipeline-stage` archetype)
 - Target: `.claude/archetypes/pipeline-stage/archetype.md`, edge-case checklist item 12
 - Change: item 12 additionally asks that the near-duplicate pair use a byte pattern different from any identical-pair fixture in the same test, so that "near" cannot accidentally equal "same".
 - Evidence: `plan.json` defect 2: AC-17 (`ScanPipelineEndToEndTest`) wrote `near1.bin` with the same pattern as `same1.bin`/`same2.bin`, so a correct pipeline grouped it with them and the green gate failed. Fixed in `23db805`. Related but distinct: DFS-002.L-7 (discrimination tests for an adapter).
 - Recurrences: 1 (DFS-005)
 - Recommendation: apply.
-- Decision:
+- Decision: applied 2026-10-05 by the user; commit `docs: apply DFS-005.L-1, DFS-005.L-2, DFS-005.L-4 and DFS-005.L-7`
 
 ### DFS-005.L-3: An expected value in a stop test contradicted its own message
 
@@ -48,14 +48,14 @@
 
 ### DFS-005.L-4: Real-file tests build expected paths from the unresolved temp directory
 
-- Status: proposed
+- Status: applied
 - Impact: local (`test-guide.md`)
 - Target: `.claude/archetypes/pipeline-stage/test-guide.md`, the real-file and NIO adapter guidance
 - Change: when results pass through `toRealPath()`, build expected paths from `tempDir.toRealPath()`, not the raw `@TempDir`.
 - Evidence: `verification.md`, concern 1: AC-17 builds its expected paths from the unresolved `@TempDir` while `ScanPipeline` reports paths under `NioLocationResolver`'s `toRealPath()`. It passes on Windows but would fail on macOS (`/var` resolves to `/private/var`) or with 8.3 short temp paths. AC-17 itself still carries this and needs a small follow-up fix.
 - Recurrences: 1 (DFS-005)
 - Recommendation: apply.
-- Decision:
+- Decision: applied 2026-10-05 by the user; commit `docs: apply DFS-005.L-1, DFS-005.L-2, DFS-005.L-4 and DFS-005.L-7`
 
 ### DFS-005.L-5: The story skill tells every agent to append learnings, but the verifier role forbids it
 
@@ -81,14 +81,14 @@
 
 ### DFS-005.L-7: Checklist item 10 still refers to a listener that "does not exist yet"
 
-- Status: proposed
+- Status: applied
 - Impact: local (`pipeline-stage` archetype)
 - Target: `.claude/archetypes/pipeline-stage/archetype.md`, edge-case checklist item 10
 - Change: replace "How is that reported before DFS-005's progress listener exists" with a question about reporting the drop through the stage's `onDrop` sink.
 - Evidence: the architect's note above; DFS-005 added `ScanListener` and the `onDrop` constructors on `PartialHashFilter`, `FullHashConfirmer` and `HardLinkDetector`. DFS-002.L-5 (parked) proposes splitting the same item; decide the two together.
 - Recurrences: 1 (DFS-005)
 - Recommendation: apply, together with DFS-002.L-5.
-- Decision:
+- Decision: applied 2026-10-05 by the user; commit `docs: apply DFS-005.L-1, DFS-005.L-2, DFS-005.L-4 and DFS-005.L-7`
 
 ### DFS-005.L-8: `pipeline-stage` doesn't fit a service that composes stages
 

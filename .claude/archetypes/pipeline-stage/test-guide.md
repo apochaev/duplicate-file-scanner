@@ -18,6 +18,7 @@ A test that proves more than one criterion lists every ID, comma-separated, at t
 
 - The stage's own logic (`application`): a fake or in-memory implementation of any port it depends on (for example a `ContentHasher` fake returning fixed digests for fixed paths), never the real filesystem. Follow CLAUDE.md's fixture rules if you use the shared fixtures (`Fixtures.copyInto` into a `@TempDir`).
 - A new adapter (`infra.adapter`): real temporary files (`@TempDir`), because that is the one layer whose job is to talk to the real filesystem.
+- Expected paths in a real-file test: when the code under test resolves paths with `toRealPath()` (as `NioLocationResolver` does), build expected paths from `tempDir.toRealPath()`, not the raw `@TempDir`. The raw path passes on Windows but fails on macOS (`/var` resolves to `/private/var`) or with 8.3 short temp names (DFS-005, AC-17).
 
 ## Cover, per scenario in the ticket
 

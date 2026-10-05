@@ -1,13 +1,13 @@
 ---
 name: pipeline-stage
-version: 9
+version: 10
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
   architect: {model: opus, effort: high, maxTurns: 25}
   verifier: {model: opus, effort: medium, maxTurns: 20}
   implementer: {model: sonnet, effort: medium, maxTurns: 40}
-  test-author: {model: sonnet, effort: medium, maxTurns: 30}
+  test-author: {model: sonnet, effort: medium, maxTurns: 40}
   retro: {model: sonnet, effort: low, maxTurns: 15}
 ---
 
@@ -39,9 +39,9 @@ Work through every item that applies to this stage; skip and say why for one tha
 7. **Memory or performance, measured.** For a stage that must hold data across the whole walk before it can drop anything (as size-grouping does — a unique size is only known after every file is seen), measure actual heap for a realistic synthetic scale (DFS-001 used 1 million entries) and record the figure in the ticket before closing it, rather than assuming a bound. A stage that only ever holds one candidate group at a time (the hashing stages) can note that instead of measuring. (DFS-001: the plain in-memory map, memory measured.)
 8. **Groups of one are dropped.** After this stage runs, does every group with fewer than two surviving files get dropped, so later stages and the final report never see a singleton "duplicate" of one file? (CLAUDE.md decision 3.)
 9. **Path-order processing.** For a stage that reads file content (the hashing stages), are files within a group processed in ascending path order, for spinning-disk locality? Is there a size threshold below which a cheaper stage (the partial-hash sample) is skipped entirely, and is that threshold named and justified? (CLAUDE.md decision 3: hash in path order; skip the partial stage under ~128 KB.)
-10. **Failure mid-stage.** What happens to a file that becomes unreadable, or changes size, between the previous stage and this one? Is it dropped from its group and reported, or does the whole group fail? How is that reported before DFS-005's progress listener exists (a `learnings.md` note is enough if the ticket punts on it, but the design doc must say which)?
+10. **Failure mid-stage.** What happens to a file that becomes unreadable, or changes size, between the previous stage and this one? Is it dropped from its group and reported, or does the whole group fail? Is the drop reported through the stage's `onDrop` sink (added in DFS-005), and with which `SkipReason` and detail? The design doc must say which.
 11. **New secondary ports.** If this stage introduces a port (for example a hasher), does its interface match the stage decomposition (a sample method here, a full-hash method in a later ticket, or both together — the design doc states which and why), and is the application-level stage tested against a fake implementation of the port while only the NIO adapter is tested against real temp files (CLAUDE.md's test conventions)?
-12. **Large and near-duplicate fixtures.** If this stage's behavior depends on file content past a threshold (the 128 KB partial-hash sample, full-hash confirmation), does the test plan include a same-size, differs-only-in-the-middle-byte pair generated in code, not committed to `fixtures/`?
+12. **Large and near-duplicate fixtures.** If this stage's behavior depends on file content past a threshold (the 128 KB partial-hash sample, full-hash confirmation), does the test plan include a same-size, differs-only-in-the-middle-byte pair generated in code, not committed to `fixtures/`? Does the near pair use a byte pattern different from every identical-pair fixture in the same test, so that "near" cannot accidentally equal "same"? (DFS-005: AC-17's `near1.bin` was written with the identical pair's pattern and became a real duplicate.)
 13. **Reused across concurrent scans.** Does anything in this stage hold state in a field that would be shared if two scans ran at once (CLAUDE.md's "no state in singleton fields")? If it accumulates (item 1), one instance belongs to one scan; say so in the design doc.
 14. **Input/output currency named.** Does the ticket's Story or Context name the type(s) this stage consumes and produces — the currency shared with its neighbor stages — or explicitly say the architect is free to choose them? If neither, raise it now rather than leaving the architect to invent an unspecified type at design time. (CCW-005: FIX-002's fixture demonstration, where the architect had to invent `CandidateGroup` unprompted.)
 
