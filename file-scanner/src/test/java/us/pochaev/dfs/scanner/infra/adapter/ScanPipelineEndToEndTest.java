@@ -47,7 +47,8 @@ class ScanPipelineEndToEndTest {
             + "excludes the near-duplicate and the empty files, and treats the hard link as one physical copy")
     void realPipelineOnRealFiles(@TempDir Path dir) throws IOException {
         Path root = Fixtures.copyInto(Files.createDirectory(dir.resolve("tree")));
-        Path big = Files.createDirectory(root.resolve("big"));
+        // the pipeline reports real paths, so expected paths are built from the resolved directory
+        Path big = Files.createDirectory(root.resolve("big")).toRealPath();
 
         int size = 200 * 1024;
         Path same1 = big.resolve("same1.bin");
