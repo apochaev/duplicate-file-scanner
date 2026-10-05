@@ -5,7 +5,7 @@
     "version": 9
   },
   "branch": "tickets/DFS-005-run-scan-end-to-end",
-  "state": "running",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -103,7 +103,7 @@
       "after": [
         "implement"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -119,7 +119,7 @@
         "docs/tickets/backlog/DFS-005-run-scan-end-to-end/verification.md",
         "docs/tickets/backlog/DFS-005-run-scan-end-to-end/DFS-005-ticket.md"
       ],
-      "commit": null
+      "commit": "a1b152b7134ed1a11e45cd5841f82c27a6295d9a"
     }
   ],
   "gates": [
@@ -129,7 +129,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": [
