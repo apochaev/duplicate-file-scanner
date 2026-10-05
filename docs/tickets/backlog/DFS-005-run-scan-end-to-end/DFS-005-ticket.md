@@ -246,13 +246,13 @@ Feature: Running a scan end to end
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] The tests of DFS-001 to DFS-004 and DFS-017 are unchanged and pass
-- [ ] Every item of the `pipeline-stage` edge-case checklist is addressed in the design doc or marked not applicable with a one-line reason
-- [ ] Links in the real-file tests (AC-10, AC-17) are created at test time and skipped through `Assumptions` when the platform does not allow them; nothing platform-specific is committed to `fixtures/`
-- [ ] `module-info.java` is unchanged: every new exported type is in `domain.model`, which is already exported, and `ModuleExportsTest` stays green
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] The tests of DFS-001 to DFS-004 and DFS-017 are unchanged and pass
+- [x] Every item of the `pipeline-stage` edge-case checklist is addressed in the design doc or marked not applicable with a one-line reason
+- [x] Links in the real-file tests (AC-10, AC-17) are created at test time and skipped through `Assumptions` when the platform does not allow them; nothing platform-specific is committed to `fixtures/`
+- [x] `module-info.java` is unchanged: every new exported type is in `domain.model`, which is already exported, and `ModuleExportsTest` stays green
 
 ## Open questions
 

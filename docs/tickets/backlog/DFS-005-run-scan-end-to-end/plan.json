@@ -55,6 +55,15 @@
           "wallClockSeconds": 789,
           "outcome": "passed",
           "note": "hit the 30-turn cap with tests written but no test-plan.md or report; red already passed (29 story tests failing on the stub, 102 others passing), so the same agent was resumed via SendMessage to write test-plan.md and report (SKILL.md step 6). Turns/wall-clock are the first invocation only; the wrap-up round is not included. Completion notice for the first invocation: 60 tool uses, 148212 subagent tokens"
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "n/a",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "human-directed fix in the main session (not an agent run): corrected the AC-14 expected list and gave AC-17's near pair its own byte pattern (defects 1, 2). Verified with green, not test-phase, because src/main already holds the real implementation (SKILL.md approve-with-feedback rule for a reopened tests phase): 130 tests, 0 failures, 1 pre-existing skip."
         }
       ],
       "artifacts": [
@@ -65,7 +74,7 @@
         "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/ScanPipelineEndToEndTest.java",
         "docs/tickets/backlog/DFS-005-run-scan-end-to-end/test-plan.md"
       ],
-      "commit": "99896c109e3c7ee0e91cc31bf887539efe0964b3"
+      "commit": "23db8053543cfecf49648d18412c17cb8dbbe1b1"
     },
     {
       "id": "implement",
@@ -73,7 +82,7 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -82,11 +91,11 @@
           "turns": 19,
           "wallClockSeconds": 860,
           "outcome": "failed-gate",
-          "note": "green failed on 2 tests; disabled, freeze, touches, stubs, traceability, consistency passed. The implementer reported both as test defects; the orchestrator confirmed both by reading the committed tests (99896c1). Completion notice: 56 tool uses, 133314 subagent tokens"
+          "note": "green failed on 2 tests; disabled, freeze, touches, stubs, traceability, consistency passed. The implementer reported both as test defects; the orchestrator confirmed both by reading the committed tests (99896c1). Completion notice: 56 tool uses, 133314 subagent tokens. Reconciled after defects 1-2 were fixed in the tests phase (attempt 2): all seven checks passed against this commit with no new implementer run."
         }
       ],
       "artifacts": [],
-      "commit": null
+      "commit": "20b881e2f26e7dcf2b0f7421711cf30ff886bde3"
     },
     {
       "id": "verify",
@@ -94,9 +103,22 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 8,
+          "wallClockSeconds": 109,
+          "outcome": "passed",
+          "note": "turns self-reported; all 18 criteria met, 4 non-blocking concerns in verification.md. consistency passed."
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-005-run-scan-end-to-end/verification.md",
+        "docs/tickets/backlog/DFS-005-run-scan-end-to-end/DFS-005-ticket.md"
+      ],
       "commit": null
     }
   ],
@@ -116,14 +138,14 @@
       "phase": "implement",
       "route": "test-author",
       "summary": "green: ScanPipelineTest AC-14 expects walk-listener returns [false,false,false] for the first 3 events, contradicting its own message and the scenario ('returns false for the 3rd walk event'); should be [true,true,false]",
-      "status": "open"
+      "status": "closed"
     },
     {
       "id": 2,
       "phase": "implement",
       "route": "test-author",
       "summary": "green: ScanPipelineEndToEndTest AC-17 writes near1.bin with the same pattern as same1/same2 (writePattern(near1, size, -1)), so near1 is a true duplicate of same1 and a correct pipeline groups it; the near pair must differ from the same pair",
-      "status": "open"
+      "status": "closed"
     }
   ]
 }
