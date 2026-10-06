@@ -1,7 +1,7 @@
 ---
 id: DFS-018
 title: Track scans asynchronously
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner]
 archetype: use-case
