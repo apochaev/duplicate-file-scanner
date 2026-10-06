@@ -1,7 +1,7 @@
 ---
 id: CCW-011
 title: Add a use-case archetype
-status: in-review
+status: done
 type: docs
 scope: [docs]
 archetype: none
@@ -11,8 +11,8 @@ depends_on: []
 touches: [.claude/archetypes/use-case]
 blocked_reason:
 created: 2026-10-05
-updated: 2026-10-05
-completed:
+updated: 2026-10-06
+completed: 2026-10-06
 ---
 
 # CCW-011: Add a use-case archetype
