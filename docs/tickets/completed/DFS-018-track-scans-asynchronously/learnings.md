@@ -52,14 +52,14 @@
 
 ### DFS-018.L-4: Behaviour the design adds beyond the scenarios goes untested
 
-- Status: proposed
+- Status: parked
 - Impact: shared (`.claude/skills/story/SKILL.md`, a skill)
 - Target: `.claude/skills/story/SKILL.md`, "Human gate"
 - Change: at the design gate, list each behaviour `design.md` adds that no scenario covers, and ask the user to add a scenario or accept it untested.
 - Evidence: the verifier's note above and `verification.md`: `ErrorCode.LOCATION_UNREADABLE`, a failing executor other than a rejection, and an unrequested `CancellationException` were approved at the design gate and are untested. Related but distinct: CCW-005.L-4.
 - Recurrences: 1 (DFS-018)
 - Recommendation: park. The design summary named all three this time and the user accepted them knowingly; it changes the shared gate flow, so wait for a recurrence.
-- Decision:
+- Decision: parked 2026-10-06 by the user
 
 ### DFS-018.L-5: Tests cannot see the state port's contents
 
@@ -74,11 +74,11 @@
 
 ### DFS-018.L-6: The guides do not say which form marks the work FAILED
 
-- Status: proposed
+- Status: parked
 - Impact: local (`use-case` archetype)
 - Target: `.claude/archetypes/use-case/impl-guide.md`, and checklist item 9 in `archetype.md`
 - Change: require a `finally` that marks the work FAILED if it is still RUNNING or CANCELLING, which covers an `Error` and an undeclared checked exception alike, instead of a `catch (Error)`.
 - Evidence: the verifier's note above and `verification.md`: `design.md` item 9 said a `finally` marks FAILED; the implementer wrote `catch (Error e)` (`0608c04`), which leaves a scan RUNNING if a runner throws an undeclared checked exception.
 - Recurrences: 1 (DFS-018)
 - Recommendation: park. One story, recorded as a minor note.
-- Decision:
+- Decision: parked 2026-10-06 by the user
