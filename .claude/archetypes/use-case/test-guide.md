@@ -14,10 +14,13 @@ void cancellingAQueuedScanCancelsItAtOnce() { ... }
 
 A test that proves more than one criterion lists every ID, comma-separated, at the very start: `DFS-018.AC-1, DFS-018.AC-2 <title>`. Nothing may come before the ID(s) — `TraceabilityCheck` reads the run of IDs at the very start of the display name and stops at the first token that is not `<TICKET-ID>.AC-<n>`. Fill the same mapping into `test-plan.md` (from `test-plan.md.tmpl`) as you write each test; the traceability gate cross-checks both.
 
+A `@ParameterizedTest` needs the ID in each invocation's name too: `RedCheck` and `TraceabilityCheck` read the per-invocation name, and JUnit's default `[n] VALUE` hides the ID, so a correct stub failure is counted as a regression. Set `@ParameterizedTest(name = "<TICKET-ID>.AC-<n> <title> {0}")`, as well as the container's `@DisplayName` (DFS-018: 9 such "regressions" failed the red gate).
+
 ## What to test against
 
 - The service's own logic (`application`): fakes of every port and seam it depends on (a scripted runner for a composed collaborator, a fake or the in-memory state port), and a manual executor, never real threads or the real filesystem. Follow CLAUDE.md's fixture rules if you use the shared fixtures (`Fixtures.copyInto` into a `@TempDir`).
 - A new adapter (`infra.adapter`), such as an in-memory state port: tested directly, including its atomicity under real threads if the design relies on it.
+- A scenario that checks what the state port holds ("the repository holds no record") uses a test fake of the port that exposes its records. Do not add a listing method to the production port for tests (DFS-018's `ListingRepository`).
 - Expected paths in a real-file test: when the code under test resolves paths with `toRealPath()` (as `NioLocationResolver` does), build expected paths from `tempDir.toRealPath()`, not the raw `@TempDir`. The raw path passes on Windows but fails on macOS (`/var` resolves to `/private/var`) or with 8.3 short temp names (DFS-005, AC-17).
 
 ## Testing asynchronous behavior without timing

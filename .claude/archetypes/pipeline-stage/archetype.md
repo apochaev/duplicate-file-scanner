@@ -1,6 +1,6 @@
 ---
 name: pipeline-stage
-version: 10
+version: 11
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
@@ -23,7 +23,7 @@ Written from what refining DFS-001 (group scanned files by size) surfaced. DFS-0
 - A result type the pipeline exposes outside the stage chain (for example `DuplicateSet`) goes in `domain.model` and must be added to `module-info.java`'s `exports` for that package, and covered by `ModuleExportsTest`.
 - A value type that is only the currency between stages (for example `CandidateGroup`), and never leaves `application`, stays in `application` — do not export it pre-emptively.
 - A secondary port the stage needs (for example `ContentHasher`) goes in `infra.port`; its adapter goes in `infra.adapter`.
-- Stubs are owned by the architect and throw `new UnsupportedOperationException("not implemented: <TICKET-ID>")` (CLAUDE.md decision 5 area; convention fixed by D2, matched by `tools/story-gate`'s `StubsCheck`/`RedCheck`, which key off the literal prefix `not implemented:`).
+- Stubs are owned by the architect and throw `new UnsupportedOperationException("not implemented: <TICKET-ID>")` (convention fixed by D2, matched by `tools/story-gate`'s `StubsCheck`/`RedCheck`, which key off the literal prefix `not implemented:`).
 - A port method this ticket deliberately does not implement, deferring it to a later ticket (for example `ContentHasher.fullHash`, deferred by DFS-002 to DFS-003): stub it like any other method (the standard `not implemented: <TICKET-ID>` message) — the implementer is the one who changes it. The implementer replaces that message with a permanent one that does *not* use the `not implemented:` prefix and names the ticket that will implement it (for example `"full hash is implemented by DFS-003"`), so `StubsCheck` never reads it as a leftover stub. See `test-guide.md`, "Testing a port method deferred to a later ticket," for how to keep such a method's test correctly red now and green later without a new stub-recognition mechanism. The ticket that later implements the method finishes the handover in two steps. Its architect re-stubs the method back to `not implemented: <its own ID>`, because the deferring ticket's permanent message does not start with `not implemented:`, so `RedCheck` would reject the new story tests failing on it; the architect also names the deferring ticket's test file in `design.md`, since the test-author reads only files the design names. Its test-author removes the deferring ticket's stand-in test, which would otherwise fail `RedCheck` as a regression and then `green` once the method works, and writes tests for the method's real behavior. See `test-guide.md` (DFS-003.L-2).
 
 ## Edge-case checklist

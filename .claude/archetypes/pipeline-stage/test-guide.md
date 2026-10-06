@@ -14,6 +14,8 @@ void filesOfEqualSizeFormOneGroup() { ... }
 
 A test that proves more than one criterion lists every ID, comma-separated, at the very start: `DFS-001.AC-1, DFS-001.AC-2 <title>`. Nothing may come before the ID(s) — `TraceabilityCheck` reads the run of IDs at the very start of the display name and stops at the first token that is not `<TICKET-ID>.AC-<n>`. Fill the same mapping into `test-plan.md` (from `test-plan.md.tmpl`) as you write each test; the traceability gate cross-checks both.
 
+A `@ParameterizedTest` needs the ID in each invocation's name too: `RedCheck` and `TraceabilityCheck` read the per-invocation name, and JUnit's default `[n] VALUE` hides the ID, so a correct stub failure is counted as a regression. Set `@ParameterizedTest(name = "<TICKET-ID>.AC-<n> <title> {0}")`, as well as the container's `@DisplayName` (DFS-018: 9 such "regressions" failed the red gate).
+
 ## What to test against
 
 - The stage's own logic (`application`): a fake or in-memory implementation of any port it depends on (for example a `ContentHasher` fake returning fixed digests for fixed paths), never the real filesystem. Follow CLAUDE.md's fixture rules if you use the shared fixtures (`Fixtures.copyInto` into a `@TempDir`).
