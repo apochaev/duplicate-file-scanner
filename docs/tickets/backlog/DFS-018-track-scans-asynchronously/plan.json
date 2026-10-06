@@ -11,7 +11,7 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -24,9 +24,25 @@
         }
       ],
       "artifacts": [
-        "docs/tickets/backlog/DFS-018-track-scans-asynchronously/plan.json"
+        "docs/tickets/backlog/DFS-018-track-scans-asynchronously/design.md",
+        "docs/tickets/backlog/DFS-018-track-scans-asynchronously/learnings.md",
+        "docs/tickets/backlog/DFS-018-track-scans-asynchronously/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ScanPipeline.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ScanRunner.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ScanService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Result.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ScanSnapshot.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ScanStatus.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/command/CancelScan.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/command/StartScan.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/GetScanResult.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/GetScanStatus.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/InMemoryScanRepository.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ScanRecord.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ScanRepository.java"
       ],
-      "commit": null
+      "commit": "72e0b500dc9a5039ad67d2e8999e047757d9e272"
     },
     {
       "id": "tests",
@@ -34,9 +50,33 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": null,
+          "wallClockSeconds": 192,
+          "outcome": "failed-gate",
+          "note": "turns not reported; completion notice gave 14 tool uses, 79208 subagent tokens. test-phase: FAIL red, 9 problems, all 'regression' on @ParameterizedTest invocations of AC-9 (4) and AC-12 (5): JUnit's default invocation names '[n] VALUE' lack the DFS-018.AC- prefix, so RedCheck counted them as non-story tests, although each failed with exactly the stub's exception. 0 Thread.sleep in the test tree."
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "high",
+          "turns": null,
+          "wallClockSeconds": 143,
+          "outcome": "passed",
+          "note": "escalated one tier (sonnet/medium -> opus/high) per resume step 6; fixed defect 1 by naming both @ParameterizedTest invocations with their criterion ID. turns not reported; completion notice gave 10 tool uses, 23568 subagent tokens. red: 39 story tests fail with stubs, 131 other tests pass (1 skipped); traceability: 18 criteria, 20 scenarios. 0 Thread.sleep."
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-018-track-scans-asynchronously/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanServiceRealThreadTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/InMemoryScanRepositoryTest.java"
+      ],
       "commit": null
     },
     {
@@ -65,12 +105,20 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
       "status": "pending"
     }
   ],
-  "defects": []
+  "defects": [
+    {
+      "id": 1,
+      "phase": "tests",
+      "route": "test-author",
+      "summary": "red: @ParameterizedTest invocations of AC-9 and AC-12 are named '[n] VALUE' (JUnit default), so RedCheck does not see the DFS-018.AC- prefix and reports 9 'regressions'; each invocation needs a name starting with its criterion ID, e.g. @ParameterizedTest(name = \"DFS-018.AC-9 {0}\")",
+      "status": "closed"
+    }
+  ]
 }
