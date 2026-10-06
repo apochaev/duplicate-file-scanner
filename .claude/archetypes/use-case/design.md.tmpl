@@ -1,0 +1,70 @@
+# <TICKET-ID>: <ticket title> — design
+
+Filled in by the architect during the `design` phase. This is the artifact the design gate (D3, gate 1) summarizes for the human, so keep it to roughly the length below — it is a contract, not an essay. Delete this instruction line and every `<...>` placeholder before committing.
+
+## Summary
+
+About 20 lines, written last: what the use cases do, the main types and where they live, the state model in one line, and anything the human should look at closely at the design gate. `/story run` shows this section verbatim at the gate; nothing else in this file is read for that purpose.
+
+## Public API
+
+The use-case ports and the types they take or return, with their full signature. One line each; a sentence after if a signature needs explanation. Mark every first-slice type this replaces.
+
+- `<InterfaceOrRecordName>` in `<package>`: `<methods / components>`
+- ...
+
+## Layer placement
+
+- `domain.usecases.command` / `domain.usecases.query` (exported): `<use-case ports>`
+- `domain.model` (exported): `<results, snapshots, status and error enums, or "none">`
+- `application`: `<the service, and any package-private seam>`
+- `infra.port` / `infra.adapter`: `<state port and its in-memory adapter, or "none">`
+
+## State and transitions
+
+The states a request goes through, the legal transitions and what triggers each, and which states are terminal. A table is enough:
+
+| From | Event | To |
+|---|---|---|
+| `<STATE>` | `<command or completion>` | `<STATE>` |
+
+Then one line per command saying what it does in each state, including the terminal ones. "None: this use case has no lifecycle" if it does not apply.
+
+## Concurrency and atomicity
+
+- Which thread runs what: `<caller's thread: validation and recording; executor's thread: the work and callbacks>`
+- Where per-request state lives, and the one atomic operation every transition goes through: `<...>`
+- Each race the design must settle, and who wins: `<...>`
+
+## Checklist disposition
+
+One line per item of `archetype.md`'s edge-case checklist: how this use case addresses it, or "not applicable: <reason>".
+
+1. Unknown or stale IDs: <...>
+2. Results as values, bugs as exceptions: <...>
+3. Status model: <...>
+4. Races and who wins: <...>
+5. Validation before side effects: <...>
+6. State placement: <...>
+7. Progress and observation: <...>
+8. Caller-supplied callbacks: <...>
+9. Failures off the caller's thread: <...>
+10. Query results: <...>
+11. Executor contract: <...>
+12. Retention: <...>
+13. Testability: <...>
+14. Exported surface: <...>
+
+## Configuration
+
+- Settings this use case reads, their default, and where they are enforced: `<...>`, or "none".
+
+## Open design notes
+
+Anything the architect deviated from in the ticket, or a decision made while designing that the ticket left open. Empty section ("None.") if there is nothing to add.
+
+## Stubs
+
+- Files stubbed: `<list>`
+- Each throws `new UnsupportedOperationException("not implemented: <TICKET-ID>")` per D2 / CLAUDE.md decision 5.
+- Commit: `<hash, filled in after the design commit>`

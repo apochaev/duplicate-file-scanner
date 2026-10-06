@@ -1,0 +1,56 @@
+---
+name: use-case
+version: 1
+phases: [design, test, implement, verify]
+gates: [design, done]
+models:
+  architect: {model: opus, effort: high, maxTurns: 25}
+  verifier: {model: opus, effort: medium, maxTurns: 20}
+  implementer: {model: sonnet, effort: medium, maxTurns: 40}
+  test-author: {model: sonnet, effort: medium, maxTurns: 40}
+  retro: {model: sonnet, effort: low, maxTurns: 15}
+---
+
+# use-case
+
+Applies to a ticket that adds or changes a use case (a command or query port in `domain.usecases`, CLAUDE.md's CQS split) and the `application` service that implements it, including a service that composes other parts (for example the scan pipeline) and runs work asynchronously on a caller-supplied executor. It does not apply to a stage of the detection pipeline: those use `pipeline-stage`. CLI and server wiring get their own archetypes as they come up (D4).
+
+Written from what refining DFS-018 (track scans asynchronously) surfaced (CCW-011). DFS-018 is the first ticket to carry `archetype: use-case`. It has no `skeletons/` yet; a second use-case ticket will show what they should look like.
+
+## Where files go
+
+- A use-case port is one interface per use case: commands in `domain.usecases.command`, queries in `domain.usecases.query`. Both packages are exported.
+- A value type a use case takes or returns (a result, a snapshot, a status enum, an error code) goes in `domain.model`, which is exported. A new exported package needs at least one real type plus an `exports` line in `module-info.java`, or `ModuleExportsTest` fails (CLAUDE.md, "Current state and open items").
+- The service implementing the use cases lives in `application`. It is not exported. A seam the service uses only to be testable (a package-private interface over a composed collaborator) stays package-private in `application`.
+- State the service keeps per request lives behind a secondary port in `infra.port`; its adapter (in-memory first) goes in `infra.adapter`.
+- Existing first-slice types (for example `ScanStatus`, `CancelScan`, `GetScanStatus`) may be replaced in place when the ticket says so: CLAUDE.md marks them as not final designs. The design doc lists every one it changes.
+- Stubs are owned by the architect and throw `new UnsupportedOperationException("not implemented: <TICKET-ID>")` (CLAUDE.md decision 5 area; convention fixed by D2, matched by `tools/story-gate`'s `StubsCheck`/`RedCheck`, which key off the literal prefix `not implemented:`).
+- A port method this ticket deliberately does not implement, deferring it to a later ticket (for example `ContentHasher.fullHash`, deferred by DFS-002 to DFS-003): stub it like any other method (the standard `not implemented: <TICKET-ID>` message) — the implementer is the one who changes it. The implementer replaces that message with a permanent one that does *not* use the `not implemented:` prefix and names the ticket that will implement it (for example `"full hash is implemented by DFS-003"`), so `StubsCheck` never reads it as a leftover stub. See `test-guide.md`, "Testing a port method deferred to a later ticket," for how to keep such a method's test correctly red now and green later without a new stub-recognition mechanism. The ticket that later implements the method finishes the handover in two steps. Its architect re-stubs the method back to `not implemented: <its own ID>`, because the deferring ticket's permanent message does not start with `not implemented:`, so `RedCheck` would reject the new story tests failing on it; the architect also names the deferring ticket's test file in `design.md`, since the test-author reads only files the design names. Its test-author removes the deferring ticket's stand-in test, which would otherwise fail `RedCheck` as a regression and then `green` once the method works, and writes tests for the method's real behavior. See `test-guide.md` (DFS-003.L-2).
+
+## Edge-case checklist
+
+Work through every item that applies to this use case; skip and say why for one that does not. Each item traces back to a DFS-018 refinement decision (named in parentheses) or a CLAUDE.md convention this archetype generalizes. Settle as many as possible at refinement, so the architect does not invent them.
+
+1. **Unknown or stale IDs.** For every command and query that takes an ID (a scan ID, a plan ID, a quarantine-run ID), what does it return for an ID it never issued, or one from a previous process? The same answer for every operation, so a caller maps it once. (DFS-018 decision 4: `Failure(UNKNOWN_SCAN)`.)
+2. **Results as values, bugs as exceptions.** Which outcomes are values in the sealed `Result<T>` (`Success`/`Failure` with an `ErrorCode`) and which stay exceptions? Expected outcomes (not found, invalid input the user can fix, a refused submission) are `Failure` values; a `null` argument is a caller bug and stays a `NullPointerException`. Does an optional argument get an overload instead of accepting `null`? Is each new `ErrorCode` named? (DFS-018 decisions 4, 11.)
+3. **Status model.** Does the use case track something with a lifecycle? List every state, including the transient ones (queued before an executor picks the work up, stopping between a cancel request and the actual stop), the legal transitions, which states are terminal, and what each command does in each state, including on a terminal one (usually: no effect, return the unchanged state). (DFS-018 decision 3.)
+4. **Races and who wins.** Which transitions can collide (a completion and a cancel, a cancel during pickup from a queue)? Which outcome wins, and where is that decided in one atomic step, not by a check-then-act across two calls? (DFS-018 decisions 3, 8: completion wins; every transition is one atomic update that checks the current state first.)
+5. **Validation before side effects.** What is checked on the caller's thread before anything is recorded, queued or written, so a request rejected by validation leaves no trace (no record, no ID, no task)? A refusal that can only happen after recording, such as the executor rejecting the task, is item 11's case. If a later step re-checks the same thing (a composed collaborator validating again), is that duplication stated, and what happens if the world changes in between? (DFS-018 decision 6.)
+6. **State placement.** Per-request state (status, progress, results, a cancel request) lives behind a port, never in a field of the shared service instance (CLAUDE.md's "no state in singleton fields"). Is it one immutable record per request, changed only through an atomic update, and is a flag that could disagree with the status avoided (for example, the cancel request *is* the status)? (DFS-018 decision 8.)
+7. **Progress and observation.** How does a caller learn what is happening: pushed (a listener the caller passes in), pulled (a snapshot query a server can poll), or both? What does the snapshot carry, and what does it hold before any progress exists? Is the snapshot kept current from the same events forwarded to the listener, so push and pull cannot drift apart? (DFS-018 decision 2.)
+8. **Caller-supplied callbacks.** If the use case calls caller code (a listener, a callback), what happens when that code throws: the whole operation fails, the exception is swallowed per call, or the callback is detached on its first exception? Where is that recorded so it is not silent? (DFS-018 decision 7: detach and record `listenerFailure`.)
+9. **Failures off the caller's thread.** For work that runs on an executor, where does a failure end up so it is not lost (the core never prints, CLAUDE.md)? Which exceptions mark the work failed and with what message, and does an `Error` still leave the state terminal (a `finally`) rather than stuck in a running state forever? Is a failure of the work reported as a successful query whose state says failed, rather than as a `Failure` of the query itself (the result describes the call, not the work)? (DFS-018 decisions 4, 7.)
+10. **Query results.** What exactly does each query return: the whole value or a page, in which order, and in which states is a result available at all (and what is returned in the others)? Is a partial result ever returned, and is that consistent with what the composed collaborator guarantees? (DFS-018 decision 5: the whole `ScanResult`, only when COMPLETED, otherwise `Failure(SCAN_NOT_COMPLETED)`.)
+11. **Executor contract.** The executor is supplied by the caller (CLAUDE.md's "Spring-friendliness rules"). What happens if it rejects the task? On which thread do callbacks run, and does the contract say so? Is a record created before submission, so a task that starts immediately always finds it, and if the executor then rejects the task, what state does that record end in and what does the command return? (DFS-018 decisions 2, 11.)
+12. **Retention.** How long is per-request state kept, and is removing or evicting it in scope? If not, is it named under Out of scope with the reason and the ticket or condition that will need it? (DFS-018 decision 9: kept until the process exits; eviction deferred to a long-running server.)
+13. **Testability.** Can every state and transition be pinned without timing? A manual executor for queued states, fakes that block on a latch for running and stopping states, races tested by applying the transitions in both orders, one real-thread test with a bounded timeout, and no `Thread.sleep`. Does a composed collaborator that is hard to drive from its own ports (a `final` class built from several ports) get a package-private seam, and does the ticket name the one-line change to that collaborator in `touches`? (DFS-018 decisions 10, 12.)
+14. **Exported surface.** Which new or changed types does a caller see (ports, results, snapshots, status and error enums), and are they all in already exported packages? If a new package is exported, is `module-info.java` listed in `touches` explicitly (a package entry does not cover it; CCW-003)? Which first-slice types does the ticket replace, and does it say so?
+
+## Extra done-items
+
+Beyond the standard checks (every scenario automated and passing, `./gradlew build` green including ArchUnit and module-export tests, no files changed outside `touches`):
+
+- Every item of the checklist above is either addressed in the design doc or explicitly marked not applicable with a one-line reason.
+- No test uses `Thread.sleep`; waiting is on a latch, a future or a bounded poll (checklist item 13).
+- The service implementing the use cases has no field other than its ports, its seams and the executor (checklist item 6).
+- A use case that adds a type to an exported package keeps `ModuleExportsTest` green; one that adds a new exported package updates `module-info.java`'s `exports` (checklist item 14).

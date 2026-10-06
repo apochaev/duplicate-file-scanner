@@ -1,7 +1,7 @@
 ---
 id: CCW-011
 title: Add a use-case archetype
-status: ready
+status: in-review
 type: docs
 scope: [docs]
 archetype: none
@@ -164,10 +164,18 @@ Feature: The use-case archetype
 
 ## Definition of done
 
-- [ ] Every scenario above is checked the way it says (mechanical or reading) and passes, with the evidence noted beside this item
-- [ ] `/tickets validate` reports no archetype finding for DFS-018
-- [ ] No files changed outside the paths listed under Touches
-- [ ] The fresh agent's coverage report (AC-5) is summarized in this ticket, with any gap it found and how it was fixed
+- [x] Every scenario above is checked the way it says (mechanical or reading) and passes, with the evidence noted beside this item. AC-1: `ls -A` lists exactly the five files, no `skeletons/`. AC-2: frontmatter `name: use-case`, `version: 1`, phases and gates as stated; the `models` block is byte-identical to `pipeline-stage`'s (`diff`). AC-3: each heading found once; the opening paragraph was read. AC-4: read; seed topics map to items 1, 2, 3, 4, 5, 6, 8, 9, 12, 13. AC-5: see the implementation notes. AC-6: seven phrases found in both archetypes; `## Summary` only in `use-case` (deviation noted above). AC-7: zero hits (Python, case-insensitive). AC-8: all four headings found. AC-9: `thread.sleep` 2, `latch` 3, `manual executor` 2, `both orders` 1, `bounded timeout` 1 (Python); `Thread.sleep` is forbidden on lines 31 and 69 of `test-guide.md`. AC-10: see the next item.
+- [x] `/tickets validate` reports no archetype finding for DFS-018: its archetype rule, run on this branch, finds `.claude/archetypes/use-case/` for DFS-018 and no finding for any ticket. On `main` it holds once this branch is merged.
+- [x] No files changed outside the paths listed under Touches: `git status` shows only `.claude/archetypes/use-case/` and this ticket file (a `grep.exe.stackdump` left by the crashing grep was deleted).
+- [x] The fresh agent's coverage report (AC-5) is summarized in this ticket, with any gap it found and how it was fixed: see the implementation notes (no gap; four tightenings applied).
+
+## Implementation notes (2026-10-05)
+
+- **AC-6 deviation (a refinement mistake).** `## Summary` is not in `pipeline-stage`'s files: its architect gets that section from `.claude/agents/architect.md`, not from `design.md.tmpl`. So that row cannot be "found in both". `use-case/design.md.tmpl` carries `## Summary` anyway, because the architect prompt requires it. The other seven phrases are found in both.
+- **Checklist beyond the seed.** The ten seed topics are items 1, 2, 3, 4, 5, 6, 8, 9, 12 and 13. Items 7 (progress), 10 (query results), 11 (executor contract) and 14 (exported surface) were added to cover DFS-018 decisions 2, 5 and 11 and the exported-types question no seed topic named.
+- **AC-5 coverage report (fresh general-purpose agent, given only this ticket, DFS-018's ticket and the five files).** Gaps: none; every one of DFS-018's decisions 2 to 12 is prompted by at least one item (2: items 7, 11, 14; 3: 3, 4; 4: 1, 2; 5: 10, 14; 6: 5, 2; 7: 8, 9; 8: 4, 6; 9: 12; 10: 13 and the test guide; 11: 2, 11; 12: 13). Its four tightenings were applied: item 5 now covers validation failures only and hands executor rejection to item 11 (it had contradicted item 11); item 7 asks that the snapshot be kept current from the same events the listener gets; item 9 asks that a failed run be a successful query whose state says failed; item 11 asks what the pre-created record becomes on rejection. No rerun was needed, since it reported no gap.
+- **Reported, not fixed here (outside `touches`).** DFS-018's decision 8 and Definition of done say the service has "no field other than its ports and the executor", but its decision 12 gives it a `ScanRunner` seam field; the archetype's wording ("its ports, its seams and the executor") is the right one, and DFS-018's should be aligned before its run, or the verifier may flag a correct implementation. Two references carried verbatim from `pipeline-stage` are wrong in both archetypes: "CLAUDE.md decision 5 area" for the stub convention (decision 5 is about factories), and "CLAUDE.md, 'Implementing a ticket'" (that section is in the `tickets` skill, not CLAUDE.md).
+- **Tooling.** In Git Bash, `grep -i -F` crashes (`msys-2.0.dll`, leaving `grep.exe.stackdump`) and prints nothing, which reads as zero matches; the AC-7 and AC-9 checks were redone in Python.
 
 ## Open questions
 

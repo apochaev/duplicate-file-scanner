@@ -1,0 +1,69 @@
+# use-case — test-author guide
+
+You write every test for this use case against the architect's stubs, before the implementer writes any real logic. Every story test must fail against the stubs for exactly one reason: the stub's `UnsupportedOperationException("not implemented: <TICKET-ID>")`. That is the red gate (D2); a test that passes against a stub, or fails for another reason, is a vacuous or broken test and is sent back to you.
+
+## Naming convention (D11)
+
+Every test's `@DisplayName` starts with the full ID(s) of the criteria it proves, then a readable title:
+
+```java
+@Test
+@DisplayName("DFS-018.AC-7 Cancelling a queued scan cancels it at once")
+void cancellingAQueuedScanCancelsItAtOnce() { ... }
+```
+
+A test that proves more than one criterion lists every ID, comma-separated, at the very start: `DFS-018.AC-1, DFS-018.AC-2 <title>`. Nothing may come before the ID(s) — `TraceabilityCheck` reads the run of IDs at the very start of the display name and stops at the first token that is not `<TICKET-ID>.AC-<n>`. Fill the same mapping into `test-plan.md` (from `test-plan.md.tmpl`) as you write each test; the traceability gate cross-checks both.
+
+## What to test against
+
+- The service's own logic (`application`): fakes of every port and seam it depends on (a scripted runner for a composed collaborator, a fake or the in-memory state port), and a manual executor, never real threads or the real filesystem. Follow CLAUDE.md's fixture rules if you use the shared fixtures (`Fixtures.copyInto` into a `@TempDir`).
+- A new adapter (`infra.adapter`), such as an in-memory state port: tested directly, including its atomicity under real threads if the design relies on it.
+- Expected paths in a real-file test: when the code under test resolves paths with `toRealPath()` (as `NioLocationResolver` does), build expected paths from `tempDir.toRealPath()`, not the raw `@TempDir`. The raw path passes on Windows but fails on macOS (`/var` resolves to `/private/var`) or with 8.3 short temp names (DFS-005, AC-17).
+
+## Testing asynchronous behavior without timing
+
+A use case that runs work on an executor has states that exist only between two events (queued, running, stopping). Pin each one deterministically:
+
+- **Queued:** pass a manual executor, a small test class that keeps submitted tasks in a list until the test calls something like `runNext()`. Assert the queued state, act on it (for example cancel), then run the task and assert what it did or did not do.
+- **Running and stopping:** give the fake collaborator a latch it blocks on at a chosen point (for example after its third event). Run the task on a separate thread you control, assert the running state, act (for example cancel), assert the stopping state, then release the latch and assert the terminal state.
+- **Races:** test a race by applying the two transitions in both orders, one test per order (for example "cancel, then completion" and "completion, then cancel"), not by starting two threads and hoping they collide.
+- **One real-thread test:** prove the wiring on a real executor (virtual threads) once, waiting for the terminal state with a bounded timeout (a few seconds) on a future, a latch or a bounded poll.
+- **No `Thread.sleep`.** Not to wait for a state, not to "give the executor time". A sleep makes a test slow and flaky, and a flaky red gate is worse than none.
+- **Which thread:** if the design says callbacks run on the executor's thread, record the thread in the fake listener and assert it is not the test thread.
+
+## Cover, per scenario in the ticket
+
+- The happy path and the stated edge cases, exactly as scenarios describe them — do not invent new scenarios; if you find a gap, report it rather than silently adding one (the ticket's scenarios are what was reviewed and approved at `ready`).
+- Whatever the design doc's checklist disposition and "State and transitions" table commit to: every listed transition, and what each command does in each state, including the terminal ones.
+- Results: assert the exact `Success` value or the exact `Failure` code (and message where the ticket names it), not only that "it failed".
+- Invalid input: whatever the design doc's public API section says is rejected has a test that expects rejection — a `Failure` value for an expected outcome, a `NullPointerException` for a `null` argument.
+- Discrimination: for any adapter whose job is to distinguish inputs (a hasher, a comparator, any port mapping distinct inputs to distinct outputs), at least one test that feeds it two different real inputs and asserts the outputs actually differ — not only that identical inputs produce matching outputs. A suite proving only the matching case cannot catch a constant-returning or partially-ignoring implementation (found on DFS-002: `NioContentHasher.sampleHash` reached the done gate proven only for identical bytes; a constant-returning implementation would have passed the whole suite).
+
+## Testing a port method deferred to a later ticket
+
+Some use cases stub a port method that is not this ticket's job to implement (for example `ContentHasher.fullHash`, deferred by DFS-002 to DFS-003 — see `archetype.md`, "Where files go"). At the point your tests run, the implementer's permanent replacement message does not exist yet: the stub still reads the generic `not implemented: <TICKET-ID>`. Do not assert the eventual, differently-worded message — checked against the still-generic stub, that turns today's legitimate stub failure into your own `AssertionFailedError`, which `RedCheck` rejects (it requires the raw stub exception, not an assertion failure). A bare `catch (UnsupportedOperationException expected) {}` does not fix this either: it also swallows the stub's own exception and passes vacuously, before the method is ever really implemented.
+
+Instead, catch the exception and re-throw it unchanged only while its message still starts with `not implemented:`:
+
+```java
+try {
+    hasher.fullHash(file);
+    fail("expected fullHash to throw UnsupportedOperationException");
+} catch (UnsupportedOperationException expected) {
+    if (expected.getMessage() != null && expected.getMessage().startsWith("not implemented:")) {
+        throw expected;
+    }
+}
+```
+
+This fails red now (the generic stub message starts with `not implemented:`, so the catch rethrows it and `RedCheck` recognizes it as the stub failure), and turns green on its own once the implementer's permanent message lands (the message no longer starts with `not implemented:`, so the catch no longer rethrows). Leave the exact final wording for the verifier to confirm by eye against the ticket's Definition of done, not an automated assertion.
+
+**When your ticket is the one that implements the deferred method.** The deferring ticket's stand-in test (the conditional rethrow above) guards a state your ticket ends. Remove that test method; `design.md` names its file. Left in place, it fails the red gate as a `regression` once your architect re-stubs the method, and fails `green` once the method works. Replace it with tests for the method's real behavior, each named with your own criterion IDs (DFS-003.L-2).
+
+## What not to do
+
+- Do not write a test that only restates the implementation ("calls method X"); assert on behavior and output.
+- Do not test the port's real adapter from `application`-level tests, or vice versa.
+- Do not touch a stub's production code — that is the implementer's job, done after your tests are frozen.
+- Do not use `assertThrows` against a stub whose precondition check runs after its `UnsupportedOperationException` (the L-013 ordering): the type mismatch reports as `assertThrows`'s own `AssertionFailedError`, masking the stub's exception, and the red gate reads only the top-level JUnit XML failure type — so this misreports as "not a stub failure." Use `try { ...; fail(...); } catch (ExpectedType expected) {}` instead, so the stub's exception propagates uncaught.
+- Do not use `Thread.sleep` anywhere in a test (see "Testing asynchronous behavior without timing").
