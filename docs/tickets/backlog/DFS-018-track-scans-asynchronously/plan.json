@@ -5,7 +5,7 @@
     "version": 1
   },
   "branch": "tickets/DFS-018-track-scans-asynchronously",
-  "state": "running",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -113,7 +113,7 @@
       "after": [
         "implement"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -129,7 +129,7 @@
         "docs/tickets/backlog/DFS-018-track-scans-asynchronously/verification.md",
         "docs/tickets/backlog/DFS-018-track-scans-asynchronously/DFS-018-ticket.md"
       ],
-      "commit": null
+      "commit": "d24a9564746fbcbdac1b489fac714b8d80068c52"
     }
   ],
   "gates": [
@@ -139,7 +139,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": [
