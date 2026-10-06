@@ -33,8 +33,10 @@ import java.util.function.Consumer;
  * {@code SizeIndex}, the stage instances built from the {@link ScanConfig}, the skip collector, the
  * counters) is created inside {@link #scan} and never escapes it, so one instance may run several
  * scans at once as long as the ports are thread-safe.
+ * <p>
+ * Implements {@link ScanRunner}, the seam {@link ScanService} runs it through (DFS-018 decision 12).
  */
-public final class ScanPipeline {
+public final class ScanPipeline implements ScanRunner {
 
     private final LocationResolver resolver;
     private final FileTreeWalker walker;
@@ -113,6 +115,13 @@ public final class ScanPipeline {
                 ScanPhase.HARD_LINKS, fullOutput, hardLinkDetector::detect, listener, stopSignal);
 
         return new ScanResult(hardLinkOutput, skipped);
+    }
+
+    /** {@link ScanRunner}'s method: exactly {@link #scan}, same arguments, same contract (DFS-018). */
+    @Override
+    public ScanResult run(List<Path> locations, ScanConfig config, ScanListener listener,
+                          BooleanSupplier stopSignal) throws IOException {
+        return scan(locations, config, listener, stopSignal);
     }
 
     private void walkLocations(List<Path> kept, SizeIndex sizeIndex, Consumer<WalkEvent.Skipped> sink,
