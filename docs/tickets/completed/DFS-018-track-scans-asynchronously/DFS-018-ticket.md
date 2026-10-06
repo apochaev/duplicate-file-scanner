@@ -1,7 +1,7 @@
 ---
 id: DFS-018
 title: Track scans asynchronously
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: use-case
@@ -11,7 +11,7 @@ touches: [us.pochaev.dfs.scanner.domain.model, us.pochaev.dfs.scanner.domain.use
 blocked_reason:
 created: 2026-09-27
 updated: 2026-10-06
-completed:
+completed: 2026-10-06
 ---
 
 # DFS-018: Track scans asynchronously
