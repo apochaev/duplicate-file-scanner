@@ -9,3 +9,8 @@
 - L-5 (template): `design.md.tmpl`'s Stubs line cites "D2 / CLAUDE.md decision 5", but CLAUDE.md decision 5 is about factories, not stubs; the stub convention is D2 alone. The same mis-citation is in `archetype.md`'s "Where files go".
 
 - (test-author, attempt 2) The use-case archetype's `test-guide.md` naming section only covers `@DisplayName`. On a `@ParameterizedTest` the display name sits on the container and JUnit names each invocation `[n] VALUE`; RedCheck/TraceabilityCheck read the per-invocation name, so the invocations lose the `<ID>.AC-n` prefix and are classified as regressed pre-existing tests. The guide (and the test-author naming convention) should say: every `@ParameterizedTest` needs `name = "<ID>.AC-n <title> {0}"`.
+
+## verify (verifier)
+
+- (verifier) design.md checklist item 9 said "a `finally` marks FAILED on an Error"; the implementer wrote `catch (Error e) { finish(FAILED); throw e; }`. Same for every declared throwable, but not for a sneaky-thrown checked exception from a misbehaving runner. The use-case impl-guide could say which form it wants (a `finally` guarded by "still RUNNING/CANCELLING" is the airtight one), so the design wording and the code agree.
+- (verifier) Behaviour the approved design adds beyond the scenarios (here `LOCATION_UNREADABLE`, a non-rejection `RuntimeException` from `execute`, an unrequested `CancellationException`) ends up untested by construction, because the test-author writes tests only from scenarios. The design gate could ask the human to either add a scenario for each such addition or accept it untested explicitly, so the verifier is not left judging untested branches.

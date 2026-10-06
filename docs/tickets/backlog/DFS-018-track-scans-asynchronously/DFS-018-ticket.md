@@ -279,13 +279,13 @@ Feature: Starting, tracking and cancelling a scan
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] No test uses `Thread.sleep`; waiting is on a latch, a future or a bounded poll (decision 10)
-- [ ] `module-info.java` is unchanged: every new exported type is in an already exported package (`domain.model`, `domain.usecases.command`, `domain.usecases.query`), and `ModuleExportsTest` stays green
-- [ ] The service implementing the use cases has no field other than its ports, its seams (`ScanRunner`, decision 12) and the executor (decision 8)
-- [ ] Every item of the `use-case` archetype's edge-case checklist (CCW-011) is addressed in the design doc or marked not applicable with a one-line reason
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] No test uses `Thread.sleep`; waiting is on a latch, a future or a bounded poll (decision 10)
+- [x] `module-info.java` is unchanged: every new exported type is in an already exported package (`domain.model`, `domain.usecases.command`, `domain.usecases.query`), and `ModuleExportsTest` stays green
+- [x] The service implementing the use cases has no field other than its ports, its seams (`ScanRunner`, decision 12) and the executor (decision 8)
+- [x] Every item of the `use-case` archetype's edge-case checklist (CCW-011) is addressed in the design doc or marked not applicable with a one-line reason
 
 ## Open questions
 
