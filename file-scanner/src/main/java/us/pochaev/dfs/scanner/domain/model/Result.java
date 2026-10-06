@@ -11,9 +11,18 @@ public sealed interface Result<T> {
 
     /** The call succeeded; {@code value} is never null. */
     record Success<T>(T value) implements Result<T> {
+
+        public Success {
+            java.util.Objects.requireNonNull(value, "value");
+        }
     }
 
     /** The call was refused for the reason {@code code}; {@code message} is never null. */
     record Failure<T>(ErrorCode code, String message) implements Result<T> {
+
+        public Failure {
+            java.util.Objects.requireNonNull(code, "code");
+            java.util.Objects.requireNonNull(message, "message");
+        }
     }
 }

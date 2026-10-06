@@ -14,4 +14,9 @@ import us.pochaev.dfs.scanner.domain.model.ScanSnapshot;
  * @param result   the pipeline's result once the status is COMPLETED; null in every other status
  */
 public record ScanRecord(ScanId id, ScanSnapshot snapshot, ScanResult result) {
+
+    public ScanRecord {
+        java.util.Objects.requireNonNull(id, "id");
+        java.util.Objects.requireNonNull(snapshot, "snapshot");
+    }
 }

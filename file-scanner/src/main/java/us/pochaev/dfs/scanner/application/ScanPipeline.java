@@ -121,7 +121,7 @@ public final class ScanPipeline implements ScanRunner {
     @Override
     public ScanResult run(List<Path> locations, ScanConfig config, ScanListener listener,
                           BooleanSupplier stopSignal) throws IOException {
-        throw new UnsupportedOperationException("not implemented: DFS-018");
+        return scan(locations, config, listener, stopSignal);
     }
 
     private void walkLocations(List<Path> kept, SizeIndex sizeIndex, Consumer<WalkEvent.Skipped> sink,

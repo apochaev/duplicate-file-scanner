@@ -20,4 +20,8 @@ package us.pochaev.dfs.scanner.domain.model;
  */
 public record ScanSnapshot(ScanStatus status, ScanPhase phase, long filesWalked, int groupsDone,
                            int groupsTotal, String failureMessage, String listenerFailure) {
+
+    public ScanSnapshot {
+        java.util.Objects.requireNonNull(status, "status");
+    }
 }
