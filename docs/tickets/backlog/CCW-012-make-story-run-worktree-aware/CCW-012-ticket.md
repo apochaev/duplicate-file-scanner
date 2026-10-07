@@ -176,15 +176,21 @@ Built by hand on `tickets/CCW-012-make-story-run-worktree-aware`, in its worktre
 - `.claude/skills/story/plan.json.tmpl`: the `worktree` field.
 - `.claude/skills/tickets/SKILL.md`: the two sentences of decision 6.
 - **Checks done (2026-10-07):** AC-5 (template field), AC-6 and AC-9 mechanically, in Python: every inline `git` command in the story skill uses `git -C` or is a repo-level `git worktree`/`git branch --list` lookup; all three `StoryGate.java` invocations carry `--root <worktree>`; the four `cd` mentions are two prohibitions, the agents' working-tree block and its explanation, none telling the orchestrator to `cd`; both old tickets-skill phrases are gone and the new "Parallel work" wording is present. AC-2, AC-5 (refusal), AC-7 and AC-8 by reading: preflight lines for states (b) to (e); `run`, `approve`, `status` and `learn` each find the worktree and refuse on a mismatch; the block is stated once and required by resume step 6 and `learn`.
-- **Pending (decision 7):** AC-1, AC-3, AC-4, AC-10 and AC-5's live half need the live run of the next product ticket to reach `ready`, up to its design gate.
+- **Live run (decision 7), 2026-10-07: DFS-019** ("Wire ScannerFactories", archetype `use-case`), `/story run DFS-019` invoked from the repo checkout on `main` at `8cc78bf`.
+  - AC-1: preflight found no branch (state a) and ran `git worktree add -b tickets/DFS-019-wire-scanner-factories ../duplicate-file-scanner-DFS-019-wire-scanner-factories main`; `git worktree list --porcelain` listed `C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-019-wire-scanner-factories` on `refs/heads/tickets/DFS-019-wire-scanner-factories`, and the repo checkout stayed on `main`.
+  - AC-3: the new branch's HEAD was `8cc78bf`, `main`'s tip at preflight; the design commit's parent is `8cc78bf`.
+  - AC-4: after `tickets start`, the worktree's ticket read `status: in-progress`; the repo checkout's copy still read `status: ready`, and `git status` there was empty.
+  - AC-5 (live half): `plan.json`'s `worktree` equalled the path `git worktree list --porcelain` printed for the branch.
+  - AC-10: the architect's launch prompt carried the working-tree block verbatim; `StoryGate.java touches DFS-019 --root <worktree>` passed (7 files); the design commit `a728d62` was made with `git -C <worktree>` on the ticket branch; `plan.json` state was `awaiting-approval`; the repo checkout was on `main` with no changes.
+  - Beyond the design gate (not required by decision 7): the same rules carried the story through tests (one red-gate defect, a test fault unrelated to worktrees), implement, verify, `/story learn` and `/tickets done DFS-019`, which fast-forwarded `main` to `bc514d7` and closed it as `4e4b739`. No worktree gap was found, so no follow-up commit was needed.
 - **Sequencing deviation from decision 7 (2026-10-07, the user's choice):** skills load from the repo checkout on `main`, so the live run can only exercise the new `/story run` once this branch is on `main`. The branch is therefore merged into `main` before the live run, with the ticket `in-review` and its live done-items still open; the live run's evidence is recorded on `main` afterwards, and `/tickets done CCW-012` then finds the branch already landed (its ancestor check) and only closes. A gap the live run finds is fixed by a follow-up commit on `main` tagged `[CCW-012]`.
 
 ## Definition of done
 
-- [ ] Every scenario above is checked the way it says (mechanical, reading or live) and passes, with the evidence noted beside this item
-- [ ] The live run of decision 7 reached the design gate of a real product ticket, started from the repo checkout on `main`; its ticket ID, worktree path and design commit are noted here
-- [ ] CCW-008.L-2 is marked `applied` with a pointer to this ticket (via `/learn`)
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above is checked the way it says (mechanical, reading or live) and passes, with the evidence noted beside this item: mechanical and reading checks above (Checks done); the live scenarios in the DFS-019 live run above
+- [x] The live run of decision 7 reached the design gate of a real product ticket, started from the repo checkout on `main`; its ticket ID, worktree path and design commit are noted here: DFS-019, worktree `../duplicate-file-scanner-DFS-019-wire-scanner-factories`, design commit `a728d62`
+- [x] CCW-008.L-2 is marked `applied` with a pointer to this ticket (via `/learn`): done 2026-10-07
+- [x] No files changed outside the paths listed under Touches: `git show --stat f1fa795` lists the three touched files plus this ticket
 
 ## Open questions
 

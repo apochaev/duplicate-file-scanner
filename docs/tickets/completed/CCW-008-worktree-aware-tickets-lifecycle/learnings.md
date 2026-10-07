@@ -19,13 +19,13 @@ Migrated from `docs/learnings/log.md` (2026-09-23, CCW-010) — see that file fo
 
 ### CCW-008.L-2: `/story run` checks its branch out in place instead of using a worktree
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`.claude/skills/story/SKILL.md`, a skill)
 - Target: `.claude/skills/story/SKILL.md`, Preflight step 2
 - Change: Preflight step 2 creates the story branch off `main` (not the current branch tip). It then runs `/tickets start <ID> --worktree`, so the branch lives in its own worktree `../<repo-dir>-<ID>-<slug>`, where every phase agent then works. The repo checkout stays on `main`, as `CLAUDE.md`'s parallel-work convention (CCW-008) expects.
 - Evidence: Preflight step 2 on `main` reads "Create it off the current branch tip if it does not exist; check it out if it does." `/story run DFS-002` left the repo checkout on `tickets/DFS-002-partial-hash-stage`. While CCW-008 was being built, no tree had `main` checked out. The first version of CCW-008's `done` refused in exactly that state, and closing CCW-008 needed the temporary close tree (`docs/tickets/completed/CCW-008-worktree-aware-tickets-lifecycle/CCW-008-ticket.md`, decision 4 and Out of scope). Branching "off the current branch tip" also means a story started from another ticket's branch inherits that branch's unmerged commits.
 - Recurrences: 2 (CCW-008: see Evidence; DFS-018: `/tickets start DFS-018 --worktree` set the ticket `in-progress` without a `plan.json`, so `/story run`'s preflight would have refused it; the status edit was reverted, and the run was driven from the main checkout's session with the worktree path passed to every phase agent by hand (2026-10-06))
 - Recommendation: apply, as a ticket rather than a one-line edit. The preflight, the resume protocol and the per-phase commits all assume one checkout, and agents would have to be pointed at the worktree path, which `/story run` needs to test for real (L-017).
-- Decision:
+- Decision: applied 2026-10-07 by the user, through ticket CCW-012 (story skill preflight off `main` in its own worktree, `git -C`/`--root` addressing, working-tree block; commit `f1fa795 docs: make /story run work each story in its own worktree [CCW-012]`, proven by the DFS-019 live run); commit `docs: apply CCW-008.L-2`
 
 *(History: written as `L-025` on `main`, renumbered to `L-032` at the same merge, for the same reason as the entry above; then moved here as `CCW-008.L-2` by this migration.)*
