@@ -22,6 +22,7 @@ Shape (template: `plan.json.tmpl` in this skill's folder):
    "ticket": "DFS-001",
    "archetype": {"name": "pipeline-stage", "version": 2},
    "branch": "tickets/DFS-001-group-scanned-files-by-size",
+   "worktree": "C:/Users/me/Projects/duplicate-file-scanner-DFS-001-group-scanned-files-by-size",
    "state": "running",
    "phases": [
       {"id": "design", "agent": "architect", "after": [], "status": "pending",
@@ -33,6 +34,23 @@ Shape (template: `plan.json.tmpl` in this skill's folder):
 ```
 
 `state` is one of `running`, `awaiting-approval`, `blocked`, `done`. A phase `status` is `pending`, `in-progress` or `done`. A `runs` entry is `{"attempt": 1, "model": "opus", "effort": "high", "turns": 21, "wallClockSeconds": 940, "outcome": "passed | failed-gate | maxTurns"}` — turns and wall-clock time only, no token count (its source is unconfirmed; CCW-006's pilot is where that gets settled, not this skill).
+
+## Worktree (CCW-012)
+
+Every story is worked in its own git worktree, never in the repo checkout: branch `tickets/<TICKET-ID>-<slug>` (the slug is the ticket folder's), worktree `../<repo-dir>-<TICKET-ID>-<slug>` beside the repo checkout, the same names the `tickets` skill uses (CCW-008). The repo checkout stays on `main` throughout, so several stories can be in flight and `/tickets done` merges into it directly.
+
+- **Finding it.** Every mode finds the story's worktree with `git worktree list --porcelain`, by the line `branch refs/heads/tickets/<TICKET-ID>-<slug>`; the `worktree` line above it is the path. Never guess the path. `plan.json` lives inside the worktree, so it cannot be how the worktree is found; its `worktree` field (written by preflight) is a cross-check instead: if it disagrees with what `git worktree list` reports (the worktree was moved or recreated), refuse, naming both paths, and change nothing.
+- **Addressing it, never `cd`.** The orchestrating session stays in the repo checkout. Every git command against the story runs as `git -C <worktree> ...`; every check runs as `java tools/story-gate/StoryGate.java <check> <TICKET-ID> --root <worktree>`; `plan.json` and every other story file are read and written by absolute path under `<worktree>`. Never `cd` into the worktree: whether a `cd` persists between shell calls is the harness's behaviour, not this skill's (CCW-001.L-5).
+- **The story folder** is `<worktree>/docs/tickets/{backlog,completed}/<TICKET-ID>-<slug>/`, and the ticket file is inside it. Read the ticket from the worktree once one exists, since its copy on `main` is not updated until `/tickets done` merges.
+- **The working-tree block.** Every agent launch (resume step 6, and the retro in `learn`) carries this block right after the story-folder and ticket lines, with the three values filled in:
+
+  ```
+  Working tree: this story runs in a git worktree. The repository root for this story is
+  <worktree>
+  (branch tickets/<TICKET-ID>-<slug>). Read and write every file under that root, and run every git and Gradle command from that root (for example `cd "<worktree>" && ./gradlew build`). Never read or edit files under <repo checkout> (the repo checkout, on main); it is a different tree. CLAUDE.md, the archetype and tools/story-gate are the copies under the worktree root.
+  ```
+
+  The agent definitions are not changed for this: agents already take their paths from the launch prompt and never derive them (resume step 6). The `cd` inside an agent's own command is the agent's business; the rule against `cd` binds this orchestrating session.
 
 ## Phase ids, agents and gates (fixed convention, not per-archetype)
 
@@ -55,27 +73,35 @@ A gate in `archetype.md`'s `gates:` list names either an actual phase id (pause 
 
 ## Preflight (`run`, when no `plan.json` exists yet)
 
-1. Read the ticket. Refuse, naming the reason, and do nothing else, unless:
-   - `status` is `ready` (a fresh start) or `in-progress` with a `plan.json` already present (a resume falls through to the resume protocol instead, skipping preflight);
+1. Look the branch up: `git worktree list --porcelain` for `branch refs/heads/tickets/<TICKET-ID>-<slug>`, and `git branch --list tickets/<TICKET-ID>-<slug>`. Read the ticket from the worktree if one holds the branch, otherwise from the repo checkout. If that worktree's story folder already has a `plan.json`, this is a resume: skip preflight and go to the resume protocol.
+2. Refuse, naming the reason, and do nothing else, unless:
+   - `status` is `ready` (a fresh start), or `in-progress` while a worktree holds the branch and has no `plan.json` (the user ran `/tickets start <ID> --worktree` first; also a fresh start, not a refusal);
    - `archetype` is not `none` — refuse with "implemented by hand, not through the pipeline" for a `none` ticket;
    - every `depends_on` entry has `status: done` — refuse naming the first one that isn't.
-2. Resolve the branch: `tickets/<TICKET-ID>-<slug>` (the slug is the ticket's own folder name). Create it off the current branch tip if it does not exist; check it out if it does.
-3. Create `plan.json` from the resolved archetype's `phases:`, `gates:` and `models:` (per the table above), state `running`, every phase `pending`, no defects.
-4. Run the `tickets` skill's `start <ID>` (sets the ticket `in-progress`; refuses only if start's own preconditions somehow no longer hold, which preflight has already checked).
-5. Continue into the resume protocol below, in the same invocation.
+3. Set up the worktree, always off `main`, never off the current branch tip (a story must not inherit another ticket's unmerged commits). By what step 1 found:
+   - **(a) no branch:** `git worktree add -b tickets/<TICKET-ID>-<slug> ../<repo-dir>-<TICKET-ID>-<slug> main`.
+   - **(b) a worktree holds the branch, ticket `ready`:** reuse it.
+   - **(c) a worktree holds the branch, ticket `in-progress`, no `plan.json`:** reuse it.
+   - **(d) the branch exists, no worktree:** `git worktree add ../<repo-dir>-<TICKET-ID>-<slug> tickets/<TICKET-ID>-<slug>` (no `-b`).
+   - **(e) the branch is checked out in place in a checkout that is not a story worktree** (the old in-place `/story run`; `git worktree list` shows it on the repo checkout or another tree not named `../<repo-dir>-<TICKET-ID>-<slug>`): refuse, naming that checkout's path, and tell the user to switch it back to `main` (`git -C <that checkout> checkout main`) and rerun. Never move someone's checkout automatically.
+
+   If `git worktree add` refuses, stop and report git's message.
+4. Create `plan.json` in the worktree's story folder from the resolved archetype's `phases:`, `gates:` and `models:` (per the table above), with `worktree` set to the worktree's path as `git worktree list --porcelain` prints it, state `running`, every phase `pending`, no defects.
+5. Run the `tickets` skill's `start <ID>`. A worktree now holds the branch, so `start` makes its `in-progress` edit inside the worktree, never in the repo checkout (its first branch, CCW-008). In state (c) the ticket is already `in-progress`; `start` accepts that and changes nothing. `start` refuses only if its own preconditions somehow no longer hold, which this preflight has already checked.
+6. Continue into the resume protocol below, in the same invocation.
 
 ## Resume protocol (every `run`, including right after preflight)
 
 Ported from D5, with the escalation, blocked-clearing and gate-summary rules from this ticket's refinement folded in:
 
-1. Read `plan.json`.
+1. Find the worktree (see "Worktree") and read `plan.json` from its story folder. If no worktree holds the branch, or `plan.json`'s `worktree` disagrees with `git worktree list --porcelain`, refuse, naming the reason, and change nothing.
 2. If state is `awaiting-approval`: only `approve` (below) can change that from outside this loop. `run` invoked while still `awaiting-approval` does not advance — it re-shows the same gate's summary and the same `/story approve <ID>` command, so a plain `run` is always safe to retry without accidentally skipping the gate.
 3. If state is `blocked`: treat the blocked phase as `in-progress` and go straight to step 5's reconciliation, except the attempt counter is reset to 1 first (a human-initiated retry is not the automatic escalation D9 describes) and state is set back to `running` once the phase is no longer blocked. (A phase sent back by human feedback at a gate, rather than by two failed attempts, follows the same reset-and-reconcile shape — see `approve <ID> [feedback]` below.)
 4. Otherwise (state `running`): pick the first phase that is not `done` and whose `after` phases are all `done`. If none remains, every phase is `done` — go to "Finishing", below.
 5. If the picked phase is `in-progress` (an interrupted run): reconcile. If its last recorded `runs` attempt has artifacts and a commit, and the phase's deterministic check(s) (table above) pass against that commit, mark it `done`, record the commit, and loop back to step 4 in the same invocation. Otherwise fall through to step 6 to launch a fresh attempt, handing the agent the notes already in `progress.md`.
-6. Launch the phase's agent as a subagent (`Agent` tool, `subagent_type` the phase's agent name), giving it the story folder's path and the ticket's path explicitly at the top of the prompt — agents never derive or search for these themselves. Resolve model/effort/maxTurns in order: the ticket's `models:` override, then the archetype's `models:`, then the agent's own frontmatter (D9); on the *second* attempt of this phase, one tier above whatever that resolved to (`sonnet`→`opus` for model; one step up for effort; unchanged `maxTurns` unless the archetype says otherwise). If the agent stops at its turn cap without delivering a final report but the work on disk looks genuinely complete (not stuck or looping), prefer resuming that same agent (`SendMessage` to its agent id, asking it to wrap up in as few turns as possible) over discarding its work for a fresh, escalated attempt; record the combined turns/wall-clock of both invocations in one `runs` entry with a `note` explaining the resume, since this is not a clean single invocation. This case is not fully designed — flag it for `/story learn` (found running this ticket's own demonstration, CCW-005).
-7. When the agent returns, run the phase's deterministic check(s) with `java tools/story-gate/StoryGate.java <check> <TICKET-ID>` (or the `story-gate` launcher). Record the attempt in the phase's `runs` (model, effort, turns, wall-clock seconds, outcome).
-8. On every check passing: commit the phase's changes *yourself* — none of the five agent prompts include a commit step, and something must produce the commit `plan.json` records (`FreezeCheck`, CCW-003, reads it straight out of the plan). Stage exactly what the phase's own `touches`/story-folder/test-tree scope covers (by name, never `git add -A`, per `CLAUDE.md`), commit with a Conventional Commits message ending `[<TICKET-ID>]` (type by phase: `feat`/`refactor` for `design` and `implement`, `test` for `tests`, `docs` for `verify`'s ticket-file ticks), then mark the phase `done` and record the commit (`git rev-parse HEAD`). Loop back to step 4 in the same invocation. This is a deliberate, narrow exception to "commits are made only when the user asks": the human gates (D3) are what the user is actually approving, and between them the pipeline is meant to run unattended (D3's own words) — a per-phase pause to ask "commit this?" would defeat that. Flagged as friction for `/story learn`'s first real run to confirm or challenge.
+6. Launch the phase's agent as a subagent (`Agent` tool, `subagent_type` the phase's agent name), giving it the story folder's path and the ticket's path (both under the worktree) explicitly at the top of the prompt, followed by the working-tree block (see "Worktree") — agents never derive or search for these themselves. Resolve model/effort/maxTurns in order: the ticket's `models:` override, then the archetype's `models:`, then the agent's own frontmatter (D9); on the *second* attempt of this phase, one tier above whatever that resolved to (`sonnet`→`opus` for model; one step up for effort; unchanged `maxTurns` unless the archetype says otherwise). If the agent stops at its turn cap without delivering a final report but the work on disk looks genuinely complete (not stuck or looping), prefer resuming that same agent (`SendMessage` to its agent id, asking it to wrap up in as few turns as possible) over discarding its work for a fresh, escalated attempt; record the combined turns/wall-clock of both invocations in one `runs` entry with a `note` explaining the resume, since this is not a clean single invocation. This case is not fully designed — flag it for `/story learn` (found running this ticket's own demonstration, CCW-005).
+7. When the agent returns, run the phase's deterministic check(s) with `java tools/story-gate/StoryGate.java <check> <TICKET-ID> --root <worktree>` (or the `story-gate` launcher with the same `--root`). Record the attempt in the phase's `runs` (model, effort, turns, wall-clock seconds, outcome).
+8. On every check passing: commit the phase's changes *yourself* — none of the five agent prompts include a commit step, and something must produce the commit `plan.json` records (`FreezeCheck`, CCW-003, reads it straight out of the plan). Stage exactly what the phase's own `touches`/story-folder/test-tree scope covers, in the worktree (`git -C <worktree> add <path>...`, by name, never `-A`, per `CLAUDE.md`), confirm with `git -C <worktree> status` that nothing else is staged, commit with `git -C <worktree> commit` and a Conventional Commits message ending `[<TICKET-ID>]` (type by phase: `feat`/`refactor` for `design` and `implement`, `test` for `tests`, `docs` for `verify`'s ticket-file ticks), then mark the phase `done` and record the commit (`git -C <worktree> rev-parse HEAD`). Loop back to step 4 in the same invocation. This is a deliberate, narrow exception to "commits are made only when the user asks": the human gates (D3) are what the user is actually approving, and between them the pipeline is meant to run unattended (D3's own words) — a per-phase pause to ask "commit this?" would defeat that. Flagged as friction for `/story learn`'s first real run to confirm or challenge.
 9. On a check failing: append a defect to `plan.json`'s `defects` — `{"id": <next>, "phase": "<id>", "route": "<agent>", "summary": "<the verdict's compact reason>", "status": "open"}`. Routing: a `test-phase` failure routes to `test-author`; any other failure on the `implement` phase routes to `implementer`; a `design`-phase `touches` failure routes to `architect`; a `verify`-phase failure routes to `verifier`. Exception: when an `implement`-phase `green` failure is traced to a defect in a test rather than in the implementation (the implementer reports it, and the orchestrator confirms it by reading the failing test; the implementer's claim alone is not enough), route that defect to `test-author` instead. Record the implement attempt as `failed-gate`, then do not retry `implement`. Reopen `tests` the way `approve <ID> [feedback]` sends `tests` back: attempt counter reset to 1, verified with `green` rather than `test-phase`, and `implement` set to `in-progress` so step 5 reconciles it against its existing commit without relaunching the implementer. Then loop back to step 4. If this phase's `runs` now holds two failed attempts, set state `blocked` and stop — the escalation (see "Blocked", below) is the output. Otherwise mark the phase `pending` again and loop back to step 4 in the same invocation (a same-phase retry happens without returning control to the user; only `blocked` and a human gate stop the run).
 10. Immediately after a phase is marked `done` (step 8), check whether a gate is configured right after it (its own id, or `done` if it was the last phase in `phases:`). If so: leave that gate's plan entry `pending` (only `approve`, below, changes it) and set overall state `awaiting-approval`; stop and show the stop (see "Human gate", below) instead of looping to step 4.
 
@@ -94,40 +120,40 @@ Shown once, whenever step 9 above sets state `blocked`:
 
 ## Finishing
 
-When step 4 finds every phase `done`: run the `tickets` skill's `review <ID>` first (sets the ticket `in-review`). This is required, not optional — CCW-003's `consistency` check accepts only ticket status `in-review` or `done` when plan state is `done`, so skipping this step leaves `consistency` failing right at the finish line (found running this ticket's own demonstration). Then set state `done`. Say so, then:
+When step 4 finds every phase `done`: run the `tickets` skill's `review <ID>` first, against the ticket file in the worktree (sets the ticket `in-review`; commit that edit with `git -C <worktree>` like a phase's). This is required, not optional — CCW-003's `consistency` check accepts only ticket status `in-review` or `done` when plan state is `done`, so skipping this step leaves `consistency` failing right at the finish line (found running this ticket's own demonstration). Then set state `done`. Say so, then:
 
 - If `learnings.md` is non-empty, or `plan.json` has any defect (open or closed): end with the exact command `/story learn <TICKET-ID>`.
 - Otherwise: state plainly that there is nothing to learn.
 
-Setting the ticket all the way to `done` is not this skill's job — that stays a separate, human `/tickets done <ID>` once the user is satisfied with the result. D3's "before done" gate is about the pipeline's own finish line, not the ticket lifecycle's terminal state.
+Setting the ticket all the way to `done` is not this skill's job — that stays a separate, human `/tickets done <ID>` once the user is satisfied with the result; `done` merges the branch into the repo checkout's `main` and offers to remove the worktree. D3's "before done" gate is about the pipeline's own finish line, not the ticket lifecycle's terminal state.
 
 ## Modes
 
 ### `run <ID>`
 
-Preflight (if no `plan.json` yet) then the resume protocol, both above. This is the only mode that launches agents or advances state.
+Preflight (if no `plan.json` yet) then the resume protocol, both above. This is the only mode that launches agents or advances state. Invoke it from the repo checkout; it creates or finds the story's worktree itself (see "Worktree").
 
 ### `status <ID>`
 
-Read-only, never launches anything or writes `plan.json`. Reads the plan (refuses, naming the reason, if there is none yet) and prints: the state, which phase is next (or, if `awaiting-approval`/`blocked`, which gate/phase that is), and the same next-command line that mode's stop would show — so `status` and a genuine stop always agree.
+Read-only, never launches anything or writes `plan.json`. Finds the worktree (see "Worktree") and reads the plan from it (refuses, naming the reason, if there is no worktree or no plan yet, or if the plan's `worktree` disagrees with `git worktree list --porcelain`) and prints: the state, which phase is next (or, if `awaiting-approval`/`blocked`, which gate/phase that is), and the same next-command line that mode's stop would show — so `status` and a genuine stop always agree.
 
 ### `approve <ID> [feedback]`
 
-Requires state `awaiting-approval`; otherwise refuse and say what state it is actually in.
+Finds the worktree and reads the plan exactly as resume step 1 does (same refusals). Requires state `awaiting-approval`; otherwise refuse and say what state it is actually in.
 
 - No feedback: mark the pending gate's plan entry `approved`, set state `running`, and continue the resume protocol immediately, in the same invocation — the user does not need a separate `/story run` to keep going.
 - With feedback: do not approve. Append the feedback to the named phase's entry in `progress.md` as a note for its next attempt. Then send that phase, and everything after it, back for targeted rework:
   - The named phase, and any phase after it up to and including the phase the gate sits after, resets to `pending` with its attempt counter back at 1 — this is a human-initiated redirect, not D9's automatic-retry escalation, so it never inherits an escalated model/effort tier from a prior attempt.
   - A later phase whose own artifacts need no change once the rework lands (its existing commit will still satisfy its checks — for example `implement` when only tests are being added to) resets to `in-progress` instead of `pending`, so step 5 reconciles it against its existing commit rather than relaunching its agent.
   - Leave the gate `pending`, set state `running`, and continue the resume protocol immediately in the same invocation — do not wait for a separate `/story run`.
-  - If the phase sent back is `tests`, and a later `implement` commit already exists on the branch: `test-phase` (`RedCheck`) cannot be used to verify the new attempt, because `RedCheck` requires every story test to fail against the stub, which cannot hold once `src/main` already carries the real implementation — it would report every story test as "passed against stubs," the inverse of what it is meant to catch. Verify the reopened tests phase with a plain green run instead (`java tools/story-gate/StoryGate.java green <TICKET-ID>`, confirmed against the JUnit XML reports for the changed/added tests), since what actually needs proving here is "the new tests pass for real, against real behavior" — which `green` already checks. Do not force a red run by reverting `src/main`; that is out of every phase agent's boundaries. Record which check was actually used in the phase's `runs` entry note.
+  - If the phase sent back is `tests`, and a later `implement` commit already exists on the branch: `test-phase` (`RedCheck`) cannot be used to verify the new attempt, because `RedCheck` requires every story test to fail against the stub, which cannot hold once `src/main` already carries the real implementation — it would report every story test as "passed against stubs," the inverse of what it is meant to catch. Verify the reopened tests phase with a plain green run instead (`java tools/story-gate/StoryGate.java green <TICKET-ID> --root <worktree>`, confirmed against the JUnit XML reports for the changed/added tests), since what actually needs proving here is "the new tests pass for real, against real behavior" — which `green` already checks. Do not force a red run by reverting `src/main`; that is out of every phase agent's boundaries. Record which check was actually used in the phase's `runs` entry note.
   - Tell the user the gate is still open, the feedback is recorded, and that the run is continuing with the phases now reset.
 
 ### `learn <ID>`
 
-Requires the ticket's story folder to have a `plan.json` (any state). If `learnings.md` is empty and `plan.json` has no defects: say there is nothing to learn and stop — this is the retro skip (mirrors D6's "runs only when there is something to learn"). Otherwise:
+Requires the ticket's story folder to have a `plan.json` (any state). The story folder is in the worktree while one holds the branch (found and cross-checked as in resume step 1); after `/tickets done` has merged and removed the worktree, it is the repo checkout's `docs/tickets/completed/<TICKET-ID>-<slug>/`. If `learnings.md` is empty and `plan.json` has no defects: say there is nothing to learn and stop — this is the retro skip (mirrors D6's "runs only when there is something to learn"). Otherwise:
 
-1. Launch the `retro` agent (`.claude/agents/retro.md`) with only the story folder's path — no conversation history, files only, per D6/CCW-007.
+1. Launch the `retro` agent (`.claude/agents/retro.md`) with only the story folder's path, followed by the working-tree block when the story folder is in a worktree — no conversation history, files only, per D6/CCW-007.
 2. It returns proposals in its final report (`READ:`/`FINDINGS:`) — it never writes; its tools have no `Write` (found running this ticket's own demonstration, contradicting an earlier assumption in this ticket's own Context and in D6's design-doc sketch, both written before CCW-004 built the actual agent).
 3. For each proposal, check it against every ticket's existing entries the same way `/learn add` does (show up to three candidates with their full ID and Change/Evidence lines, ask "same friction?"), then draft the exact new entry (or the recurrence line) and show it; on the user's approval, write it directly to *this story's own* `docs/tickets/{backlog,completed}/<TICKET-ID>-<slug>/learnings.md`, identified `<TICKET-ID>.L-<n>` with `<n>` counted only within that file (CCW-010: entries live per-ticket, never in one shared, sequentially-numbered file) — all eight fields, `Status: proposed` — mirroring `/learn reflect`'s already-solved version of this exact problem (an agent proposes, the calling skill writes only what is approved).
 4. End by naming `/learn review` as the next command for the user to run themselves. `learn` is `disable-model-invocation: true` and cannot be invoked here through the `Skill` tool ("reserved for explicit user invocation" — found running this ticket's own demonstration); `decide` and `apply` are typed by the user afterward exactly as `/learn` already documents. `learn` stays each ticket's `learnings.md` only writer from here on.
@@ -137,4 +163,5 @@ Requires the ticket's story folder to have a `plan.json` (any state). If `learni
 - Never edits a phase agent's artifacts (`design.md`, test files, source, `verification.md`) — only `plan.json`, and (via `tickets start`/`review`) the ticket's `status`/`updated` fields.
 - Never runs more than one phase's agent per `run` invocation before returning control at a stop — a `pending`→`done` chain across several phases in one call is expected (step 8 loops), but the moment a human gate or `blocked` is reached, it stops.
 - Commits each phase's own changes itself once that phase's deterministic check passes (see the resume protocol, step 8) — the one deliberate exception to "commits only when asked," bounded to exactly what that phase's gate just confirmed is in scope.
+- Never checks a story branch out in the repo checkout, never `cd`s the orchestrating session into a worktree, and never runs a story's git command or check without `git -C <worktree>` or `--root <worktree>` (see "Worktree").
 - Never invokes the `learn` skill directly (the `Skill` tool refuses it — `disable-model-invocation`); `learn <ID>` writes proposals itself and ends by naming `/learn review` for the user to type.

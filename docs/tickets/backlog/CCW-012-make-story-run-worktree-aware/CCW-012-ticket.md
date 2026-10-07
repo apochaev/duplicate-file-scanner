@@ -1,7 +1,7 @@
 ---
 id: CCW-012
 title: Make /story run worktree-aware
-status: ready
+status: in-review
 type: feature
 scope: [docs]
 archetype: none
@@ -167,6 +167,17 @@ Feature: /story run works each story in its own worktree
 **Out of scope:**
 - `/tickets start`, `review` and `done`'s own worktree handling (CCW-008), beyond the two sentences of decision 6
 - Running several stories concurrently from one session
+
+## Implementation notes (2026-10-07)
+
+Built by hand on `tickets/CCW-012-make-story-run-worktree-aware`, in its worktree.
+
+- `.claude/skills/story/SKILL.md`: a new "Worktree (CCW-012)" section (finding the worktree with `git worktree list --porcelain`, the `plan.json` `worktree` cross-check, `git -C` and `--root` instead of `cd`, where the story folder is, and the exact working-tree block); the `plan.json` shape example gains `worktree`; preflight rewritten as six steps with states (a) to (e), always off `main`; resume step 1 finds the worktree and refuses a mismatch; step 6 adds the block; step 7 adds `--root`; step 8 stages, commits and reads `HEAD` with `git -C`; Finishing runs `review` against the worktree's ticket; `run`, `status`, `approve` and `learn` find the worktree; the reopened-tests `green` command adds `--root`; "never does" gains the no-in-place, no-`cd` rule.
+- `.claude/skills/story/plan.json.tmpl`: the `worktree` field.
+- `.claude/skills/tickets/SKILL.md`: the two sentences of decision 6.
+- **Checks done (2026-10-07):** AC-5 (template field), AC-6 and AC-9 mechanically, in Python: every inline `git` command in the story skill uses `git -C` or is a repo-level `git worktree`/`git branch --list` lookup; all three `StoryGate.java` invocations carry `--root <worktree>`; the four `cd` mentions are two prohibitions, the agents' working-tree block and its explanation, none telling the orchestrator to `cd`; both old tickets-skill phrases are gone and the new "Parallel work" wording is present. AC-2, AC-5 (refusal), AC-7 and AC-8 by reading: preflight lines for states (b) to (e); `run`, `approve`, `status` and `learn` each find the worktree and refuse on a mismatch; the block is stated once and required by resume step 6 and `learn`.
+- **Pending (decision 7):** AC-1, AC-3, AC-4, AC-10 and AC-5's live half need the live run of the next product ticket to reach `ready`, up to its design gate.
+- **Sequencing deviation from decision 7 (2026-10-07, the user's choice):** skills load from the repo checkout on `main`, so the live run can only exercise the new `/story run` once this branch is on `main`. The branch is therefore merged into `main` before the live run, with the ticket `in-review` and its live done-items still open; the live run's evidence is recorded on `main` afterwards, and `/tickets done CCW-012` then finds the branch already landed (its ancestor check) and only closes. A gap the live run finds is fixed by a follow-up commit on `main` tagged `[CCW-012]`.
 
 ## Definition of done
 

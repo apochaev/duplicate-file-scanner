@@ -85,7 +85,7 @@ A `## Acceptance criteria` section sits between Context and Scenarios. Its first
 
 A ticket worked outside `main` lives on one branch, `tickets/<ID>-<slug>` (the slug is the ticket folder's), e.g. `tickets/CCW-008-worktree-aware-tickets-lifecycle`. `/story run` uses the same branch name. If the ticket also has a worktree, it sits next to the repo checkout as `../<repo-dir>-<ID>-<slug>`, e.g. `../duplicate-file-scanner-CCW-008-worktree-aware-tickets-lifecycle`. Find either one with `git worktree list --porcelain`: look for the line `branch refs/heads/tickets/<ID>-<slug>`, and never guess the path. A ticket worked directly on `main` has neither.
 
-**Parallel work.** To run several tickets at once, keep the repo checkout on `main` and give every ticket its own worktree (`start --worktree`). Each session then works in its own tree, and `done` merges into the `main` checkout. If nothing has `main` checked out (a checkout was switched to a ticket branch in place, as `/story run` does today), `done` still works: it opens a temporary close tree for `main` (step 1 of `done`), so no session ever has to switch branches to close a ticket.
+**Parallel work.** To run several tickets at once, keep the repo checkout on `main` and give every ticket its own worktree (`start --worktree`). Each session then works in its own tree, and `done` merges into the `main` checkout. If nothing has `main` checked out (for example, a checkout was switched to a ticket branch by hand), `done` still works: it opens a temporary close tree for `main` (step 1 of `done`), so no session ever has to switch branches to close a ticket.
 
 ## Modes
 
@@ -99,7 +99,7 @@ A ticket worked outside `main` lives on one branch, `tickets/<ID>-<slug>` (the s
 
 - **A worktree already holds the ticket's branch:** enter that worktree. Make the `in-progress` edit to the ticket file inside it, not in the tree `start` was invoked from, and report the worktree's path as the place to work. Never create a second worktree.
 - **`--worktree` was given (or the user asked for a worktree) and none exists:** run `git worktree add -b tickets/<ID>-<slug> ../<repo-dir>-<ID>-<slug> main`. Drop `-b` and pass the branch name if the branch already exists. Then make the edit inside the new worktree, as above. If git refuses (for example, the branch is checked out in another tree), stop and report git's message.
-- **Otherwise:** set `in-progress` in place, in whatever tree and branch `start` was invoked from, exactly as a ticket worked directly on `main` has always done. This is also the case when `/story run` has already checked out the branch in place.
+- **Otherwise:** set `in-progress` in place, in whatever tree and branch `start` was invoked from, exactly as a ticket worked directly on `main` has always done.
 
 `start` never commits. The status edit stays uncommitted in the tree it was made in.
 
