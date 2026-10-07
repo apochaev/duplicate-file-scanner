@@ -1,7 +1,7 @@
 ---
 id: DFS-019
 title: Wire ScannerFactories
-status: in-progress
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: use-case

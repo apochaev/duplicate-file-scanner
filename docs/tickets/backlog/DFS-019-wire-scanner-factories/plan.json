@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-019-wire-scanner-factories",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-019-wire-scanner-factories",
-  "state": "running",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -97,7 +97,7 @@
       "after": [
         "implement"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -113,7 +113,7 @@
         "docs/tickets/backlog/DFS-019-wire-scanner-factories/verification.md",
         "docs/tickets/backlog/DFS-019-wire-scanner-factories/DFS-019-ticket.md"
       ],
-      "commit": null
+      "commit": "43f7a1eef6816528a31eab0466d846b52541772f"
     }
   ],
   "gates": [
@@ -123,7 +123,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": [
