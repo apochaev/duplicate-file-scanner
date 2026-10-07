@@ -12,7 +12,7 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -31,7 +31,7 @@
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScanUseCases.java",
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java"
       ],
-      "commit": null
+      "commit": "a728d6223804f5b063518d7d81221134296e5071"
     },
     {
       "id": "tests",
@@ -39,9 +39,32 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": null,
+          "wallClockSeconds": 76,
+          "outcome": "failed-gate",
+          "note": "turns not reported; 11 tool uses, 45774 subagent tokens. test-phase FAIL red: the AC-5 test used assertThrows(NullPointerException) against the stub, so the failure surfaced as AssertionFailedError, not the stub's exception; use-case test-guide.md line 71 forbids exactly this."
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "high",
+          "turns": null,
+          "wallClockSeconds": 76,
+          "outcome": "passed",
+          "note": "escalated retry for defect 1; 13 tool uses, 31160 subagent tokens. test-phase PASS: red (7 story tests fail on the stub) and traceability (6 criteria, 7 scenarios)."
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-019-wire-scanner-factories/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactoriesTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/ArchitectureTest.java"
+      ],
       "commit": null
     },
     {
@@ -70,12 +93,20 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
       "status": "pending"
     }
   ],
-  "defects": []
+  "defects": [
+    {
+      "id": 1,
+      "phase": "tests",
+      "route": "test-author",
+      "summary": "red: ScannerFactoriesTest 'DFS-019.AC-5 A null executor is a caller bug' fails with AssertionFailedError (assertThrows masks the stub's UnsupportedOperationException); test-guide.md says to use try { ...; fail(...); } catch (NullPointerException expected) {} instead",
+      "status": "closed"
+    }
+  ]
 }

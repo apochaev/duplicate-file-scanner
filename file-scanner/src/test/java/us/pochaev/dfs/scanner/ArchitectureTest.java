@@ -11,8 +11,8 @@ import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
  * Enforces the hexagonal layering documented in CLAUDE.md. module-info cannot express these
- * rules, so this is the real guard. Rules allow empty matches so they stay green while
- * layers are still unpopulated.
+ * rules, so this is the real guard. Rules fail on empty matches (a mistyped package pattern must
+ * fail loudly), except the top-level util rule, because that package holds no class yet.
  */
 class ArchitectureTest {
 
@@ -45,7 +45,6 @@ class ArchitectureTest {
                 .whereLayer("Application").mayOnlyBeAccessedByLayers("Factory")
                 .whereLayer("Adapter").mayOnlyBeAccessedByLayers("Factory")
                 .whereLayer("Factory").mayNotBeAccessedByAnyLayer()
-                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -54,6 +53,7 @@ class ArchitectureTest {
         noClasses().that().resideInAPackage(BASE + ".util..")
                 .should().dependOnClassesThat().resideInAnyPackage(
                         BASE + ".domain..", BASE + ".application..", BASE + ".infra..")
+                // top-level util holds only package-info.java, so this rule matches no class yet
                 .allowEmptyShould(true)
                 .check(classes);
     }
@@ -63,7 +63,6 @@ class ArchitectureTest {
         noClasses()
                 .should().dependOnClassesThat().resideInAnyPackage("org.springframework..")
                 .because("the scanner core must stay framework-free; Spring wiring lives in the apps")
-                .allowEmptyShould(true)
                 .check(classes);
     }
 }
