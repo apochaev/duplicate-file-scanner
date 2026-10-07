@@ -1,7 +1,7 @@
 ---
 id: DFS-019
 title: Wire ScannerFactories
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: use-case
@@ -11,7 +11,7 @@ touches: [us.pochaev.dfs.scanner.domain.factory, file-scanner/src/test/java/us/p
 blocked_reason:
 created: 2026-09-27
 updated: 2026-10-07
-completed:
+completed: 2026-10-07
 ---
 
 # DFS-019: Wire ScannerFactories
