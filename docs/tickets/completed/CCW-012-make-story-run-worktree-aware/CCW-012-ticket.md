@@ -1,7 +1,7 @@
 ---
 id: CCW-012
 title: Make /story run worktree-aware
-status: in-review
+status: done
 type: feature
 scope: [docs]
 archetype: none
@@ -11,8 +11,8 @@ depends_on: []
 touches: [.claude/skills/story/SKILL.md, .claude/skills/story/plan.json.tmpl, .claude/skills/tickets/SKILL.md]
 blocked_reason:
 created: 2026-10-06
-updated: 2026-10-06
-completed:
+updated: 2026-10-07
+completed: 2026-10-07
 ---
 
 # CCW-012: Make /story run worktree-aware
