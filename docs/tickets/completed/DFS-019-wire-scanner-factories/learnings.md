@@ -14,36 +14,36 @@
 
 ### DFS-019.L-1: The assertThrows-against-stub rule is worded too narrowly
 
-- Status: proposed
+- Status: applied
 - Impact: shared (an archetype guide every use-case story's test-author reads)
 - Target: `.claude/archetypes/use-case/test-guide.md`
 - Change: restate the rule's trigger as "any expected-exception test against a stub (the stub always throws first, so `assertThrows` reports its own `AssertionFailedError` and the red gate rejects it)", not only the L-013 ordering, and move it from "What not to do" into the section on writing red tests.
 - Evidence: plan.json defect 1: tests attempt 1 failed the red gate on the AC-5 null-executor test written with `assertThrows`, and attempt 2 was escalated to opus; the test-author's note above says the stub had no precondition check, so the rule (CCW-005.L-3's wording) looked inapplicable.
 - Recurrences: 1 (DFS-019)
 - Recommendation: apply; one failed gate and an escalated retry for a wording problem. `pipeline-stage/test-guide.md:61` has the same wording and should get the same change (a second entry or the same apply).
-- Decision:
+- Decision: applied 2026-10-07 by the user (also applied to `pipeline-stage/test-guide.md`, version 11 → 12, at the user's request); commit `docs: apply DFS-019.L-1, DFS-019.L-2 and DFS-019.L-3`
 
 ### DFS-019.L-2: No phase owns an edit to an existing guard test named in touches
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`.claude/archetypes/`)
 - Target: `.claude/archetypes/use-case/archetype.md`
 - Change: add under "Where files go": "An edit to an existing test named in `touches` (a guard such as `ArchitectureTest`) belongs to the test-author; the architect specifies it in `design.md`."
 - Evidence: DFS-019 decision 5 put `ArchitectureTest.java` in touches; the architect, who writes no tests, had to decide on its own to assign it to the test-author (design.md, plan.json design-run note).
 - Recurrences: 1 (DFS-019)
 - Recommendation: apply; one line, and the architect's improvised answer worked.
-- Decision:
+- Decision: applied 2026-10-07 by the user; commit `docs: apply DFS-019.L-1, DFS-019.L-2 and DFS-019.L-3`
 
 ### DFS-019.L-3: Stub-phase notes in design.md go stale after implementation
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`.claude/archetypes/`)
 - Target: `.claude/archetypes/use-case/design.md.tmpl`
 - Change: mark the "Open design notes" and "Stubs" sections "(as of the design phase)", so a later reader knows they describe the stubs, not the finished code.
 - Evidence: verification.md: design.md still says `ScanUseCases`'s constructor "is left without checks" and "Commit: to be filled in" after implementation added the checks.
 - Recurrences: 1 (DFS-019)
 - Recommendation: apply; labelling in the template is cheaper than adding implementer work.
-- Decision:
+- Decision: applied 2026-10-07 by the user; commit `docs: apply DFS-019.L-1, DFS-019.L-2 and DFS-019.L-3`
 
 ### DFS-019.L-4: The use-case archetype has no skeleton for a data-record stub
 
