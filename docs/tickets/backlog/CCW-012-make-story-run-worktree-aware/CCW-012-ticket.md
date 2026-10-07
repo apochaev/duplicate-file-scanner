@@ -1,14 +1,14 @@
 ---
 id: CCW-012
 title: Make /story run worktree-aware
-status: draft
+status: ready
 type: feature
 scope: [docs]
-archetype:
+archetype: none
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 priority: high
 depends_on: []
-touches: [.claude/skills/story/SKILL.md]
+touches: [.claude/skills/story/SKILL.md, .claude/skills/story/plan.json.tmpl, .claude/skills/tickets/SKILL.md]
 blocked_reason:
 created: 2026-10-06
 updated: 2026-10-06
@@ -33,49 +33,148 @@ From CCW-008.L-2 (`docs/tickets/completed/CCW-008-worktree-aware-tickets-lifecyc
 
 What already exists (CCW-008): `/tickets start <ID> --worktree` creates `../<repo-dir>-<ID>-<slug>` on branch `tickets/<ID>-<slug>` off `main`, or enters it if it exists; `/tickets done` merges into whichever tree has `main` and removes the worktree after one confirmation. The `story` skill never mentions worktrees today.
 
-## Acceptance criteria
+Checked against the real components (2026-10-06): `tools/story-gate` takes `--root <dir>` and otherwise uses `git rev-parse --show-toplevel` of the current directory (`StoryGate.java`, `Git.topLevel`), so it can check a worktree from the repo checkout with no change. The phase agents' definitions (`.claude/agents/*.md`) run relative commands (`./gradlew`, `java tools/story-gate/StoryGate.java`), and a subagent's shell starts in the session's directory, so an agent is not in the worktree unless its launch prompt says so.
 
-<!-- Filled during refinement. State the full ID once, then one testable statement per line, numbered from 1. Never renumber or delete: retire with `- **AC-<n> (retired)** <statement>. Retired <date>: <reason>`. -->
+Decisions (refinement, 2026-10-06):
+
+1. **Archetype `none`, proven by a live run.** This ticket changes instructions only (precedents: CCW-008, CCW-011). It is implemented by hand; its main evidence is the Definition of done's live `/story run`, which exercises the change for real.
+2. **Preflight sets up the worktree itself, always off `main`.** It finds the ticket's branch and worktree with `git worktree list --porcelain` and handles each starting state: (a) no branch: `git worktree add -b tickets/<ID>-<slug> ../<repo-dir>-<ID>-<slug> main`; (b) a worktree already holds the branch and the ticket is `ready`: reuse it; (c) a worktree holds the branch and the ticket is `in-progress` with no `plan.json` (the user ran `/tickets start --worktree` first, the DFS-018 case): treat it as a fresh start, not a refusal; (d) the branch exists without a worktree: `git worktree add` without `-b`; (e) the branch is checked out in place in another checkout: refuse, naming that checkout's path and telling the user to switch it back to `main` and rerun (moving someone's checkout is too risky to do automatically). Then it runs the `tickets` skill's `start <ID>`, which, since a worktree now holds the branch, makes its `in-progress` edit inside the worktree (CCW-008's existing rule). The branch is never created off the current branch tip, so a story never inherits another ticket's unmerged commits.
+3. **The orchestrating session stays in the repo checkout and addresses the worktree explicitly, never with `cd`.** Every git command runs as `git -C <worktree> ...`; every check as `java tools/story-gate/StoryGate.java <check> <ID> --root <worktree>` (the flag `story-gate` already has); `plan.json` and other story files are read and written by absolute worktree path. Each mode (`run`, `approve`, `status`, `learn`) finds the worktree with `git worktree list --porcelain` (the line `branch refs/heads/tickets/<ID>-<slug>`), the rule the `tickets` skill already uses, since `plan.json` itself lives inside the worktree and cannot be the way to find it. Preflight records the worktree path in a new `plan.json` field, `worktree`, and every later mode refuses if it disagrees with what `git worktree list` reports (a moved or recreated worktree). No step relies on how the shell treats `cd` (CCW-001.L-5); DFS-018's run used `cd` and worked only because this harness resets the directory after each call.
+4. **Every launch prompt carries a fixed working-tree block.** Resume step 6 gives each phase agent, right after the story-folder and ticket lines, a block whose exact wording `SKILL.md` states: the worktree root and its branch, "read and write every file under that root, and run every git and Gradle command from that root", and "never read or edit the repo checkout", with its path. `/story learn` gives the retro the same block. This is the text DFS-018 added by hand to all six agent launches, which every agent respected. The five agent definitions are not changed: agents already take their paths from the launch prompt and never derive them (resume step 6), and the block follows that contract.
+5. **`story-gate` is not changed.** Every check is run with `--root <worktree>` (decision 3), which it already supports. DFS-018's checks were run from inside the worktree root; `--root` selects the same root from the repo checkout.
+6. **The `tickets` skill's two sentences about in-place `/story run` are fixed here.** In "Parallel work", "(a checkout was switched to a ticket branch in place, as `/story run` does today)" becomes "(for example, a checkout was switched to a ticket branch by hand)". In `start`'s "Otherwise" branch, the sentence "This is also the case when `/story run` has already checked out the branch in place." is deleted: `/story run`'s preflight now calls `start` with a worktree already holding the branch, so `start` takes its first branch. Left alone, the two skills would contradict each other (CCW-005.L-4).
+7. **Proven by a live run up to the design gate.** The next product ticket to reach `ready` (probably DFS-019) is run with the new `/story run` from the repo checkout; preflight, the design phase, the `touches` check with `--root`, the `git -C` commit and the stop at the design gate exercise every new rule once. CCW-012 closes on that evidence; the story then continues normally, and a gap in a later phase is caught by its retro. CCW-012 therefore waits in `in-review` until a product ticket is `ready` and has reached its design gate.
+
+## Acceptance criteria
 
 The full ID of each criterion is `CCW-012.AC-<n>`.
 
-- **AC-1** <one testable statement>
+- **AC-1** With no branch for the ticket, preflight creates the worktree `../<repo-dir>-<ID>-<slug>` on a new branch `tickets/<ID>-<slug>` created off `main`, and the repo checkout stays on `main` (decision 2, state a).
+- **AC-2** `SKILL.md`'s preflight handles states (b) to (e) as decision 2 states: reuse a worktree holding the branch when the ticket is `ready`; treat `in-progress` with no `plan.json` as a fresh start; `git worktree add` without `-b` when the branch has no worktree; refuse, naming the checkout's path, when the branch is checked out in place.
+- **AC-3** The branch is created off `main`, never off the current branch tip: the new branch's first parent is `main`'s tip at preflight time (decision 2).
+- **AC-4** Preflight's `tickets start` makes the `in-progress` edit inside the worktree, not in the repo checkout (decision 2).
+- **AC-5** `plan.json.tmpl` has a `worktree` field, and preflight writes the worktree's path into it; `SKILL.md` tells every later mode to refuse when it disagrees with `git worktree list --porcelain` (decision 3).
+- **AC-6** `SKILL.md` runs every git command against the story as `git -C <worktree>` and every `story-gate` check with `--root <worktree>`, and never tells the orchestrator to `cd` (decision 3).
+- **AC-7** `SKILL.md`'s `run`, `approve`, `status` and `learn` modes find the worktree with `git worktree list --porcelain` by the branch line (decision 3).
+- **AC-8** `SKILL.md` gives the exact wording of a working-tree block that resume step 6 puts in every phase agent's launch prompt, and that `/story learn` puts in the retro's (decision 4).
+- **AC-9** The `tickets` skill no longer says `/story run` checks branches out in place: the "Parallel work" sentence reads "(for example, a checkout was switched to a ticket branch by hand)", and `start`'s "This is also the case when `/story run` has already checked out the branch in place." is gone (decision 6).
+- **AC-10** A live `/story run` of the next ready product ticket, started from the repo checkout on `main`, reaches the design gate with the design commit on the ticket branch in its worktree, the architect's launch prompt carrying the working-tree block, `touches` run with `--root`, and the repo checkout still on `main` and clean (decision 7).
 
 ## Scenarios
 
-```gherkin
-Feature: <name>
+Each scenario says how it is checked: **mechanical** (a command whose output decides it), **reading** (the skill text is read; not a walkthrough of a run), or **live** (observed in the decision-7 run up to the design gate).
 
-  @AC-1
-  Scenario: <to be written during refinement>
-    Given <concrete state>
-    When <action>
-    Then <observable outcome>
+```gherkin
+Feature: /story run works each story in its own worktree
+
+  Background:
+    Given the repo checkout "duplicate-file-scanner" is on "main" and clean
+
+  # check: live (git worktree list --porcelain, git -C <repo checkout> branch --show-current)
+  @AC-1 @AC-10
+  Scenario: A fresh story gets its own worktree and the repo checkout stays on main
+    Given a ready product ticket <ID> with no branch "tickets/<ID>-<slug>"
+    When /story run <ID> is invoked from the repo checkout
+    Then "git worktree list --porcelain" lists "../duplicate-file-scanner-<ID>-<slug>" on "refs/heads/tickets/<ID>-<slug>"
+    And the repo checkout's current branch is still "main"
+
+  # check: live (git merge-base / rev-parse)
+  @AC-3
+  Scenario: The story branch starts at main's tip
+    Given main's tip at the moment /story run <ID> is invoked
+    When preflight has created the branch
+    Then the branch's first commit's parent is that tip of main
+
+  # check: live (git -C <worktree> status, git -C <repo checkout> status)
+  @AC-4
+  Scenario: The in-progress edit lands in the worktree
+    When preflight has run tickets start <ID>
+    Then the ticket file in the worktree has "status: in-progress"
+    And the repo checkout's copy of the ticket still has "status: ready" and the repo checkout has no changes
+
+  # check: mechanical (grep plan.json.tmpl); live (compare plan.json's worktree with git worktree list)
+  @AC-5
+  Scenario: plan.json records the worktree
+    When preflight has written plan.json
+    Then ".claude/skills/story/plan.json.tmpl" contains a "worktree" field
+    And plan.json's "worktree" equals the worktree path that "git worktree list --porcelain" gives for the branch
+
+  # check: reading
+  @AC-5
+  Scenario: A later mode refuses a worktree that does not match plan.json
+    When SKILL.md's run, approve, status and learn modes are read
+    Then each says to refuse when plan.json's "worktree" disagrees with "git worktree list --porcelain"
+
+  # check: reading
+  @AC-2
+  Scenario Outline: Preflight handles every starting state
+    When SKILL.md's preflight is read for state <state>
+    Then it says <action>
+
+    Examples:
+      | state                                                          | action                                                                |
+      | a worktree holds the branch and the ticket is ready            | reuse the worktree                                                    |
+      | a worktree holds the branch, in-progress, no plan.json         | treat it as a fresh start, not a refusal                              |
+      | the branch exists without a worktree                           | git worktree add without -b                                           |
+      | the branch is checked out in place in another checkout         | refuse, naming that checkout's path, and say to switch it to main     |
+
+  # check: mechanical (grep SKILL.md: every "git " command line against the story uses "-C", every StoryGate call has "--root", no "cd " instruction)
+  @AC-6
+  Scenario: The orchestrator addresses the worktree without cd
+    When ".claude/skills/story/SKILL.md" is searched
+    Then every git command it prescribes against the story uses "git -C <worktree>"
+    And every "StoryGate.java" invocation it prescribes carries "--root <worktree>"
+    And it never tells the orchestrator to "cd" into the worktree
+
+  # check: reading
+  @AC-7
+  Scenario: Every mode finds the worktree the same way
+    When SKILL.md's run, approve, status and learn modes are read
+    Then each finds the worktree with "git worktree list --porcelain" by the line "branch refs/heads/tickets/<ID>-<slug>"
+
+  # check: reading (SKILL.md); live (the architect's launch prompt in the decision-7 run)
+  @AC-8 @AC-10
+  Scenario: Every agent is told its working tree
+    When SKILL.md's resume step 6 and learn mode are read
+    Then both give the same exact working-tree block, naming the worktree root, its branch, "run every git and Gradle command from that root" and the repo checkout not to touch
+    And the architect's launch prompt in the live run carries that block
+
+  # check: mechanical (grep the tickets skill)
+  @AC-9
+  Scenario: The tickets skill no longer describes an in-place /story run
+    When ".claude/skills/tickets/SKILL.md" is searched for "as `/story run` does today" and "has already checked out the branch in place"
+    Then neither is found
+    And the "Parallel work" paragraph contains "(for example, a checkout was switched to a ticket branch by hand)"
+
+  # check: live (story-gate output, git log in the worktree, git status in both trees)
+  @AC-10
+  Scenario: The live run reaches the design gate cleanly
+    Given the next product ticket to reach ready
+    When /story run <ID> is invoked from the repo checkout and the architect returns
+    Then "StoryGate.java touches <ID> --root <worktree>" passes
+    And the design commit is on "tickets/<ID>-<slug>" in the worktree
+    And plan.json's state is "awaiting-approval"
+    And the repo checkout is on "main" with no changes
 ```
 
 ## Scope
 
 **Touches:**
 - `.claude/skills/story/SKILL.md`: preflight, the resume protocol and the agent launch prompts (to be confirmed in refinement)
+- `.claude/skills/tickets/SKILL.md`: two sentences that describe the in-place `/story run` (decision 6)
+- `.claude/skills/story/plan.json.tmpl`: the new `worktree` field (decision 3); `ConsistencyCheck` reads only the keys it knows, so an extra field is safe
 
 **Out of scope:**
-- `/tickets start`, `review` and `done`'s own worktree handling (CCW-008), unless refinement finds a change there is required
+- `/tickets start`, `review` and `done`'s own worktree handling (CCW-008), beyond the two sentences of decision 6
 - Running several stories concurrently from one session
 
 ## Definition of done
 
-- [ ] Every scenario above is checked the way it says (mechanical or reading) and passes
-- [ ] A real `/story run` on a ready ticket, started from the repo checkout on `main`, works the story in its own worktree and leaves the repo checkout on `main` and clean
+- [ ] Every scenario above is checked the way it says (mechanical, reading or live) and passes, with the evidence noted beside this item
+- [ ] The live run of decision 7 reached the design gate of a real product ticket, started from the repo checkout on `main`; its ticket ID, worktree path and design commit are noted here
+- [ ] CCW-008.L-2 is marked `applied` with a pointer to this ticket (via `/learn`)
 - [ ] No files changed outside the paths listed under Touches
 
 ## Open questions
 
-- Archetype (likely `none`: an instructions-only change to a skill, implemented by hand).
-- Preflight versus `/tickets start --worktree`: does preflight call `start --worktree` itself (as CCW-008.L-2 proposes), and what happens when the worktree already exists with the ticket still `ready`, or `in-progress` without a `plan.json` (the DFS-018 case)?
-- Where the orchestrating session runs: from the repo checkout with every path pointed at the worktree (what DFS-018 did), or from a session started inside the worktree. Which `cd`, `git -C` and `story-gate` invocation form does the skill prescribe, given that a `cd` moves the session's working directory (CCW-001.L-5)?
-- How the worktree root reaches each phase agent: a fixed block in every launch prompt (DFS-018's "IMPORTANT, working tree" text), or a change to the five agent definitions (which would widen `touches`).
-- Whether `story-gate` needs to know about the worktree, or works unchanged when run from the worktree root (it did for DFS-018).
-- Whether the branch is always created off `main` rather than the current branch tip, and what preflight does if the current checkout is not `main`.
-- Whether `/story learn` and `/story status` need to find the worktree (`git worktree list --porcelain`) when invoked from the repo checkout.
-- What the "Parallel work" paragraph in `.claude/skills/tickets/SKILL.md` ("as `/story run` does today") should say afterwards, and whether that edit belongs here.
-- The live-run Definition of done item: which ticket it uses (a real next story, such as DFS-019, or a throwaway fixture ticket).
+None.
