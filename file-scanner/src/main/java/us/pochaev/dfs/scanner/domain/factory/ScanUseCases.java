@@ -1,5 +1,7 @@
 package us.pochaev.dfs.scanner.domain.factory;
 
+import java.util.Objects;
+
 import us.pochaev.dfs.scanner.domain.usecases.command.CancelScan;
 import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
@@ -21,6 +23,9 @@ public record ScanUseCases(StartScan start, CancelScan cancel, GetScanStatus sta
      * @throws NullPointerException if any component is null
      */
     public ScanUseCases {
-        // DFS-019: the implementer adds a non-null check for each component (design.md, Public API).
+        Objects.requireNonNull(start, "start");
+        Objects.requireNonNull(cancel, "cancel");
+        Objects.requireNonNull(status, "status");
+        Objects.requireNonNull(result, "result");
     }
 }

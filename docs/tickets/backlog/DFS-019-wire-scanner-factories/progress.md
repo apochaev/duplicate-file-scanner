@@ -19,3 +19,6 @@
 - Fixed the red-gate defect: `DFS-019.AC-5 A null executor is a caller bug` now uses `try { scanUseCases(null); fail(...); } catch (NullPointerException expected) {}` instead of `assertThrows`, so the stub's `UnsupportedOperationException` propagates uncaught. Removed the now-unused `assertThrows` import. No other test in the file used `assertThrows`.
 - `StoryGate red DFS-019` passes: 7 story tests fail with the stub, 170 other tests pass (1 skipped). `StoryGate test-phase DFS-019` passes traceability (6 criteria, 7 scenarios).
 - Expected commit: `test(file-scanner): add ScannerFactories tests [DFS-019]` (made by the orchestrator).
+
+## Implement
+Implemented ScannerFactories.scanUseCases wiring and ScanUseCases non-null checks. Expected commit: feat(file-scanner): wire scanner factories [DFS-019]

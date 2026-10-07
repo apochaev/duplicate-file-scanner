@@ -39,7 +39,7 @@
       "after": [
         "design"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -65,7 +65,7 @@
         "file-scanner/src/test/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactoriesTest.java",
         "file-scanner/src/test/java/us/pochaev/dfs/scanner/ArchitectureTest.java"
       ],
-      "commit": null
+      "commit": "ead1b9bab925c11136825a886065b32f7020b449"
     },
     {
       "id": "implement",
@@ -73,9 +73,22 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": null,
+          "wallClockSeconds": 34,
+          "outcome": "passed",
+          "note": "8 tool uses, 25940 subagent tokens. green (176 passed, 1 skipped, not a story test), disabled, freeze, touches --base main (10 files), stubs, traceability, consistency all PASS with --root <worktree>."
+        }
+      ],
+      "artifacts": [
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScanUseCases.java"
+      ],
       "commit": null
     },
     {
