@@ -126,12 +126,12 @@ Feature: Wiring the scanner
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `ArchitectureTest`'s layer rule and no-Spring rule no longer call `allowEmptyShould(true)`, its top-level `util` rule still does with a comment saying why, and all three pass (decision 5; checked by search and by the build)
-- [ ] Every item of the `use-case` archetype's edge-case checklist is addressed in `design.md` or marked not applicable with a one-line reason
-- [ ] `ScannerFactories` has no fields and `ScanUseCases` holds only the four ports; each call builds a fresh set (decision 2)
+- [x] Every scenario above is an automated test and passes (verifier: 7 tests in `ScannerFactoriesTest`, one per scenario, green at 1c6ba85)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests) (verifier: gate green at 1c6ba85, 176 passed, 1 skipped)
+- [x] No files changed outside the paths listed under Touches (verifier: `git diff main...HEAD --stat`, only `domain.factory`, `ArchitectureTest.java`, story folder)
+- [x] `ArchitectureTest`'s layer rule and no-Spring rule no longer call `allowEmptyShould(true)`, its top-level `util` rule still does with a comment saying why, and all three pass (decision 5; checked by search and by the build) (verifier: a search finds one occurrence, line 57, on the util rule, with a comment)
+- [x] Every item of the `use-case` archetype's edge-case checklist is addressed in `design.md` or marked not applicable with a one-line reason (verifier: items 1-14 in "Checklist disposition")
+- [x] `ScannerFactories` has no fields and `ScanUseCases` holds only the four ports; each call builds a fresh set (decision 2) (verifier: code read, and AC-3 test)
 
 ## Open questions
 
