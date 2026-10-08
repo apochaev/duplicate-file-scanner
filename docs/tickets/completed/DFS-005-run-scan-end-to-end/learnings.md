@@ -92,11 +92,11 @@
 
 ### DFS-005.L-8: `pipeline-stage` doesn't fit a service that composes stages
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`.claude/archetypes/`)
 - Target: a new `.claude/archetypes/use-case/` (a CCW ticket)
 - Change: an archetype for use cases and composing services, with its own checklist: stop and cancellation, the order of listener events, validation that fails before any side effect, and stateless reuse across concurrent calls.
 - Evidence: the architect's note above: none of `pipeline-stage`'s skeletons fit `ScanPipeline`, checklist items 2 and 7 had nothing to say about it, and `design.md.tmpl`'s "this stage" wording read oddly.
 - Recurrences: 1 (DFS-005)
 - Recommendation: decide while refining DFS-018, the next service-shaped ticket.
-- Decision:
+- Decision: applied 2026-10-07 by the user, through ticket CCW-011 (commit `dddd014`); commit `docs: apply DFS-002.L-4, DFS-002.L-8 and DFS-005.L-8`

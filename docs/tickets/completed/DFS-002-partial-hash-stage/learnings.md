@@ -38,6 +38,7 @@ Structured entries below were migrated from `docs/learnings/log.md` (2026-09-23,
 - Status: applied
 - Impact: shared (the `pipeline-stage` archetype's stub convention every architect and test-author reads)
 - Target: `.claude/archetypes/pipeline-stage/archetype.md`, "Where files go" (documents the two-stage stub-message convention) and `test-guide.md` (documents the conditional-rethrow test pattern)
+- Change: document a convention for a port method a ticket deliberately defers: the architect stubs it as usual, the implementer swaps in a permanent message without the `not implemented:` prefix naming the implementing ticket, and `test-guide.md` explains how its test stays red now and green later. (Reconstructed 2026-10-07 from Target and Decision; the original entry, L-024, was written without a Change line.)
 - Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/learnings.md`, design section — "the archetype and `impl-guide` do not cover a port method that is intentionally left unimplemented for a later ticket... A convention would help, for example a distinct prefix such as `deferred to:` that `StubsCheck` ignores." Independently re-raised in the test-phase learnings ("Retry (defect 1): a method stubbed until a future ticket is not designed for in this archetype"), and directly caused `plan.json` defect 1 (test-phase attempt 1 failed the gate, escalated to opus for attempt 2).
 - Recurrences: 1 (DFS-002) — hit independently by both the architect and the test-author in one story
 - Recommendation: apply. Two independent phases hit the same undesigned case and it caused a real gate failure and an unnecessary model escalation, not just friction. Applied as documentation rather than the originally proposed `RedCheck`/`StubsCheck`/`TestResult` code change: a code-level `"deferred to:"` prefix does not actually solve the problem, since `RedCheck` only runs *before* implementation, while the stub still carries the generic message — a test asserting the eventual, differently-worded message still mismatches at that point regardless of what prefix `RedCheck` recognizes. It also would have collided with `GreenCheck`, which fails unconditionally on any `FAILED` test — a test designed to stay red forever would permanently break `green`. The pattern that actually resolved this in DFS-002 (test-author's conditional rethrow: catch, and re-throw unchanged only while the message still starts with `not implemented:`) needs no gate code change at all — it turns green on its own once the implementer's permanent message lands, exactly like every other AC test. The fix is documenting that pattern as a named convention so future test-authors don't have to reinvent it under gate pressure.
@@ -67,14 +68,14 @@ Structured entries below were migrated from `docs/learnings/log.md` (2026-09-23,
 
 ### DFS-002.L-4: `DisabledCheck`/`FreezeCheck` scan the whole test tree, not just the current story's own scope
 
-- Status: proposed
+- Status: applied
 - Impact: shared (`tools/story-gate/DisabledCheck.java`, `FreezeCheck.java`)
 - Target: `tools/story-gate/DisabledCheck.java`, `tools/story-gate/FreezeCheck.java`
 - Change: scope both checks to the ticket's `touches` (or at minimum give `DisabledCheck` a carve-out for a deliberately-committed manual benchmark, distinct from a real skipped/incomplete test) instead of scanning/diffing the entire test tree regardless of which ticket is running.
 - Evidence: `docs/tickets/backlog/DFS-002-partial-hash-stage/plan.json`, defect 2 — "`disabled` check failed on `SizeIndexHeapBenchmark.java` (DFS-001's own committed benchmark, unrelated to anything DFS-002 touched)... Then `freeze` failed for the same reason."
 - Recurrences: 1 (DFS-002) — two consecutive false-positive gate failures from a completely unrelated file
 - Recommendation: apply, as a ticket (CCW-009) rather than a direct edit — real code across two files with genuine design questions (what "the ticket's own scope" resolves to for these checks), the same reasoning L-008 already set precedent for. Concrete, reproduced false-positive gate failure; will recur for any story that runs after a prior story's test-tree-touching learning gets committed.
-- Decision:
+- Decision: applied 2026-10-07 by the user, through ticket CCW-009 (commit `157d548`); commit `docs: apply DFS-002.L-4, DFS-002.L-8 and DFS-005.L-8`
 
 ### DFS-002.L-5: Checklist item 10 conflates "unreadable" and "changes size" as one undesigned case
 
@@ -111,11 +112,11 @@ Structured entries below were migrated from `docs/learnings/log.md` (2026-09-23,
 
 ### DFS-002.L-8: Two sessions working on diverged branches independently allocate the same next learnings-log number
 
-- Status: proposed
+- Status: applied
 - Impact: shared (the learnings-log convention itself, and every skill that wrote to it)
 - Target: (superseded by this migration — see CCW-010)
 - Change: a per-story learnings log, kept in the story's own folder, rather than every session computing "highest `L-<n>` in the shared `docs/learnings/log.md`, plus one" directly against a file a parallel session on a different branch may have already advanced.
 - Evidence: closing DFS-002, `main` had diverged with a full CCW-008 implementation done in a parallel session on the same machine, overlapping this session's working hours (commits `e2238ac` through `c0a2555`, 2026-09-22 23:25 to 2026-09-23 07:15). Both sessions independently proposed a next entry by reading their own branch's copy of `docs/learnings/log.md` and computing "highest number plus one" — each landed on the same two numbers for four entirely unrelated findings between them (this session: the deferred-stub convention, now DFS-002.L-1, and the resume-protocol gap, now DFS-002.L-2; the other: a mid-implementation reconciliation observation, now CCW-008.L-1, and a worktree-checkout gap, now CCW-008.L-2). Neither session could have detected the collision without seeing the other's uncommitted or unmerged work. Resolved by hand at merge time by renumbering; this entry itself directly caused CCW-010, which replaced the shared numbering scheme this entry, and this whole migration, are artifacts of.
 - Recurrences: 1 (DFS-002/CCW-008, discovered together at merge time — one collision, two colliding entries)
 - Recommendation: apply, as a ticket (CCW-010) — done; this migration is CCW-010's own AC-5. Leaving this entry `proposed` rather than `applied`, since CCW-010 as a whole is still `in-progress` at the time of this migration; close it out when CCW-010 itself closes.
-- Decision:
+- Decision: applied 2026-10-07 by the user, through ticket CCW-010 (commit `04eadf5`); commit `docs: apply DFS-002.L-4, DFS-002.L-8 and DFS-005.L-8`
