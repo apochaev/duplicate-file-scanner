@@ -47,22 +47,22 @@
 
 ### DFS-019.L-4: The use-case archetype has no skeleton for a data-record stub
 
-- Status: proposed
+- Status: parked
 - Impact: shared (`.claude/archetypes/`)
 - Target: `.claude/archetypes/use-case/skeletons/` (new)
 - Change: add a record skeleton that settles whether the compact constructor is omitted or left empty with its checks listed in design.md.
 - Evidence: the architect's note above: `ScanUseCases` got an empty compact constructor holding only a comment, which "looks odd".
 - Recurrences: 1 (DFS-019)
 - Recommendation: park; stylistic, no phase failed. Revisit when a second use-case ticket shows what skeletons it needs (archetype.md already says so).
-- Decision:
+- Decision: parked 2026-10-07 by the user
 
 ### DFS-019.L-5: Wiring-only tickets fit the use-case checklist poorly
 
-- Status: proposed
+- Status: parked
 - Impact: shared (`.claude/archetypes/`)
 - Target: a new `.claude/archetypes/wiring/` (a CCW ticket), or a wiring variant of the use-case checklist
 - Change: a checklist for factory tickets: shared versus fresh instances per build, a null or missing executor, default adapters versus overrides, the exported return type.
 - Evidence: design.md marked 9 of 14 use-case checklist items not applicable (1, 3, 4, 5, 7, 8, 9, 10, 12); the shared-versus-fresh question (AC-2, AC-3) is in no checklist; DFS-019 decision 1 left this to the retro.
 - Recurrences: 1 (DFS-019)
 - Recommendation: park; one data point. Revisit with the next wiring ticket (the cli's Spring configuration is the likely one).
-- Decision:
+- Decision: parked 2026-10-07 by the user
