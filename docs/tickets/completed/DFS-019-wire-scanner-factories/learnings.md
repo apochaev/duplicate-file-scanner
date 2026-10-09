@@ -58,11 +58,11 @@
 
 ### DFS-019.L-5: Wiring-only tickets fit the use-case checklist poorly
 
-- Status: parked
+- Status: proposed
 - Impact: shared (`.claude/archetypes/`)
 - Target: a new `.claude/archetypes/wiring/` (a CCW ticket), or a wiring variant of the use-case checklist
 - Change: a checklist for factory tickets: shared versus fresh instances per build, a null or missing executor, default adapters versus overrides, the exported return type.
 - Evidence: design.md marked 9 of 14 use-case checklist items not applicable (1, 3, 4, 5, 7, 8, 9, 10, 12); the shared-versus-fresh question (AC-2, AC-3) is in no checklist; DFS-019 decision 1 left this to the retro.
-- Recurrences: 1 (DFS-019)
-- Recommendation: park; one data point. Revisit with the next wiring ticket (the cli's Spring configuration is the likely one).
-- Decision: parked 2026-10-07 by the user
+- Recurrences: 2 (DFS-019: see Evidence; DFS-020: `ScannerFactories.scanUseCases` returns one `ScanService` behind all four ports, so Spring injection by type failed ("expected single matching bean but found 2"); found while implementing, after ready; each `@Bean` now wraps its port in a delegate of that interface alone, and the AC-1 scenario was reworded from object identity to shared behavior, commit 73d444f (2026-10-08))
+- Recommendation: apply, through a CCW ticket for a `wiring` archetype. The second wiring ticket (DFS-020, built by hand) hit a gap this checklist would have caught: "does the factory's returned object implement more than the port it is returned as?" There are now two real examples to draw the archetype from: DFS-019 through the pipeline and DFS-020 by hand. Add that question, and "how the consumer's container (Spring) will see the returned types", to the checklist.
+- Decision: parked 2026-10-07 by the user (history); re-proposed 2026-10-09 on the DFS-020 recurrence
