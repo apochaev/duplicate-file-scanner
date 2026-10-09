@@ -1,7 +1,7 @@
 ---
 id: DFS-020
 title: Scan from the CLI and write JSONL
-status: ready
+status: in-review
 type: feature
 scope: [cli, docs]
 archetype: none
@@ -32,7 +32,7 @@ The scanner library is complete for scanning. `ScannerFactories.scanUseCases(Exe
 **Decisions (refinement, 2026-10-07):**
 
 1. **Archetype `none`.** Built by hand, not through the story pipeline: no archetype fits CLI wiring (`use-case` already fit DFS-019's wiring poorly, DFS-019.L-5), and a `cli` archetype is better drawn later from this ticket and DFS-019 than designed ahead of either. Tests still carry `DFS-020.AC-n` in their `@DisplayName`, and the implementing session ticks each done-item with its evidence.
-2. **Spring Boot with an `ApplicationRunner`, arguments parsed by hand.** `cli` becomes a Spring Boot application (Spring Boot 4, Java 25, JUnit 6). One `ApplicationRunner` reads `ApplicationArguments`: plain arguments are the folders, `--name=value` options the settings; the exit code is returned through `ExitCodeGenerator` and `SpringApplication.exit`. No CLI library: one command with a few options does not need one, and whether the delete workflow is interactive (Spring Shell) or a set of one-shot commands (picocli) is not yet known. The CLI framework question in CLAUDE.md stays open; the delete ticket is the natural point to revisit it.
+2. **Spring Boot with an `ApplicationRunner`, arguments parsed by hand.** `cli` becomes a Spring Boot application (Spring Boot 4, Java 25, JUnit 6). One `ApplicationRunner` reads `ApplicationArguments`: plain arguments are the folders, `--name=value` options the settings; the exit code is returned through `ExitCodeGenerator` and `SpringApplication.exit`. No CLI library: one command with a few options does not need one, and whether the delete workflow is interactive (Spring Shell) or a set of one-shot commands (picocli) is not yet known. The CLI framework question in CLAUDE.md stays open; the delete ticket is the natural point to revisit it. Found while implementing: the factory returns one `ScanService` behind all four ports, so four beans of that object would each match every port type and injection fails ("expected single matching bean but found 2"). Each bean therefore wraps its port in a delegate of that interface alone, and AC-1's scenario checks the shared repository by behavior rather than by object identity.
 3. **JSONL schema: typed lines in one stream.** Every line is one JSON object (Jackson, from Spring Boot) with a `type` field, in this order: one `set` line per `DuplicateSet`, in the order of `ScanResult.sets`; one `skipped` line per skipped path, in the order of `ScanResult.skipped`; one final `summary` line. Shapes:
    - `{"type":"set","size":<bytes>,"digest":"<sha-256 hex>","copies":[["<path>",...],...]}`: one inner array per `PhysicalCopy`, holding its links' paths, so hard links stay one copy (CLAUDE.md invariant).
    - `{"type":"skipped","path":"<path>","reason":"SYMLINK|SPECIAL_FILE|UNREADABLE","detail":"<detail>"}`.
@@ -75,7 +75,7 @@ Feature: Scanning from the CLI
   Scenario: The Spring context provides the four scan ports
     When the cli Spring application context starts without running a scan
     Then it holds exactly one bean each of type StartScan, CancelScan, GetScanStatus and GetScanResult
-    And all four are the same ScanUseCases' ports, built by ScannerFactories.scanUseCases
+    And all four share one ScanUseCases, built by ScannerFactories.scanUseCases: a scan started through the StartScan bean is known to the GetScanStatus, GetScanResult and CancelScan beans
 
   @AC-2 @AC-5 @AC-8 @AC-11
   Scenario: Duplicates across two folders become one set line and a summary
@@ -198,11 +198,11 @@ Feature: Scanning from the CLI
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] CLAUDE.md's "Current state" no longer calls `Main` a stub or says Spring Boot is missing, and "Commands" shows the `-q` run with redirection (decision 9)
-- [ ] `./gradlew -q :cli:run --args="<absolute dir>" > out.jsonl` on a real directory gives a file in which every line parses as JSON and the last is the `summary` line, and the exit status (`$?`) is 0
+- [x] Every scenario above is an automated test and passes: `ScanCommandTest` (17 runs incl. the two outlines), `ScannerConfigurationTest`, `CliApplicationTest`; 0 skipped on this Windows machine (symlink, hard link and junction all created). AC-6's test was mutation-checked: with `banner-mode=console` it fails
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests): 196 tests, 0 failures, 1 skipped (file-scanner's case-sensitivity test, expected on Windows)
+- [x] No files changed outside the paths listed under Touches: `git status` shows only CLAUDE.md, `cli/build.gradle.kts`, `cli/src/main/resources/`, `cli/src/{main,test}/java/us/pochaev/dfs/cli/` and this ticket
+- [x] CLAUDE.md's "Current state" no longer calls `Main` a stub or says Spring Boot is missing, and "Commands" shows the `-q` run with redirection (decision 9): both edited
+- [x] `./gradlew -q :cli:run --args="<absolute dir>" > out.jsonl` on a real directory gives a file in which every line parses as JSON and the last is the `summary` line, and the exit status (`$?`) is 0: run 2026-10-08 on `C:/Users/apoch/Projects/us.pochaev`, 4 min 31 s, exit 0, 3335 lines all parsing as JSON (3330 `set`, 4 `skipped`, last `{"type":"summary","sets":3330,"files":14997,"skipped":4,"reclaimableBytes":40950250}`)
 
 ## Open questions
 
