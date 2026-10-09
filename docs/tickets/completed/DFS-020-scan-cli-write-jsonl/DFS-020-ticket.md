@@ -1,7 +1,7 @@
 ---
 id: DFS-020
 title: Scan from the CLI and write JSONL
-status: in-review
+status: done
 type: feature
 scope: [cli, docs]
 archetype: none
@@ -12,7 +12,7 @@ touches: [CLAUDE.md, cli/build.gradle.kts, cli/src/main/resources, us.pochaev.df
 blocked_reason:
 created: 2026-10-07
 updated: 2026-10-08
-completed:
+completed: 2026-10-08
 ---
 
 # DFS-020: Scan from the CLI and write JSONL
