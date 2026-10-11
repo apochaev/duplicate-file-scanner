@@ -1,0 +1,2 @@
+FAIL red DFS-001: 1 problem
+- ScanTest > DFS-001.AC-1 Runs the scan: failed with AssertionError: expected 0 but was 1

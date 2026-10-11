@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="a.ScanTest" tests="1" skipped="0" failures="1" errors="0">
+  <testcase name="DFS-001.AC-1 Runs the scan" classname="a.ScanTest" time="0.01">
+    <failure message="java.lang.AssertionError: expected 0 but was 1" type="java.lang.AssertionError">java.lang.AssertionError: expected 0 but was 1
+	at a.Scan.run(Scan.java:41)
+	Suppressed: java.lang.UnsupportedOperationException: not implemented: DFS-001
+		at a.Scan.run(Scan.java:41)
+		... 3 more
+</failure>
+  </testcase>
+</testsuite>

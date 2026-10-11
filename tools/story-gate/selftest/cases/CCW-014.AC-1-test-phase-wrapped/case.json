@@ -1,0 +1,10 @@
+{
+  "check": "test-phase",
+  "scenarios": [
+    "The test-phase gate passes on wrapped stubs"
+  ],
+  "reports": "reports",
+  "build": {
+    "exit": 1
+  }
+}

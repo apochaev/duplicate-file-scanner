@@ -19,6 +19,8 @@ import org.w3c.dom.NodeList;
 /** Reads the JUnit XML reports Gradle writes to {@code <module>/build/test-results/test/TEST-*.xml}. */
 final class Junit {
 
+    private static final String CAUSED_BY = "Caused by: ";
+
     private Junit() {}
 
     /** Every report of every module under {@code root}, in a stable order. */
@@ -89,7 +91,8 @@ final class Junit {
             Element failure = child(tc, tag);
             if (failure != null) {
                 String type = failure.getAttribute("type");
-                return TestResult.failed(className, name, type, messageOf(failure, type));
+                String[] root = rootCause(failure.getTextContent());
+                return TestResult.failed(className, name, type, messageOf(failure, type), root[0], root[1]);
             }
         }
         Element skipped = child(tc, "skipped");
@@ -107,6 +110,21 @@ final class Junit {
             else if (message.equals(type)) message = "";
         }
         return message.strip();
+    }
+
+    /**
+     * The root cause of a stack trace: the type and message of its last {@code Caused by:} line that starts the line
+     * (CCW-014). Indented ones belong to {@code Suppressed:} blocks and are ignored. Two empty strings when there is
+     * none.
+     */
+    static String[] rootCause(String trace) {
+        String last = null;
+        for (String line : trace.lines().toList()) {
+            if (line.startsWith(CAUSED_BY)) last = line.substring(CAUSED_BY.length()).strip();
+        }
+        if (last == null) return new String[] {"", ""};
+        int colon = last.indexOf(": ");
+        return colon < 0 ? new String[] {last, ""} : new String[] {last.substring(0, colon), last.substring(colon + 2)};
     }
 
     private static Element child(Element parent, String tag) {

@@ -1,0 +1,10 @@
+{
+  "check": "green",
+  "scenarios": [
+    "Green names the root cause of a wrapped failure"
+  ],
+  "reports": "reports",
+  "build": {
+    "exit": 1
+  }
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="a.ScanTest" tests="1" skipped="0" failures="1" errors="0">
+  <testcase name="DFS-001.AC-1 Context starts" classname="a.ScanTest" time="0.01">
+    <failure message="org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'startScan'" type="org.springframework.beans.factory.BeanCreationException">org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'startScan'
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:790)
+	at a.Scan.run(Scan.java:41)
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate
+	at org.springframework.beans.BeanUtils.instantiateClass(BeanUtils.java:200)
+	... 20 more
+Caused by: java.lang.UnsupportedOperationException: not implemented: DFS-001
+	at a.Scan.run(Scan.java:41)
+	... 12 more
+</failure>
+  </testcase>
+</testsuite>

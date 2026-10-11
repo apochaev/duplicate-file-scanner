@@ -1,0 +1,10 @@
+{
+  "check": "red",
+  "scenarios": [
+    "A stub only in a suppressed block does not count"
+  ],
+  "reports": "reports",
+  "build": {
+    "exit": 1
+  }
+}

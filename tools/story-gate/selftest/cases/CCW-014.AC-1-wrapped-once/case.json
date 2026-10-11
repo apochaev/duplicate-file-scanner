@@ -1,0 +1,10 @@
+{
+  "check": "red",
+  "scenarios": [
+    "A stub wrapped once by a runner failure passes red"
+  ],
+  "reports": "reports",
+  "build": {
+    "exit": 1
+  }
+}

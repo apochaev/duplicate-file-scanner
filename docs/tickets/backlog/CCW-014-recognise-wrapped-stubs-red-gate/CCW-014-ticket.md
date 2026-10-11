@@ -1,7 +1,7 @@
 ---
 id: CCW-014
 title: Recognise wrapped stubs in the red gate
-status: ready
+status: in-review
 type: feature
 scope: [build]
 archetype: none
@@ -41,7 +41,7 @@ Selftest cases can carry real JUnit XML reports (`"reports": "<folder>"` in `cas
 
 1. **Root cause only.** A failed story test also counts as a stub failure when the **last** `Caused by:` line at the start of a line (not indented) in the `<failure>`/`<error>` element's text is `Caused by: java.lang.UnsupportedOperationException: not implemented:...`. Tab-indented `Suppressed:` blocks, and the indented `Caused by:` lines inside them, are ignored. A stub's exception has no cause, so when a stub is involved it is always the deepest exception: this is today's rule ("the failure is the stub") carried one or more levels down. The existing top-level rule (`type` attribute plus `message` prefix) stays as it is.
 2. **The prefix is enough.** A wrapped stub needs only `not implemented:`, exactly like an unwrapped one (`TestResult.STUB_PREFIX`); the ticket ID after it is not checked. The wrapped rule is the existing rule applied to the root cause, nothing more. A leftover stub of another ticket is kept out of production by `StubsCheck`. Requiring the ID for all stubs would change what every ticket relies on and re-bless existing cases such as `AC-1-red-passes`; that is a separate decision for a separate ticket if ever wanted.
-3. **Failure reasons name the root cause.** `TestResult.reason()`, used by `RedCheck` (story problems and regressions) and `GreenCheck`, gives the outer exception as today and, when the trace has an unindented `Caused by:`, appends `; root cause <SimpleType>: <first line of its message>`, each part capped by the existing 100-code-point truncation. Unwrapped failures read exactly as before. No existing selftest fixture contains a `Caused by:` line, so no existing `expected.txt` changes. `GreenCheck`'s logic is untouched; its output gains the root cause through `reason()`.
+3. **Failure reasons name the root cause.** `TestResult.reason()`, used by `RedCheck` (story problems and regressions) and `GreenCheck`, gives the outer exception as today and, when the trace has an unindented `Caused by:`, gives `<OuterSimpleType>; root cause <SimpleType>: <first line of its message>` instead, capped by the existing 100-code-point truncation. Found while implementing: with the wrapper's own message kept, `Verdict.MAX_WIDTH` (160) cut every Spring case's root-cause message short, since a wrapper's message is long boilerplate ("Failed to execute ApplicationRunner"); so a wrapped failure drops the outer message and keeps only its type (user's choice, 2026-10-11). Unwrapped failures read exactly as before. No existing selftest fixture contains a `Caused by:` line, so no existing `expected.txt` changes. `GreenCheck`'s logic is untouched; its output gains the root cause through `reason()`.
 4. **Two more cases: an unrelated wrapped UOE, and the `test-phase` composite.** A wrapped `UnsupportedOperationException` without the prefix (an immutable collection's `read-only view`) must not count, mirroring the existing unwrapped case `AC-1-unrelated-uoe`. And `/story run`'s tests phase calls `test-phase` (`TestPhaseGate`: red, then traceability on the same reports), not `red` alone, so one case runs `test-phase` on wrapped stubs, using `selftest/shared`'s DFS-001 `ticket.md` (AC-1 to AC-3) and `test-plan.md`, modelled on `AC-8-phase-gate-passes`. Unwrapped non-stub failures and tests passing against stubs stay covered by the existing cases `AC-1-other-failure` and `AC-1-passed-against-stubs`, kept unchanged.
 5. **Archetype `none`.** Built by hand, like CCW-003 and CCW-009 (the earlier gate tickets) and every other CCW ticket: `tools/story-gate` is proven by its own `selftest`, not by Gradle tests against architect stubs. Each done-item is ticked with the `selftest` output as evidence.
 
@@ -55,7 +55,7 @@ The full ID of each criterion is `CCW-014.AC-<n>`.
 - **AC-2** A story test whose failure is wrapped but whose last unindented `Caused by:` is any other exception still fails `red` as "failed with <reason>" (decision 1).
 - **AC-3** A stub that appears only inside an indented `Suppressed:` block, not as the root cause, does not count, so `red` fails for that test (decision 1).
 - **AC-4** A wrapped stub is recognised by the `not implemented:` prefix alone, whatever ticket ID follows it, the same as an unwrapped stub (decision 2).
-- **AC-5** A failure reason (in `red` and in `green`) for a test whose trace has an unindented `Caused by:` reads `<OuterType>: <message>; root cause <RootType>: <message>`; a failure without one reads exactly as before (decision 3).
+- **AC-5** A failure reason (in `red` and in `green`) for a test whose trace has an unindented `Caused by:` reads `<OuterType>; root cause <RootType>: <message>`; a failure without one reads exactly as before (decision 3).
 
 ## Scenarios
 
@@ -81,7 +81,7 @@ Feature: The red gate sees a stub through a wrapper
   Scenario: A wrapped UnsupportedOperationException that is not a stub fails red
     Given a JUnit report where story test "DFS-001.AC-1 Runs the scan" failed with type "java.lang.IllegalStateException", message "Failed to execute ApplicationRunner", and a trace whose last unindented line is "Caused by: java.lang.UnsupportedOperationException: read-only view"
     When the red check runs for DFS-001
-    Then it fails, naming that test as "failed with IllegalStateException: Failed to execute ApplicationRunner; root cause UnsupportedOperationException: read-only view"
+    Then it fails, naming that test as "failed with IllegalStateException; root cause UnsupportedOperationException: read-only view"
 
   # check: mechanical (selftest case CCW-014.AC-1-test-phase-wrapped, with selftest/shared's DFS-001 ticket.md and test-plan.md)
   @AC-1
@@ -95,7 +95,7 @@ Feature: The red gate sees a stub through a wrapper
   Scenario: A wrapped failure that is not a stub fails red
     Given a JUnit report where story test "DFS-001.AC-1 Runs the scan" failed with type "java.lang.IllegalStateException", whose trace's last unindented line is "Caused by: java.io.IOException: disk gone"
     When the red check runs for DFS-001
-    Then it fails, naming that test as "failed with IllegalStateException: Failed to execute ApplicationRunner; root cause IOException: disk gone"
+    Then it fails, naming that test as "failed with IllegalStateException; root cause IOException: disk gone"
 
   # check: mechanical (selftest case CCW-014.AC-3-stub-only-suppressed)
   @AC-3
@@ -109,7 +109,7 @@ Feature: The red gate sees a stub through a wrapper
   Scenario: Green names the root cause of a wrapped failure
     Given a JUnit report where test "DFS-001.AC-1 Context starts" failed with type "java.lang.IllegalStateException", message "Failed to load ApplicationContext", and a trace whose last unindented line is "Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'StartScan'"
     When the green check runs for DFS-001
-    Then it fails, naming that test with "IllegalStateException: Failed to load ApplicationContext; root cause NoSuchBeanDefinitionException: No qualifying bean of type 'StartScan'"
+    Then it fails, naming that test with "IllegalStateException; root cause NoSuchBeanDefinitionException: No qualifying bean of type 'StartScan'"
 
   # check: mechanical (selftest case CCW-014.AC-4-other-ticket-id)
   @AC-4
@@ -131,9 +131,9 @@ Feature: The red gate sees a stub through a wrapper
 
 ## Definition of done
 
-- [ ] Every scenario above is a selftest case and `java tools/story-gate/StoryGate.java selftest` passes
-- [ ] No files changed outside the paths listed under Touches
-- [ ] Every existing selftest case still matches its `expected.txt` unchanged
+- [x] Every scenario above is a selftest case and `java tools/story-gate/StoryGate.java selftest` passes: "PASS selftest: 92 cases match their expected verdicts; every scenario of CCW-003, CCW-009, CCW-014 is covered" (84 existing + 8 `CCW-014.AC-*` cases, each a real JUnit report under its `reports/`)
+- [x] No files changed outside the paths listed under Touches: `git status` shows only `tools/story-gate/Junit.java`, `TestResult.java`, the 8 new `selftest/cases/CCW-014.*` folders, and this ticket
+- [x] Every existing selftest case still matches its `expected.txt` unchanged: no existing `expected.txt` appears in `git status`, and selftest passed before the change (84 cases) and after it
 
 ## Open questions
 

@@ -1,10 +1,12 @@
 /**
  * One test case from a JUnit XML report. For a failure, {@code failureType} is the exception class and
- * {@code failureMessage} its message without the leading class name. For a skip, {@code skipType} is the
- * exception behind it (an assumption failure), or empty when the test was disabled.
+ * {@code failureMessage} its message without the leading class name; {@code rootType} and {@code rootMessage} are
+ * the same for the failure's root cause, the last unindented {@code Caused by:} line of its trace, or empty when the
+ * trace has none (CCW-014). For a skip, {@code skipType} is the exception behind it (an assumption failure), or
+ * empty when the test was disabled.
  */
 record TestResult(String className, String name, Outcome outcome, String failureType, String failureMessage,
-                  String skipType) {
+                  String rootType, String rootMessage, String skipType) {
 
     enum Outcome { PASSED, FAILED, SKIPPED }
 
@@ -12,15 +14,20 @@ record TestResult(String className, String name, Outcome outcome, String failure
     static final String STUB_PREFIX = "not implemented:";
 
     static TestResult passed(String className, String name) {
-        return new TestResult(className, name, Outcome.PASSED, "", "", "");
+        return new TestResult(className, name, Outcome.PASSED, "", "", "", "", "");
     }
 
     static TestResult failed(String className, String name, String type, String message) {
-        return new TestResult(className, name, Outcome.FAILED, type, message, "");
+        return failed(className, name, type, message, "", "");
+    }
+
+    static TestResult failed(String className, String name, String type, String message, String rootType,
+                             String rootMessage) {
+        return new TestResult(className, name, Outcome.FAILED, type, message, rootType, rootMessage, "");
     }
 
     static TestResult skipped(String className, String name, String skipType) {
-        return new TestResult(className, name, Outcome.SKIPPED, "", "", skipType);
+        return new TestResult(className, name, Outcome.SKIPPED, "", "", "", "", skipType);
     }
 
     /** The class without its package, and without any outer class ({@code a.b.Outer$Inner} gives {@code Outer}). */
@@ -34,10 +41,16 @@ record TestResult(String className, String name, Outcome outcome, String failure
         return className.substring(className.lastIndexOf('.') + 1) + " > " + name;
     }
 
-    /** A failure raised by an architect's stub: exactly {@code UnsupportedOperationException("not implemented: ...")}. */
+    /**
+     * A failure raised by an architect's stub: exactly {@code UnsupportedOperationException("not implemented: ...")},
+     * either as the failure itself or as its root cause, when a framework wrapped it (CCW-014).
+     */
     boolean failedWithStub() {
-        return outcome == Outcome.FAILED && STUB_EXCEPTION.equals(failureType)
-                && failureMessage.startsWith(STUB_PREFIX);
+        return outcome == Outcome.FAILED && (isStub(failureType, failureMessage) || isStub(rootType, rootMessage));
+    }
+
+    private static boolean isStub(String type, String message) {
+        return STUB_EXCEPTION.equals(type) && message.startsWith(STUB_PREFIX);
     }
 
     /** True for a skip raised by an {@code Assumptions} check, false for a disabled test. */
@@ -46,8 +59,17 @@ record TestResult(String className, String name, Outcome outcome, String failure
                 && (skipType.endsWith("TestAbortedException") || skipType.endsWith("AssumptionViolatedException"));
     }
 
-    /** {@code SimpleType: first line of the message}: short, and never a stack trace. */
+    /**
+     * {@code SimpleType: first line of the message}: short, and never a stack trace. When the failure was wrapped,
+     * {@code SimpleType; root cause SimpleType: first line} instead (CCW-014): a wrapper's own message is boilerplate
+     * ("Failed to execute ApplicationRunner"), and dropping it keeps the root cause inside the verdict's line width.
+     */
     String reason() {
+        if (rootType.isEmpty()) return brief(failureType, failureMessage);
+        return brief(failureType, "") + "; root cause " + brief(rootType, rootMessage);
+    }
+
+    private static String brief(String failureType, String failureMessage) {
         String type = failureType.substring(failureType.lastIndexOf('.') + 1);
         String first = failureMessage.lines().findFirst().orElse("").strip();
         if (first.codePointCount(0, first.length()) > 100) { // by code points: never split a surrogate pair

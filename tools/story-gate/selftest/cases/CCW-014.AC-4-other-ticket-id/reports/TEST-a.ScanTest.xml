@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="a.ScanTest" tests="1" skipped="0" failures="1" errors="0">
+  <testcase name="DFS-001.AC-1 Runs the scan" classname="a.ScanTest" time="0.01">
+    <failure message="java.lang.IllegalStateException: Failed to execute ApplicationRunner" type="java.lang.IllegalStateException">java.lang.IllegalStateException: Failed to execute ApplicationRunner
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:790)
+	at a.Scan.run(Scan.java:41)
+Caused by: java.lang.UnsupportedOperationException: not implemented: DFS-017
+	at a.Scan.run(Scan.java:41)
+	... 12 more
+</failure>
+  </testcase>
+</testsuite>

@@ -1,0 +1,10 @@
+{
+  "check": "red",
+  "scenarios": [
+    "A wrapped stub naming another ticket still counts"
+  ],
+  "reports": "reports",
+  "build": {
+    "exit": 1
+  }
+}
