@@ -1,7 +1,7 @@
 ---
 id: CCW-013
 title: Add a wiring archetype
-status: draft
+status: ready
 type: feature
 scope: [docs]
 archetype: none
@@ -151,4 +151,4 @@ Feature: The wiring archetype
 
 ## Open questions
 
-- CCW-014 must exist (created with `/tickets new`) before this ticket can be `ready`, since `depends_on` names it.
+None.
