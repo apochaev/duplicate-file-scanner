@@ -1,0 +1,71 @@
+# <TICKET-ID>: <ticket title> — design
+
+Filled in by the architect during the `design` phase. This is the artifact the design gate (D3, gate 1) summarizes for the human, so keep it short: it is a contract, not an essay. Delete this instruction line and every `<...>` placeholder before committing.
+
+## Summary
+
+About 20 lines, written last: which shape this ticket is (domain factory, composition root, or both), what it wires to what, the main types and where they live, and anything the human should look at closely at the design gate. `/story run` shows this section verbatim at the gate; nothing else in this file is read for that purpose.
+
+## Public API
+
+Every factory method, result record, `@Bean` and command entry point, with its full signature. One line each.
+
+- `<FactoryClass>.<method>(<parameters>)` in `domain.factory`: returns `<type>`
+- `<ResultRecord>` in `domain.factory`: `<components>`
+- `@Bean <PortType> <beanName>(<parameters>)` in `<ConfigurationClass>`: `<delegate kind: anonymous class or method reference>`
+- `<CommandClass>.run(<parameters>)`: returns `<exit code type>`
+
+## What is wired to what
+
+Which service and which adapters a factory builds, what the returned ports share, and which beans a composition root declares from which factory call. A short list or table:
+
+| Port or bean | Built from | Shares with |
+|---|---|---|
+| `<Port>` | `<service or factory call>` | `<state, resolver, executor>` |
+
+## Layer and package placement
+
+- `domain.factory` (exported): `<factory class, result record, or "unchanged">`
+- `application` / `infra.adapter`: `<classes the factory instantiates, unchanged>`
+- `<app package>`: `<@Configuration, Spring runner, Main, command class, or "none">`
+- `<app>/src/main/resources`: `<application.properties, logback-spring.xml, or "none">`
+
+## Runtime behavior (composition root only)
+
+"Not applicable: no composition root" for a factory-only ticket. Otherwise:
+
+- Streams: `<what goes to stdout, what to stderr, and how each stdout-writing default is turned off>`
+- Exit codes: `<value: meaning, and how it reaches the process>`
+- Waiting: `<completion event or polling, interval, what is written when the work did not complete>`
+- Interruption: `<what Ctrl+C does>`
+- Arguments: `<arguments, options, defaults, usage errors>`
+
+## Checklist disposition
+
+One line per item of `archetype.md`'s edge-case checklist: how this ticket addresses it, or "not applicable: <reason>". A factory-only ticket may mark items 7 to 11 together as "not applicable: no composition root".
+
+1. Instances: <...>
+2. Returned objects as a container sees them: <...>
+3. Executor: <...>
+4. Defaults and overrides: <...>
+5. Exported surface: <...>
+6. Guard tests: <...>
+7. Streams: <...>
+8. Exit codes: <...>
+9. Waiting for asynchronous work: <...>
+10. Interruption: <...>
+11. Arguments: <...>
+
+## Guard-test edits
+
+The exact edit to each existing guard test named in `touches` (an `ArchitectureTest` rule, an `allowEmptyShould` flag), for the test-author to make. "None." if there is none.
+
+## Open design notes (as of the design phase)
+
+Anything the architect deviated from in the ticket, or a decision made while designing that the ticket left open. "None." if there is nothing to add.
+
+## Stubs (as of the design phase)
+
+- Files stubbed: `<list>`
+- Each throws `new UnsupportedOperationException("not implemented: <TICKET-ID>")` per D2. Spring-level tests see it wrapped; the red gate accepts the root cause (CCW-014).
+- Commit: `<hash, filled in after the design commit>`

@@ -1,0 +1,23 @@
+# <TICKET-ID>: <ticket title> — test plan
+
+Filled in by the test-author during the `test` phase, before writing any test. `tools/story-gate`'s `TraceabilityCheck` reads this file and requires every live criterion's full ID (`<TICKET-ID>.AC-<n>`) to appear in it somewhere, so keep the ID column exact. Delete this instruction line and every `<...>` placeholder before committing.
+
+## Criterion → scenario → test
+
+| Criterion | Scenario | Test (`@DisplayName`) | Level |
+|---|---|---|---|
+| `<TICKET-ID>.AC-1` | `<scenario title from the ticket>` | `<TICKET-ID>.AC-1 <short readable title>` | `<factory / command with fakes / command with real ports / Spring context / Spring application>` |
+| ... | ... | ... | ... |
+
+One row per scenario; a criterion with several scenarios gets several rows. A test whose display name proves more than one criterion lists every ID it starts with, comma-separated (see `test-guide.md`). The Level column says which of the test guide's levels the test runs at.
+
+## Fakes and fixtures used
+
+- `<port>`: faked with `<a hand-written fake implementing the port: scripted statuses, recorded calls, a chosen result>`
+- Executor: `<a real virtual-thread executor, shut down after each test, or none>`
+- Output capture: `<PrintStreams over byte arrays for the command class; OutputCaptureExtension for the Spring application>`
+- Files: `<@TempDir folders created in the test, links created at test time and skipped by Assumptions where the platform forbids them>`
+
+## Notes for the implementer
+
+Anything a test relies on that is not obvious from its name (the poll interval a test passes, the exact stderr line it matches, which stream a test reads). "None." if there is nothing to add.

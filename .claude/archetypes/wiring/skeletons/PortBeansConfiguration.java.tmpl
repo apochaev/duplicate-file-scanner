@@ -1,0 +1,63 @@
+package <app package>;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import us.pochaev.dfs.scanner.domain.factory.<FactoryResult>;
+import us.pochaev.dfs.scanner.domain.factory.<Factories>;
+<imports of the ports and of the types their methods take and return>
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * The scanner's Spring wiring for <app> (CLAUDE.md decision 6): the {@code @Bean}s call the factories, and the
+ * scanner itself stays Spring-free. Every port comes from one {@link <Factories>#<factoryMethod>} call, so they share
+ * one <shared state, e.g. scan repository>.
+ *
+ * <p>The factory returns one service object behind several ports, so each bean wraps its port in a delegate of that
+ * interface alone: otherwise every bean would match every port type and an injection point such as
+ * {@code <APort>} would find several candidates (wiring checklist item 2).
+ */
+@Configuration(proxyBeanMethods = false)
+public class <ConfigurationName> {
+
+    /**
+     * <Virtual threads for the CLI; a server passes Spring's TaskExecutor instead.> Closed with {@code shutdownNow},
+     * not {@code close}: {@code close} waits for running work, which would make Ctrl+C hang until it finished
+     * (wiring checklist item 3).
+     */
+    @Bean(destroyMethod = "shutdownNow")
+    ExecutorService <executorBeanName>() {
+        return Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    @Bean
+    <FactoryResult> <factoryResultBeanName>(ExecutorService <executorBeanName>) {
+        return <Factories>.<factoryMethod>(<executorBeanName>);
+    }
+
+    /** A port with several methods (for example an overloaded command): an anonymous class delegating each one. */
+    @Bean
+    <MultiMethodPort> <multiMethodPortBeanName>(<FactoryResult> ports) {
+        <MultiMethodPort> port = ports.<accessor>();
+        return new <MultiMethodPort>() {
+            @Override
+            public <ReturnType> <method>(<parameters>) {
+                return port.<method>(<arguments>);
+            }
+
+            @Override
+            public <ReturnType> <method>(<other parameters>) {
+                return port.<method>(<other arguments>);
+            }
+        };
+    }
+
+    /** A port with a single method: a method reference, which is an instance of that interface alone. */
+    @Bean
+    <SingleMethodPort> <singleMethodPortBeanName>(<FactoryResult> ports) {
+        return ports.<accessor>()::<method>;
+    }
+
+    <one bean like one of the two above for every other port>
+}

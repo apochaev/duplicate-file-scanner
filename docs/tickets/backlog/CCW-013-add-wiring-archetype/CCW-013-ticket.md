@@ -1,7 +1,7 @@
 ---
 id: CCW-013
 title: Add a wiring archetype
-status: ready
+status: in-review
 type: feature
 scope: [docs]
 archetype: none
@@ -145,9 +145,17 @@ Feature: The wiring archetype
 
 ## Definition of done
 
-- [ ] Every scenario above is checked the way it says (mechanical, reading or live) and passes, with the evidence noted beside this item
-- [ ] No files changed outside the paths listed under Touches
-- [ ] DFS-019.L-5 is marked `applied` with a pointer to this ticket (via `/learn`)
+- [x] Every scenario above is checked the way it says (mechanical, reading or live) and passes, with the evidence noted beside this item:
+  - AC-1 (mechanical + reading): frontmatter has `name: wiring`, `version: 1`, `phases: [design, test, implement, verify]`, `gates: [design, done]`, and a `models` entry for all five agents; `### Shared`, `### Domain factory`, `### Composition root` present; the opening bullets name DFS-019 and DFS-020.
+  - AC-2 (reading): "Where files go" lists the factory method, each `@Bean` method and the command's run method as stubs, and names `BeanCreationException`, `IllegalStateException` and CCW-014.
+  - AC-3 (mechanical + reading): items numbered 1-5 under Shared, 6 under Domain factory, 7-11 under Composition root; 0 items without a `(DFS-0…` or `(CLAUDE.md…` source.
+  - AC-4 (reading): `test-guide.md`, "Testing a composition root: two levels", covers the Spring-free command class with hand-written fakes and the Spring level with `AnnotationConfigApplicationContext`, `SpringApplication` and `OutputCaptureExtension`.
+  - AC-5 (mechanical): the folder holds the five files plus `skeletons/`; `grep -ciE "CQS|scan pipeline|# use-case|use-case archetype"` gives 0 in each.
+  - AC-6 (mechanical + reading): the skeleton has `proxyBeanMethods = false`, `destroyMethod = "shutdownNow"`, an anonymous-class delegate and a method-reference delegate, all names as `<...>` placeholders.
+  - AC-7 (mechanical + reading): `dry-run.md` has rows 1-11, each with a DFS-019 and a DFS-020 cell; item 2's DFS-020 cell names `73d444f` and "expected single matching bean but found 2".
+  - AC-8 (reading): `dry-run.md` shows the skeleton filled with DFS-020's names beside the real `ScannerConfiguration`: same six beans and shapes; two differences listed (parameter/local names, Javadoc wording), neither affecting behavior.
+- [x] No files changed outside the paths listed under Touches: `git status` shows only `.claude/archetypes/wiring/`, `docs/tickets/backlog/CCW-013-add-wiring-archetype/dry-run.md`, DFS-019's `learnings.md` and this ticket
+- [x] DFS-019.L-5 is marked `applied` with a pointer to this ticket (via `/learn`): `/learn apply DFS-019.L-5` on 2026-10-11, Decision names CCW-013 and the checklist items 1-5
 
 ## Open questions
 
