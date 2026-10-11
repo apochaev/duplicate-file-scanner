@@ -1,7 +1,7 @@
 ---
 id: CCW-014
 title: Recognise wrapped stubs in the red gate
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -12,7 +12,7 @@ touches: [tools/story-gate/]
 blocked_reason:
 created: 2026-10-11
 updated: 2026-10-11
-completed:
+completed: 2026-10-11
 ---
 
 # CCW-014: Recognise wrapped stubs in the red gate
