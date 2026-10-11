@@ -1,7 +1,7 @@
 ---
 id: CCW-013
 title: Add a wiring archetype
-status: in-review
+status: done
 type: feature
 scope: [docs]
 archetype: none
@@ -12,7 +12,7 @@ touches: [.claude/archetypes/wiring/, docs/tickets/backlog/CCW-013-add-wiring-ar
 blocked_reason:
 created: 2026-10-09
 updated: 2026-10-11
-completed:
+completed: 2026-10-11
 ---
 
 # CCW-013: Add a wiring archetype
