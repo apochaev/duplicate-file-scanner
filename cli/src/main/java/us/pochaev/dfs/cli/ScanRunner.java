@@ -8,11 +8,14 @@ import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
 
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 /**
  * Runs {@link ScanCommand} on the process's arguments and streams, and hands its exit code to
- * {@code SpringApplication.exit} (DFS-020 decision 2).
+ * {@code SpringApplication.exit} (DFS-020 decision 2). Stdout is written as UTF-8 whatever the
+ * platform's console encoding, so every path survives a redirect to a file (DFS-023 decision 7).
  */
 @Component
 class ScanRunner implements ApplicationRunner, ExitCodeGenerator {
@@ -28,7 +31,9 @@ class ScanRunner implements ApplicationRunner, ExitCodeGenerator {
 
     @Override
     public void run(ApplicationArguments args) {
-        exitCode = command.run(args.getSourceArgs(), System.out, System.err);
+        PrintStream out = new PrintStream(System.out, false, StandardCharsets.UTF_8);
+        exitCode = command.run(args.getSourceArgs(), out, System.err);
+        out.flush();
     }
 
     @Override

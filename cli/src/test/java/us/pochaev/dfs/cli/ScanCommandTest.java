@@ -269,6 +269,121 @@ class ScanCommandTest {
         assertEquals(List.of("set", "summary"), lines.stream().map(l -> l.get("type").asString()).toList());
     }
 
+    // --- DFS-023: the text report
+
+    @Test
+    @DisplayName("DFS-023.AC-1, DFS-023.AC-2, DFS-023.AC-7 A file in three places across two folders is one set of three copies")
+    void textReportOneSetOfThreeCopies() throws IOException {
+        Path a = Files.createDirectories(tmp.resolve("a"));
+        Path b = Files.createDirectories(tmp.resolve("b"));
+        Path x = write(a.resolve("x.txt"), DUP);
+        write(a.resolve("u.txt"), "unique");
+        Path y = write(b.resolve("y.txt"), DUP);
+        Path z = write(Files.createDirectories(b.resolve("sub")).resolve("z.txt"), DUP);
+
+        Run run = scan(a.toString(), b.toString(), "--format=text");
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals(List.of(
+                "#1  30 B reclaimable  (3 copies x 15 B, sha256 " + sha256(DUP).substring(0, 12) + ")",
+                "    " + real(x),
+                "    " + real(z),
+                "    " + real(y),
+                "Summary: 1 sets, 3 files, 30 B reclaimable, 0 skipped"), run.out.lines().toList());
+        assertTrue(run.out.endsWith("\n"), run.out);
+        assertTrue(run.err.contains("scan: walk started"), run.err);
+    }
+
+    @ParameterizedTest(name = "[{index}] options: {0}")
+    @ValueSource(strings = {"", "--format=jsonl"})
+    @DisplayName("DFS-023.AC-1 JSONL stays the default and is unchanged")
+    void jsonlStaysTheDefault(String option) throws IOException {
+        write(tmp.resolve("x.txt"), DUP);
+        write(tmp.resolve("y.txt"), DUP);
+
+        Run run = option.isEmpty() ? scan(tmp.toString()) : scan(tmp.toString(), option);
+
+        assertEquals(0, run.exitCode, run.err);
+        List<JsonNode> lines = run.jsonLines();
+        assertEquals(2, lines.size(), run.out);
+        assertEquals("set", lines.get(0).get("type").asString());
+        assertEquals(JSON.readTree("{\"type\":\"summary\",\"sets\":1,\"files\":2,\"skipped\":0,\"reclaimableBytes\":15}"),
+                lines.get(1));
+    }
+
+    @Test
+    @DisplayName("DFS-023.AC-3 Hard links are shown under their copy, not as copies")
+    void textReportHardLinksUnderTheirCopy() throws IOException {
+        Path x = write(tmp.resolve("x.txt"), DUP);
+        Path link = tmp.resolve("x-link.txt");
+        try {
+            Files.createLink(link, x);
+        } catch (UnsupportedOperationException | FileSystemException e) {
+            abort("hard links are not available here: " + e.getMessage());
+        }
+        Path y = write(tmp.resolve("y.txt"), DUP);
+
+        Run run = scan(tmp.toString(), "--format=text");
+
+        assertEquals(List.of(
+                "#1  15 B reclaimable  (2 copies x 15 B, sha256 " + sha256(DUP).substring(0, 12) + ")",
+                "    " + real(link),
+                "      (hard link) " + real(x),
+                "    " + real(y),
+                "Summary: 1 sets, 3 files, 15 B reclaimable, 0 skipped"), run.out.lines().toList());
+    }
+
+    @Test
+    @DisplayName("DFS-023.AC-6, DFS-023.AC-7 Skipped paths are listed after the sets, before the summary")
+    void textReportListsSkippedPaths() throws IOException {
+        Path x = write(tmp.resolve("x.txt"), DUP);
+        write(tmp.resolve("y.txt"), DUP);
+        Path link = tmp.resolve("link.txt");
+        try {
+            Files.createSymbolicLink(link, x);
+        } catch (UnsupportedOperationException | IOException e) {
+            abort("symbolic links are not available here: " + e.getMessage());
+        }
+
+        Run run = scan(tmp.toString(), "--format=text");
+
+        List<String> lines = run.out.lines().toList();
+        assertEquals(6, lines.size(), run.out);
+        assertTrue(lines.get(0).startsWith("#1  15 B reclaimable  (2 copies x 15 B"), run.out);
+        assertEquals("Skipped (1):", lines.get(3));
+        assertTrue(lines.get(4).startsWith("    " + tmp.toRealPath().resolve("link.txt") + "  SYMLINK  "), lines.get(4));
+        assertEquals("Summary: 1 sets, 2 files, 15 B reclaimable, 1 skipped", lines.get(5));
+    }
+
+    @Test
+    @DisplayName("DFS-023.AC-6, DFS-023.AC-7 No duplicates and nothing skipped")
+    void textReportNoDuplicates() throws IOException {
+        write(tmp.resolve("a.txt"), "one");
+        write(tmp.resolve("b.txt"), "two");
+
+        Run run = scan(tmp.toString(), "--format=text");
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals("No duplicates found.\nSummary: 0 sets, 0 files, 0 B reclaimable, 0 skipped\n", run.out);
+    }
+
+    @ParameterizedTest(name = "[{index}] args: {0}")
+    @ValueSource(strings = {"<folder> --format=txt", "<folder> --format=", "<folder> --format=TEXT",
+            "<folder> --format=text --format=jsonl"})
+    @DisplayName("DFS-023.AC-9 A bad --format starts no scan")
+    void badFormatStartsNoScan(String args) {
+        FakePorts fake = new FakePorts();
+
+        Run run = run(fake, args.replace("<folder>", tmp.toString()).split(" "));
+
+        assertEquals(2, run.exitCode);
+        assertTrue(run.err.startsWith("error: "), run.err);
+        assertTrue(run.err.contains(ScanCommand.USAGE_LINE), run.err);
+        assertTrue(ScanCommand.USAGE_LINE.contains("--format=jsonl|text"), ScanCommand.USAGE_LINE);
+        assertEquals("", run.out);
+        assertEquals(0, fake.starts);
+    }
+
     // --- helpers
 
     private Run scan(String... args) {

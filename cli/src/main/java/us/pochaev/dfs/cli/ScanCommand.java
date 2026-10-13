@@ -29,8 +29,9 @@ import java.util.Objects;
 
 /**
  * The scan command (DFS-020): parses the arguments, runs one scan, waits for it and writes the
- * result to {@code out} as JSON Lines. Kept free of Spring so it can be tested with plain streams
- * and fake ports (decision 8); {@link ScanRunner} wires it to the process.
+ * result to {@code out} as JSON Lines, or as a text report with {@code --format=text} (DFS-023).
+ * Kept free of Spring so it can be tested with plain streams and fake ports (decision 8);
+ * {@link ScanRunner} wires it to the process.
  *
  * <p>Stdout carries only JSONL: a {@code set} line per duplicate set, a {@code skipped} line per
  * skipped path, then one {@code summary} line (decision 3). Progress and errors go to {@code err}
@@ -42,8 +43,10 @@ public final class ScanCommand {
     public static final int ERROR = 1;
     public static final int USAGE = 2;
 
-    static final String USAGE_LINE = "usage: duplicate-file-scanner <folder>... [--min-size=<bytes>]";
+    static final String USAGE_LINE =
+            "usage: duplicate-file-scanner <folder>... [--min-size=<bytes>] [--format=jsonl|text]";
     private static final String MIN_SIZE = "--min-size=";
+    private static final String FORMAT = "--format=";
     private static final Duration PROGRESS_INTERVAL = Duration.ofSeconds(1);
 
     private final StartScan start;
@@ -64,6 +67,7 @@ public final class ScanCommand {
         List<Path> folders = new ArrayList<>();
         ScanConfig defaults = ScanConfig.defaults();
         long minSize = defaults.minSize();
+        String format = null;
         for (String arg : args) {
             if (arg.startsWith(MIN_SIZE)) {
                 String value = arg.substring(MIN_SIZE.length());
@@ -75,6 +79,14 @@ public final class ScanCommand {
                 if (minSize < 1) {
                     return usage(err, "--min-size must be at least 1: " + value);
                 }
+            } else if (arg.startsWith(FORMAT)) {
+                if (format != null) {
+                    return usage(err, "--format given more than once");
+                }
+                format = arg.substring(FORMAT.length());
+                if (!format.equals("jsonl") && !format.equals("text")) {
+                    return usage(err, "--format must be jsonl or text: " + format);
+                }
             } else if (arg.startsWith("--")) {
                 return usage(err, "unknown option: " + arg);
             } else {
@@ -84,6 +96,7 @@ public final class ScanCommand {
         if (folders.isEmpty()) {
             return usage(err, "no folder given");
         }
+        boolean text = "text".equals(format);
         ScanConfig config = new ScanConfig(minSize, defaults.sampleSize(), defaults.partialHashThreshold());
 
         ScanId id;
@@ -112,7 +125,11 @@ public final class ScanCommand {
 
         return switch (result.result(id)) {
             case Result.Success<ScanResult> s -> {
-                write(s.value(), out);
+                if (text) {
+                    TextReport.write(s.value(), out);
+                } else {
+                    write(s.value(), out);
+                }
                 yield OK;
             }
             case Result.Failure<ScanResult> f -> error(err, f.code() + ": " + f.message());
