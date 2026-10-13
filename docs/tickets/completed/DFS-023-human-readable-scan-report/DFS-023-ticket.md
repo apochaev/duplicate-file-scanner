@@ -1,7 +1,7 @@
 ---
 id: DFS-023
 title: Print a human-readable scan report
-status: ready
+status: done
 type: feature
 scope: [cli, docs]
 archetype: none
@@ -12,7 +12,7 @@ touches: [CLAUDE.md, us.pochaev.dfs.cli]
 blocked_reason:
 created: 2026-10-13
 updated: 2026-10-13
-completed:
+completed: 2026-10-13
 ---
 
 # DFS-023: Print a human-readable scan report
@@ -201,12 +201,12 @@ Feature: Human-readable scan report
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] A real `./gradlew -q :cli:run --args="... --format=text"` on two or more real folders prints a readable report
-- [ ] A real `:cli:run` redirected to a file, on a folder whose name is Cyrillic, writes that path as valid UTF-8 in both formats (decision 7)
-- [ ] CLAUDE.md "Commands" and "Current state" updated as in decision 7
+- [x] Every scenario above is an automated test and passes. 9 test methods for 9 scenarios (`grep -c 'DisplayName("DFS-023'`: 6 in `ScanCommandTest`, 2 in `TextReportTest`, 1 in `ScanRunnerTest`); all 40 `cli` test runs pass, none skipped (hard and symbolic links were available). `ScanRunnerTest` (AC-8) fails 2 of 2 against the pre-change `ScanRunner` and passes with the fix; it replaces `System.out` with an ISO-8859-1 stream, since Gradle's test JVM gives `System.out` UTF-8 and would hide the bug.
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests), 2026-10-13
+- [x] No files changed outside the paths listed under Touches: `CLAUDE.md`, `ScanCommand`, `ScanRunner`, new `TextReport`, and tests in `cli` (plus this ticket file)
+- [x] A real `./gradlew -q :cli:run --args="... --format=text"` on two or more real folders prints a readable report: `velvetapp` and `velvet-vortex` under `C:/Users/apoch/Projects/us.pochaev`, exit 0 in 1 min 59 s, 16,290 lines ending `Summary: 2,680 sets, 13,609 files, 36.5 MB reclaimable, 0 skipped`; #1 is `4.4 MB reclaimable  (18 copies x 266.5 KB, ...)`, 18 copies of one `source-map.debug.js`
+- [x] A real `:cli:run` redirected to a file, on a folder whose name is Cyrillic, writes that path as valid UTF-8 in both formats (decision 7): a scratch folder `utf/фото` with two equal files, both runs exit 0, both files decode as strict UTF-8, contain `фото` and no `?`. Gradle relays the bytes unchanged.
+- [x] CLAUDE.md "Commands" (text run, UTF-8 console tip) and "Current state" (text format, UTF-8) updated as in decision 7
 
 ## Open questions
 
