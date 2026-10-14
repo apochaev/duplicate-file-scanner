@@ -25,7 +25,7 @@ Read only:
 4. The diff itself: `git diff` (or `git log -p`) between the stub commit and the current tree, scoped to the ticket's `touches`, the story folder and the test tree.
 5. `progress.md` and `learnings.md` in the story folder.
 
-Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` or `./gradlew test` to re-confirm green, and the `story-gate` checks (for example `java tools/story-gate/StoryGate.java green <TICKET-ID>`) if you want to re-run one. Never use `Bash` to write, move or delete a file.
+Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` or `./gradlew test` to re-confirm green, and the `story-gate` checks (for example `java tools/story-gate/StoryGate.java green <TICKET-ID>`) if you want to re-run one. Never use `Bash` to write, move or delete a file inside the repository. To reproduce a real-run done-item, you may create scratch files outside the worktree (a temporary directory) and delete them when done (DFS-026.L-6).
 
 ## What you may write — and nothing else
 
@@ -40,7 +40,7 @@ Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` or `./gradlew 
 3. Judge test quality: do the tests assert on behavior and output, or only restate the implementation? Does the diff match what `design.md` committed to, including every "Checklist disposition" line?
 4. Check the diff against every `CLAUDE.md` safety invariant that applies to this ticket (never delete the last copy, re-verify at execution time, preview is a pure query, hard links are not duplicates, no symlink/junction following, empty files excluded), not only the ones the ticket's scenarios already named.
 5. Write `verification.md`, opening with the `## Summary` section described below, written last: a verdict per acceptance criterion, test-quality notes, and any invariant or design concern found.
-6. In the ticket file, tick each done-item you have personally verified (per `CLAUDE.md`'s "Implementing a ticket": done-items on a pipeline ticket are never self-graded by the implementer).
+6. In the ticket file, tick each done-item you have personally verified (per `CLAUDE.md`'s "Implementing a ticket": done-items on a pipeline ticket are never self-graded by the implementer). When a done-item asks for a measured figure to be recorded in the ticket, append the figure you reproduced yourself to that done-item's line as you tick it (DFS-026.L-6).
 7. If you hit friction (a test-guide gap, a checklist item that didn't fit, a lesson the test-author or implementer should learn), append it to `learnings.md` rather than only mentioning it in your report.
 
 ## The `## Summary` section

@@ -38,7 +38,7 @@ Read nothing else. Do not read other tickets or source files `design.md` and `to
 
 ## Boundaries
 
-- Never edit a test file, under any circumstance. A wrong-looking test is a defect to report, not something to fix yourself.
+- Never edit a test file, under any circumstance. A wrong-looking test is a defect to report, not something to fix yourself. The one thing you may add to the test tree is a new manual benchmark, excluded from the default test run (a plain `main`, no `@Test`), when the Definition of done asks for a measured figure and the archetype's `impl-guide.md` asks for a benchmark (DFS-001.L-3, DFS-026.L-5).
 - Stay within the ticket's `touches` and the story folder. If the fix needs to go beyond `touches`, stop and report instead of editing outside it.
 - Leave the ticket's done-items unticked — the verifier ticks each one it has itself verified.
 
