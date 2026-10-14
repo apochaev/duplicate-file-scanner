@@ -1,0 +1,2 @@
+FAIL red DFS-026: 1 problem
+- regression: ScanCommandTest > exits 0 on duplicates failed (AssertionFailedError: expected: <0> but was: <1>)

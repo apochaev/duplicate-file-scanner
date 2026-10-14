@@ -1,0 +1,26 @@
+{
+  "check": "red",
+  "ticket": "DFS-026",
+  "scenarios": [
+    "An existing test failing with another ticket's stub is a regression"
+  ],
+  "results": [
+    {
+      "class": "us.pochaev.dfs.scanner.application.HardLinkKeyTest",
+      "name": "DFS-026.AC-1 Hard links share one key",
+      "outcome": "failed",
+      "type": "java.lang.UnsupportedOperationException",
+      "message": "not implemented: DFS-026"
+    },
+    {
+      "class": "us.pochaev.dfs.scanner.application.HardLinkDetectorTest",
+      "name": "DFS-004.AC-1 Hard links are grouped",
+      "outcome": "failed",
+      "type": "java.lang.UnsupportedOperationException",
+      "message": "not implemented: DFS-999"
+    }
+  ],
+  "build": {
+    "exit": 1
+  }
+}

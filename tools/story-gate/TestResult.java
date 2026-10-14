@@ -49,8 +49,23 @@ record TestResult(String className, String name, Outcome outcome, String failure
         return outcome == Outcome.FAILED && (isStub(failureType, failureMessage) || isStub(rootType, rootMessage));
     }
 
+    /**
+     * {@link #failedWithStub()}, narrowed to ticket {@code id}'s own stub: the message is {@code not implemented: <id>},
+     * optionally followed by text that does not continue the ID (CCW-015). A stub naming another ticket is not it.
+     */
+    boolean failedWithStubOf(String id) {
+        return outcome == Outcome.FAILED
+                && (isStubOf(failureType, failureMessage, id) || isStubOf(rootType, rootMessage, id));
+    }
+
     private static boolean isStub(String type, String message) {
         return STUB_EXCEPTION.equals(type) && message.startsWith(STUB_PREFIX);
+    }
+
+    private static boolean isStubOf(String type, String message, String id) {
+        String own = STUB_PREFIX + " " + id;
+        if (!STUB_EXCEPTION.equals(type) || !message.startsWith(own)) return false;
+        return message.length() == own.length() || !Character.isLetterOrDigit(message.charAt(own.length()));
     }
 
     /** True for a skip raised by an {@code Assumptions} check, false for a disabled test. */

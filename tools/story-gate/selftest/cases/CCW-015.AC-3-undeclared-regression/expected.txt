@@ -1,0 +1,2 @@
+FAIL red DFS-026: 1 problem
+- regression: ScannerFactoriesTest > builds a working scanner failed (AssertionFailedError: expected: <COMPLETED> but was: <FAILED>)

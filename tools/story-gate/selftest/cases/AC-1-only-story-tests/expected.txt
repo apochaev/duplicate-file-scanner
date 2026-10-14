@@ -1,1 +1,1 @@
-PASS red DFS-001: 1 story tests fail with stubs, 4 other tests pass (1 skipped)
+PASS red DFS-001: 1 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 4 other tests pass (1 skipped)

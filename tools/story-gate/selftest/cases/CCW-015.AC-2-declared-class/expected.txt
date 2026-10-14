@@ -1,0 +1,1 @@
+PASS red DFS-026: 1 story tests fail with stubs, 0 other tests fail on the ticket's stub, 1 fail in declared classes, 3 other tests pass

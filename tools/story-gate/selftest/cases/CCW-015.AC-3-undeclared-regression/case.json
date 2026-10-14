@@ -1,0 +1,27 @@
+{
+  "check": "red",
+  "ticket": "DFS-026",
+  "scenarios": [
+    "An undeclared assertion failure is still a regression"
+  ],
+  "results": [
+    {
+      "class": "us.pochaev.dfs.scanner.application.HardLinkKeyTest",
+      "name": "DFS-026.AC-1 Hard links share one key",
+      "outcome": "failed",
+      "type": "java.lang.UnsupportedOperationException",
+      "message": "not implemented: DFS-026"
+    },
+    {
+      "class": "us.pochaev.dfs.scanner.ScannerFactoriesTest",
+      "name": "builds a working scanner",
+      "outcome": "failed",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "expected: <COMPLETED> but was: <FAILED>"
+    }
+  ],
+  "build": {
+    "exit": 1
+  },
+  "design": "design.md"
+}

@@ -60,6 +60,10 @@ One line per item of `archetype.md`'s edge-case checklist: how this ticket addre
 
 The exact edit to each existing guard test named in `touches` (an `ArchitectureTest` rule, an `allowEmptyShould` flag), for the test-author to make. "None." if there is none.
 
+## Expected breakage
+
+Existing test classes (not this ticket's story tests) that the stubs will make fail without the stub in the failure or its root cause, for example a CLI or end-to-end test that reduces the stub to an exit code, a FAILED status or an empty result. One bullet per class, `` - `<SimpleClassName>`: <one-line reason> ``, with the class's simple name only (no package). The red gate reads only bullets under this exact heading and accepts every failure in a declared class; each of those tests must still pass at `green`. A test that fails directly on this ticket's stub needs no entry. "None." if no such class exists.
+
 ## Open design notes (as of the design phase)
 
 Anything the architect deviated from in the ticket, or a decision made while designing that the ticket left open. "None." if there is nothing to add.

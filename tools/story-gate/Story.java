@@ -44,6 +44,12 @@ record Story(String id, Path folder) {
         return Files.isRegularFile(plan) ? read(plan) : null;
     }
 
+    /** The architect's design's text, or null when it has not been written. */
+    String designText() {
+        Path design = folder.resolve("design.md");
+        return Files.isRegularFile(design) ? read(design) : null;
+    }
+
     private static String read(Path file) {
         try {
             return Files.readString(file);

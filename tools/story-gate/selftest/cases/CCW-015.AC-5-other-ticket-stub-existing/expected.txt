@@ -1,0 +1,2 @@
+FAIL red DFS-026: 1 problem
+- regression: HardLinkDetectorTest > DFS-004.AC-1 Hard links are grouped failed (UnsupportedOperationException: not implemented: DFS-999)

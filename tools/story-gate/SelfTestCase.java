@@ -19,12 +19,14 @@ import java.util.stream.Stream;
  * Runs one self-test case and returns the text to compare with its {@code expected.txt}. {@code case.json} holds:
  *
  * <ul>
- * <li>{@code check}: red, green, disabled, freeze, touches, traceability, stubs, consistency, test-phase, launcher
- *     or cli (the whole program as a child process, on a console pretending to be a legacy code page);</li>
+ * <li>{@code check}: red, green, disabled, freeze, touches, traceability, stubs, consistency, test-phase, launcher,
+ *     cli (the whole program as a child process, on a console pretending to be a legacy code page) or contains
+ *     (instruction files in the real repository hold the phrases {@code contains} maps each path to);</li>
  * <li>{@code ticket} (default DFS-001) and {@code scenarios}: titles of this ticket's scenarios the case covers;</li>
+ * <li>{@code design}: a file standing in for the story's {@code design.md} (red only; absent means none);</li>
  * <li>test results, inline as {@code results} ({@code class}, {@code name}, {@code outcome}, {@code type},
- *     {@code message}, {@code times} for repeats with {@code {i}} in the name) and/or a folder of real
- *     {@code reports};</li>
+ *     {@code message}, {@code rootType} and {@code rootMessage} for a wrapped failure, {@code times} for repeats
+ *     with {@code {i}} in the name) and/or a folder of real {@code reports};</li>
  * <li>{@code build}: {@code exit}, {@code output} (a file of captured Gradle output) and {@code root};</li>
  * <li>{@code files}: path to text, the source tree for disabled and stubs;</li>
  * <li>{@code touches}, {@code rootFiles}, {@code changed}, or a {@code repo}: steps that build a temporary git
@@ -69,7 +71,7 @@ final class SelfTestCase {
     private String dispatch() {
         String id = str(spec, "ticket", "DFS-001");
         return switch (str(spec, "check", "")) {
-            case "red" -> RedCheck.evaluate(id, results(), build()).render();
+            case "red" -> RedCheck.evaluate(id, results(), build(), RedCheck.declaredClasses(design())).render();
             case "green" -> GreenCheck.evaluate(id, results(), build()).render();
             case "disabled" -> DisabledCheck.evaluate(id, files(), results()).render();
             case "stubs" -> StubsCheck.evaluate(id, files()).render();
@@ -86,6 +88,7 @@ final class SelfTestCase {
             case "selftest" -> nestedSelfTest();
             case "launcher" -> launcher();
             case "cli" -> cli();
+            case "contains" -> contains();
             default -> throw new GateError("unknown check '" + str(spec, "check", "") + "'");
         };
     }
@@ -100,7 +103,8 @@ final class SelfTestCase {
             for (int i = 1; i <= times; i++) {
                 String cls = str(r, "class", "x.SampleTest"), name = str(r, "name", "test").replace("{i}", "" + i);
                 all.add(switch (str(r, "outcome", "passed")) {
-                    case "failed" -> TestResult.failed(cls, name, str(r, "type", ""), str(r, "message", ""));
+                    case "failed" -> TestResult.failed(cls, name, str(r, "type", ""), str(r, "message", ""),
+                            str(r, "rootType", ""), str(r, "rootMessage", ""));
                     case "skipped" -> TestResult.skipped(cls, name, str(r, "type", ""));
                     default -> TestResult.passed(cls, name);
                 });
@@ -150,6 +154,32 @@ final class SelfTestCase {
             exists = new HashSet<>(strings("rootFiles"))::contains;
         }
         return TouchesCheck.evaluate(id, touches, exists, changes).render();
+    }
+
+    /** One line per file under the repository root: {@code ok}, or the first phrase it lacks. */
+    private String contains() {
+        StringBuilder out = new StringBuilder();
+        Map<String, Object> wanted = Json.asObject(spec.get("contains"));
+        if (wanted == null) throw new GateError("a contains case needs a contains object");
+        for (var e : new TreeMap<>(wanted).entrySet()) {
+            Path file = root.resolve(e.getKey());
+            String text;
+            try {
+                text = Files.readString(file).replace("\r\n", "\n");
+            } catch (IOException ex) {
+                out.append(e.getKey()).append(": unreadable\n");
+                continue;
+            }
+            String missing = null;
+            for (Object phrase : Json.asArray(e.getValue())) {
+                if (!text.contains(String.valueOf(phrase))) {
+                    missing = String.valueOf(phrase);
+                    break;
+                }
+            }
+            out.append(e.getKey()).append(missing == null ? ": ok" : ": missing \"" + missing + "\"").append('\n');
+        }
+        return out.toString();
     }
 
     private String freeze(String id) {
@@ -335,6 +365,11 @@ final class SelfTestCase {
     private Path locate(String name) {
         Path own = dir.resolve(name);
         return Files.exists(own) ? own : shared.resolve(name);
+    }
+
+    private String design() {
+        String name = str(spec, "design", null);
+        return name == null ? null : text(name);
     }
 
     private String text(String name) {

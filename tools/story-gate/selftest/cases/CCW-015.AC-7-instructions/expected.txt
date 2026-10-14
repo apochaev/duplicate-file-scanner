@@ -1,0 +1,7 @@
+.claude/agents/architect.md: ok
+.claude/archetypes/pipeline-stage/archetype.md: ok
+.claude/archetypes/pipeline-stage/design.md.tmpl: ok
+.claude/archetypes/use-case/archetype.md: ok
+.claude/archetypes/use-case/design.md.tmpl: ok
+.claude/archetypes/wiring/archetype.md: ok
+.claude/archetypes/wiring/design.md.tmpl: ok

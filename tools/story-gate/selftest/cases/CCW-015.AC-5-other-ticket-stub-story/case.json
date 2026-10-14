@@ -1,0 +1,26 @@
+{
+  "check": "red",
+  "ticket": "DFS-026",
+  "scenarios": [
+    "A story test failing with another ticket's stub is still accepted"
+  ],
+  "results": [
+    {
+      "class": "us.pochaev.dfs.scanner.application.HardLinkKeyTest",
+      "name": "DFS-026.AC-1 Hard links share one key",
+      "outcome": "failed",
+      "type": "java.lang.UnsupportedOperationException",
+      "message": "not implemented: DFS-026"
+    },
+    {
+      "class": "us.pochaev.dfs.scanner.application.HardLinkKeyTest",
+      "name": "DFS-026.AC-2 Plain copies get distinct keys",
+      "outcome": "failed",
+      "type": "java.lang.UnsupportedOperationException",
+      "message": "not implemented: DFS-999"
+    }
+  ],
+  "build": {
+    "exit": 1
+  }
+}

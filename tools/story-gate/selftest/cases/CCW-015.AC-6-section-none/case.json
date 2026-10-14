@@ -1,0 +1,27 @@
+{
+  "check": "red",
+  "ticket": "DFS-026",
+  "scenarios": [
+    "A section reading None declares nothing"
+  ],
+  "results": [
+    {
+      "class": "us.pochaev.dfs.scanner.application.HardLinkKeyTest",
+      "name": "DFS-026.AC-1 Hard links share one key",
+      "outcome": "failed",
+      "type": "java.lang.UnsupportedOperationException",
+      "message": "not implemented: DFS-026"
+    },
+    {
+      "class": "us.pochaev.dfs.cli.ScanCommandTest",
+      "name": "exits 0 on duplicates",
+      "outcome": "failed",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "expected: <0> but was: <1>"
+    }
+  ],
+  "build": {
+    "exit": 1
+  },
+  "design": "design.md"
+}

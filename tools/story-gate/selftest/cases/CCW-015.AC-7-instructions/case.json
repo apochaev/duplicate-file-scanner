@@ -1,0 +1,44 @@
+{
+  "check": "contains",
+  "scenarios": [
+    "The architect is asked for the section and to name it in the Summary"
+  ],
+  "contains": {
+    ".claude/archetypes/pipeline-stage/design.md.tmpl": [
+      "## Expected breakage",
+      "simple name only",
+      "The red gate reads only bullets under this exact heading",
+      "needs no entry",
+      "\"None.\" if no such class exists"
+    ],
+    ".claude/archetypes/use-case/design.md.tmpl": [
+      "## Expected breakage",
+      "simple name only",
+      "The red gate reads only bullets under this exact heading",
+      "needs no entry",
+      "\"None.\" if no such class exists"
+    ],
+    ".claude/archetypes/wiring/design.md.tmpl": [
+      "## Expected breakage",
+      "simple name only",
+      "The red gate reads only bullets under this exact heading",
+      "needs no entry",
+      "\"None.\" if no such class exists"
+    ],
+    ".claude/agents/architect.md": [
+      "Declare under `design.md`'s `## Expected breakage` every existing test class",
+      "simple class name only",
+      "Write \"None.\" when there is none",
+      "every class declared under `## Expected breakage`, by name"
+    ],
+    ".claude/archetypes/pipeline-stage/archetype.md": [
+      "\nversion: 14\n"
+    ],
+    ".claude/archetypes/use-case/archetype.md": [
+      "\nversion: 4\n"
+    ],
+    ".claude/archetypes/wiring/archetype.md": [
+      "\nversion: 2\n"
+    ]
+  }
+}
