@@ -12,7 +12,7 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -40,18 +40,29 @@
           "wallClockSeconds": 0,
           "outcome": "passed",
           "note": "design gate: user sent the design back with feedback (progress.md); attempt counter reset to 1 for the rework"
+        },
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 15,
+          "wallClockSeconds": 178,
+          "outcome": "passed",
+          "note": "rework after design-gate feedback; turns = tool uses reported by the harness; touches passed (11 files)"
         }
       ],
       "artifacts": [
+        "build.gradle.kts",
+        "cli/build.gradle.kts",
         "design.md",
-        "progress.md",
-        "learnings.md",
-        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/FileIdentity.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/HardLinkDetector.java",
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileIdentity.java",
         "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/WindowsFileId.java",
-        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/HardLinkDetector.java"
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/FileIdentity.java",
+        "learnings.md",
+        "progress.md"
       ],
-      "commit": null
+      "commit": "8846965455182d0c337fc060cf002daf758006db"
     },
     {
       "id": "tests",
@@ -59,9 +70,28 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 14,
+          "wallClockSeconds": 113,
+          "outcome": "passed",
+          "note": "turns = tool uses reported by the harness. test-phase FAIL red: 44 non-story failures; 20 are exactly the DFS-026 stub exception, 24 are assertion/wrapped failures (11 show the stub in the trace, 13 do not). Counterfactual in a scratch copy (stubs replaced by a stand-in: LinkedHashMap grouping, isSameFile-equality key) made all 44 pass (cli 63/63, file-scanner only story AC-8 failing). traceability PASS (8 criteria, 9 scenarios), touches PASS (18 files). Not committed: the 24 fall outside the approved override (exact stub exception only); held for the user. 2026-10-14 user accepted the phase on the counterfactual evidence (option 1), widening the design-gate override; durable fix tracked as CCW-015"
+        }
+      ],
+      "artifacts": [
+        "cli/src/test/java/us/pochaev/dfs/cli/NativeAccessTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/HardLinkDetectorTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanPipelineTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/StageDropReportingTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NativeAccessProbe.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NioFileIdentityTest.java",
+        "progress.md",
+        "test-plan.md"
+      ],
       "commit": null
     },
     {
@@ -90,7 +120,8 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved",
+      "note": "2026-10-14 approved with option 1: a narrow red-gate override for this ticket. If test-phase fails only on non-story tests, each such failure must be exactly UnsupportedOperationException: not implemented: DFS-026; any other failure blocks as usual. Durable fix: a CCW ticket letting RedCheck accept failures from the current ticket's own stub."
     },
     {
       "after": "done",

@@ -11,10 +11,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.Map;
+
+import us.pochaev.dfs.scanner.domain.model.SkipReason;
+import us.pochaev.dfs.scanner.domain.model.WalkEvent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -99,8 +101,8 @@ class HardLinkDetectorTest {
     // --- AC-4: identity is checked only inside a set, ascending, against each copy's first link ---
 
     @Test
-    @DisplayName("DFS-004.AC-4 Identity is only checked inside a set, against each copy's first link")
-    void identityIsOnlyCheckedInsideASetAgainstEachCopysFirstLink() {
+    @DisplayName("DFS-004.AC-4 Identity is only read inside a set, once per file in path order")
+    void identityIsOnlyReadInsideASetOncePerFileInPathOrder() {
         FileEntry xa = entry("x/a", 10 * 1024);
         FileEntry xb = entry("x/b", 10 * 1024);
         FileEntry xc = entry("x/c", 10 * 1024);
@@ -115,10 +117,7 @@ class HardLinkDetectorTest {
         detector.detect(List.of(firstSet, secondSet));
 
         assertEquals(
-                List.of(
-                        new Call(xb.path(), xa.path()),
-                        new Call(xc.path(), xa.path()),
-                        new Call(ye.path(), yd.path())),
+                List.of(xa.path(), xb.path(), xc.path(), yd.path(), ye.path()),
                 identity.calls());
     }
 
@@ -196,71 +195,118 @@ class HardLinkDetectorTest {
         assertEquals(List.of(), result);
     }
 
+    // --- DFS-026: one key lookup per file ---
+
+    @Test
+    @DisplayName("DFS-026.AC-1, DFS-026.AC-2 A large set of ordinary copies takes one lookup per file")
+    void largeSetOfOrdinaryCopiesTakesOneLookupPerFile() {
+        List<FileEntry> files = new ArrayList<>();
+        for (int i = 0; i < 10_000; i++) {
+            files.add(entry(String.format("d%02d/._f%05d", i % 50, i), 4096));
+        }
+        FakeFileIdentity identity = new FakeFileIdentity();
+        DuplicateSet input = new DuplicateSet(4096, "digest", files);
+
+        List<DuplicateSet> result = new HardLinkDetector(identity).detect(List.of(input));
+
+        assertEquals(10_000, identity.calls().size());
+        assertEquals(1, result.size());
+        assertEquals(10_000, result.getFirst().copies().size());
+        assertEquals(true, result.getFirst().copies().stream().allMatch(c -> c.links().size() == 1));
+    }
+
+    @Test
+    @DisplayName("DFS-026.AC-1, DFS-026.AC-2 Hard links collapse into one copy")
+    void hardLinksCollapseIntoOneCopy() {
+        FileEntry a = entry("a.mp4", 1000);
+        FileEntry b = entry("b.mp4", 1000);
+        FileEntry c = entry("c.mp4", 1000);
+        FakeFileIdentity identity = new FakeFileIdentity().sameFile(a.path(), c.path());
+
+        List<DuplicateSet> result =
+                new HardLinkDetector(identity).detect(List.of(new DuplicateSet(1000, "digest", List.of(a, b, c))));
+
+        assertEquals(3, identity.calls().size());
+        assertEquals(1, result.size());
+        assertEquals(
+                List.of(new PhysicalCopy(List.of(a, c)), new PhysicalCopy(List.of(b))), result.getFirst().copies());
+    }
+
+    @Test
+    @DisplayName("DFS-026.AC-2 A set that is all links of one file is dropped")
+    void setOfAllLinksOfOneFileIsDropped() {
+        FileEntry a = entry("a.mp4", 1000);
+        FileEntry b = entry("b.mp4", 1000);
+        FakeFileIdentity identity = new FakeFileIdentity().sameFile(a.path(), b.path());
+
+        List<DuplicateSet> result =
+                new HardLinkDetector(identity).detect(List.of(new DuplicateSet(1000, "digest", List.of(a, b))));
+
+        assertEquals(List.of(), result);
+    }
+
+    @Test
+    @DisplayName("DFS-026.AC-5 An unreadable file is dropped, the rest grouped")
+    void unreadableFileIsDroppedTheRestGrouped() {
+        FileEntry a = entry("a.mp4", 1000);
+        FileEntry b = entry("b.mp4", 1000);
+        FileEntry c = entry("c.mp4", 1000);
+        FakeFileIdentity identity = new FakeFileIdentity().unreadable(b.path(), "access denied");
+        List<WalkEvent.Skipped> drops = new ArrayList<>();
+
+        List<DuplicateSet> result = new HardLinkDetector(identity, drops::add)
+                .detect(List.of(new DuplicateSet(1000, "digest", List.of(a, b, c))));
+
+        assertEquals(
+                List.of(new WalkEvent.Skipped(b.path(), SkipReason.UNREADABLE, "hard-link check failed: access denied")),
+                drops);
+        assertEquals(1, result.size());
+        assertEquals(
+                List.of(new PhysicalCopy(List.of(a)), new PhysicalCopy(List.of(c))), result.getFirst().copies());
+    }
+
     private static FileEntry entry(String path, long size) {
         return new FileEntry(Path.of(path), size, WHEN);
     }
 
-    /** One recorded call to {@link FileIdentity#isSameFile}, in argument order. */
-    private record Call(Path a, Path b) {
-    }
-
     /**
-     * A fake {@link FileIdentity}: two paths are the same file only if configured as such with
-     * {@link #sameFile} (symmetric), or if a path is marked {@link #unreadable}, in which case
-     * any call naming it throws a simulated {@link IOException}. Records every call, in argument
-     * order, for {@link #calls()} to assert on (AC-4).
+     * A fake {@link FileIdentity} that hands out keys: by default a path's key is the path itself
+     * (every file distinct); {@link #sameFile} gives two paths one shared key; a path marked
+     * {@link #unreadable} throws {@link IOException}. Records every requested path, in order.
      */
     private static final class FakeFileIdentity implements FileIdentity {
 
-        private final Set<UnorderedPair> sameFilePairs = new HashSet<>();
-        private final Set<Path> unreadable = new HashSet<>();
-        private final List<Call> calls = new ArrayList<>();
+        private final Map<Path, Object> keys = new HashMap<>();
+        private final Map<Path, String> unreadable = new HashMap<>();
+        private final List<Path> calls = new ArrayList<>();
 
         FakeFileIdentity sameFile(Path a, Path b) {
-            sameFilePairs.add(new UnorderedPair(a, b));
+            keys.put(b, keys.getOrDefault(a, a));
             return this;
         }
 
         FakeFileIdentity unreadable(Path path) {
-            unreadable.add(path);
+            unreadable.put(path, "simulated unreadable file");
             return this;
         }
 
-        List<Call> calls() {
+        FakeFileIdentity unreadable(Path path, String message) {
+            unreadable.put(path, message);
+            return this;
+        }
+
+        List<Path> calls() {
             return List.copyOf(calls);
         }
 
         @Override
-        public boolean isSameFile(Path a, Path b) throws IOException {
-            calls.add(new Call(a, b));
-            if (unreadable.contains(a) || unreadable.contains(b)) {
-                throw new IOException("simulated unreadable file: " + a + " or " + b);
+        public Object key(Path path) throws IOException {
+            calls.add(path);
+            String message = unreadable.get(path);
+            if (message != null) {
+                throw new IOException(message);
             }
-            if (a.equals(b)) {
-                return true;
-            }
-            return sameFilePairs.contains(new UnorderedPair(a, b));
-        }
-
-        private record UnorderedPair(Path one, Path other) {
-            private UnorderedPair {
-                Objects.requireNonNull(one, "one");
-                Objects.requireNonNull(other, "other");
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (!(obj instanceof UnorderedPair(Path otherOne, Path otherOther))) {
-                    return false;
-                }
-                return (one.equals(otherOne) && other.equals(otherOther))
-                        || (one.equals(otherOther) && other.equals(otherOne));
-            }
-
-            @Override
-            public int hashCode() {
-                return one.hashCode() ^ other.hashCode();
-            }
+            return keys.getOrDefault(path, path);
         }
     }
 }

@@ -831,21 +831,20 @@ class ScanPipelineTest {
     }
 
     private static final class FakeFileIdentity implements FileIdentity {
-        private final Set<Path> pairA = new HashSet<>();
-        private final List<Path[]> calls = new ArrayList<>();
+        private final List<Path> calls = new ArrayList<>();
 
-        List<Path[]> calls() {
+        List<Path> calls() {
             synchronized (calls) {
                 return List.copyOf(calls);
             }
         }
 
         @Override
-        public boolean isSameFile(Path a, Path b) throws IOException {
+        public Object key(Path path) throws IOException {
             synchronized (calls) {
-                calls.add(new Path[]{a, b});
+                calls.add(path);
             }
-            return a.equals(b);
+            return path;
         }
     }
 

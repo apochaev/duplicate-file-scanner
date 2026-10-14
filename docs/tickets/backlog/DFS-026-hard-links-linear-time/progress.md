@@ -22,3 +22,9 @@ Make every story test reach a stub first. `tools/story-gate/RedCheck.java` rejec
 - Stubs unchanged; `./gradlew :file-scanner:compileJava :cli:compileJava :cli:bootJar` passes.
 - Flagged for the gate: pre-existing tests that form duplicate sets reach the stubs and `RedCheck` counts them as regressions (see design.md and learnings.md).
 - Expected commit: `feat(file-scanner): rework DFS-026 design for the red gate [DFS-026]` (orchestrator commits).
+
+## tests (test-author, attempt 1) — 2026-10-14
+
+- Rewrote the FileIdentity fakes (HardLinkDetectorTest, ScanPipelineTest, StageDropReportingTest) and NioFileIdentityTest to keys; added DFS-026 story tests, NativeAccessProbe (child JVM main), cli NativeAccessTest (plain, green).
+- Red gate: story tests fail with the DFS-026 stub; ~24 existing end-to-end/cli tests fail indirectly (scan status FAILED caused by the stub), accepted by the gate decision.
+- Expected commit: test(file-scanner): add DFS-026 tests [DFS-026]

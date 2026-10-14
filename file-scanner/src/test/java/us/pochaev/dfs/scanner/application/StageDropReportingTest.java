@@ -186,12 +186,12 @@ class StageDropReportingTest {
         }
 
         @Override
-        public boolean isSameFile(Path a, Path b) throws IOException {
-            IOException failure = unreadable.get(a) != null ? unreadable.get(a) : unreadable.get(b);
+        public Object key(Path path) throws IOException {
+            IOException failure = unreadable.get(path);
             if (failure != null) {
                 throw failure;
             }
-            return a.equals(b);
+            return path;
         }
     }
 }
