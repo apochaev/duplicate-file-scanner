@@ -17,4 +17,22 @@ dependencies {
 
 application {
     mainClass = "us.pochaev.dfs.cli.Main"
+    // The scanner calls native code on Windows (DFS-026): :cli:run and the start scripts allow it.
+    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+}
+
+tasks.bootJar {
+    // Same for `java -jar` (DFS-026.AC-7).
+    manifest {
+        attributes("Enable-Native-Access" to "ALL-UNNAMED")
+    }
+}
+
+// NativeAccessTest reads the bootJar's manifest from the path in system property dfs.bootJar.
+val bootJarFile = tasks.bootJar.flatMap { it.archiveFile }
+tasks.test {
+    dependsOn(tasks.bootJar)
+    jvmArgumentProviders.add(CommandLineArgumentProvider {
+        listOf("-Ddfs.bootJar=" + bootJarFile.get().asFile.absolutePath)
+    })
 }

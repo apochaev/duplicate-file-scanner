@@ -6,13 +6,13 @@
   },
   "branch": "tickets/DFS-026-hard-links-linear-time",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-026-hard-links-linear-time",
-  "state": "blocked",
+  "state": "running",
   "phases": [
     {
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "in-progress",
+      "status": "pending",
       "runs": [
         {
           "attempt": 1,
@@ -22,6 +22,24 @@
           "wallClockSeconds": 245,
           "outcome": "failed-gate",
           "note": "turns = tool uses reported by the harness. touches failed on 4 files that the ticket's Scope section lists; the frontmatter touches list is empty (refinement omission), so a retry cannot pass; blocked for a ticket fix instead of an automatic retry"
+        },
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "human-initiated resume from blocked (counter reset): no agent relaunched; reconciled the first attempt's uncommitted artifacts after the user approved filling the ticket's frontmatter touches from its Scope section; touches passed (9 files), then committed"
+        },
+        {
+          "attempt": 0,
+          "model": null,
+          "effort": null,
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "design gate: user sent the design back with feedback (progress.md); attempt counter reset to 1 for the rework"
         }
       ],
       "artifacts": [
@@ -85,7 +103,7 @@
       "phase": "design",
       "route": "architect",
       "summary": "touches: HardLinkDetector, NioFileIdentity, FileIdentity, WindowsFileId outside touches; cause: the ticket frontmatter has touches: [] while its Scope section lists these packages",
-      "status": "open"
+      "status": "closed"
     }
   ]
 }

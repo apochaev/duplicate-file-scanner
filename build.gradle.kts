@@ -30,5 +30,7 @@ subprojects {
 
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
+        // The scanner calls native code on Windows (DFS-026); allow it for the classpath (unnamed module).
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
     }
 }

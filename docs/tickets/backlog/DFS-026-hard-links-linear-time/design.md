@@ -2,22 +2,22 @@
 
 ## Summary
 
-The hard-link stage stops comparing pairwise: `FileIdentity` hands out one opaque key per path, and `HardLinkDetector` groups each set's files by key (one lookup per file). The key is `fileKey()` off Windows and a volume-serial + 128-bit file-ID record from FFM on Windows.
+The hard-link stage stops comparing pairwise: `FileIdentity` hands out one opaque key per path, and `HardLinkDetector` groups each set's files by key (one lookup per file). The key is `fileKey()` off Windows and a volume-serial + 128-bit file-ID record from FFM on Windows. Every story test reaches a `not implemented: DFS-026` stub before any assertion or assumption.
 
-- **AC-1** one lookup per file: `HardLinkDetector.regroup` (stub) calls `identity.key(path)` once per file, in path order, no pairwise loop.
-- **AC-2** same output as the pairwise detector: equal keys form one copy, grouped in a `LinkedHashMap` filled in path order, so copies come out by first link; sets under two copies dropped.
-- **AC-3** `fileKey()` off Windows: `NioFileIdentity.key` (stub) returns `Files.readAttributes(...).fileKey()` (no open).
-- **AC-4** NTFS file ID: new package-private `WindowsFileId.key` (stub) returns `record Key(volumeSerialNumber, fileIdLow, fileIdHigh)` from `GetFileInformationByHandleEx(FileIdInfo)`.
-- **AC-5** unreadable file: `IOException` from `key` is reported to `onDrop` as `Skipped(path, UNREADABLE, "hard-link check failed: <detail>")`, the file is left out and the rest of the set is still grouped. The `onDrop` handling is the same as before.
-- **AC-6** single method: `FileIdentity` now declares only `Object key(Path) throws IOException` (done in this design commit).
-- **AC-7** native access: build config only (no stub). `jvmArgs` on every `Test` task, `applicationDefaultJvmArgs` and the `bootJar` manifest attribute; the implementer adds these.
-- **AC-8** refused native call: `WindowsFileId` maps `IllegalCallerException` to `IllegalStateException` naming `--enable-native-access`.
+- **AC-1** one lookup per file: `HardLinkDetector.regroup` (stub) calls `identity.key(path)` once per file, in path order. Test: `detect` with a counting fake hits the stub.
+- **AC-2** same output as the pairwise detector: equal keys form one copy (`LinkedHashMap` filled in path order, copies by first link); sets under two copies dropped. Test: `detect` hits the stub.
+- **AC-3** `fileKey()` off Windows: `NioFileIdentity.key` (stub). Test calls `key` on a temp file **before** the "fileKey() not null" assumption, so it fails on the stub on Windows too.
+- **AC-4** NTFS file ID: package-private `WindowsFileId.key` (stub), `record Key(volumeSerialNumber, fileIdLow, fileIdHigh)`. Test calls `key` before the Windows and `createLink` assumptions.
+- **AC-5** unreadable file: `IOException` from `key` goes to `onDrop` as `Skipped(path, UNREADABLE, "hard-link check failed: <detail>")`, rest of the set grouped. Test: `detect` hits the stub.
+- **AC-6** single method: `FileIdentity` declares only `Object key(Path) throws IOException` (already in place). Test reads a key twice **first**, then checks equality, hash codes and the declared methods.
+- **AC-7** native access: the three build settings are in place now (root `Test` `jvmArgs`, cli `applicationDefaultJvmArgs`, `bootJar` manifest `Enable-Native-Access: ALL-UNNAMED`; manifest verified). Story test in `file-scanner` calls `key` on a temp file first, then asserts `isNativeAccessEnabled()`. The cli test-JVM and manifest checks are a plain test with no story ID, `cli/src/test/java/us/pochaev/dfs/cli/NativeAccessTest.java` (test-author), green at the red gate.
+- **AC-8** refused native call: `WindowsFileId` maps `IllegalCallerException` to `IllegalStateException` naming `--enable-native-access`. Test calls `key` in-process first, then the Windows assumption and the child JVM.
 
-Placement: port in `infra.port`, adapter plus FFM helper in `infra.adapter`, stage in `application`. There are no `domain.model` changes, no new exports and `module-info.java` is unchanged.
+Placement: port in `infra.port`, adapter plus FFM helper in `infra.adapter`, stage in `application`. No `domain.model` changes, no new exports, `module-info.java` unchanged.
 
 Not applicable: checklist 1 (finished input list), 5 (paths already unique since DFS-001), 6 (no tunable), 12 (no content read).
 
-Needs a gate decision. The AC-7 tests need a new `cli` test file, which is not in Scope's touches. The ticket's frontmatter `touches:` is empty, though Scope lists the paths. Test sources stop compiling until the test-author rewrites the four `FileIdentity` fakes.
+**Needs a gate decision: pre-existing tests will fail at the red gate.** `RedCheck` treats every non-story failure as a regression, and any existing test that forms a duplicate set reaches the `regroup` stub (through the real adapter, also the `key` stub). Likely affected: `HardLinkDetectorTest`, `ScanPipelineTest`, `StageDropReportingTest`, `NioFileIdentityTest`, `ScanPipelineEndToEndTest`, `ScanServiceRealThreadTest`, `ScannerFactoriesTest`, `ScanProgressSnapshotTest` (file-scanner), `ScanCommandTest`, `ScanRunnerTest` (cli). A throwing stub cannot avoid this when an existing, wired stage is reshaped; options in Open design notes.
 
 ## Public API
 
@@ -33,7 +33,7 @@ Unchanged: `ScanPipeline`, `ScannerFactories` (still `new NioFileIdentity()`), e
 - `application`: `HardLinkDetector` groups by key.
 - `domain.model` (exported, added to `module-info.java`): none.
 - `infra.port` / `infra.adapter`: `FileIdentity` (reshaped), implemented by `NioFileIdentity`, which delegates to `WindowsFileId` on Windows. `java.lang.foreign` is in `java.base`, so `module-info` needs no `requires`.
-- Build: root `build.gradle.kts` (`Test` tasks) and `cli/build.gradle.kts` (`application`, `bootJar`, `test`); see Configuration.
+- Build: root `build.gradle.kts` (`Test` tasks) and `cli/build.gradle.kts` (`application`, `bootJar`, `test`), done in this design phase; see Configuration.
 - `CLAUDE.md`: decision 5's wording, written by the implementer. It covers the invariant bullet, the Commands sentence, the `FileTreeWalker` paragraph and Current state wherever they name `isSameFile`.
 
 ## Checklist disposition
@@ -56,12 +56,10 @@ Unchanged: `ScanPipeline`, `ScannerFactories` (still `new NioFileIdentity()`), e
 ## Configuration
 
 - Tunable(s) this stage reads, their default, and where they are enforced: none.
-- Native access (AC-7; the implementer adds this, since a stub cannot hold it):
-  - Root `build.gradle.kts` `subprojects { tasks.withType<Test>().configureEach { jvmArgs("--enable-native-access=ALL-UNNAMED") } }`.
-  - `cli/build.gradle.kts`:
-    - `application { applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED") }`.
-    - `tasks.bootJar { manifest { attributes("Enable-Native-Access" to "ALL-UNNAMED") } }`.
-    - For the manifest test: `tasks.test { dependsOn(tasks.bootJar); systemProperty("dfs.bootJar", <bootJar archiveFile absolute path>) }`. The property name `dfs.bootJar` is the contract the test reads.
+- Native access (AC-7), added in this design phase so the build is ready before the tests:
+  - Root `build.gradle.kts`, `subprojects { tasks.withType<Test>().configureEach { jvmArgs("--enable-native-access=ALL-UNNAMED") } }`.
+  - `cli/build.gradle.kts`: `application { applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED") }` and `tasks.bootJar { manifest { attributes("Enable-Native-Access" to "ALL-UNNAMED") } }` (checked: the built jar's manifest carries the attribute).
+  - `cli/build.gradle.kts`, for `NativeAccessTest`: `tasks.test` depends on `bootJar` and passes `-Ddfs.bootJar=<absolute path of the bootJar archive>` through a lazy `jvmArgumentProviders` entry. The property name `dfs.bootJar` is the contract the test reads.
 
 ## Open design notes
 
@@ -77,12 +75,17 @@ Unchanged: `ScanPipeline`, `ScannerFactories` (still `new NioFileIdentity()`), e
   - Load `kernel32` with `SymbolLookup.libraryLookup("kernel32", Arena.global())`.
   - Initialise the handles lazily in a holder class that is only touched on Windows. **Catch `IllegalCallerException` inside the holder's initialisation and keep it**, rather than letting it escape a static initializer, which would surface as `ExceptionInInitializerError` and then `NoClassDefFoundError`. Every `key` call then throws `IllegalStateException("native access refused; run the JVM with --enable-native-access=ALL-UNNAMED (or the module name)", cause)`.
   - Check whether `--illegal-native-access=deny` raises on lookup/linking or on the first downcall, and map it on both paths.
-- **Test files named for the test-author.** `HardLinkDetectorTest`, `ScanPipelineTest`, `StageDropReportingTest` (fakes now hand out keys: default key = the path itself, configurable equal keys, configurable `IOException`, a call counter) and `NioFileIdentityTest` (AC-3, AC-4, AC-6, AC-7's module check, AC-8), all under `file-scanner/src/test/java/us/pochaev/dfs/scanner/`.
-  - `ScanServiceRealThreadTest` and `ScanPipelineEndToEndTest` use the real `NioFileIdentity` and need no change.
-  - **`compileTestJava` fails after this design commit** until those four fakes are rewritten. The reshaped port is in the design, so this cannot be avoided.
-- **AC-8 child JVM.** Start `ProcessHandle.current().info().command()` with `--illegal-native-access=deny`, `-cp System.getProperty("java.class.path")`, and a test-source `main` class. The class reads one key and prints the exception's class and message, and the parent asserts on them. Skip off Windows.
-- **AC-7 needs a cli test file outside Scope's touches.** The cli test JVM check and the `bootJar` manifest check need e.g. `cli/src/test/java/us/pochaev/dfs/cli/NativeAccessTest.java`. It should read `ScannerFactories.class.getModule()` (allowed by cli's `ArchitectureTest`; every class is in the unnamed module on the classpath) and open the jar named by `dfs.bootJar`. `:cli:run` is confirmed by the real-run done-item: no scanner "restricted method" warning on stderr. Gradle's own warning is unrelated.
-- **Red-gate shape.** AC-7's tests cannot fail on a `not implemented:` stub, because no code path reaches one: they fail on assertions until the implementer edits the build. AC-6's "single method" assertion already passes after this commit, because the port reshape is the design itself.
+- **Test files named for the test-author.** `HardLinkDetectorTest`, `ScanPipelineTest`, `StageDropReportingTest` (fakes now hand out keys: default key = the path itself, configurable equal keys, configurable `IOException`, a call counter) and `NioFileIdentityTest` (AC-3, AC-4, AC-6, AC-7's module check, AC-8), all under `file-scanner/src/test/java/us/pochaev/dfs/scanner/`. `ScanServiceRealThreadTest` and `ScanPipelineEndToEndTest` use the real `NioFileIdentity` and need no source change. `compileTestJava` fails until the four fakes are rewritten, because the port reshape is the design itself.
+- **Red-gate order for every story test (design gate feedback).** `RedCheck` accepts a story test only if it fails with `UnsupportedOperationException("not implemented: ...")`; a pass or a skip is rejected. So each story test reaches a stub before any assertion or `Assumptions` call:
+  - AC-1, AC-2, AC-5: call `HardLinkDetector.detect` with the key-handing fake; `regroup` throws.
+  - AC-3: create a temp file, call `new NioFileIdentity().key(file)`, then `assumeTrue(fileKey != null)`, then the hard-link and copy checks.
+  - AC-4: create `x.bin`, call `key(x)`, then assume Windows, then `Files.createLink` (assume it succeeds), then compare keys.
+  - AC-6: read `key(x)` twice and assert equal keys and hash codes, then assert `FileIdentity.class.getDeclaredMethods()` is just `key(Path)`.
+  - AC-7 (`file-scanner`): call `key` on a temp file, then assert `NioFileIdentity.class.getModule().isNativeAccessEnabled()`.
+  - AC-8: call `key` on a temp file in-process (native access is enabled in the test JVM), then assume Windows, then run the child JVM.
+- **AC-7's cli part is a plain test, no story ID.** `cli/src/test/java/us/pochaev/dfs/cli/NativeAccessTest.java` (written by the test-author; listed in the ticket's `touches`) asserts `ScannerFactories.class.getModule().isNativeAccessEnabled()` (allowed by cli's `ArchitectureTest`; on the classpath every class is in the unnamed module) and opens the jar named by `System.getProperty("dfs.bootJar")` to assert `Enable-Native-Access: ALL-UNNAMED`. Its display names must not start with `DFS-026.AC-`, so it counts as an ordinary test and passes at the red gate. `:cli:run` is confirmed by the real-run done-item: no scanner "restricted method" warning on stderr (Gradle's own warning is unrelated).
+- **AC-8 child JVM.** Start `ProcessHandle.current().info().command()` with `--illegal-native-access=deny` (and no `--enable-native-access`), `-cp System.getProperty("java.class.path")`, and a test-source `main` class. It reads one key and prints the exception's class and message; the parent asserts on them.
+- **Pre-existing tests at the red gate (open, for the gate).** Any non-story test that forms a duplicate set reaches the `regroup` stub, and any using the real adapter also reaches the `key` stub; `RedCheck` reports each as a regression. Candidates are listed in the Summary. Options, not decided here: (a) the test-author relabels the DFS-004/DFS-005 stage tests whose behavior AC-2 and AC-5 restate as `DFS-026.AC-2`/`AC-5` story tests, which still leaves the end-to-end and cli tests failing; (b) an orchestrator override of the red gate for this ticket, after checking that every non-story failure is a `not implemented: DFS-026` stub; (c) a CCW change to `RedCheck` accepting a non-story failure when it is the current ticket's stub. Keeping the old logic alive in a stub is not an option: every stub throws, and the pairwise method is gone from the port.
 
 ## Stubs
 
@@ -91,5 +94,6 @@ Unchanged: `ScanPipeline`, `ScannerFactories` (still `new NioFileIdentity()`), e
   - `file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileIdentity.java` (`key`).
   - `file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/WindowsFileId.java` (new; `key`).
   - `file-scanner/src/main/java/us/pochaev/dfs/scanner/application/HardLinkDetector.java` (`regroup`).
+- Build settings (real, not stubs): `build.gradle.kts`, `cli/build.gradle.kts` (see Configuration).
 - Each throws `new UnsupportedOperationException("not implemented: DFS-026")` per D2.
 - Commit: filled in by the orchestrator after the design commit.
