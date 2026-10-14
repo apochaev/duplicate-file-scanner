@@ -1,7 +1,7 @@
 ---
 id: DFS-024
 title: Show scan progress with folders, files, bytes and ETA
-status: in-progress
+status: done
 type: feature
 scope: [file-scanner, cli, docs]
 archetype: none
@@ -12,7 +12,7 @@ touches: [CLAUDE.md, us.pochaev.dfs.scanner.domain.model, us.pochaev.dfs.scanner
 blocked_reason:
 created: 2026-10-13
 updated: 2026-10-13
-completed:
+completed: 2026-10-13
 ---
 
 # DFS-024: Show scan progress with folders, files, bytes and ETA
