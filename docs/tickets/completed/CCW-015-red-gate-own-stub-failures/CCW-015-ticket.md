@@ -1,7 +1,7 @@
 ---
 id: CCW-015
 title: Make the red gate accept existing tests broken by the ticket's own stub
-status: in-review
+status: done
 type: feature
 scope: []
 archetype: none
@@ -12,7 +12,7 @@ touches: [tools/story-gate, .claude/agents/architect.md, .claude/archetypes/pipe
 blocked_reason:
 created: 2026-10-14
 updated: 2026-10-14
-completed:
+completed: 2026-10-14
 ---
 
 # CCW-015: Make the red gate accept existing tests broken by the ticket's own stub
