@@ -164,14 +164,14 @@ Feature: Linear-time hard-link detection
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] CLAUDE.md carries decision 5's invariant wording and native-access sentence, and no longer tells readers to use `Files.isSameFile`
-- [ ] Every item of the pipeline-stage checklist is addressed in `design.md` or marked not applicable with a one-line reason
-- [ ] The time of `NioFileIdentity.key` over 10,000 real files in a `@TempDir` on Windows is recorded in this ticket
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] CLAUDE.md carries decision 5's invariant wording and native-access sentence, and no longer tells readers to use `Files.isSameFile`
+- [x] Every item of the pipeline-stage checklist is addressed in `design.md` or marked not applicable with a one-line reason
+- [x] The time of `NioFileIdentity.key` over 10,000 real files in a `@TempDir` on Windows is recorded in this ticket: 2026-10-14, JDK 25.0.4.1, `NioFileIdentityKeyBenchmark` (10,000 files of 4,096 bytes in a temp dir), verifier's runs: pass 1 393.9 / 377.7 ms (~38 us/file, handle linking included), pass 2 222.2 / 219.9 ms (~22 us/file), 10,000 distinct keys
 - [x] Baseline recorded before the change: `--format=text --progress=log` scan of the synthetic 7,993-file folder (decision 6) with the current code, its `Summary:` line and the time its `Hard links:` phase took: 2026-10-13 at commit `6abe6c9`, exit 0; walk, sampling and hashing done by 0:00, then `Hard links: 1 / 1 sets  20:55` and `Done in 20:55: 7,993 files found, 7,993 compared, 1 duplicate sets`; `Summary: 1 sets, 7,993 files, 31.2 MB reclaimable, 0 skipped`. So the hard-link phase took about 20 minutes 55 seconds for one set of 7,993 files.
-- [ ] The same scan after the change reports the same `Summary:` line and its `Hard links:` phase takes under a minute; both times recorded here
+- [x] The same scan after the change reports the same `Summary:` line and its `Hard links:` phase takes under a minute; both times recorded here: 2026-10-14 at commit `98a52d4` (verifier's run, folder regenerated), exit 0; `Hashing: ... 0:03`, `Hard links: 1 / 1 sets  0:04`, `Done in 0:04: 7,993 files found, 7,993 compared, 1 duplicate sets`; `Summary: 1 sets, 7,993 files, 31.2 MB reclaimable, 0 skipped` (same as the baseline). Hard-link phase about 1 second (baseline 20:55); stderr carries no scanner native-access warning
 
 ## Open questions
 

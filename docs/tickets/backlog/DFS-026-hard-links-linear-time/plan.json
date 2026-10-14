@@ -100,7 +100,7 @@
       "after": [
         "tests"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -121,7 +121,7 @@
         "learnings.md",
         "progress.md"
       ],
-      "commit": null
+      "commit": "98a52d46a8398bea0d6cb812abc1a4184206db36"
     },
     {
       "id": "verify",
@@ -129,9 +129,23 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 23,
+          "wallClockSeconds": 258,
+          "outcome": "passed",
+          "note": "turns = tool uses reported by the harness, combined over two invocations: the agent stopped at its 20-turn cap with verification.md written but no report, and was resumed via SendMessage to wrap up. consistency PASS; 8 done-items ticked, 0 open"
+        }
+      ],
+      "artifacts": [
+        "DFS-026-ticket.md",
+        "learnings.md",
+        "verification.md"
+      ],
       "commit": null
     }
   ],
