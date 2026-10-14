@@ -9,3 +9,8 @@
 
 - **Red gate vs reshaping a wired stage.** `RedCheck` fails any non-story test that fails, including with the current ticket's own `not implemented:` stub. When a ticket reshapes a stage that is already wired into the pipeline (here `HardLinkDetector.regroup` and `NioFileIdentity.key`), every existing test that forms a duplicate set (stage, pipeline, end-to-end and cli tests) hits the stub and is reported as a regression. The pipeline has no rule for this; `RedCheck` could accept a non-story failure whose cause is the current ticket's stub, or the archetype could tell the architect how to stage such a change.
 - **Story tests and assumptions.** A story test whose platform assumption comes first is skipped at the red gate on the other platform; the archetype's test guidance should say "reach the stub before any `Assumptions` call" by default.
+
+## implement (implementer) — 2026-10-14
+
+- **Measured done-items need a test-tree file the tests phase did not write.** The impl-guide (L-023) asks for a committed manual benchmark in the test tree; that is a new test-tree file in the implement phase. `FreezeCheck` is scoped to the tests phase's artifacts, so it passes, but the role text ("never edit a test file") reads ambiguously for a new non-test benchmark. The archetype could say explicitly that the implementer adds such benchmarks (plain `main`, no `@Test`/`@Disabled`).
+- **Error mapping beyond the design.** `WindowsFileId` maps Win32 2/3/5 to `NoSuchFileException`/`AccessDeniedException` (else `FileSystemException`), so the drop detail reads like the JDK's own (`<path>: CreateFileW failed, Win32 error 5`). Still `IOException`, so AC-5's path is unchanged.

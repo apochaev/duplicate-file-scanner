@@ -3,13 +3,16 @@ package us.pochaev.dfs.scanner.application;
 import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
 import us.pochaev.dfs.scanner.domain.model.PhysicalCopy;
+import us.pochaev.dfs.scanner.domain.model.SkipReason;
 import us.pochaev.dfs.scanner.domain.model.WalkEvent;
 import us.pochaev.dfs.scanner.infra.port.FileIdentity;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -84,8 +87,35 @@ public final class HardLinkDetector {
      * and left out; returns null when fewer than two copies remain.
      */
     private DuplicateSet regroup(DuplicateSet set) {
-        throw new UnsupportedOperationException("not implemented: DFS-026");
-        // implementer: group with a LinkedHashMap<Object, List<FileEntry>> filled in path order,
-        // so copies come out ordered by their first link (insertion order), never by hash order.
+        List<FileEntry> files = new ArrayList<>(set.files());
+        files.sort(Comparator.comparing(FileEntry::path));
+
+        // Filled in path order: insertion order is first-link order, so hash order never leaks.
+        Map<Object, List<FileEntry>> copies = new LinkedHashMap<>();
+        for (FileEntry file : files) {
+            Object key;
+            try {
+                key = Objects.requireNonNull(identity.key(file.path()), "key");
+            } catch (IOException e) {
+                onDrop.accept(new WalkEvent.Skipped(file.path(), SkipReason.UNREADABLE,
+                        "hard-link check failed: " + PartialHashFilter.detail(e)));
+                continue;
+            }
+            copies.computeIfAbsent(key, k -> new ArrayList<>()).add(file);
+        }
+
+        if (copies.size() < 2) {
+            return null;
+        }
+
+        List<FileEntry> survivingFiles = new ArrayList<>();
+        List<PhysicalCopy> physicalCopies = new ArrayList<>(copies.size());
+        for (List<FileEntry> links : copies.values()) {
+            physicalCopies.add(new PhysicalCopy(List.copyOf(links)));
+            survivingFiles.addAll(links);
+        }
+        survivingFiles.sort(Comparator.comparing(FileEntry::path));
+
+        return new DuplicateSet(set.size(), set.digest(), survivingFiles, physicalCopies);
     }
 }

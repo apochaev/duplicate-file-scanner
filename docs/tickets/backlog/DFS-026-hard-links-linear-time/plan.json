@@ -70,7 +70,7 @@
       "after": [
         "design"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -92,7 +92,7 @@
         "progress.md",
         "test-plan.md"
       ],
-      "commit": null
+      "commit": "64f5fc8af70580ee76ddca96315128358d601dee"
     },
     {
       "id": "implement",
@@ -100,9 +100,27 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
+      "status": "in-progress",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 37,
+          "wallClockSeconds": 343,
+          "outcome": "passed",
+          "note": "turns = tool uses reported by the harness. green (252 passed, 2 skipped), disabled, freeze, touches (20 files), stubs, traceability, consistency all PASS. Implementer added a manual benchmark main (NioFileIdentityKeyBenchmark, no @Test) in the test tree; outside the frozen set, kept for the verifier to judge"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/HardLinkDetector.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileIdentity.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/WindowsFileId.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NioFileIdentityKeyBenchmark.java",
+        "learnings.md",
+        "progress.md"
+      ],
       "commit": null
     },
     {

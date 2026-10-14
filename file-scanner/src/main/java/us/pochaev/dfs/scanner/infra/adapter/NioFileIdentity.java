@@ -3,7 +3,11 @@ package us.pochaev.dfs.scanner.infra.adapter;
 import us.pochaev.dfs.scanner.infra.port.FileIdentity;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Objects;
 
 /**
  * {@link FileIdentity} on the platform's own file identity (DFS-026). On Windows, for a path of the
@@ -15,6 +19,9 @@ import java.nio.file.Path;
  */
 public final class NioFileIdentity implements FileIdentity {
 
+    /** Decided once: {@code fileKey()} is always null on Windows (verified), so it is not tried. */
+    private static final boolean WINDOWS = System.getProperty("os.name", "").startsWith("Windows");
+
     /**
      * {@inheritDoc}
      *
@@ -24,11 +31,15 @@ public final class NioFileIdentity implements FileIdentity {
      */
     @Override
     public Object key(Path path) throws IOException {
-        throw new UnsupportedOperationException("not implemented: DFS-026");
-        // implementer: Objects.requireNonNull(path, "path") as the real body's first line (L-013).
-        // Then: if Windows and path.getFileSystem() == FileSystems.getDefault() -> WindowsFileId.key(path);
-        // else Files.readAttributes(path, BasicFileAttributes.class).fileKey(), and an IOException
-        // naming the path if that is null (never fall back to the path itself: that would count
-        // hard links as duplicates). See design.md, "Open design notes".
+        Objects.requireNonNull(path, "path");
+        if (WINDOWS && path.getFileSystem() == FileSystems.getDefault()) {
+            return WindowsFileId.key(path);
+        }
+        Object fileKey = Files.readAttributes(path, BasicFileAttributes.class).fileKey();
+        if (fileKey == null) {
+            // Never fall back to the path: that would count hard links as duplicates.
+            throw new IOException("no file key: " + path);
+        }
+        return fileKey;
     }
 }
