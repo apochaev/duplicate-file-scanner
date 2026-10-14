@@ -1,14 +1,14 @@
 ---
 id: DFS-026
 title: Detect hard links in linear time per duplicate set
-status: ready
+status: in-progress
 type: fix
 scope: [file-scanner, cli, build]
 archetype: pipeline-stage
 models: {implementer: {model: opus, effort: high}}
 priority: high
 depends_on: [DFS-024]
-touches: []
+touches: [CLAUDE.md, build.gradle.kts, cli/build.gradle.kts, us.pochaev.dfs.scanner.application, us.pochaev.dfs.scanner.infra.port, us.pochaev.dfs.scanner.infra.adapter, cli/src/test/java/us/pochaev/dfs/cli/NativeAccessTest.java]
 blocked_reason:
 created: 2026-10-13
 updated: 2026-10-13
@@ -153,6 +153,7 @@ Feature: Linear-time hard-link detection
 - `CLAUDE.md`: the hard-link invariant, a native-access sentence in Commands, Current state (decision 5)
 - `build.gradle.kts` (root, `subprojects {}` `Test` tasks) and `cli/build.gradle.kts` (`applicationDefaultJvmArgs`, `bootJar` manifest): native access
 - `application` (`HardLinkDetector`): group by key; its test and the other `FileIdentity` fakes (`ScanPipelineTest`, `StageDropReportingTest`)
+- `cli/src/test/java/us/pochaev/dfs/cli/NativeAccessTest.java` (new): AC-7's check of the cli test JVM and the `bootJar` manifest (added 2026-10-13 at the design phase: the frontmatter `touches` was left empty at refinement and is now filled from this section)
 
 **Out of scope:**
 - Hashing and sampling speed (the user has deferred speed work).

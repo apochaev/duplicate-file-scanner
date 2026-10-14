@@ -22,12 +22,14 @@ import java.util.function.Consumer;
  * accumulation, nothing to merge. It holds no mutable state (only the {@link FileIdentity}), so
  * one instance may serve several concurrent scans as long as the port is thread-safe.
  * <p>
- * Per set: files are taken in ascending {@link java.nio.file.Path#compareTo path order}; each is
- * checked with {@code identity.isSameFile(file, firstLink)} against the first link of each copy
- * formed so far, in copy order, and joins the first copy it matches, or starts a new copy. The
- * incoming {@link DuplicateSet#copies()} are ignored and re-derived from {@link DuplicateSet#files()}.
- * A file whose check throws {@link java.io.IOException} is dropped from its set (not reported until
- * DFS-005's listener exists). A set left with fewer than two copies is dropped.
+ * Per set (DFS-026): files are taken in ascending {@link java.nio.file.Path#compareTo path order};
+ * the port is asked {@code identity.key(path)} exactly once per file, and files with equal keys
+ * form one copy, so a set of n files costs n lookups whatever its copies and links (never a
+ * pairwise comparison). Copies are ordered by their first link (the first file, in path order,
+ * with that key), never by hash-map iteration order. The incoming {@link DuplicateSet#copies()} are
+ * ignored and re-derived from {@link DuplicateSet#files()}. A file whose lookup throws
+ * {@link java.io.IOException} is dropped from its set and reported to {@code onDrop}. A set left
+ * with fewer than two copies is dropped.
  */
 public final class HardLinkDetector {
 
@@ -74,53 +76,16 @@ public final class HardLinkDetector {
         return List.copyOf(result);
     }
 
+    /**
+     * Regroups one set by identity key: one {@code identity.key} call per file, in ascending path
+     * order; equal keys form one copy; copies in order of their first link; a file whose lookup
+     * throws {@link IOException} is reported to {@code onDrop} as
+     * {@code Skipped(path, UNREADABLE, "hard-link check failed: " + PartialHashFilter.detail(e))}
+     * and left out; returns null when fewer than two copies remain.
+     */
     private DuplicateSet regroup(DuplicateSet set) {
-        List<FileEntry> files = new ArrayList<>(set.files());
-        files.sort(Comparator.comparing(FileEntry::path));
-
-        List<List<FileEntry>> copies = new ArrayList<>();
-        for (FileEntry file : files) {
-            List<FileEntry> matchedCopy = null;
-            boolean dropped = false;
-            for (List<FileEntry> copy : copies) {
-                FileEntry firstLink = copy.get(0);
-                try {
-                    if (identity.isSameFile(file.path(), firstLink.path())) {
-                        matchedCopy = copy;
-                        break;
-                    }
-                } catch (IOException e) {
-                    onDrop.accept(new WalkEvent.Skipped(file.path(),
-                            us.pochaev.dfs.scanner.domain.model.SkipReason.UNREADABLE,
-                            "hard-link check failed: " + PartialHashFilter.detail(e)));
-                    dropped = true;
-                    break;
-                }
-            }
-            if (dropped) {
-                continue;
-            }
-            if (matchedCopy != null) {
-                matchedCopy.add(file);
-            } else {
-                List<FileEntry> newCopy = new ArrayList<>();
-                newCopy.add(file);
-                copies.add(newCopy);
-            }
-        }
-
-        if (copies.size() < 2) {
-            return null;
-        }
-
-        List<FileEntry> survivingFiles = new ArrayList<>();
-        List<PhysicalCopy> physicalCopies = new ArrayList<>();
-        for (List<FileEntry> copy : copies) {
-            physicalCopies.add(new PhysicalCopy(List.copyOf(copy)));
-            survivingFiles.addAll(copy);
-        }
-        survivingFiles.sort(Comparator.comparing(FileEntry::path));
-
-        return new DuplicateSet(set.size(), set.digest(), survivingFiles, physicalCopies);
+        throw new UnsupportedOperationException("not implemented: DFS-026");
+        // implementer: group with a LinkedHashMap<Object, List<FileEntry>> filled in path order,
+        // so copies come out ordered by their first link (insertion order), never by hash order.
     }
 }
