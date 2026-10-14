@@ -1,7 +1,7 @@
 ---
 id: DFS-026
 title: Detect hard links in linear time per duplicate set
-status: in-review
+status: done
 type: fix
 scope: [file-scanner, cli, build]
 archetype: pipeline-stage
@@ -12,7 +12,7 @@ touches: [CLAUDE.md, build.gradle.kts, cli/build.gradle.kts, us.pochaev.dfs.scan
 blocked_reason:
 created: 2026-10-13
 updated: 2026-10-14
-completed:
+completed: 2026-10-14
 ---
 
 # DFS-026: Detect hard links in linear time per duplicate set
