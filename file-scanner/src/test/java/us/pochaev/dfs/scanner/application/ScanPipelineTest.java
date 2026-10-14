@@ -164,15 +164,24 @@ class ScanPipelineTest {
 
         pipeline.scan(List.of(root), ScanConfig.defaults(), listener, NEVER_STOP);
 
+        // DFS-024 added bytes to FileWalked and a HashProgress per file in the hash phases (the 20-byte group comes first)
         List<ScanEvent> expected = List.of(
                 new ScanEvent.PhaseStarted(ScanPhase.WALK),
-                new ScanEvent.FileWalked(1), new ScanEvent.FileWalked(2), new ScanEvent.FileWalked(3),
-                new ScanEvent.FileWalked(4), new ScanEvent.FileWalked(5),
+                new ScanEvent.FileWalked(1, 10), new ScanEvent.FileWalked(2, 20), new ScanEvent.FileWalked(3, 40),
+                new ScanEvent.FileWalked(4, 60), new ScanEvent.FileWalked(5, 90),
                 new ScanEvent.PhaseStarted(ScanPhase.PARTIAL_HASH),
+                new ScanEvent.HashProgress(ScanPhase.PARTIAL_HASH, 1, 4, 20, 60),
+                new ScanEvent.HashProgress(ScanPhase.PARTIAL_HASH, 2, 4, 40, 60),
                 new ScanEvent.GroupDone(ScanPhase.PARTIAL_HASH, 1, 2),
+                new ScanEvent.HashProgress(ScanPhase.PARTIAL_HASH, 3, 4, 50, 60),
+                new ScanEvent.HashProgress(ScanPhase.PARTIAL_HASH, 4, 4, 60, 60),
                 new ScanEvent.GroupDone(ScanPhase.PARTIAL_HASH, 2, 2),
                 new ScanEvent.PhaseStarted(ScanPhase.FULL_HASH),
+                new ScanEvent.HashProgress(ScanPhase.FULL_HASH, 1, 4, 20, 60),
+                new ScanEvent.HashProgress(ScanPhase.FULL_HASH, 2, 4, 40, 60),
                 new ScanEvent.GroupDone(ScanPhase.FULL_HASH, 1, 2),
+                new ScanEvent.HashProgress(ScanPhase.FULL_HASH, 3, 4, 50, 60),
+                new ScanEvent.HashProgress(ScanPhase.FULL_HASH, 4, 4, 60, 60),
                 new ScanEvent.GroupDone(ScanPhase.FULL_HASH, 2, 2),
                 new ScanEvent.PhaseStarted(ScanPhase.HARD_LINKS),
                 new ScanEvent.GroupDone(ScanPhase.HARD_LINKS, 1, 2),
@@ -557,6 +566,81 @@ class ScanPipelineTest {
         }
     }
 
+    // --- DFS-024: progress events ---
+
+    @Test
+    @DisplayName("DFS-024.AC-2 Folders and bytes are counted across locations")
+    void foldersAndBytesAreCountedAcrossLocations() throws IOException {
+        Path l1 = Path.of("L1");
+        Path l2 = Path.of("L2");
+        FakeLocationResolver resolver = new FakeLocationResolver().resolvesTo(l1, l1).resolvesTo(l2, l2);
+        FakeFileTreeWalker walker = new FakeFileTreeWalker()
+                .withEvents(l1, new WalkEvent.DirectoryEntered(l1), found(entry("L1/a.bin", 100)),
+                        found(entry("L1/b.bin", 200)))
+                .withEvents(l2, new WalkEvent.DirectoryEntered(l2), new WalkEvent.DirectoryEntered(Path.of("L2/s")),
+                        found(entry("L2/s/c.bin", 50)));
+        RecordingListener listener = new RecordingListener();
+        ScanPipeline pipeline = new ScanPipeline(resolver, walker, new FakeContentHasher(), new FakeFileIdentity());
+
+        pipeline.scan(List.of(l1, l2), ScanConfig.defaults(), listener, NEVER_STOP);
+
+        assertEquals(List.of(new ScanEvent.DirectoryWalked(1), new ScanEvent.DirectoryWalked(2),
+                new ScanEvent.DirectoryWalked(3)), eventsOf(listener, ScanEvent.DirectoryWalked.class));
+        assertEquals(List.of(new ScanEvent.FileWalked(1, 100), new ScanEvent.FileWalked(2, 300),
+                new ScanEvent.FileWalked(3, 350)), eventsOf(listener, ScanEvent.FileWalked.class));
+    }
+
+    @Test
+    @DisplayName("DFS-024.AC-3 Hash progress totals are fixed and reach the end exactly, an unreadable file included")
+    void hashProgressTotalsAreFixed() throws IOException {
+        Path root = Path.of("root");
+        FileEntry a = entry("root/a.bin", 1000);
+        FileEntry b = entry("root/b.bin", 1000);
+        FileEntry c = entry("root/c.bin", 1000);
+        FakeLocationResolver resolver = new FakeLocationResolver().resolvesTo(root, root);
+        FakeFileTreeWalker walker = new FakeFileTreeWalker().withEvents(root, found(a), found(b), found(c));
+        FakeContentHasher hasher = new FakeContentHasher()
+                .digest(a.path(), "same").digest(c.path(), "same")
+                .sampleHashFails(b.path(), "Access is denied");
+        RecordingListener listener = new RecordingListener();
+        ScanPipeline pipeline = new ScanPipeline(resolver, walker, hasher, new FakeFileIdentity());
+
+        // a 100-byte threshold makes the 1,000-byte files go through the sample
+        pipeline.scan(List.of(root), new ScanConfig(1, 16, 100), listener, NEVER_STOP);
+
+        List<ScanEvent.HashProgress> partial = eventsOf(listener, ScanEvent.HashProgress.class).stream()
+                .filter(p -> p.phase() == ScanPhase.PARTIAL_HASH).toList();
+        assertTrue(partial.stream().allMatch(p -> p.filesTotal() == 3 && p.bytesTotal() == 3000), partial.toString());
+        assertEquals(List.of(1L, 2L, 3L), partial.stream().map(ScanEvent.HashProgress::filesDone).toList());
+        assertEquals(3000, partial.getLast().bytesDone());
+    }
+
+    @Test
+    @DisplayName("DFS-024.AC-4 Progress within a file never passes the file's scan-time size")
+    void progressWithinAFileIsCapped() throws IOException {
+        Path root = Path.of("root");
+        FileEntry p = entry("root/p.bin", 5000);
+        FileEntry q = entry("root/q.bin", 5000);
+        FakeLocationResolver resolver = new FakeLocationResolver().resolvesTo(root, root);
+        FakeFileTreeWalker walker = new FakeFileTreeWalker().withEvents(root, found(p), found(q));
+        FakeContentHasher hasher = new FakeContentHasher()
+                .digest(p.path(), "same").digest(q.path(), "same")
+                .reports(p.path(), 4000, 6000);
+        RecordingListener listener = new RecordingListener();
+        ScanPipeline pipeline = new ScanPipeline(resolver, walker, hasher, new FakeFileIdentity());
+
+        pipeline.scan(List.of(root), ScanConfig.defaults(), listener, NEVER_STOP);
+
+        List<List<Long>> full = eventsOf(listener, ScanEvent.HashProgress.class).stream()
+                .filter(e -> e.phase() == ScanPhase.FULL_HASH)
+                .map(e -> List.of(e.filesDone(), e.bytesDone())).toList();
+        assertEquals(List.of(List.of(0L, 4000L), List.of(0L, 5000L), List.of(1L, 5000L), List.of(2L, 10000L)), full);
+    }
+
+    private static <T extends ScanEvent> List<T> eventsOf(RecordingListener listener, Class<T> type) {
+        return listener.events().stream().filter(type::isInstance).map(type::cast).toList();
+    }
+
     private static WalkEvent found(FileEntry entry) {
         return new WalkEvent.FileFound(entry);
     }
@@ -678,6 +762,7 @@ class ScanPipelineTest {
         private final Map<Path, String> digests = new HashMap<>();
         private final Map<Path, String> sampleFailures = new HashMap<>();
         private final Map<Path, String> fullFailures = new HashMap<>();
+        private final Map<Path, long[]> progressReports = new HashMap<>();
         private final List<Path> fullHashCalls = new ArrayList<>();
 
         FakeContentHasher digest(Path path, String digest) {
@@ -687,6 +772,17 @@ class ScanPipelineTest {
 
         FakeContentHasher fullHashFails(Path path, String message) {
             fullFailures.put(path, message);
+            return this;
+        }
+
+        FakeContentHasher sampleHashFails(Path path, String message) {
+            sampleFailures.put(path, message);
+            return this;
+        }
+
+        /** {@code fullHash(path, callback)} reports these byte counts, in order, before returning. */
+        FakeContentHasher reports(Path path, long... bytesRead) {
+            progressReports.put(path, bytesRead);
             return this;
         }
 
@@ -715,6 +811,14 @@ class ScanPipelineTest {
                 throw new IOException(failure);
             }
             return digestFor(file);
+        }
+
+        @Override
+        public String fullHash(Path file, java.util.function.LongConsumer bytesRead) throws IOException {
+            for (long bytes : progressReports.getOrDefault(file, new long[0])) {
+                bytesRead.accept(bytes);
+            }
+            return fullHash(file);
         }
 
         private String digestFor(Path file) {

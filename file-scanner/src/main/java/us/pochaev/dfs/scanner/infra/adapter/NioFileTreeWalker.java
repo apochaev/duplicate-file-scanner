@@ -59,7 +59,7 @@ public final class NioFileTreeWalker implements FileTreeWalker {
                 return emit(skipped(dir, SkipReason.SPECIAL_FILE, "reparse point or special directory"),
                         FileVisitResult.SKIP_SUBTREE);
             }
-            return FileVisitResult.CONTINUE;
+            return emit(new WalkEvent.DirectoryEntered(dir), FileVisitResult.CONTINUE);
         }
 
         @Override

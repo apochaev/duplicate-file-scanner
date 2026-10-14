@@ -15,8 +15,10 @@ import us.pochaev.dfs.scanner.domain.model.FileEntry;
 import us.pochaev.dfs.scanner.domain.model.PhysicalCopy;
 import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.scanner.domain.model.ScanConfig;
+import us.pochaev.dfs.scanner.domain.model.ScanEvent;
 import us.pochaev.dfs.scanner.domain.model.ScanId;
 import us.pochaev.dfs.scanner.domain.model.ScanListener;
+import us.pochaev.dfs.scanner.domain.model.ScanPhase;
 import us.pochaev.dfs.scanner.domain.model.ScanResult;
 import us.pochaev.dfs.scanner.domain.model.ScanSnapshot;
 import us.pochaev.dfs.scanner.domain.model.ScanStatus;
@@ -291,7 +293,7 @@ class ScanCommandTest {
                 "    " + real(y),
                 "Summary: 1 sets, 3 files, 30 B reclaimable, 0 skipped"), run.out.lines().toList());
         assertTrue(run.out.endsWith("\n"), run.out);
-        assertTrue(run.err.contains("scan: walk started"), run.err);
+        assertTrue(run.err.contains("Walking:"), run.err);
     }
 
     @ParameterizedTest(name = "[{index}] options: {0}")
@@ -384,6 +386,89 @@ class ScanCommandTest {
         assertEquals(0, fake.starts);
     }
 
+    // --- DFS-024: the progress display
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @ValueSource(strings = {"", "--progress=live", "--progress=log", "--progress=off"})
+    @DisplayName("DFS-024.AC-10, DFS-024.AC-13 Stdout is the same in every progress mode")
+    void stdoutIsTheSameInEveryProgressMode(String option) throws IOException {
+        Path x = write(tmp.resolve("x.txt"), DUP);
+        Path y = write(tmp.resolve("y.txt"), DUP);
+
+        Run run = option.isEmpty() ? scan(tmp.toString(), "--format=text") : scan(tmp.toString(), "--format=text", option);
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals(List.of(
+                "#1  15 B reclaimable  (2 copies x 15 B, sha256 " + sha256(DUP).substring(0, 12) + ")",
+                "    " + real(x),
+                "    " + real(y),
+                "Summary: 1 sets, 2 files, 15 B reclaimable, 0 skipped"), run.out.lines().toList());
+        switch (option) {
+            case "--progress=off" -> assertEquals("", run.err);
+            case "--progress=log" -> {
+                assertFalse(run.err.contains("\r"), run.err);
+                assertTrue(run.err.lines().toList().getLast().startsWith("Done in "), run.err);
+            }
+            default -> {
+                assertTrue(run.err.contains("\r"), run.err);
+                assertTrue(run.err.lines().toList().getLast().startsWith("Done in "), run.err);
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-024.AC-11 A completed scan ends with the Done line")
+    void completedScanEndsWithDoneLine() throws IOException {
+        write(tmp.resolve("x.txt"), DUP);
+        write(tmp.resolve("y.txt"), DUP);
+        write(tmp.resolve("z.txt"), "unique!");
+
+        Run run = scan(tmp.toString(), "--progress=log");
+
+        String last = run.err.lines().toList().getLast();
+        assertTrue(last.matches("Done in \\d+:\\d\\d: 3 files found, 2 compared, 1 duplicate sets"), run.err);
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @ValueSource(strings = {"--progress=live", "--progress=off"})
+    @DisplayName("DFS-024.AC-10, DFS-024.AC-11 A failed scan finishes the line and reports the error")
+    void failedScanFinishesTheLine(String option) {
+        FakePorts fake = new FakePorts(
+                snapshot(ScanStatus.RUNNING, null),
+                snapshot(ScanStatus.FAILED, "java.io.UncheckedIOException: disk gone"));
+        fake.events = List.of(new ScanEvent.PhaseStarted(ScanPhase.WALK), new ScanEvent.FileWalked(1, 10));
+
+        Run run = run(fake, tmp.toString(), option);
+
+        assertEquals(1, run.exitCode);
+        String error = "error: scan failed: java.io.UncheckedIOException: disk gone\n";
+        if (option.equals("--progress=off")) {
+            assertEquals(error, run.err.replace("\r\n", "\n"));
+        } else {
+            String err = run.err.replace(System.lineSeparator(), "\n");
+            assertTrue(err.matches("(?s)\rWalking:    0 folders, 1 files, 10 B found  0:\\d\\d\n" + java.util.regex.Pattern.quote(error)),
+                    err);
+        }
+        assertFalse(run.err.contains("Done in"), run.err);
+    }
+
+    @ParameterizedTest(name = "[{index}] args: {0}")
+    @ValueSource(strings = {"<folder> --progress=quiet", "<folder> --progress=", "<folder> --progress=LIVE",
+            "<folder> --progress=log --progress=off"})
+    @DisplayName("DFS-024.AC-12 A bad --progress starts no scan")
+    void badProgressStartsNoScan(String args) {
+        FakePorts fake = new FakePorts();
+
+        Run run = run(fake, args.replace("<folder>", tmp.toString()).split(" "));
+
+        assertEquals(2, run.exitCode);
+        assertTrue(run.err.startsWith("error: "), run.err);
+        assertTrue(run.err.contains(ScanCommand.USAGE_LINE), run.err);
+        assertTrue(ScanCommand.USAGE_LINE.contains("--progress=live|log|off"), ScanCommand.USAGE_LINE);
+        assertEquals("", run.out);
+        assertEquals(0, fake.starts);
+    }
+
     // --- helpers
 
     private Run scan(String... args) {
@@ -456,6 +541,7 @@ class ScanCommandTest {
         private final Deque<ScanSnapshot> snapshots;
         final List<String> calls = new ArrayList<>();
         ScanResult result = new ScanResult(List.of(), List.of());
+        List<ScanEvent> events = List.of();
         int starts;
         int resultCalls;
 
@@ -471,6 +557,7 @@ class ScanCommandTest {
         @Override
         public Result<ScanId> start(List<Path> locations, ScanConfig config, ScanListener listener) {
             starts++;
+            events.forEach(listener::onEvent);
             return new Result.Success<>(id);
         }
 

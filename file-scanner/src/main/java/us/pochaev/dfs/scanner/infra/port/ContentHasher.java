@@ -2,6 +2,7 @@ package us.pochaev.dfs.scanner.infra.port;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.LongConsumer;
 
 /**
  * Hashes file content for the detection pipeline (CLAUDE.md decision 3): a cheap head-and-tail
@@ -12,6 +13,9 @@ import java.nio.file.Path;
  * SHA-256 for both. Implementations must be safe to call from several threads at once.
  */
 public interface ContentHasher {
+
+    /** The most bytes {@link #fullHash(Path, LongConsumer)} reads between two progress reports: 8 MiB. */
+    long PROGRESS_INTERVAL = 8L * 1024 * 1024;
 
     /**
      * Hashes the first {@code sampleSize} bytes and the last {@code sampleSize} bytes of
@@ -35,4 +39,21 @@ public interface ContentHasher {
      * @throws IOException if {@code file} cannot be opened or read
      */
     String fullHash(Path file) throws IOException;
+
+    /**
+     * Hashes the whole content of {@code file} like {@link #fullHash(Path)}, reporting progress to
+     * {@code bytesRead}: the number of bytes of this file read so far, rising, at least once per
+     * {@link #PROGRESS_INTERVAL} bytes read (DFS-024). Called on the hashing thread.
+     * <p>
+     * The default reports nothing and returns {@link #fullHash(Path)}, for hashers without
+     * progress support.
+     *
+     * @param file      the file to hash
+     * @param bytesRead receives the bytes read so far
+     * @return the lowercase hexadecimal digest of the file's content
+     * @throws IOException if {@code file} cannot be opened or read
+     */
+    default String fullHash(Path file, LongConsumer bytesRead) throws IOException {
+        return fullHash(file);
+    }
 }

@@ -225,6 +225,9 @@ public final class ScanService implements StartScan, CancelScan, GetScanStatus, 
             case ScanEvent.GroupDone e -> new ScanSnapshot(s.status(), s.phase(), s.filesWalked(),
                     e.done(), e.total(), s.failureMessage(), s.listenerFailure());
             case ScanEvent.Skipped e -> s;
+            // DFS-024 decision 6: the snapshot keeps its fields; these reach the caller's listener only
+            case ScanEvent.DirectoryWalked e -> s;
+            case ScanEvent.HashProgress e -> s;
         });
     }
 

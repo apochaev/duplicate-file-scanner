@@ -87,7 +87,7 @@ class ScanServiceTest {
     void aScanRunsAndCompletesWithItsResult() throws Exception {
         Env env = new Env();
         ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of());
-        env.runner.events = List.of(new ScanEvent.PhaseStarted(ScanPhase.WALK), new ScanEvent.FileWalked(1));
+        env.runner.events = List.of(new ScanEvent.PhaseStarted(ScanPhase.WALK), new ScanEvent.FileWalked(1, 0));
         env.runner.blockAfter = 1;
         env.runner.result = expected;
         ScanId id = success(env.service.start(List.of(A), CONFIG));
@@ -160,7 +160,7 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-5 The snapshot follows the pipeline's progress")
     void snapshotFollowsThePipelinesProgress() throws Exception {
         Env env = new Env();
-        env.runner.events = List.of(new ScanEvent.FileWalked(48210),
+        env.runner.events = List.of(new ScanEvent.FileWalked(48210, 0),
                 new ScanEvent.PhaseStarted(ScanPhase.FULL_HASH),
                 new ScanEvent.GroupDone(ScanPhase.FULL_HASH, 37, 120));
         env.runner.blockAfter = 3;
@@ -184,8 +184,8 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-6 A listener receives every event in order, on the thread that runs the task")
     void listenerReceivesEveryEventOnTheExecutorsThread() throws Exception {
         Env env = new Env();
-        List<ScanEvent> sent = List.of(new ScanEvent.PhaseStarted(ScanPhase.WALK), new ScanEvent.FileWalked(1),
-                new ScanEvent.FileWalked(2), new ScanEvent.PhaseStarted(ScanPhase.PARTIAL_HASH));
+        List<ScanEvent> sent = List.of(new ScanEvent.PhaseStarted(ScanPhase.WALK), new ScanEvent.FileWalked(1, 0),
+                new ScanEvent.FileWalked(2, 0), new ScanEvent.PhaseStarted(ScanPhase.PARTIAL_HASH));
         env.runner.events = sent;
         RecordingListener listener = new RecordingListener();
         success(env.service.start(List.of(A), CONFIG, listener));
@@ -201,7 +201,7 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-6 The overload without a listener runs the same scan")
     void overloadWithoutAListenerRunsTheSameScan() {
         Env env = new Env();
-        env.runner.events = List.of(new ScanEvent.FileWalked(1));
+        env.runner.events = List.of(new ScanEvent.FileWalked(1, 0));
         ScanId id = success(env.service.start(List.of(A), CONFIG));
 
         env.executor.runNext();
@@ -231,8 +231,8 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-8 Cancelling a running scan goes through CANCELLING to CANCELLED")
     void cancellingARunningScanGoesThroughCancelling() throws Exception {
         Env env = new Env();
-        env.runner.events = List.of(new ScanEvent.FileWalked(1), new ScanEvent.FileWalked(2),
-                new ScanEvent.FileWalked(3));
+        env.runner.events = List.of(new ScanEvent.FileWalked(1, 0), new ScanEvent.FileWalked(2, 0),
+                new ScanEvent.FileWalked(3, 0));
         env.runner.blockAfter = 3;
         env.runner.failure = new CancellationException("stopped");
         ScanId id = success(env.service.start(List.of(A), CONFIG));
@@ -274,7 +274,7 @@ class ScanServiceTest {
     void completionWinsOverAnEarlierCancel() throws Exception {
         Env env = new Env();
         ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of());
-        env.runner.events = List.of(new ScanEvent.FileWalked(1));
+        env.runner.events = List.of(new ScanEvent.FileWalked(1, 0));
         env.runner.blockAfter = 1;
         env.runner.result = expected;
         ScanId id = success(env.service.start(List.of(A), CONFIG));
@@ -393,8 +393,8 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-15 A throwing listener is detached and the scan carries on")
     void aThrowingListenerIsDetachedAndTheScanCarriesOn() {
         Env env = new Env();
-        env.runner.events = List.of(new ScanEvent.PhaseStarted(ScanPhase.WALK), new ScanEvent.FileWalked(1),
-                new ScanEvent.FileWalked(2), new ScanEvent.FileWalked(3));
+        env.runner.events = List.of(new ScanEvent.PhaseStarted(ScanPhase.WALK), new ScanEvent.FileWalked(1, 0),
+                new ScanEvent.FileWalked(2, 0), new ScanEvent.FileWalked(3, 0));
         RecordingListener listener = new RecordingListener();
         listener.throwOnEvent = 2;
         ScanId id = success(env.service.start(List.of(A), CONFIG, listener));
@@ -724,7 +724,7 @@ class ScanServiceTest {
             switch (target) {
                 case FAILED -> runner.failure = new IllegalStateException("boom");
                 case RUNNING, CANCELLING -> {
-                    runner.events = List.of(new ScanEvent.FileWalked(1));
+                    runner.events = List.of(new ScanEvent.FileWalked(1, 0));
                     runner.blockAfter = 1;
                 }
                 default -> {

@@ -1,7 +1,7 @@
 ---
 id: DFS-024
 title: Show scan progress with folders, files, bytes and ETA
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner, cli, docs]
 archetype: none
@@ -56,6 +56,13 @@ Done in 4:31: 33,984 files found, 9,812 compared, 3,330 duplicate sets
 6. **`ScanSnapshot` is unchanged.** `ScanService` passes the new events to the caller's listener and leaves the snapshot as it is for them; `GetScanStatus` keeps `phase, filesWalked, groupsDone, groupsTotal`. Progress reaches the CLI through the listener (CLAUDE.md, "Progress is reported through a listener"); a poller such as a future server's status page gains the new counters when it exists and its needs are known.
 7. **Line formats, ETA and the final line, as proposed.** Counts and sizes use DFS-023's formatters (`3,330`, `9.8 GB`). The percentage is `bytesDone * 100 / bytesTotal` rounded down. The elapsed clock is the time since the scan started, `m:ss`, or `h:mm:ss` from one hour on. The ETA is `(bytesTotal - bytesDone) / (bytesDone / seconds since FULL_HASH started)`, formatted like the clock, and reads `--:--` until 3 seconds and 1% of the phase's bytes have passed. A phase with no input still writes its finished line (`Sampling:   0 / 0 files`). The final line, `Done in <elapsed>: <files walked> files found, <files entering PARTIAL_HASH> compared, <sets> duplicate sets`, is written in `live` and `log` modes, not in `off`. On a failed scan the current line is completed with a newline before the `error:` line, and no `Done` line is written; on Ctrl+C the JVM stops (DFS-020 decision 7) and the line stays as it was.
 8. **Layout and testing details (proposed during refinement, 2026-10-13).** A line is the label padded to 12 characters (`Walking:`, `Sampling:`, `Hashing:`, `Hard links:`), the counts, two spaces, and the elapsed clock; no right alignment. The display is a plain class in `cli` fed the events and a clock (`LongSupplier` of nanoseconds), with an explicit redraw method; only `live` mode adds a daemon timer that calls it about every 200 ms, stopped when the scan ends. Tests drive the class directly with a fake clock and explicit redraws; the scanner events with fake walkers and hashers in `application` tests; `NioFileTreeWalker` and `NioContentHasher` on `@TempDir` files; and the command through `ScanCommand` as in DFS-020 and DFS-023. Hand-written fakes, no Mockito.
+
+**Implementation notes (2026-10-13):**
+
+- Tests of earlier tickets changed with the behavior: DFS-005.AC-4's exact event sequence now includes `FileWalked` bytes and the `HashProgress` events; DFS-020.AC-7 and DFS-023.AC-1 checked the old `scan: walk started` lines and now check `Walking:` and `Hashing:`; `NioFileTreeWalkerTest.emptyDirectoriesProduceNoEvents` was renamed `...NoFileOrSkipEvents`, since an empty directory now yields `DirectoryEntered`.
+- `NioContentHasher` caps each read at the next report boundary, so reports are exactly `PROGRESS_INTERVAL` apart, as AC-4's scenario states, rather than up to one 64 KiB buffer more.
+- AC-5's test lives in `domain.factory`'s test package (it scans through `ScannerFactories`), which `touches` does not list; it is a test file only.
+- On the first real run the hard-link phase, not hashing, took most of the time (about 7 of 10 s, with the files already in the OS cache); scan speed stays deferred.
 
 ## Acceptance criteria
 
@@ -232,12 +239,12 @@ Feature: Scan progress
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] A real scan in a Windows console shows the updating line through each phase and the `Done` line, through `./gradlew -q :cli:run` or, if Gradle holds back the `\r` line, through the installed launcher (decision 5); the user confirms what they saw
-- [ ] The same real scan with `--progress=log` and stderr redirected to a file gives readable lines without `\r`
-- [ ] CLAUDE.md "Commands" and "Current state" describe `--progress` (and the launcher, if needed)
+- [x] Every scenario above is an automated test and passes: 17 test methods for the 15 scenarios (`grep -c 'DisplayName("DFS-024'`: `ProgressDisplayTest` 5, `ScanCommandTest` 4, `ScanPipelineTest` 3, `NioProgressTest` 4, `ScanProgressSnapshotTest` 1), all passing, none skipped; 245 test runs in both projects, one skipped as before (the case-sensitivity test on Windows)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests), 2026-10-13
+- [x] No files changed outside the paths listed under Touches, except one new test file in `domain.factory`'s test package (see implementation notes)
+- [x] A real scan in a Windows console shows the updating line through each phase and the `Done` line, through `./gradlew -q :cli:run` or, if Gradle holds back the `\r` line, through the installed launcher (decision 5); the user confirms what they saw: 2026-10-13, `C:/Media D:/Media E:/Media F:/Media --format=text` (7.3 TB, 700,488 files) in PowerShell through `./gradlew -q :cli:run`, no launcher needed; the user saw each phase redrawn in place on one line (`Walking:` done at 0:42, `Sampling:` at 40:31, `Hashing:` with bytes, percentage and a falling ETA up to 1:19:13) and confirmed it "looks good". That run ended in an unexpected PC power-off before the hard-link phase, so the `Hard links:` and `Done` lines were checked only in the `velvetapp` runs above (stderr captured, not a console) and in the tests; closed on the user's say-so
+- [x] The same real scan with `--progress=log` and stderr redirected to a file gives readable lines without `\r`: `velvetapp` + `velvet-vortex`, exit 0, 7 progress lines and `Done in 0:13: 42,836 files found, 37,315 compared, 2,680 duplicate sets`; stdout byte-identical to the `live` run. In the `live` run Gradle relayed the `\r` redraws unchanged (55 in the redirected stderr), so `:cli:run` needs no launcher workaround
+- [x] CLAUDE.md "Commands" and "Current state" describe `--progress` (no launcher needed, see above)
 
 ## Open questions
 

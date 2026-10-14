@@ -39,6 +39,7 @@ public final class PartialHashFilter {
     private final int sampleSize;
     private final long skipThreshold;
     private final Consumer<WalkEvent.Skipped> onDrop;
+    private final FileProgress progress;
 
     /**
      * Creates a filter with the default sample size ({@value #DEFAULT_SAMPLE_SIZE} bytes) and
@@ -73,8 +74,23 @@ public final class PartialHashFilter {
      */
     public PartialHashFilter(ContentHasher hasher, int sampleSize, long skipThreshold,
                              Consumer<WalkEvent.Skipped> onDrop) {
+        this(hasher, sampleSize, skipThreshold, onDrop, FileProgress.NONE);
+    }
+
+    /**
+     * Creates a filter like {@link #PartialHashFilter(ContentHasher, int, long, Consumer)} that also
+     * reports to {@code progress} when it is done with each input file: sampled, dropped, or passed
+     * through unread in a group under the skip threshold (DFS-024).
+     *
+     * @throws NullPointerException     if {@code hasher}, {@code onDrop} or {@code progress} is null
+     * @throws IllegalArgumentException if {@code sampleSize} is not positive or
+     *                                  {@code skipThreshold} is negative
+     */
+    public PartialHashFilter(ContentHasher hasher, int sampleSize, long skipThreshold,
+                             Consumer<WalkEvent.Skipped> onDrop, FileProgress progress) {
         Objects.requireNonNull(hasher, "hasher");
         Objects.requireNonNull(onDrop, "onDrop");
+        Objects.requireNonNull(progress, "progress");
         if (sampleSize <= 0) {
             throw new IllegalArgumentException("sampleSize must be positive: " + sampleSize);
         }
@@ -85,6 +101,7 @@ public final class PartialHashFilter {
         this.sampleSize = sampleSize;
         this.skipThreshold = skipThreshold;
         this.onDrop = onDrop;
+        this.progress = progress;
     }
 
     /**
@@ -102,6 +119,7 @@ public final class PartialHashFilter {
         for (CandidateGroup group : groups) {
             Objects.requireNonNull(group, "group");
             if (group.size() <= skipThreshold) {
+                group.files().forEach(progress::fileDone);
                 result.add(group);
                 continue;
             }
@@ -124,9 +142,11 @@ public final class PartialHashFilter {
                 onDrop.accept(new WalkEvent.Skipped(file.path(),
                         us.pochaev.dfs.scanner.domain.model.SkipReason.UNREADABLE,
                         "partial hash failed: " + detail(e)));
+                progress.fileDone(file);
                 continue;
             }
             byDigest.computeIfAbsent(digest, k -> new ArrayList<>()).add(file);
+            progress.fileDone(file);
         }
 
         List<CandidateGroup> subgroups = new ArrayList<>();

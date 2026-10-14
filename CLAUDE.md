@@ -19,9 +19,10 @@ Run from the repo root (`./gradlew` works in Git Bash; use `gradlew.bat` in cmd/
 ./gradlew :file-scanner:test --tests "*SomeTest"  # one test class
 ./gradlew -q :cli:run --args="C:/abs/path" > out.jsonl   # scan, write JSONL
 ./gradlew -q :cli:run --args="C:/a D:/b --format=text"    # scan, print a readable report
+./gradlew -q :cli:run --args="C:/a --progress=log" 2> progress.log   # plain progress lines for a file
 ```
 
-`:cli:run` starts in `cli/`, so pass **absolute** paths. `-q` keeps Gradle's own lines out of stdout, which must carry only the output. Stdout is always UTF-8; to see non-ASCII paths correctly on a Windows console, switch it to UTF-8 first (`chcp 65001` in cmd, `[Console]::OutputEncoding = [Text.Encoding]::UTF8` in PowerShell). Gradle 9.6 on JDK 25 prints a harmless "restricted method in java.lang.System" warning at startup.
+`:cli:run` starts in `cli/`, so pass **absolute** paths. `-q` keeps Gradle's own lines out of stdout, which must carry only the output. Stdout is always UTF-8; to see non-ASCII paths correctly on a Windows console, switch it to UTF-8 first (`chcp 65001` in cmd, `[Console]::OutputEncoding = [Text.Encoding]::UTF8` in PowerShell). Progress goes to stderr, by default as one line per phase redrawn in place (`--progress=live`); use `--progress=log` when stderr goes to a file and `--progress=off` for none. Gradle 9.6 on JDK 25 prints a harmless "restricted method in java.lang.System" warning at startup.
 
 Shared config (Java 25 toolchain, `--release 25`, JUnit 6 BOM, `useJUnitPlatform`) lives in the root `build.gradle.kts` `subprojects {}` block; do not repeat it in subprojects.
 
@@ -116,7 +117,7 @@ A ticket worked off `main` uses branch `tickets/<ID>-<slug>`, and if it has a wo
 
 ## Current state and open items
 
-- The package layout, `module-info.java` and ArchUnit tests are scaffolded (ArchUnit 1.5.0, core artifact with plain JUnit tests; not `archunit-junit5`, to avoid engine compatibility risk with JUnit 6). `cli` is a Spring Boot app (an `ApplicationRunner`, arguments parsed by hand) that scans the folders given and writes JSON Lines to stdout: `set`, then `skipped`, then one `summary` line; progress and errors go to stderr; exit codes 0, 1 and 2. The schema and rules are in DFS-020. `--format=text` prints a readable report instead (largest reclaimable space first; DFS-023). Stdout is UTF-8 in both formats.
+- The package layout, `module-info.java` and ArchUnit tests are scaffolded (ArchUnit 1.5.0, core artifact with plain JUnit tests; not `archunit-junit5`, to avoid engine compatibility risk with JUnit 6). `cli` is a Spring Boot app (an `ApplicationRunner`, arguments parsed by hand) that scans the folders given and writes JSON Lines to stdout: `set`, then `skipped`, then one `summary` line; progress and errors go to stderr; exit codes 0, 1 and 2. The schema and rules are in DFS-020. `--format=text` prints a readable report instead (largest reclaimable space first; DFS-023). Stdout is UTF-8 in both formats. Progress (DFS-024) shows folders, files and bytes found, then files and bytes hashed with a percentage and ETA, from the scanner's `ScanEvent`s (`DirectoryWalked`, `FileWalked` with bytes, `HashProgress`, `GroupDone`); `--progress=live|log|off`.
 - Guards: `file-scanner` has `ArchitectureTest` (layers, top-level `util`, no Spring) and `ModuleExportsTest` (reads the compiled `module-info.class`: only unqualified `domain.*` exports, every non-`util` domain package exported, nothing opened). `cli` has an `ArchitectureTest` that forbids depending on anything under `us.pochaev.dfs.scanner` outside `domain`.
 - The scanner rules use `allowEmptyShould(true)` so they pass while layers are empty. Once `application` and `infra` have classes, consider removing it so a mistyped package pattern fails loudly instead of silently checking nothing.
 - Adding a new exported domain package: it needs at least one real type (a `package-info.java` alone counts as empty and `exports` fails to compile) plus an `exports` line, or `ModuleExportsTest` fails.

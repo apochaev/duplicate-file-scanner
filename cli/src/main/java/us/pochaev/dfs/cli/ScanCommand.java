@@ -8,10 +8,7 @@ import us.pochaev.dfs.scanner.domain.model.FileEntry;
 import us.pochaev.dfs.scanner.domain.model.PhysicalCopy;
 import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.scanner.domain.model.ScanConfig;
-import us.pochaev.dfs.scanner.domain.model.ScanEvent;
 import us.pochaev.dfs.scanner.domain.model.ScanId;
-import us.pochaev.dfs.scanner.domain.model.ScanListener;
-import us.pochaev.dfs.scanner.domain.model.ScanPhase;
 import us.pochaev.dfs.scanner.domain.model.ScanResult;
 import us.pochaev.dfs.scanner.domain.model.ScanSnapshot;
 import us.pochaev.dfs.scanner.domain.model.ScanStatus;
@@ -35,7 +32,7 @@ import java.util.Objects;
  *
  * <p>Stdout carries only JSONL: a {@code set} line per duplicate set, a {@code skipped} line per
  * skipped path, then one {@code summary} line (decision 3). Progress and errors go to {@code err}
- * (decision 4). Exit codes: 0 completed, 1 refused start or failed scan, 2 usage error (decision 6).
+ * (decision 4), shown by {@link ProgressDisplay} (DFS-024). Exit codes: 0 completed, 1 refused start or failed scan, 2 usage error (decision 6).
  */
 public final class ScanCommand {
 
@@ -44,10 +41,11 @@ public final class ScanCommand {
     public static final int USAGE = 2;
 
     static final String USAGE_LINE =
-            "usage: duplicate-file-scanner <folder>... [--min-size=<bytes>] [--format=jsonl|text]";
+            "usage: duplicate-file-scanner <folder>... [--min-size=<bytes>] [--format=jsonl|text]"
+                    + " [--progress=live|log|off]";
     private static final String MIN_SIZE = "--min-size=";
     private static final String FORMAT = "--format=";
-    private static final Duration PROGRESS_INTERVAL = Duration.ofSeconds(1);
+    private static final String PROGRESS = "--progress=";
 
     private final StartScan start;
     private final GetScanStatus status;
@@ -68,6 +66,7 @@ public final class ScanCommand {
         ScanConfig defaults = ScanConfig.defaults();
         long minSize = defaults.minSize();
         String format = null;
+        String progress = null;
         for (String arg : args) {
             if (arg.startsWith(MIN_SIZE)) {
                 String value = arg.substring(MIN_SIZE.length());
@@ -87,6 +86,14 @@ public final class ScanCommand {
                 if (!format.equals("jsonl") && !format.equals("text")) {
                     return usage(err, "--format must be jsonl or text: " + format);
                 }
+            } else if (arg.startsWith(PROGRESS)) {
+                if (progress != null) {
+                    return usage(err, "--progress given more than once");
+                }
+                progress = arg.substring(PROGRESS.length());
+                if (!progress.equals("live") && !progress.equals("log") && !progress.equals("off")) {
+                    return usage(err, "--progress must be live, log or off: " + progress);
+                }
             } else if (arg.startsWith("--")) {
                 return usage(err, "unknown option: " + arg);
             } else {
@@ -99,10 +106,16 @@ public final class ScanCommand {
         boolean text = "text".equals(format);
         ScanConfig config = new ScanConfig(minSize, defaults.sampleSize(), defaults.partialHashThreshold());
 
+        ProgressDisplay display = new ProgressDisplay(
+                progress == null ? ProgressDisplay.Mode.LIVE : ProgressDisplay.Mode.valueOf(progress.toUpperCase()),
+                err, System::nanoTime);
+        display.start();
+
         ScanId id;
-        switch (start.start(folders, config, new Progress(err))) {
+        switch (start.start(folders, config, display)) {
             case Result.Success<ScanId> s -> id = s.value();
             case Result.Failure<ScanId> f -> {
+                display.failed();
                 return error(err, f.code() + ": " + f.message());
             }
         }
@@ -112,19 +125,22 @@ public final class ScanCommand {
             last = await(id);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            display.failed();
             return error(err, "interrupted while waiting for the scan");
         } catch (IllegalStateException e) {
+            display.failed();
             return error(err, e.getMessage());
         }
-        if (last.status() == ScanStatus.FAILED) {
-            return error(err, "scan failed: " + last.failureMessage());
-        }
         if (last.status() != ScanStatus.COMPLETED) {
-            return error(err, "scan " + last.status().name().toLowerCase());
+            display.failed();
+            return last.status() == ScanStatus.FAILED
+                    ? error(err, "scan failed: " + last.failureMessage())
+                    : error(err, "scan " + last.status().name().toLowerCase());
         }
 
         return switch (result.result(id)) {
             case Result.Success<ScanResult> s -> {
+                display.completed(s.value().sets().size());
                 if (text) {
                     TextReport.write(s.value(), out);
                 } else {
@@ -132,7 +148,10 @@ public final class ScanCommand {
                 }
                 yield OK;
             }
-            case Result.Failure<ScanResult> f -> error(err, f.code() + ": " + f.message());
+            case Result.Failure<ScanResult> f -> {
+                display.failed();
+                yield error(err, f.code() + ": " + f.message());
+            }
         };
     }
 
@@ -203,55 +222,5 @@ public final class ScanCommand {
     private static int error(PrintStream err, String message) {
         err.println("error: " + message);
         return ERROR;
-    }
-
-    /**
-     * Writes progress to stderr: a line per phase start, and walk and group counts at most once
-     * per {@link #PROGRESS_INTERVAL}. Called on the scanning thread.
-     */
-    private static final class Progress implements ScanListener {
-
-        private final PrintStream err;
-        private long lastCount = System.nanoTime();
-
-        Progress(PrintStream err) {
-            this.err = err;
-        }
-
-        @Override
-        public void onEvent(ScanEvent event) {
-            switch (event) {
-                case ScanEvent.PhaseStarted e -> {
-                    err.println("scan: " + phaseName(e.phase()) + " started");
-                    lastCount = System.nanoTime();
-                }
-                case ScanEvent.FileWalked e -> {
-                    if (due()) {
-                        err.println("scan: walk " + e.filesSoFar() + " files");
-                    }
-                }
-                case ScanEvent.GroupDone e -> {
-                    if (due()) {
-                        err.println("scan: " + phaseName(e.phase()) + " " + e.done() + "/" + e.total() + " groups");
-                    }
-                }
-                case ScanEvent.Skipped e -> {
-                    // reported as a "skipped" JSONL line once the scan completes
-                }
-            }
-        }
-
-        private boolean due() {
-            long now = System.nanoTime();
-            if (now - lastCount < PROGRESS_INTERVAL.toNanos()) {
-                return false;
-            }
-            lastCount = now;
-            return true;
-        }
-
-        private static String phaseName(ScanPhase phase) {
-            return phase.name().toLowerCase().replace('_', ' ');
-        }
     }
 }

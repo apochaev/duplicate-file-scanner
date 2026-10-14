@@ -33,6 +33,7 @@ public final class FullHashConfirmer {
 
     private final ContentHasher hasher;
     private final Consumer<WalkEvent.Skipped> onDrop;
+    private final FileProgress progress;
 
     /**
      * @throws NullPointerException if {@code hasher} is null
@@ -49,8 +50,20 @@ public final class FullHashConfirmer {
      * @throws NullPointerException if {@code hasher} or {@code onDrop} is null
      */
     public FullHashConfirmer(ContentHasher hasher, Consumer<WalkEvent.Skipped> onDrop) {
+        this(hasher, onDrop, FileProgress.NONE);
+    }
+
+    /**
+     * Creates a confirmer like {@link #FullHashConfirmer(ContentHasher, Consumer)} that also reports
+     * to {@code progress} the bytes read while each member is hashed, and when it is done with each
+     * member, hashed or dropped (DFS-024).
+     *
+     * @throws NullPointerException if {@code hasher}, {@code onDrop} or {@code progress} is null
+     */
+    public FullHashConfirmer(ContentHasher hasher, Consumer<WalkEvent.Skipped> onDrop, FileProgress progress) {
         this.hasher = Objects.requireNonNull(hasher, "hasher");
         this.onDrop = Objects.requireNonNull(onDrop, "onDrop");
+        this.progress = Objects.requireNonNull(progress, "progress");
     }
 
     /**
@@ -79,15 +92,17 @@ public final class FullHashConfirmer {
         for (FileEntry file : sorted) {
             String digest;
             try {
-                digest = hasher.fullHash(file.path());
+                digest = hasher.fullHash(file.path(), bytes -> progress.bytesRead(file, bytes));
             } catch (IOException e) {
                 // Dropped without failing the rest of the group (DFS-003.AC-7).
                 onDrop.accept(new WalkEvent.Skipped(file.path(),
                         us.pochaev.dfs.scanner.domain.model.SkipReason.UNREADABLE,
                         "full hash failed: " + PartialHashFilter.detail(e)));
+                progress.fileDone(file);
                 continue;
             }
             byDigest.computeIfAbsent(digest, k -> new ArrayList<>()).add(file);
+            progress.fileDone(file);
         }
 
         List<DuplicateSet> sets = new ArrayList<>();

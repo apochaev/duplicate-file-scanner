@@ -8,6 +8,14 @@ import java.util.Objects;
  */
 public sealed interface WalkEvent {
 
+    /** The walker descends into {@code directory}; sent for the start location too (DFS-024). */
+    record DirectoryEntered(Path directory) implements WalkEvent {
+
+        public DirectoryEntered {
+            Objects.requireNonNull(directory, "directory");
+        }
+    }
+
     record FileFound(FileEntry entry) implements WalkEvent {
 
         public FileFound {

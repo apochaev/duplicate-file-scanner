@@ -1,6 +1,7 @@
 package us.pochaev.dfs.scanner.application;
 
 import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
+import us.pochaev.dfs.scanner.domain.model.FileEntry;
 import us.pochaev.dfs.scanner.domain.model.ScanConfig;
 import us.pochaev.dfs.scanner.domain.model.ScanEvent;
 import us.pochaev.dfs.scanner.domain.model.ScanListener;
@@ -99,16 +100,18 @@ public final class ScanPipeline implements ScanRunner {
             listener.onEvent(new ScanEvent.Skipped(s));
         };
 
-        PartialHashFilter partialHashFilter = new PartialHashFilter(
-                hasher, config.sampleSize(), config.partialHashThreshold(), sink);
-        FullHashConfirmer fullHashConfirmer = new FullHashConfirmer(hasher, sink);
         HardLinkDetector hardLinkDetector = new HardLinkDetector(identity, sink);
 
         walkLocations(kept, sizeIndex, sink, listener, stopSignal);
 
         List<CandidateGroup> initialGroups = sizeIndex.groups();
+        PartialHashFilter partialHashFilter = new PartialHashFilter(hasher, config.sampleSize(),
+                config.partialHashThreshold(), sink,
+                new PhaseProgress(ScanPhase.PARTIAL_HASH, initialGroups, listener));
         List<CandidateGroup> partialOutput = runGroupPhase(
                 ScanPhase.PARTIAL_HASH, initialGroups, partialHashFilter::filter, listener, stopSignal);
+        FullHashConfirmer fullHashConfirmer = new FullHashConfirmer(hasher, sink,
+                new PhaseProgress(ScanPhase.FULL_HASH, partialOutput, listener));
         List<DuplicateSet> fullOutput = runGroupPhase(
                 ScanPhase.FULL_HASH, partialOutput, fullHashConfirmer::confirm, listener, stopSignal);
         List<DuplicateSet> hardLinkOutput = runGroupPhase(
@@ -128,6 +131,8 @@ public final class ScanPipeline implements ScanRunner {
                                ScanListener listener, BooleanSupplier stopSignal) throws IOException {
         listener.onEvent(new ScanEvent.PhaseStarted(ScanPhase.WALK));
         AtomicLong count = new AtomicLong();
+        AtomicLong bytes = new AtomicLong();
+        AtomicLong directories = new AtomicLong();
         AtomicBoolean stopped = new AtomicBoolean();
         for (Path root : kept) {
             try {
@@ -138,7 +143,10 @@ public final class ScanPipeline implements ScanRunner {
                     }
                     if (event instanceof WalkEvent.FileFound found) {
                         sizeIndex.add(found.entry());
-                        listener.onEvent(new ScanEvent.FileWalked(count.incrementAndGet()));
+                        listener.onEvent(new ScanEvent.FileWalked(count.incrementAndGet(),
+                                bytes.addAndGet(found.entry().size())));
+                    } else if (event instanceof WalkEvent.DirectoryEntered) {
+                        listener.onEvent(new ScanEvent.DirectoryWalked(directories.incrementAndGet()));
                     } else if (event instanceof WalkEvent.Skipped s) {
                         sink.accept(s);
                     }
@@ -167,6 +175,51 @@ public final class ScanPipeline implements ScanRunner {
             listener.onEvent(new ScanEvent.GroupDone(phase, i + 1, total));
         }
         return List.copyOf(output);
+    }
+
+    /**
+     * Turns a hash stage's per-file calls into {@link ScanEvent.HashProgress} for one phase (DFS-024).
+     * The totals are the input groups' file count and size sum, fixed when the phase begins; bytes
+     * read within a file count up to that file's scan-time size at most, so a file that grew since
+     * the walk cannot push {@code bytesDone} past {@code bytesTotal}. Used on the scan's thread only.
+     */
+    private static final class PhaseProgress implements FileProgress {
+
+        private final ScanPhase phase;
+        private final ScanListener listener;
+        private final long filesTotal;
+        private final long bytesTotal;
+        private long filesDone;
+        private long bytesFinished;
+
+        PhaseProgress(ScanPhase phase, List<CandidateGroup> input, ScanListener listener) {
+            this.phase = phase;
+            this.listener = listener;
+            long files = 0;
+            long bytes = 0;
+            for (CandidateGroup group : input) {
+                files += group.files().size();
+                bytes += group.size() * group.files().size();
+            }
+            this.filesTotal = files;
+            this.bytesTotal = bytes;
+        }
+
+        @Override
+        public void bytesRead(FileEntry file, long bytes) {
+            send(bytesFinished + Math.min(bytes, file.size()));
+        }
+
+        @Override
+        public void fileDone(FileEntry file) {
+            filesDone++;
+            bytesFinished += file.size();
+            send(bytesFinished);
+        }
+
+        private void send(long bytesDone) {
+            listener.onEvent(new ScanEvent.HashProgress(phase, filesDone, filesTotal, bytesDone, bytesTotal));
+        }
     }
 
     /**

@@ -11,6 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Objects;
+import java.util.function.LongConsumer;
 
 /**
  * SHA-256 {@link ContentHasher} on NIO file channels. Stateless: a fresh
@@ -48,15 +49,40 @@ public final class NioContentHasher implements ContentHasher {
      */
     @Override
     public String fullHash(Path file) throws IOException {
+        return fullHash(file, bytes -> { });
+    }
+
+    /**
+     * Like {@link #fullHash(Path)}, reporting the bytes read so far each time exactly another
+     * {@link #PROGRESS_INTERVAL} bytes have been read, and once more at the end if bytes were read
+     * since the last report (DFS-024).
+     */
+    @Override
+    public String fullHash(Path file, LongConsumer bytesRead) throws IOException {
         Objects.requireNonNull(file, "file");
+        Objects.requireNonNull(bytesRead, "bytesRead");
         MessageDigest digest = newSha256();
         ByteBuffer buffer = ByteBuffer.allocate(64 * 1024);
+        long read = 0;
+        long reported = 0;
         try (FileChannel channel = FileChannel.open(file, StandardOpenOption.READ)) {
-            while (channel.read(buffer) >= 0) {
+            int n;
+            // a read never crosses the next report boundary, so reports are at most PROGRESS_INTERVAL apart
+            buffer.limit((int) Math.min(buffer.capacity(), reported + PROGRESS_INTERVAL - read));
+            while ((n = channel.read(buffer)) >= 0) {
                 buffer.flip();
                 digest.update(buffer);
                 buffer.clear();
+                read += n;
+                if (read - reported >= PROGRESS_INTERVAL) {
+                    reported = read;
+                    bytesRead.accept(read);
+                }
+                buffer.limit((int) Math.min(buffer.capacity(), reported + PROGRESS_INTERVAL - read));
             }
+        }
+        if (read > reported) {
+            bytesRead.accept(read);
         }
         return HexFormat.of().formatHex(digest.digest());
     }

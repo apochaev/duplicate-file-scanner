@@ -65,7 +65,7 @@ class NioFileTreeWalkerTest {
     }
 
     @Test
-    void emptyDirectoriesProduceNoEvents() throws IOException {
+    void emptyDirectoriesProduceNoFileOrSkipEvents() throws IOException {
         Files.createDirectories(root.resolve("hollow/inner"));
 
         List<WalkEvent> events = walk(root);

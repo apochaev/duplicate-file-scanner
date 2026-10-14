@@ -47,8 +47,8 @@ class CliApplicationTest {
             assertTrue(node.isObject() && node.hasNonNull("type"), "not a JSONL line on stdout: " + line);
         }
         assertEquals(List.of("set", "summary"), lines.stream().map(l -> json.readTree(l).get("type").asString()).toList());
-        List<String> err = output.getErr().lines().toList();
-        assertTrue(err.contains("scan: walk started"), output.getErr());
-        assertTrue(err.contains("scan: full hash started"), output.getErr());
+        // the phase lines' wording is DFS-024's (it replaced "scan: walk started" and the like)
+        assertTrue(output.getErr().contains("Walking:"), output.getErr());
+        assertTrue(output.getErr().contains("Hashing:"), output.getErr());
     }
 }
