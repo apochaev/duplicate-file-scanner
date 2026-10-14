@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-026-hard-links-linear-time",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-026-hard-links-linear-time",
-  "state": "running",
+  "state": "done",
   "phases": [
     {
       "id": "design",
