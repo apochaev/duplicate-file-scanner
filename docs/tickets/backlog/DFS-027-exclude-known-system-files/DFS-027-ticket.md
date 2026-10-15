@@ -1,7 +1,7 @@
 ---
 id: DFS-027
 title: Exclude known system files by default
-status: in-progress
+status: in-review
 type: feature
 scope: [file-scanner, cli]
 archetype: pipeline-stage

@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-027-exclude-known-system-files",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-027-exclude-known-system-files",
-  "state": "running",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -71,7 +71,7 @@
       "after": [
         "tests"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -81,10 +81,21 @@
           "wallClockSeconds": 69,
           "outcome": "failed-gate",
           "note": "green failed on 2 tests traced to test defects (confirmed by the orchestrator reading them); implementation left uncommitted in the worktree for reconciliation"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "reconciled without relaunch after defect 1's tests rework: green, disabled, freeze, touches, stubs, traceability, consistency all pass"
         }
       ],
-      "artifacts": [],
-      "commit": null
+      "artifacts": [
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/DefaultExcludeFilter.java"
+      ],
+      "commit": "96bc9a7f2e761896110d7d6cc91e85a6b7057cc7"
     },
     {
       "id": "verify",
@@ -92,10 +103,22 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 15,
+          "wallClockSeconds": 87,
+          "outcome": "passed",
+          "note": "two real-scan done-items left unticked for the user's run, by instruction"
+        }
+      ],
+      "artifacts": [
+        "verification.md"
+      ],
+      "commit": "790bf0f2b683f87b87325888b86588ea75c88cb1"
     }
   ],
   "gates": [
@@ -105,7 +128,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": [
