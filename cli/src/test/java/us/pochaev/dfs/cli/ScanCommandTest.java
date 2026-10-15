@@ -368,7 +368,7 @@ class ScanCommandTest {
         Run run = scan(tmp.toString(), "--format=text");
 
         assertEquals(0, run.exitCode, run.err);
-        assertEquals("No duplicates found.\nSummary: 0 sets, 0 files, 0 B reclaimable, 0 skipped\n", run.out);
+        assertEquals("No duplicates found.\nSummary: 0 sets, 0 files, 0 B reclaimable, 0 skipped, 0 excluded\n", run.out);
     }
 
     @ParameterizedTest(name = "[{index}] args: {0}")
@@ -578,8 +578,11 @@ class ScanCommandTest {
     @DisplayName("DFS-027.AC-1 The match is case-sensitive, so .ds_store and .DS_STORE are scanned")
     void matchIsCaseSensitive() throws IOException {
         Path media = mediaFolder();
-        Files.move(media.resolve("a/.DS_Store"), media.resolve("a/.ds_store"));
-        Files.move(media.resolve("b/.DS_Store"), media.resolve("b/.DS_STORE"));
+        // Delete first and recreate under the new name: Files.move is a no-op on a case-insensitive filesystem.
+        Files.delete(media.resolve("a/.DS_Store"));
+        Files.delete(media.resolve("b/.DS_Store"));
+        write(media.resolve("a/.ds_store"), "D".repeat(6 * 1024));
+        write(media.resolve("b/.DS_STORE"), "D".repeat(6 * 1024));
 
         Run run = scan(media.toString());
 
