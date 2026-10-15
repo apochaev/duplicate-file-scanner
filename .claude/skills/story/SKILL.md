@@ -2,7 +2,7 @@
 name: story
 description: Advance a ready ticket through the story pipeline (architect, test-author, implementer, verifier, retro), launching each phase's agent, stopping at human gates, and resuming from plan.json. Run only by the user.
 argument-hint: run|status|approve|learn <ID> [feedback]
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Story
