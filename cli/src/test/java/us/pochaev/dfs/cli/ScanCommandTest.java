@@ -32,6 +32,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -49,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.abort;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -465,6 +467,56 @@ class ScanCommandTest {
         assertTrue(run.err.startsWith("error: "), run.err);
         assertTrue(run.err.contains(ScanCommand.USAGE_LINE), run.err);
         assertTrue(ScanCommand.USAGE_LINE.contains("--progress=live|log|off"), ScanCommand.USAGE_LINE);
+        assertEquals("", run.out);
+        assertEquals(0, fake.starts);
+    }
+
+    @Test
+    @DisplayName("DFS-028.AC-1 A path with a NUL character is a usage error on every platform")
+    void nulInPathIsUsageError() {
+        FakePorts fake = new FakePorts();
+        String bad = "C:/scan/a\u0000b";
+        InvalidPathException rejected = assertThrows(InvalidPathException.class, () -> Path.of(bad));
+
+        Run run = run(fake, bad, "--format=text");
+
+        assertEquals(2, run.exitCode);
+        List<String> lines = run.err.lines().toList();
+        assertEquals(2, lines.size(), run.err);
+        assertTrue(lines.get(0).startsWith("error: not a valid path: \"C:/scan/a"), lines.get(0));
+        assertTrue(lines.get(0).endsWith("\" (" + rejected.getReason()
+                + (rejected.getIndex() < 0 ? "" : " at index " + rejected.getIndex()) + ")"), lines.get(0));
+        assertEquals(ScanCommand.USAGE_LINE, lines.get(1));
+        assertEquals("", run.out);
+        assertEquals(0, fake.starts);
+    }
+
+    @Test
+    @DisplayName("DFS-028.AC-1 A folder name ending in a space is a usage error on Windows")
+    void trailingSpaceIsUsageErrorOnWindows() {
+        assumeTrue(System.getProperty("os.name").startsWith("Windows"), "only Windows rejects a trailing space");
+        FakePorts fake = new FakePorts();
+
+        Run run = run(fake, "E:/Media/iPhone/2018-03 Photoslibrary ");
+
+        assertEquals(2, run.exitCode);
+        assertEquals("error: not a valid path: \"E:/Media/iPhone/2018-03 Photoslibrary \" (Trailing char < > at index 37)",
+                run.err.lines().findFirst().orElseThrow());
+        assertEquals("", run.out);
+        assertEquals(0, fake.starts);
+    }
+
+    @Test
+    @DisplayName("DFS-028.AC-1 Only the first rejected path is reported, and a valid folder before it is not scanned")
+    void onlyFirstRejectedPathIsReported() {
+        FakePorts fake = new FakePorts();
+
+        Run run = run(fake, "C:/scan/ok", "C:/scan/a\u0000b", "C:/scan/c\u0000d");
+
+        assertEquals(2, run.exitCode);
+        List<String> errors = run.err.lines().filter(line -> line.startsWith("error:")).toList();
+        assertEquals(1, errors.size(), run.err);
+        assertTrue(errors.getFirst().startsWith("error: not a valid path: \"C:/scan/a"), errors.getFirst());
         assertEquals("", run.out);
         assertEquals(0, fake.starts);
     }

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** {@link TextReport} on scan results built in the test (DFS-023 decision 10). */
 class TextReportTest {
@@ -74,6 +75,27 @@ class TextReportTest {
 
         assertEquals(text, TextReport.size(bytes));
         assertEquals("3,330", TextReport.count(3330));
+    }
+
+    @Test
+    @DisplayName("DFS-028.AC-2 A set of 7,993 copies shows the separator in its header")
+    void largeCopyCountHasSeparator() {
+        String[] paths = new String[7993];
+        for (int i = 0; i < paths.length; i++) {
+            paths[i] = String.format("/s/d%02d/f%05d", i % 50, i);
+        }
+
+        String header = render(new ScanResult(List.of(set("a", 4096, paths)), List.of())).getFirst();
+
+        assertTrue(header.contains("(7,993 copies x "), header);
+    }
+
+    @Test
+    @DisplayName("DFS-028.AC-2 A small set's header is unchanged")
+    void smallCopyCountIsUnchanged() {
+        String header = render(new ScanResult(List.of(set("a", 15, "/a", "/b", "/c")), List.of())).getFirst();
+
+        assertTrue(header.contains("(3 copies x 15 B"), header);
     }
 
     private static List<String> render(ScanResult scan) {

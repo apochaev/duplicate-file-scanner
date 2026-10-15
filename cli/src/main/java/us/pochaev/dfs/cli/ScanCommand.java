@@ -18,6 +18,7 @@ import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
 
 import java.io.PrintStream;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -97,7 +98,12 @@ public final class ScanCommand {
             } else if (arg.startsWith("--")) {
                 return usage(err, "unknown option: " + arg);
             } else {
-                folders.add(Path.of(arg));
+                try {
+                    folders.add(Path.of(arg));
+                } catch (InvalidPathException e) {
+                    return usage(err, "not a valid path: \"" + arg + "\" (" + e.getReason()
+                            + (e.getIndex() < 0 ? "" : " at index " + e.getIndex()) + ")");
+                }
             }
         }
         if (folders.isEmpty()) {

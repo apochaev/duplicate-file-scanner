@@ -42,7 +42,7 @@ final class TextReport {
         }
         int n = 0;
         for (Entry entry : entries) {
-            line(out, "#" + ++n + "  " + size(entry.reclaimable()) + " reclaimable  (" + entry.copies().size()
+            line(out, "#" + ++n + "  " + size(entry.reclaimable()) + " reclaimable  (" + count(entry.copies().size())
                     + " copies x " + size(entry.size()) + ", sha256 " + shortDigest(entry.digest()) + ")");
             for (List<Path> links : entry.copies()) {
                 line(out, "    " + links.getFirst());

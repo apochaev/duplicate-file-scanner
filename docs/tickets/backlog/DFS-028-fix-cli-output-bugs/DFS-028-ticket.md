@@ -1,7 +1,7 @@
 ---
 id: DFS-028
 title: Fix three CLI output bugs
-status: ready
+status: in-progress
 type: fix
 scope: [cli]
 archetype: none
@@ -130,9 +130,9 @@ Feature: CLI output fixes
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above is an automated test and passes: 8 tests named `DFS-028.AC-n`, in `ScanCommandTest` (3), `TextReportTest` (2) and `ProgressDisplayTest` (3); with the fixes stashed, the 6 that cover the bugs fail and the 2 guards (`A finished line with new counts is still printed`, `A small set's header is unchanged`) pass
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests): 262 tests, 0 failed, 2 skipped (2026-10-14)
+- [x] No files changed outside the paths listed under Touches
 
 ## Open questions
 

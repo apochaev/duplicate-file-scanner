@@ -145,6 +145,50 @@ class ProgressDisplayTest {
         assertEquals("", output());
     }
 
+    @Test
+    @DisplayName("DFS-028.AC-3 A final event and the finish in the same second print the line once")
+    void finishInSameSecondIsNotRepeated() {
+        ProgressDisplay display = display(ProgressDisplay.Mode.LOG);
+        send(display, 0, new ScanEvent.PhaseStarted(HARD_LINKS));
+        send(display, 1255, new ScanEvent.GroupDone(HARD_LINKS, 1, 1));
+
+        display.completed(1);
+
+        assertEquals(List.of(
+                "Hard links: 1 / 1 sets  20:55",
+                "Done in 20:55: 0 files found, 0 compared, 1 duplicate sets"), output().lines().toList());
+    }
+
+    @Test
+    @DisplayName("DFS-028.AC-3 The finish a second after the final event does not repeat the line")
+    void finishNextSecondIsNotRepeated() {
+        ProgressDisplay display = display(ProgressDisplay.Mode.LOG);
+        send(display, 0, new ScanEvent.PhaseStarted(HARD_LINKS));
+        send(display, 1255, new ScanEvent.GroupDone(HARD_LINKS, 1, 1));
+        at(1256);
+
+        display.completed(1);
+
+        assertEquals(List.of(
+                "Hard links: 1 / 1 sets  20:55",
+                "Done in 20:56: 0 files found, 0 compared, 1 duplicate sets"), output().lines().toList());
+    }
+
+    @Test
+    @DisplayName("DFS-028.AC-3 A finished line with new counts is still printed")
+    void finishWithNewCountsIsPrinted() {
+        ProgressDisplay display = display(ProgressDisplay.Mode.LOG);
+        send(display, 0, new ScanEvent.PhaseStarted(FULL_HASH));
+        send(display, 5, new ScanEvent.HashProgress(FULL_HASH, 10, 20, 10 * MIB, 20 * MIB));
+        send(display, 7, new ScanEvent.HashProgress(FULL_HASH, 20, 20, 20 * MIB, 20 * MIB));
+        send(display, 7, new ScanEvent.PhaseStarted(HARD_LINKS));
+
+        List<String> lines = output().lines().toList();
+        assertEquals(2, lines.size(), output());
+        assertTrue(lines.get(0).startsWith("Hashing:    10 / 20 files") && lines.get(0).endsWith("  0:05"), lines.get(0));
+        assertTrue(lines.get(1).startsWith("Hashing:    20 / 20 files") && lines.get(1).endsWith("  0:07"), lines.get(1));
+    }
+
     private ProgressDisplay display(ProgressDisplay.Mode mode) {
         return new ProgressDisplay(mode, new PrintStream(bytes, true, StandardCharsets.UTF_8), clock::get);
     }

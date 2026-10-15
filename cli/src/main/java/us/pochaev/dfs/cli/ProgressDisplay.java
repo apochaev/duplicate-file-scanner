@@ -38,6 +38,8 @@ final class ProgressDisplay implements ScanListener {
     private ScanPhase phase;
     private long phaseStarted;
     private long lastLog;
+    /** The last line written in {@link Mode#LOG}, without its clock; a finished line equal to it is not repeated. */
+    private String lastLogged;
     private int drawnLength;
     private Thread timer;
 
@@ -66,6 +68,7 @@ final class ProgressDisplay implements ScanListener {
             case ScanEvent.PhaseStarted e -> {
                 finishLine();
                 phase = e.phase();
+                lastLogged = null;
                 phaseStarted = nanos.getAsLong();
                 lastLog = phaseStarted;
                 filesDone = 0;
@@ -100,8 +103,7 @@ final class ProgressDisplay implements ScanListener {
         }
         if (mode == Mode.LOG && phase != null && nanos.getAsLong() - lastLog >= LOG_INTERVAL) {
             lastLog = nanos.getAsLong();
-            err.print(line() + "\n");
-            err.flush();
+            log();
         }
     }
 
@@ -161,7 +163,19 @@ final class ProgressDisplay implements ScanListener {
         if (phase == null) {
             return "";
         }
-        String text = switch (phase) {
+        return phaseText() + "  " + clock(nanos.getAsLong() - started);
+    }
+
+    /** Writes the current line in {@link Mode#LOG} and remembers it. */
+    private void log() {
+        lastLogged = phaseText();
+        err.print(line() + "\n");
+        err.flush();
+    }
+
+    /** The current phase's line without the elapsed clock (DFS-028 decision 4); {@code phase} is not null. */
+    private String phaseText() {
+        return switch (phase) {
             case WALK -> label("Walking:") + TextReport.count(directories) + " folders, "
                     + TextReport.count(files) + " files, " + TextReport.size(bytesFound) + " found";
             case PARTIAL_HASH -> label("Sampling:") + TextReport.count(filesDone) + " / "
@@ -172,7 +186,6 @@ final class ProgressDisplay implements ScanListener {
             case HARD_LINKS -> label("Hard links:") + TextReport.count(groupsDone) + " / "
                     + TextReport.count(groupsTotal) + " sets";
         };
-        return text + "  " + clock(nanos.getAsLong() - started);
     }
 
     private void stopTimer() {
@@ -199,9 +212,8 @@ final class ProgressDisplay implements ScanListener {
         if (mode == Mode.LIVE) {
             draw("\n");
             drawnLength = 0;
-        } else if (mode == Mode.LOG) {
-            err.print(line() + "\n");
-            err.flush();
+        } else if (mode == Mode.LOG && !phaseText().equals(lastLogged)) {
+            log();
         }
     }
 
