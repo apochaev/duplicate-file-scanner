@@ -60,7 +60,8 @@ final class TextReport {
             }
         }
         line(out, "Summary: " + count(entries.size()) + " sets, " + count(files) + " files, "
-                + size(reclaimable) + " reclaimable, " + count(scan.skipped().size()) + " skipped");
+                + size(reclaimable) + " reclaimable, " + count(scan.skipped().size()) + " skipped, "
+                + count(scan.excluded()) + " excluded");
         out.flush();
     }
 

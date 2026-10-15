@@ -13,3 +13,7 @@
 - Made `ScanServiceTest.CONFIG` a `config()` method so its tests fail on the stub rather than `NoClassDefFoundError`.
 - Ran `:file-scanner:test :cli:test`: every failure carries `not implemented: DFS-027`; no DFS-027 test passes.
 - Expected commit: `test(file-scanner): add default-excludes tests [DFS-027]`.
+
+## implement (DFS-027)
+Implemented ScanConfig.defaults(), ScanResult compact constructor, DefaultExcludeFilter, ScanCommand (--no-default-excludes, "excluded" summary key), TextReport (", N excluded"), CLAUDE.md (Commands block, Current state). file-scanner tests green; cli has 2 failing tests that are test defects (see learnings.md). Expected commit: feat(file-scanner): exclude known system files by default [DFS-027].
+- Rework: fixed text-report summary expectation (0 excluded) and made matchIsCaseSensitive delete+recreate files instead of Files.move (no-op on NTFS).

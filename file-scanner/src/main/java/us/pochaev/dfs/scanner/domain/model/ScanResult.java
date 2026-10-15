@@ -22,14 +22,12 @@ public record ScanResult(List<DuplicateSet> sets, List<WalkEvent.Skipped> skippe
      * @throws IllegalArgumentException if {@code excluded} is negative
      */
     public ScanResult {
-        throw new UnsupportedOperationException("not implemented: DFS-027");
-        // implementer: restore the DFS-005 body and add the new check, in this order:
-        //   java.util.Objects.requireNonNull(sets, "sets");
-        //   java.util.Objects.requireNonNull(skipped, "skipped");
-        //   if (excluded < 0) throw new IllegalArgumentException("excluded must not be negative: " + excluded);
-        //   sets = List.copyOf(sets);
-        //   skipped = List.copyOf(skipped);
-        // Deliberately not in the stub: a check before this throw would let a validation test
-        // pass against the stub instead of failing red (L-013, L-014).
+        java.util.Objects.requireNonNull(sets, "sets");
+        java.util.Objects.requireNonNull(skipped, "skipped");
+        if (excluded < 0) {
+            throw new IllegalArgumentException("excluded must not be negative: " + excluded);
+        }
+        sets = List.copyOf(sets);
+        skipped = List.copyOf(skipped);
     }
 }

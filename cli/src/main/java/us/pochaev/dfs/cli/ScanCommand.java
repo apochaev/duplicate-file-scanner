@@ -43,7 +43,8 @@ public final class ScanCommand {
 
     static final String USAGE_LINE =
             "usage: duplicate-file-scanner <folder>... [--min-size=<bytes>] [--format=jsonl|text]"
-                    + " [--progress=live|log|off]";
+                    + " [--progress=live|log|off] [--no-default-excludes]";
+    private static final String NO_DEFAULT_EXCLUDES = "--no-default-excludes";
     private static final String MIN_SIZE = "--min-size=";
     private static final String FORMAT = "--format=";
     private static final String PROGRESS = "--progress=";
@@ -68,6 +69,7 @@ public final class ScanCommand {
         long minSize = defaults.minSize();
         String format = null;
         String progress = null;
+        boolean noDefaultExcludes = false;
         for (String arg : args) {
             if (arg.startsWith(MIN_SIZE)) {
                 String value = arg.substring(MIN_SIZE.length());
@@ -95,6 +97,11 @@ public final class ScanCommand {
                 if (!progress.equals("live") && !progress.equals("log") && !progress.equals("off")) {
                     return usage(err, "--progress must be live, log or off: " + progress);
                 }
+            } else if (arg.equals(NO_DEFAULT_EXCLUDES)) {
+                if (noDefaultExcludes) {
+                    return usage(err, NO_DEFAULT_EXCLUDES + " given more than once");
+                }
+                noDefaultExcludes = true;
             } else if (arg.startsWith("--")) {
                 return usage(err, "unknown option: " + arg);
             } else {
@@ -110,9 +117,8 @@ public final class ScanCommand {
             return usage(err, "no folder given");
         }
         boolean text = "text".equals(format);
-        // DFS-027: the fourth argument becomes false when --no-default-excludes is given
         ScanConfig config = new ScanConfig(minSize, defaults.sampleSize(), defaults.partialHashThreshold(),
-                defaults.defaultExcludes());
+                !noDefaultExcludes);
 
         ProgressDisplay display = new ProgressDisplay(
                 progress == null ? ProgressDisplay.Mode.LIVE : ProgressDisplay.Mode.valueOf(progress.toUpperCase()),
@@ -212,6 +218,7 @@ public final class ScanCommand {
         summary.put("files", files);
         summary.put("skipped", scan.skipped().size());
         summary.put("reclaimableBytes", reclaimable);
+        summary.put("excluded", scan.excluded());
         line(out, summary);
         out.flush();
     }

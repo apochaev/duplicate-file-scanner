@@ -38,7 +38,6 @@ public record ScanConfig(long minSize, int sampleSize, long partialHashThreshold
      * {@code application}, so the values are stated here and a test pins them equal).
      */
     public static ScanConfig defaults() {
-        throw new UnsupportedOperationException("not implemented: DFS-027");
-        // implementer: return new ScanConfig(1, 65536, 131072, true);
+        return new ScanConfig(1, 65536, 131072, true);
     }
 }

@@ -6,3 +6,5 @@
 ## tests (test-author)
 
 - `ScanServiceTest`'s static `CONFIG = ScanConfig.defaults()` made a stubbed `defaults()` kill the whole class with `NoClassDefFoundError`; turning it into a method fixed it. The architect's "expected breakage" note could say to do that in the tests phase instead of leaving it to the red gate.
+
+- DFS-027 implement: two frozen tests in ScanCommandTest are defective. (1) `textReportNoDuplicates` (DFS-023.AC-6/7, ~line 371) still expects the summary without ", 0 excluded"; contradicts DFS-027.AC-3 and the test at line ~359. (2) `matchIsCaseSensitive` (~line 575) renames .DS_Store to .ds_store with Files.move; on Windows (case-insensitive NTFS) the rename is a no-op, so the test fails; CLAUDE.md says case tests should skip on Windows via Assumptions.
