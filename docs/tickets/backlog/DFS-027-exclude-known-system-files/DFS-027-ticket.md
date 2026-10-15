@@ -198,12 +198,12 @@ Feature: Default excludes
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
 - [ ] A real scan of `'E:/Media/iPhone/2018-03 Photoslibrary' E:/Media/iPhone/iPhoneOxana F:/Media/iPhone/oxana E:/Media/Video/Import E:/Media/iPhone/GMetrix --format=text` (2026-10-14 baseline: 573 sets, 1,633 files, 3.2 GB reclaimable) lists no set whose paths are `._*` or `.DS_Store`, reports a non-zero `excluded` count and fewer than 573 sets, with reclaimable space still 3.2 GB
 - [ ] The same scan with `--no-default-excludes` reproduces the baseline (573 sets, 1,633 files) with `0 excluded`
-- [ ] `CLAUDE.md` names `--no-default-excludes` and the `excluded` summary field
+- [x] `CLAUDE.md` names `--no-default-excludes` and the `excluded` summary field
 
 ## Open questions
 
