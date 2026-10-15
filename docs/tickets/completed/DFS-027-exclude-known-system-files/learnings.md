@@ -59,3 +59,14 @@
 - Recurrences: 1 (DFS-027)
 - Recommendation: apply; one missed literal cost a failed gate and a rework round.
 - Decision: applied 2026-10-15 by the user; commit `docs: apply DFS-027.L-1, L-2, L-3, L-4 [DFS-027]`
+
+### DFS-027.L-5: A note after a touches entry turns it into a path that matches nothing
+
+- Status: proposed
+- Impact: shared (a skill: `.claude/skills/tickets/SKILL.md`)
+- Target: `.claude/skills/tickets/SKILL.md`
+- Change: in the `ready` gate's touches bullet, add: each `touches` entry is a bare path or package with nothing after it; a note on what the entry is for goes in the Scope section, since the `touches` check reads an entry containing `/` as a literal path prefix.
+- Evidence: DFS-027 refine commit dfa6421 had `.../application/ (one new filter class)` and `.../application/ (the new filter's test)` in touches; the orchestrator removed the notes before the architect ran (design commit cf20387), since `tools/story-gate/TouchesCheck.java` would have reported the new `DefaultExcludeFilter.java` as outside touches.
+- Recurrences: 1 (DFS-027)
+- Recommendation: apply; the ready gate passed a list the pipeline's first check would have failed, and one sentence prevents it.
+- Decision:
