@@ -36,14 +36,14 @@
 
 ### DFS-026.L-2: The red gate counts existing tests broken by the ticket's own stub as regressions
 
-- Status: proposed
+- Status: rejected
 - Impact: shared (`tools/story-gate`, every story)
 - Target: `tools/story-gate/RedCheck.java`
 - Change: tracked as CCW-015 (decision 1: an existing test failing from the current ticket's own stub is accepted automatically; one failing another way is accepted only when `design.md` declares it).
 - Evidence: plan.json tests run 1: `test-phase` FAIL red with 44 non-story failures (20 exactly the stub, 11 with the stub in the trace, 13 with no trace of it); a scratch counterfactual made all 44 pass; the user accepted the phase on that evidence. Architect note "Red gate vs reshaping a wired stage" above.
 - Recurrences: 1 (DFS-026)
 - Recommendation: park; CCW-015 already tracks the fix.
-- Decision:
+- Decision: rejected 2026-10-14 by the user; CCW-015 fixed it
 
 ### DFS-026.L-3: A story test must reach the stub before any assumption; build-config criteria get a plain test
 
@@ -102,11 +102,11 @@
 
 ### DFS-026.L-8: Rewriting a closed ticket's tests silently dropped DFS-004.AC-9
 
-- Status: proposed
+- Status: parked
 - Impact: local (one archetype's guide)
 - Target: `.claude/archetypes/pipeline-stage/test-guide.md`
 - Change: when rewriting an older ticket's tests, keep its criterion ID in the display name, or list the dropped IDs in `test-plan.md`.
 - Evidence: verifier note "Reshaping a port can silently retire an older criterion's test name" above: the DFS-004.AC-9 tests in `NioFileIdentityTest` were replaced by DFS-026.AC-4, so no test carries `DFS-004.AC-9`.
 - Recurrences: 1 (DFS-026)
 - Recommendation: park; a minor traceability gap, first occurrence.
-- Decision:
+- Decision: parked 2026-10-14 by the user
