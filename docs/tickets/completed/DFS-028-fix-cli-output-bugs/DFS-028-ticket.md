@@ -1,7 +1,7 @@
 ---
 id: DFS-028
 title: Fix three CLI output bugs
-status: in-review
+status: done
 type: fix
 scope: [cli]
 archetype: none
@@ -12,7 +12,7 @@ touches: [cli]
 blocked_reason:
 created: 2026-10-14
 updated: 2026-10-14
-completed:
+completed: 2026-10-14
 ---
 
 # DFS-028: Fix three CLI output bugs
