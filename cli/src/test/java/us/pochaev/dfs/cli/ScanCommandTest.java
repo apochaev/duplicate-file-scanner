@@ -95,7 +95,7 @@ class ScanCommandTest {
         assertEquals(15, set.get("size").asLong());
         assertEquals(sha256(DUP), set.get("digest").asString());
         assertEquals(List.of(List.of(real(x)), List.of(real(y))), copies(set));
-        assertEquals(JSON.readTree("{\"type\":\"summary\",\"sets\":1,\"files\":2,\"skipped\":0,\"reclaimableBytes\":15}"),
+        assertEquals(JSON.readTree("{\"type\":\"summary\",\"sets\":1,\"files\":2,\"skipped\":0,\"reclaimableBytes\":15,\"excluded\":0}"),
                 lines.get(1));
     }
 
@@ -182,7 +182,7 @@ class ScanCommandTest {
         Run run = scan(tmp.toString());
 
         assertEquals(0, run.exitCode);
-        assertEquals("{\"type\":\"summary\",\"sets\":0,\"files\":0,\"skipped\":0,\"reclaimableBytes\":0}\n", run.out);
+        assertEquals("{\"type\":\"summary\",\"sets\":0,\"files\":0,\"skipped\":0,\"reclaimableBytes\":0,\"excluded\":0}\n", run.out);
     }
 
     @Test
@@ -263,7 +263,7 @@ class ScanCommandTest {
         FileEntry p = new FileEntry(Path.of("p.txt"), 4, Instant.EPOCH);
         FileEntry q = new FileEntry(Path.of("q.txt"), 4, Instant.EPOCH);
         fake.result = new ScanResult(List.of(new DuplicateSet(4, "ab", List.of(p, q),
-                List.of(new PhysicalCopy(List.of(p)), new PhysicalCopy(List.of(q))))), List.of());
+                List.of(new PhysicalCopy(List.of(p)), new PhysicalCopy(List.of(q))))), List.of(), 0);
 
         Run run = run(fake, tmp.toString());
 
@@ -293,7 +293,7 @@ class ScanCommandTest {
                 "    " + real(x),
                 "    " + real(z),
                 "    " + real(y),
-                "Summary: 1 sets, 3 files, 30 B reclaimable, 0 skipped"), run.out.lines().toList());
+                "Summary: 1 sets, 3 files, 30 B reclaimable, 0 skipped, 0 excluded"), run.out.lines().toList());
         assertTrue(run.out.endsWith("\n"), run.out);
         assertTrue(run.err.contains("Walking:"), run.err);
     }
@@ -311,7 +311,7 @@ class ScanCommandTest {
         List<JsonNode> lines = run.jsonLines();
         assertEquals(2, lines.size(), run.out);
         assertEquals("set", lines.get(0).get("type").asString());
-        assertEquals(JSON.readTree("{\"type\":\"summary\",\"sets\":1,\"files\":2,\"skipped\":0,\"reclaimableBytes\":15}"),
+        assertEquals(JSON.readTree("{\"type\":\"summary\",\"sets\":1,\"files\":2,\"skipped\":0,\"reclaimableBytes\":15,\"excluded\":0}"),
                 lines.get(1));
     }
 
@@ -334,7 +334,7 @@ class ScanCommandTest {
                 "    " + real(link),
                 "      (hard link) " + real(x),
                 "    " + real(y),
-                "Summary: 1 sets, 3 files, 15 B reclaimable, 0 skipped"), run.out.lines().toList());
+                "Summary: 1 sets, 3 files, 15 B reclaimable, 0 skipped, 0 excluded"), run.out.lines().toList());
     }
 
     @Test
@@ -356,7 +356,7 @@ class ScanCommandTest {
         assertTrue(lines.get(0).startsWith("#1  15 B reclaimable  (2 copies x 15 B"), run.out);
         assertEquals("Skipped (1):", lines.get(3));
         assertTrue(lines.get(4).startsWith("    " + tmp.toRealPath().resolve("link.txt") + "  SYMLINK  "), lines.get(4));
-        assertEquals("Summary: 1 sets, 2 files, 15 B reclaimable, 1 skipped", lines.get(5));
+        assertEquals("Summary: 1 sets, 2 files, 15 B reclaimable, 1 skipped, 0 excluded", lines.get(5));
     }
 
     @Test
@@ -404,7 +404,7 @@ class ScanCommandTest {
                 "#1  15 B reclaimable  (2 copies x 15 B, sha256 " + sha256(DUP).substring(0, 12) + ")",
                 "    " + real(x),
                 "    " + real(y),
-                "Summary: 1 sets, 2 files, 15 B reclaimable, 0 skipped"), run.out.lines().toList());
+                "Summary: 1 sets, 2 files, 15 B reclaimable, 0 skipped, 0 excluded"), run.out.lines().toList());
         switch (option) {
             case "--progress=off" -> assertEquals("", run.err);
             case "--progress=log" -> {
@@ -521,6 +521,204 @@ class ScanCommandTest {
         assertEquals(0, fake.starts);
     }
 
+    // --- DFS-027: default excludes
+
+    /** The ticket's Background: photo.jpg, ._photo.jpg and .DS_Store in folders a and b. */
+    private Path mediaFolder() throws IOException {
+        Path media = Files.createDirectories(tmp.resolve("media"));
+        for (String dir : List.of("a", "b")) {
+            Files.createDirectories(media.resolve(dir));
+            write(media.resolve(dir).resolve("photo.jpg"), "P".repeat(6 * 1024));
+            write(media.resolve(dir).resolve("._photo.jpg"), "M".repeat(4 * 1024));
+            write(media.resolve(dir).resolve(".DS_Store"), "D".repeat(6 * 1024));
+        }
+        return media;
+    }
+
+    private static List<String> setPaths(JsonNode set) {
+        return copies(set).stream().flatMap(List::stream).toList();
+    }
+
+    private static List<JsonNode> setLines(Run run) {
+        return run.jsonLines().stream().filter(l -> l.get("type").asString().equals("set")).toList();
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-1, DFS-027.AC-3 macOS metadata files are left out by default and counted")
+    void metadataFilesAreLeftOutAndCounted() throws IOException {
+        Path media = mediaFolder();
+
+        Run run = scan(media.toString());
+
+        assertEquals(0, run.exitCode, run.err);
+        List<JsonNode> lines = run.jsonLines();
+        assertEquals(2, lines.size(), run.out);
+        assertEquals(List.of(real(media.resolve("a/photo.jpg")), real(media.resolve("b/photo.jpg"))),
+                setPaths(lines.getFirst()));
+        assertFalse(run.out.contains("._photo.jpg"), run.out);
+        assertFalse(run.out.contains(".DS_Store"), run.out);
+        JsonNode summary = lines.getLast();
+        assertEquals("summary", summary.get("type").asString());
+        assertEquals(4, summary.get("excluded").asLong());
+        assertEquals(0, summary.get("skipped").asLong());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-3 The text report ends with the excluded count")
+    void textReportEndsWithExcludedCount() throws IOException {
+        Path media = mediaFolder();
+
+        Run run = scan(media.toString(), "--format=text");
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals("Summary: 1 sets, 2 files, 6.0 KB reclaimable, 0 skipped, 4 excluded", run.out.lines().toList().getLast());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-1 The match is case-sensitive, so .ds_store and .DS_STORE are scanned")
+    void matchIsCaseSensitive() throws IOException {
+        Path media = mediaFolder();
+        Files.move(media.resolve("a/.DS_Store"), media.resolve("a/.ds_store"));
+        Files.move(media.resolve("b/.DS_Store"), media.resolve("b/.DS_STORE"));
+
+        Run run = scan(media.toString());
+
+        List<String> expected = List.of(real(media.resolve("a/.ds_store")), real(media.resolve("b/.DS_STORE")));
+        assertTrue(setLines(run).stream().anyMatch(l -> setPaths(l).equals(expected)), run.out);
+        assertEquals(2, run.jsonLines().getLast().get("excluded").asLong());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-1 Only a name starting with ._ or exactly .DS_Store matches")
+    void onlyExactNamesMatch() throws IOException {
+        Path media = mediaFolder();
+        for (String dir : List.of("a", "b")) {
+            write(media.resolve(dir).resolve("x._photo.jpg"), "X".repeat(5 * 1024));
+            write(media.resolve(dir).resolve(".DS_Store.bak"), "Y".repeat(5 * 1024));
+        }
+
+        Run run = scan(media.toString());
+
+        List<JsonNode> sets = setLines(run);
+        assertEquals(3, sets.size(), run.out);
+        assertTrue(sets.stream().anyMatch(l -> setPaths(l).stream().allMatch(p -> p.endsWith("x._photo.jpg"))), run.out);
+        assertTrue(sets.stream().anyMatch(l -> setPaths(l).stream().allMatch(p -> p.endsWith(".DS_Store.bak"))), run.out);
+        assertEquals(4, run.jsonLines().getLast().get("excluded").asLong());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-2, DFS-027.AC-3 --no-default-excludes scans metadata files like any other")
+    void noDefaultExcludesScansMetadataFiles() throws IOException {
+        Path media = mediaFolder();
+
+        Run run = scan(media.toString(), "--no-default-excludes");
+
+        assertEquals(0, run.exitCode, run.err);
+        List<JsonNode> sets = setLines(run);
+        assertEquals(3, sets.size(), run.out);
+        assertTrue(sets.stream().anyMatch(l -> setPaths(l).stream().allMatch(p -> p.endsWith("._photo.jpg"))), run.out);
+        assertTrue(sets.stream().anyMatch(l -> setPaths(l).stream().allMatch(p -> p.endsWith(".DS_Store"))), run.out);
+        assertEquals(0, run.jsonLines().getLast().get("excluded").asLong());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-3 Nothing matched gives an excluded count of 0, in both formats")
+    void nothingMatchedGivesZeroExcluded() throws IOException {
+        Path plain = Files.createDirectories(tmp.resolve("plain"));
+        for (String dir : List.of("a", "b")) {
+            Files.createDirectories(plain.resolve(dir));
+            write(plain.resolve(dir).resolve("photo.jpg"), "P".repeat(6 * 1024));
+        }
+
+        Run json = scan(plain.toString());
+        Run text = scan(plain.toString(), "--format=text");
+
+        assertEquals(0, json.jsonLines().getLast().get("excluded").asLong());
+        assertTrue(text.out.lines().toList().getLast().endsWith(", 0 skipped, 0 excluded"), text.out);
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-2 --no-default-excludes given twice is a usage error and starts no scan")
+    void noDefaultExcludesTwiceIsUsageError() {
+        FakePorts fake = new FakePorts();
+
+        Run run = run(fake, tmp.toString(), "--no-default-excludes", "--no-default-excludes");
+
+        assertEquals(2, run.exitCode);
+        assertTrue(run.err.contains("--no-default-excludes given more than once"), run.err);
+        assertTrue(run.err.contains(ScanCommand.USAGE_LINE), run.err);
+        assertTrue(ScanCommand.USAGE_LINE.contains("--no-default-excludes"), ScanCommand.USAGE_LINE);
+        assertEquals("", run.out);
+        assertEquals(0, fake.starts);
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-2 --no-default-excludes reaches the scanner as a config with the flag off")
+    void flagReachesTheScanConfig() {
+        FakePorts withFlag = new FakePorts(snapshot(ScanStatus.COMPLETED, null));
+        FakePorts without = new FakePorts(snapshot(ScanStatus.COMPLETED, null));
+
+        Run off = run(withFlag, tmp.toString(), "--no-default-excludes");
+        Run on = run(without, tmp.toString());
+
+        assertEquals(0, off.exitCode, off.err);
+        assertEquals(0, on.exitCode, on.err);
+        assertFalse(withFlag.config.defaultExcludes());
+        assertTrue(without.config.defaultExcludes());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-3 The summary reports the excluded count of the scan result")
+    void summaryReportsResultCount() {
+        FakePorts fake = new FakePorts(snapshot(ScanStatus.COMPLETED, null));
+        fake.result = new ScanResult(List.of(), List.of(), 29565);
+
+        Run run = run(fake, tmp.toString());
+
+        assertEquals(List.of("summary"), run.jsonLines().stream().map(l -> l.get("type").asString()).toList());
+        assertEquals(29565, run.jsonLines().getLast().get("excluded").asLong());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-4 Excluded files still count as found in the walk progress")
+    void excludedFilesCountInWalkingLine() throws IOException {
+        Path media = mediaFolder();
+
+        Run run = scan(media.toString(), "--progress=log");
+
+        assertEquals(0, run.exitCode, run.err);
+        List<String> walking = run.err.lines().filter(l -> l.startsWith("Walking:")).toList();
+        assertTrue(walking.getLast().contains("6 files, 32.0 KB found"), run.err);
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-6 An empty metadata file is counted as excluded, not dropped as too small")
+    void emptyMetadataFilesAreCounted() throws IOException {
+        Path media = mediaFolder();
+        write(media.resolve("a/.DS_Store"), "");
+        write(media.resolve("b/.DS_Store"), "");
+        Files.createDirectories(media.resolve("c"));
+        write(media.resolve("c/._empty"), "");
+
+        Run run = scan(media.toString());
+
+        assertEquals(5, run.jsonLines().getLast().get("excluded").asLong(), run.out);
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-6 With --no-default-excludes an empty metadata file is dropped by size and counted nowhere")
+    void emptyMetadataFilesWithFlagOffAreDropped() throws IOException {
+        Path media = mediaFolder();
+        write(media.resolve("a/.DS_Store"), "");
+        write(media.resolve("b/.DS_Store"), "");
+
+        Run run = scan(media.toString(), "--no-default-excludes");
+
+        assertEquals(0, run.exitCode, run.err);
+        assertFalse(run.out.contains(".DS_Store"), run.out);
+        assertEquals(0, run.jsonLines().getLast().get("excluded").asLong());
+    }
+
     // --- helpers
 
     private Run scan(String... args) {
@@ -592,9 +790,10 @@ class ScanCommandTest {
         private final ScanId id = ScanId.random();
         private final Deque<ScanSnapshot> snapshots;
         final List<String> calls = new ArrayList<>();
-        ScanResult result = new ScanResult(List.of(), List.of());
+        ScanResult result = new ScanResult(List.of(), List.of(), 0);
         List<ScanEvent> events = List.of();
         int starts;
+        ScanConfig config;
         int resultCalls;
 
         FakePorts(ScanSnapshot... snapshots) {
@@ -609,6 +808,7 @@ class ScanCommandTest {
         @Override
         public Result<ScanId> start(List<Path> locations, ScanConfig config, ScanListener listener) {
             starts++;
+            this.config = config;
             events.forEach(listener::onEvent);
             return new Result.Success<>(id);
         }

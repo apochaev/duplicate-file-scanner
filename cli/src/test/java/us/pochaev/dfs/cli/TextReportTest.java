@@ -39,7 +39,7 @@ class TextReportTest {
                 set("B", 100, "/z/b1", "/z/b2", "/z/b3", "/z/b4"),
                 set("C", 300, "/n/c2", "/n/c1", "/n/c4", "/n/c3"),
                 set("D", 900, "/p/d1", "/p/d2"),
-                set("E", 900, "/k/e1", "/k/e2")), List.of());
+                set("E", 900, "/k/e1", "/k/e2")), List.of(), 0);
 
         List<String> lines = render(scan);
 
@@ -85,7 +85,7 @@ class TextReportTest {
             paths[i] = String.format("/s/d%02d/f%05d", i % 50, i);
         }
 
-        String header = render(new ScanResult(List.of(set("a", 4096, paths)), List.of())).getFirst();
+        String header = render(new ScanResult(List.of(set("a", 4096, paths)), List.of(), 0)).getFirst();
 
         assertTrue(header.contains("(7,993 copies x "), header);
     }
@@ -93,9 +93,26 @@ class TextReportTest {
     @Test
     @DisplayName("DFS-028.AC-2 A small set's header is unchanged")
     void smallCopyCountIsUnchanged() {
-        String header = render(new ScanResult(List.of(set("a", 15, "/a", "/b", "/c")), List.of())).getFirst();
+        String header = render(new ScanResult(List.of(set("a", 15, "/a", "/b", "/c")), List.of(), 0)).getFirst();
 
         assertTrue(header.contains("(3 copies x 15 B"), header);
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-3 The summary line ends with the excluded count")
+    void summaryEndsWithExcludedCount() {
+        List<String> lines = render(new ScanResult(List.of(set("A", 4096, "/a", "/b")), List.of(), 29565));
+
+        assertEquals("Summary: 1 sets, 2 files, 4.0 KB reclaimable, 0 skipped, 29,565 excluded", lines.getLast());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-3 With nothing excluded the summary ends with 0 excluded")
+    void summaryShowsZeroExcluded() {
+        List<String> lines = render(new ScanResult(List.of(), List.of(), 0));
+
+        assertEquals(List.of("No duplicates found.", "Summary: 0 sets, 0 files, 0 B reclaimable, 0 skipped, 0 excluded"),
+                lines);
     }
 
     private static List<String> render(ScanResult scan) {

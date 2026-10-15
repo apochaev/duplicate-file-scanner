@@ -62,7 +62,10 @@ class ScanServiceTest {
     private static final Path B = Path.of("b");
     private static final Path MISSING = Path.of("missing");
     private static final Path A_FILE = Path.of("a", "file.txt");
-    private static final ScanConfig CONFIG = ScanConfig.defaults();
+    /** A method, not a static field: a stubbed defaults() must fail each test, not the class initializer. */
+    private static ScanConfig config() {
+        return ScanConfig.defaults();
+    }
     private static final long WAIT_SECONDS = 10;
 
     // ---------------------------------------------------------------- AC-1
@@ -72,7 +75,7 @@ class ScanServiceTest {
     void startingAScanReturnsAnIdWhileTheScanWaitsInTheQueue() {
         Env env = new Env();
 
-        Result<ScanId> started = env.service.start(List.of(A), CONFIG);
+        Result<ScanId> started = env.service.start(List.of(A), config());
 
         ScanId id = success(started);
         assertEquals(new ScanSnapshot(ScanStatus.QUEUED, null, 0, 0, 0, null, null), snapshot(env, id));
@@ -86,11 +89,11 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-2 A scan runs, is RUNNING while the pipeline works and completes with its result")
     void aScanRunsAndCompletesWithItsResult() throws Exception {
         Env env = new Env();
-        ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of());
+        ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of(), 0);
         env.runner.events = List.of(new ScanEvent.PhaseStarted(ScanPhase.WALK), new ScanEvent.FileWalked(1, 0));
         env.runner.blockAfter = 1;
         env.runner.result = expected;
-        ScanId id = success(env.service.start(List.of(A), CONFIG));
+        ScanId id = success(env.service.start(List.of(A), config()));
 
         env.runTaskOnOwnThreadUntilBlocked();
         assertEquals(ScanStatus.RUNNING, snapshot(env, id).status());
@@ -130,7 +133,7 @@ class ScanServiceTest {
     private void assertRejected(List<Path> locations, ErrorCode code) {
         Env env = new Env();
 
-        Result<ScanId> started = env.service.start(locations, CONFIG);
+        Result<ScanId> started = env.service.start(locations, config());
 
         assertEquals(code, failure(started).code());
         assertTrue(env.repository.records().isEmpty());
@@ -145,7 +148,7 @@ class ScanServiceTest {
         Env env = new Env();
         env.executor.rejectWith(new RejectedExecutionException("queue full"));
 
-        Result<ScanId> started = env.service.start(List.of(A), CONFIG);
+        Result<ScanId> started = env.service.start(List.of(A), config());
 
         assertEquals(ErrorCode.EXECUTOR_REJECTED, failure(started).code());
         assertEquals(1, env.repository.records().size());
@@ -164,7 +167,7 @@ class ScanServiceTest {
                 new ScanEvent.PhaseStarted(ScanPhase.FULL_HASH),
                 new ScanEvent.GroupDone(ScanPhase.FULL_HASH, 37, 120));
         env.runner.blockAfter = 3;
-        ScanId id = success(env.service.start(List.of(A), CONFIG));
+        ScanId id = success(env.service.start(List.of(A), config()));
         assertEquals(new ScanSnapshot(ScanStatus.QUEUED, null, 0, 0, 0, null, null), snapshot(env, id));
 
         env.runTaskOnOwnThreadUntilBlocked();
@@ -188,7 +191,7 @@ class ScanServiceTest {
                 new ScanEvent.FileWalked(2, 0), new ScanEvent.PhaseStarted(ScanPhase.PARTIAL_HASH));
         env.runner.events = sent;
         RecordingListener listener = new RecordingListener();
-        success(env.service.start(List.of(A), CONFIG, listener));
+        success(env.service.start(List.of(A), config(), listener));
 
         env.runTaskOnOwnThreadUntilDone();
 
@@ -202,7 +205,7 @@ class ScanServiceTest {
     void overloadWithoutAListenerRunsTheSameScan() {
         Env env = new Env();
         env.runner.events = List.of(new ScanEvent.FileWalked(1, 0));
-        ScanId id = success(env.service.start(List.of(A), CONFIG));
+        ScanId id = success(env.service.start(List.of(A), config()));
 
         env.executor.runNext();
 
@@ -215,7 +218,7 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-7 Cancelling a queued scan cancels it at once and it never runs the pipeline")
     void cancellingAQueuedScanCancelsItAtOnce() {
         Env env = new Env();
-        ScanId id = success(env.service.start(List.of(A), CONFIG));
+        ScanId id = success(env.service.start(List.of(A), config()));
 
         ScanSnapshot afterCancel = success(env.service.cancel(id));
 
@@ -235,7 +238,7 @@ class ScanServiceTest {
                 new ScanEvent.FileWalked(3, 0));
         env.runner.blockAfter = 3;
         env.runner.failure = new CancellationException("stopped");
-        ScanId id = success(env.service.start(List.of(A), CONFIG));
+        ScanId id = success(env.service.start(List.of(A), config()));
         env.runTaskOnOwnThreadUntilBlocked();
         assertFalse(env.runner.stop.getAsBoolean());
 
@@ -273,11 +276,11 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-10 Completion wins over a cancel request that arrived first")
     void completionWinsOverAnEarlierCancel() throws Exception {
         Env env = new Env();
-        ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of());
+        ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of(), 0);
         env.runner.events = List.of(new ScanEvent.FileWalked(1, 0));
         env.runner.blockAfter = 1;
         env.runner.result = expected;
-        ScanId id = success(env.service.start(List.of(A), CONFIG));
+        ScanId id = success(env.service.start(List.of(A), config()));
         env.runTaskOnOwnThreadUntilBlocked();
         assertEquals(ScanStatus.CANCELLING, success(env.service.cancel(id)).status());
 
@@ -291,9 +294,9 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-10 A cancel request after completion is a no-op")
     void cancelAfterCompletionIsANoOp() {
         Env env = new Env();
-        ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of());
+        ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of(), 0);
         env.runner.result = expected;
-        ScanId id = success(env.service.start(List.of(A), CONFIG));
+        ScanId id = success(env.service.start(List.of(A), config()));
         env.executor.runNext();
 
         ScanSnapshot afterCancel = success(env.service.cancel(id));
@@ -359,7 +362,7 @@ class ScanServiceTest {
     private void assertFailsWith(Throwable thrown, String message) {
         Env env = new Env();
         env.runner.failure = thrown;
-        ScanId id = success(env.service.start(List.of(A), CONFIG));
+        ScanId id = success(env.service.start(List.of(A), config()));
 
         env.executor.runNext();
 
@@ -375,7 +378,7 @@ class ScanServiceTest {
     void anErrorLeavesTheScanFailedAndPropagates() {
         Env env = new Env();
         env.runner.failure = new OutOfMemoryError("test");
-        ScanId id = success(env.service.start(List.of(A), CONFIG));
+        ScanId id = success(env.service.start(List.of(A), config()));
 
         try {
             env.executor.runNext();
@@ -397,7 +400,7 @@ class ScanServiceTest {
                 new ScanEvent.FileWalked(2, 0), new ScanEvent.FileWalked(3, 0));
         RecordingListener listener = new RecordingListener();
         listener.throwOnEvent = 2;
-        ScanId id = success(env.service.start(List.of(A), CONFIG, listener));
+        ScanId id = success(env.service.start(List.of(A), config(), listener));
 
         env.executor.runNext();
 
@@ -415,7 +418,7 @@ class ScanServiceTest {
     void startWithNullLocations() {
         Env env = new Env();
         try {
-            env.service.start(null, CONFIG);
+            env.service.start(null, config());
             fail("expected NullPointerException");
         } catch (NullPointerException expected) {
             // expected
@@ -431,7 +434,7 @@ class ScanServiceTest {
         locations.add(A);
         locations.add(null);
         try {
-            env.service.start(locations, CONFIG);
+            env.service.start(locations, config());
             fail("expected NullPointerException");
         } catch (NullPointerException expected) {
             // expected
@@ -457,7 +460,7 @@ class ScanServiceTest {
     void startWithNullListener() {
         Env env = new Env();
         try {
-            env.service.start(List.of(A), CONFIG, null);
+            env.service.start(List.of(A), config(), null);
             fail("expected NullPointerException");
         } catch (NullPointerException expected) {
             // expected
@@ -576,7 +579,7 @@ class ScanServiceTest {
     static final class ScriptedRunner implements ScanRunner {
         List<ScanEvent> events = List.of();
         int blockAfter = -1;
-        ScanResult result = new ScanResult(List.of(), List.of());
+        ScanResult result = new ScanResult(List.of(), List.of(), 0);
         Throwable failure;
         final AtomicInteger calls = new AtomicInteger();
         final CountDownLatch blocked = new CountDownLatch(1);
@@ -730,7 +733,7 @@ class ScanServiceTest {
                 default -> {
                 }
             }
-            ScanId id = success(service.start(List.of(A), CONFIG));
+            ScanId id = success(service.start(List.of(A), config()));
             switch (target) {
                 case QUEUED -> {
                 }

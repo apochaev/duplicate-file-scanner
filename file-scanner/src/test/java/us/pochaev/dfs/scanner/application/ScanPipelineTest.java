@@ -291,7 +291,7 @@ class ScanPipelineTest {
                 .digest(a1.path(), "a-same").digest(a2.path(), "a-same")
                 .digest(b1.path(), "b-same").digest(b2.path(), "b-same");
         ScanPipeline pipeline = new ScanPipeline(resolver, walker, hasher, new FakeFileIdentity());
-        ScanConfig config = new ScanConfig(4096, ScanConfig.defaults().sampleSize(), ScanConfig.defaults().partialHashThreshold());
+        ScanConfig config = new ScanConfig(4096, ScanConfig.defaults().sampleSize(), ScanConfig.defaults().partialHashThreshold(), true);
 
         ScanResult result = pipeline.scan(List.of(root), config, NO_OP_LISTENER, NEVER_STOP);
 
@@ -606,7 +606,7 @@ class ScanPipelineTest {
         ScanPipeline pipeline = new ScanPipeline(resolver, walker, hasher, new FakeFileIdentity());
 
         // a 100-byte threshold makes the 1,000-byte files go through the sample
-        pipeline.scan(List.of(root), new ScanConfig(1, 16, 100), listener, NEVER_STOP);
+        pipeline.scan(List.of(root), new ScanConfig(1, 16, 100, true), listener, NEVER_STOP);
 
         List<ScanEvent.HashProgress> partial = eventsOf(listener, ScanEvent.HashProgress.class).stream()
                 .filter(p -> p.phase() == ScanPhase.PARTIAL_HASH).toList();
@@ -652,6 +652,117 @@ class ScanPipelineTest {
     private static BooleanSupplier stopAfterChecks(int checksBeforeTrue) {
         AtomicInteger count = new AtomicInteger();
         return () -> count.incrementAndGet() > checksBeforeTrue;
+    }
+
+    // --- DFS-027: default excludes ---
+
+    private ScanResult scanMediaTree(ScanConfig config, ScanListener listener, FileEntry... extra) throws IOException {
+        Path root = Path.of("media");
+        List<FileEntry> files = new ArrayList<>(List.of(
+                entry("media/a/photo.jpg", 6144), entry("media/b/photo.jpg", 6144),
+                entry("media/a/._photo.jpg", 4096), entry("media/b/._photo.jpg", 4096),
+                entry("media/a/.DS_Store", 6144), entry("media/b/.DS_Store", 6144)));
+        files.addAll(List.of(extra));
+        FakeLocationResolver resolver = new FakeLocationResolver().resolvesTo(root, root);
+        FakeFileTreeWalker walker = new FakeFileTreeWalker()
+                .withEvents(root, files.stream().map(ScanPipelineTest::found).toArray(WalkEvent[]::new));
+        FakeContentHasher hasher = new FakeContentHasher();
+        for (FileEntry f : files) {
+            String name = f.path().getFileName().toString();
+            hasher.digest(f.path(), name.startsWith("._") ? "meta" : name.equals(".DS_Store") ? "ds" : "photo");
+        }
+        return new ScanPipeline(resolver, walker, hasher, new FakeFileIdentity())
+                .scan(List.of(root), config, listener, NEVER_STOP);
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-1 By default .DS_Store and ._* files are in no duplicate set and are counted")
+    void defaultExcludesLeaveMetadataOutAndCountIt() throws IOException {
+        ScanResult result = scanMediaTree(ScanConfig.defaults(), NO_OP_LISTENER);
+
+        assertEquals(1, result.sets().size());
+        assertEquals(List.of(entry("media/a/photo.jpg", 6144), entry("media/b/photo.jpg", 6144)),
+                result.sets().getFirst().files());
+        assertEquals(4, result.excluded());
+        assertEquals(List.of(), result.skipped());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-1 The name match is case-sensitive and anchored: only an exact .DS_Store or a ._ prefix matches")
+    void nameMatchIsCaseSensitiveAndAnchored() throws IOException {
+        ScanResult result = scanMediaTree(ScanConfig.defaults(), NO_OP_LISTENER,
+                entry("media/a/.ds_store", 100), entry("media/b/.DS_STORE", 100),
+                entry("media/a/x._photo.jpg", 100), entry("media/b/x._photo.jpg", 100),
+                entry("media/a/.DS_Store.bak", 100), entry("media/b/.DS_Store.bak", 100));
+
+        assertEquals(4, result.excluded());
+        List<String> names = result.sets().stream().flatMap(set -> set.files().stream())
+                .map(f -> f.path().getFileName().toString()).toList();
+        assertTrue(names.containsAll(List.of(".ds_store", ".DS_STORE", "x._photo.jpg", ".DS_Store.bak")), names.toString());
+        assertTrue(names.stream().noneMatch(n -> n.equals(".DS_Store") || n.startsWith("._")), names.toString());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-4 Excluded files are counted in the walk progress exactly as if they were not excluded")
+    void excludedFilesStillCountAsWalked() throws IOException {
+        RecordingListener listener = new RecordingListener();
+
+        scanMediaTree(ScanConfig.defaults(), listener);
+
+        List<ScanEvent.FileWalked> walked = eventsOf(listener, ScanEvent.FileWalked.class);
+        assertEquals(6, walked.size());
+        assertEquals(new ScanEvent.FileWalked(6, 6144L * 4 + 4096L * 2), walked.getLast());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-5 With default excludes off, .DS_Store and ._* files are scanned like any other and nothing is counted")
+    void flagOffScansMetadataFiles() throws IOException {
+        ScanConfig defaults = ScanConfig.defaults();
+        ScanConfig off = new ScanConfig(defaults.minSize(), defaults.sampleSize(), defaults.partialHashThreshold(), false);
+
+        ScanResult result = scanMediaTree(off, NO_OP_LISTENER);
+
+        assertEquals(3, result.sets().size());
+        assertEquals(0, result.excluded());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-6 An empty metadata file is counted as excluded, not dropped by the size filter")
+    void emptyMetadataFileIsCountedAsExcluded() throws IOException {
+        ScanResult result = scanMediaTree(ScanConfig.defaults(), NO_OP_LISTENER,
+                entry("media/c/.DS_Store", 0), entry("media/c/._empty", 0), entry("media/c/empty.txt", 0));
+
+        assertEquals(6, result.excluded());
+        assertEquals(1, result.sets().size());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-6 With default excludes off, an empty metadata file is dropped by size and counted nowhere")
+    void emptyMetadataFileWithFlagOffIsDroppedBySize() throws IOException {
+        ScanConfig defaults = ScanConfig.defaults();
+        ScanConfig off = new ScanConfig(defaults.minSize(), defaults.sampleSize(), defaults.partialHashThreshold(), false);
+
+        ScanResult result = scanMediaTree(off, NO_OP_LISTENER, entry("media/c/.DS_Store", 0), entry("media/c/._empty", 0));
+
+        assertEquals(0, result.excluded());
+        assertTrue(result.sets().stream().flatMap(set -> set.files().stream())
+                .noneMatch(f -> f.size() == 0), result.sets().toString());
+    }
+
+    @Test
+    @DisplayName("DFS-027.AC-3 The excluded count belongs to one scan: a second scan with the same pipeline starts from zero")
+    void excludedCountIsPerScan() throws IOException {
+        Path root = Path.of("media");
+        FakeFileTreeWalker walker = new FakeFileTreeWalker().withEvents(root,
+                found(entry("media/.DS_Store", 10)), found(entry("media/._x", 10)));
+        ScanPipeline pipeline = new ScanPipeline(new FakeLocationResolver().resolvesTo(root, root), walker,
+                new FakeContentHasher(), new FakeFileIdentity());
+
+        ScanResult first = pipeline.scan(List.of(root), ScanConfig.defaults(), NO_OP_LISTENER, NEVER_STOP);
+        ScanResult second = pipeline.scan(List.of(root), ScanConfig.defaults(), NO_OP_LISTENER, NEVER_STOP);
+
+        assertEquals(2, first.excluded());
+        assertEquals(2, second.excluded());
     }
 
     // --- fakes ---

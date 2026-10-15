@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import us.pochaev.dfs.scanner.domain.model.ScanConfig;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -26,17 +27,27 @@ class ScanConfigTest {
     void defaultConfigMatchesStagesOwnDefaults() {
         ScanConfig defaults = ScanConfig.defaults();
 
-        assertEquals(new ScanConfig(1, 65536, 131072), defaults);
+        assertEquals(new ScanConfig(1, 65536, 131072, true), defaults);
         assertEquals(SizeIndex.DEFAULT_MIN_SIZE, defaults.minSize());
         assertEquals(PartialHashFilter.DEFAULT_SAMPLE_SIZE, defaults.sampleSize());
         assertEquals(PartialHashFilter.DEFAULT_SKIP_THRESHOLD, defaults.partialHashThreshold());
     }
 
     @Test
+    @DisplayName("DFS-027.AC-5 The default config has the default excludes on, matching the filter's own default")
+    void defaultConfigHasDefaultExcludesOn() {
+        ScanConfig defaults = ScanConfig.defaults();
+
+        assertTrue(defaults.defaultExcludes());
+        assertEquals(DefaultExcludeFilter.DEFAULT_ENABLED, defaults.defaultExcludes());
+        assertEquals(new ScanConfig(1, 65536, 131072, true), defaults);
+    }
+
+    @Test
     @DisplayName("DFS-005.AC-8 A minSize below 1 is rejected")
     void minSizeBelowOneIsRejected() {
         try {
-            new ScanConfig(0, 65536, 131072);
+            new ScanConfig(0, 65536, 131072, true);
             fail("expected IllegalArgumentException for minSize 0");
         } catch (IllegalArgumentException expected) {
             // expected once implemented
@@ -47,7 +58,7 @@ class ScanConfigTest {
     @DisplayName("DFS-005.AC-8 A sampleSize of zero or less is rejected")
     void sampleSizeOfZeroOrLessIsRejected() {
         try {
-            new ScanConfig(1, 0, 131072);
+            new ScanConfig(1, 0, 131072, true);
             fail("expected IllegalArgumentException for sampleSize 0");
         } catch (IllegalArgumentException expected) {
             // expected once implemented
@@ -58,7 +69,7 @@ class ScanConfigTest {
     @DisplayName("DFS-005.AC-8 A partialHashThreshold of zero or less is rejected")
     void partialHashThresholdOfZeroOrLessIsRejected() {
         try {
-            new ScanConfig(1, 65536, 0);
+            new ScanConfig(1, 65536, 0, true);
             fail("expected IllegalArgumentException for partialHashThreshold 0");
         } catch (IllegalArgumentException expected) {
             // expected once implemented
