@@ -25,7 +25,7 @@ touches:
   - CLAUDE.md
 blocked_reason:
 created: 2026-10-13
-updated: 2026-10-14
+updated: 2026-10-15
 completed:
 ---
 
@@ -201,8 +201,9 @@ Feature: Default excludes
 - [x] Every scenario above is an automated test and passes
 - [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
 - [x] No files changed outside the paths listed under Touches
-- [ ] A real scan of `'E:/Media/iPhone/2018-03 Photoslibrary' E:/Media/iPhone/iPhoneOxana F:/Media/iPhone/oxana E:/Media/Video/Import E:/Media/iPhone/GMetrix --format=text` (2026-10-14 baseline: 573 sets, 1,633 files, 3.2 GB reclaimable) lists no set whose paths are `._*` or `.DS_Store`, reports a non-zero `excluded` count and fewer than 573 sets, with reclaimable space still 3.2 GB
-- [ ] The same scan with `--no-default-excludes` reproduces the baseline (573 sets, 1,633 files) with `0 excluded`
+- [x] A real scan of `'E:/Media/iPhone/2018-03 Photoslibrary' E:/Media/iPhone/iPhoneOxana F:/Media/iPhone/oxana E:/Media/Video/Import E:/Media/iPhone/GMetrix --format=text` (2026-10-14 baseline: 573 sets, 1,633 files, 3.2 GB reclaimable) lists no set whose paths are `._*` or `.DS_Store`, reports a non-zero `excluded` count and fewer than 573 sets, with reclaimable space still 3.2 GB
+- [x] The same scan with `--no-default-excludes` reproduces the baseline (573 sets, 1,633 files) with `0 excluded`
+  - Run 2026-10-15 from the story worktree. Default: `Summary: 394 sets, 932 files, 3.2 GB reclaimable, 0 skipped, 990 excluded`, and no listed path is `._*` or `.DS_Store`. With `--no-default-excludes`: `Summary: 573 sets, 1,633 files, 3.2 GB reclaimable, 0 skipped, 0 excluded`.
 - [x] `CLAUDE.md` names `--no-default-excludes` and the `excluded` summary field
 
 ## Open questions
