@@ -1,7 +1,7 @@
 ---
 id: DFS-028
 title: Fix three CLI output bugs
-status: in-progress
+status: in-review
 type: fix
 scope: [cli]
 archetype: none
