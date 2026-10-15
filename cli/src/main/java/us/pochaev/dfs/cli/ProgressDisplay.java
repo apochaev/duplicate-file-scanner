@@ -6,6 +6,8 @@ import us.pochaev.dfs.scanner.domain.model.ScanPhase;
 
 import java.io.PrintStream;
 import java.time.Duration;
+import java.util.ArrayDeque;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.LongSupplier;
@@ -29,6 +31,14 @@ final class ProgressDisplay implements ScanListener {
     private static final long REDRAW_MILLIS = 200;
     private static final long LOG_INTERVAL = Duration.ofSeconds(5).toNanos();
     private static final long ETA_MIN_TIME = Duration.ofSeconds(3).toNanos();
+    /**
+     * The files rate, once bytes are nearly done, runs from the newest progress report at least this old
+     * (DFS-025 decision 1; 5 s, since hashing speeds up through the small-file tail and a longer look-back
+     * overestimates).
+     */
+    private static final long FILES_RATE_WINDOW = Duration.ofSeconds(5).toNanos();
+    /** From this percentage of bytes on, the ETA follows the recent files rate (DFS-025 decision 1). */
+    private static final int FILES_RATE_FROM_PERCENT = 99;
 
     private final Mode mode;
     private final PrintStream err;
@@ -53,6 +63,10 @@ final class ProgressDisplay implements ScanListener {
     private long bytesTotal;
     private long groupsDone;
     private long groupsTotal;
+    /** The Sampling phase's time per sampled file, 0 when it sampled none; added per file left to the ETA. */
+    private double nanosPerSampledFile;
+    /** {@code (time, filesDone)} of recent hashing progress, oldest first, for the files rate. */
+    private final ArrayDeque<long[]> hashSamples = new ArrayDeque<>();
 
     /** @param nanos the clock, {@code System::nanoTime} outside tests; the scan starts when this is built */
     ProgressDisplay(Mode mode, PrintStream err, LongSupplier nanos) {
@@ -67,9 +81,17 @@ final class ProgressDisplay implements ScanListener {
         switch (event) {
             case ScanEvent.PhaseStarted e -> {
                 finishLine();
+                long now = nanos.getAsLong();
+                if (phase == ScanPhase.PARTIAL_HASH) {
+                    nanosPerSampledFile = filesDone == 0 ? 0 : (double) (now - phaseStarted) / filesDone;
+                }
+                hashSamples.clear();
+                if (e.phase() == ScanPhase.FULL_HASH) {
+                    hashSamples.add(new long[] {now, 0});
+                }
                 phase = e.phase();
                 lastLogged = null;
-                phaseStarted = nanos.getAsLong();
+                phaseStarted = now;
                 lastLog = phaseStarted;
                 filesDone = 0;
                 filesTotal = 0;
@@ -91,6 +113,8 @@ final class ProgressDisplay implements ScanListener {
                 bytesTotal = e.bytesTotal();
                 if (e.phase() == ScanPhase.PARTIAL_HASH) {
                     compared = e.filesTotal();
+                } else if (e.phase() == ScanPhase.FULL_HASH) {
+                    addHashSample(nanos.getAsLong(), e.filesDone());
                 }
             }
             case ScanEvent.GroupDone e -> {
@@ -229,13 +253,53 @@ final class ProgressDisplay implements ScanListener {
         return bytesTotal == 0 ? 0 : bytesDone * 100 / bytesTotal;
     }
 
+    /**
+     * The hashing ETA (DFS-025): before 99% of bytes, the bytes left at the average byte rate plus the
+     * files left at the Sampling phase's time per file; from 99% on, the files left at the files rate
+     * since the newest report at least {@link #FILES_RATE_WINDOW} old, or the first estimate when no file
+     * finished since then.
+     */
     private String eta() {
-        long elapsed = nanos.getAsLong() - phaseStarted;
+        long now = nanos.getAsLong();
+        long elapsed = now - phaseStarted;
         if (bytesDone == 0 || elapsed < ETA_MIN_TIME || bytesDone * 100.0 < bytesTotal) {
             return "--:--";
         }
-        double remaining = (double) (bytesTotal - bytesDone) * elapsed / bytesDone;
+        long filesLeft = Math.max(0, filesTotal - filesDone);
+        if (bytesDone * 100.0 >= (double) FILES_RATE_FROM_PERCENT * bytesTotal && !hashSamples.isEmpty()) {
+            long[] base = filesRateBase(now);
+            long finished = filesDone - base[1];
+            if (finished > 0) {
+                return clock(Math.round((double) filesLeft * (now - base[0]) / finished));
+            }
+        }
+        double remaining = (double) (bytesTotal - bytesDone) * elapsed / bytesDone + filesLeft * nanosPerSampledFile;
         return clock(Math.round(remaining));
+    }
+
+    /** Records hashing progress, keeping the newest sample at least one window old as the rate's base. */
+    private void addHashSample(long now, long done) {
+        hashSamples.add(new long[] {now, done});
+        while (hashSamples.size() > 1) {
+            Iterator<long[]> it = hashSamples.iterator();
+            it.next();
+            if (it.next()[0] > now - FILES_RATE_WINDOW) {
+                break;
+            }
+            hashSamples.removeFirst();
+        }
+    }
+
+    /** The newest sample at least one window before {@code now}, or the oldest kept when none is that old. */
+    private long[] filesRateBase(long now) {
+        long[] base = hashSamples.getFirst();
+        for (long[] sample : hashSamples) {
+            if (sample[0] > now - FILES_RATE_WINDOW) {
+                break;
+            }
+            base = sample;
+        }
+        return base;
     }
 
     private static String label(String label) {

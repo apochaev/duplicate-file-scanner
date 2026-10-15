@@ -1,7 +1,7 @@
 ---
 id: DFS-025
 title: Make the hashing ETA and percentage account for files left, not only bytes
-status: ready
+status: in-progress
 type: fix
 scope: [cli]
 archetype: none
@@ -39,8 +39,9 @@ The `HashProgress` event already carries `filesDone`, `filesTotal`, `bytesDone` 
 
 **Decisions (refinement, 2026-10-15):**
 
-1. **Two rules: byte time plus a per-file cost, then a recent files rate near the end.** Until bytes reach 99%, the ETA is `bytes left / average byte rate since FULL_HASH started + files left x per-file cost`, where the per-file cost is the Sampling phase's elapsed time divided by the files it sampled (2026-10-15: 7,754 files in 45 s, about 5.8 ms). From 99% of bytes on, the ETA is `files left / files hashed per second over the last 10 seconds`. Replayed against the 2026-10-15 log, this gives 3:44 at 0:50 (real 4:06), 0:59 at 2:46 (real 2:10) and 1:43 at 3:16 (real 1:40), against today's 3:11, 0:26 and 0:00. The existing guards stay: no ETA before `ETA_MIN_TIME` or before 1% of bytes. Rejected: the larger of a bytes-based and a files-based estimate (reads hours for most of the phase, since the largest files go first: `18 / 5,756 files` at 2:00 gives about 6.6 h); switching to files near the end alone (ignores the small-file tail until 99%: 0:26 at 2:46 against 2:10 real); the per-file cost alone (0:30 at 3:16 against 1:40 real, since full hashing ran 51 files/s against Sampling's 172).
-2. **Missing inputs fall back to what this ticket already defines.** (a) When the Sampling phase sampled no files (every candidate under the 128 KB partial-hash threshold), the per-file cost is 0, so rule 1 is today's byte-based ETA. (b) After 99% of bytes, when no file finished in the last 10 seconds (one large file still hashing), the ETA is rule 1's value instead of a division by zero. Rejected: a fixed default per-file cost with `--:--` for (b) (a constant tuned to one disk, and a gap exactly when the user waits for the end); learning the per-file cost from hashing (the fitted model decision 1 did not choose, noisy while large files run).
+1. **Two rules: byte time plus a per-file cost, then a recent files rate near the end.** Until bytes reach 99%, the ETA is `bytes left / average byte rate since FULL_HASH started + files left x per-file cost`, where the per-file cost is the Sampling phase's elapsed time divided by the files it sampled (2026-10-15: 7,754 files in 45 s, about 5.8 ms). From 99% of bytes on, the ETA is `files left / files hashed per second since the newest progress report at least 5 seconds old` (amended from 10 seconds after the first real run, see below). Replayed against the 2026-10-15 log, this gives 3:44 at 0:50 (real 4:06), 0:59 at 2:46 (real 2:10) and 1:43 at 3:16 (real 1:40), against today's 3:11, 0:26 and 0:00. The existing guards stay: no ETA before `ETA_MIN_TIME` or before 1% of bytes. Rejected: the larger of a bytes-based and a files-based estimate (reads hours for most of the phase, since the largest files go first: `18 / 5,756 files` at 2:00 gives about 6.6 h); switching to files near the end alone (ignores the small-file tail until 99%: 0:26 at 2:46 against 2:10 real); the per-file cost alone (0:30 at 3:16 against 1:40 real, since full hashing ran 51 files/s against Sampling's 172).
+   Amended 2026-10-15 after the first real run with a 10-second window (same six folders, hashing 1:10 to 4:51): no false `ETA 0:00` any more (it appeared only on the final line), but the first line at or above 99% read `ETA 3:10` with 1:10 left (2.7x), because files get smaller and hashing speeds up through the tail, so a window looking back over larger files overestimates. Replayed from that log, a 5-second window (the log interval) gives about 2:03 there (1.76x) and 1.4x to 2x on later lines. The window became 5 seconds; the ticket's scenarios keep their values, since their reports are 10 seconds apart.
+2. **Missing inputs fall back to what this ticket already defines.** (a) When the Sampling phase sampled no files (every candidate under the 128 KB partial-hash threshold), the per-file cost is 0, so rule 1 is today's byte-based ETA. (b) After 99% of bytes, when no file finished since the newest progress report at least 5 seconds old (one large file still hashing), the ETA is rule 1's value instead of a division by zero. Rejected: a fixed default per-file cost with `--:--` for (b) (a constant tuned to one disk, and a gap exactly when the user waits for the end); learning the per-file cost from hashing (the fitted model decision 1 did not choose, noisy while large files run).
 3. **The percentage stays a byte percentage, unlabelled.** It sits right after the byte counts, so it reads as one, and decision 1's ETA is the figure meant for planning. Rejected: a percentage of estimated time (moves backwards as the estimate grows: 67% at 2:46, 59% at 3:16 in the replay), a files percentage (near 0% for most of the phase, 2% at 2:46 with 75% of bytes done), and the label `(99% of bytes)` (a longer line for little gain).
 4. **Archetype `none`.** One `cli` class and its test, no domain types or ports, every design choice already made here; DFS-023, DFS-024 and DFS-028 (the same display code) were `none`. Rejected: `pipeline-stage` (its checklist is written for `file-scanner` stages and mostly does not apply).
 
@@ -50,8 +51,8 @@ How the inputs reach `ProgressDisplay` today (read 2026-10-15): `PhaseStarted(PA
 
 The full ID of each criterion is `DFS-025.AC-<n>`.
 
-- **AC-1** Before bytes reach 99%, the `Hashing:` ETA is the bytes left divided by the average byte rate since hashing started, plus the files left times the Sampling phase's average time per file; from 99% of bytes on, it is the files left divided by the files hashed per second over the last 10 seconds. The existing guards stay: `--:--` before 3 seconds of hashing and before 1% of bytes (decision 1).
-- **AC-2** When the Sampling phase sampled no files, the per-file cost is 0 and the ETA before 99% of bytes equals the byte-based estimate; after 99%, when no file finished in the last 10 seconds, the ETA is the before-99% estimate (decision 2).
+- **AC-1** Before bytes reach 99%, the `Hashing:` ETA is the bytes left divided by the average byte rate since hashing started, plus the files left times the Sampling phase's average time per file; from 99% of bytes on, it is the files left divided by the files hashed per second since the newest progress report at least 5 seconds old. The existing guards stay: `--:--` before 3 seconds of hashing and before 1% of bytes (decision 1).
+- **AC-2** When the Sampling phase sampled no files, the per-file cost is 0 and the ETA before 99% of bytes equals the byte-based estimate; after 99%, when no file finished since the newest progress report at least 5 seconds old, the ETA is the before-99% estimate (decision 2).
 - **AC-3** The `Hashing:` percentage stays `bytes done x 100 / bytes total`, unchanged by the files left (decision 3).
 
 ## Scenarios
@@ -72,11 +73,11 @@ Feature: Hashing ETA
     # the old byte-only estimate would show 0:10
 
   @AC-1
-  Scenario: From 99% of bytes on, the ETA uses the files rate over the last 10 seconds
+  Scenario: From 99% of bytes on, the ETA uses the recent files rate
     When at 60 s hashing reports 50 of 110 files and 990,000,000 of 1,000,000,000 bytes
     And at 70 s hashing reports 70 of 110 files and 995,000,000 of 1,000,000,000 bytes
     Then the Hashing line at 70 s shows "ETA 0:20"
-    # 20 files in the last 10 s = 2 files per second; 40 files left / 2 = 20 s
+    # base: the report at 60 s, the newest at least 5 s old; 20 files in 10 s = 2 per second; 40 left / 2 = 20 s
 
   @AC-1
   Scenario: The existing guards still show no estimate too early
@@ -93,7 +94,7 @@ Feature: Hashing ETA
     Then the Hashing line shows "ETA 0:10"
 
   @AC-2
-  Scenario: From 99% of bytes on, with no file finished in the last 10 seconds, the ETA falls back to the first rule
+  Scenario: From 99% of bytes on, with no file finished since the recent base, the ETA falls back to the first rule
     When at 60 s hashing reports 50 of 110 files and 990,000,000 of 1,000,000,000 bytes
     And at 70 s hashing reports 50 of 110 files and 995,000,000 of 1,000,000,000 bytes
     Then the Hashing line at 70 s shows "ETA 0:06"
@@ -117,10 +118,11 @@ Feature: Hashing ETA
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] A real scan of `'E:/Media/iPhone/2018-03 Photoslibrary' E:/Media/iPhone/iPhoneOxana F:/Media/iPhone/oxana E:/Media/Video/Import E:/Media/iPhone/GMetrix F:/Media/Catalogs/ApplePhotos --format=text --progress=log` (2026-10-15 baseline: hashing 0:45 to 4:56, `ETA 0:00` from 3:16 to 4:56) shows no `ETA 0:00` on any `Hashing:` log line earlier than 10 seconds before the phase's final line, and the ETA on the first line at or above 99% of bytes is within half to double of the time actually left
+- [x] Every scenario above is an automated test and passes: six `DFS-025.AC-*` tests in `ProgressDisplayTest`, 19 of 19 passing
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests): 315 tests, 0 failed, 2 skipped
+- [x] No files changed outside the paths listed under Touches: `ProgressDisplay.java`, `ProgressDisplayTest.java` and this ticket
+- [x] A real scan of `'E:/Media/iPhone/2018-03 Photoslibrary' E:/Media/iPhone/iPhoneOxana F:/Media/iPhone/oxana E:/Media/Video/Import E:/Media/iPhone/GMetrix F:/Media/Catalogs/ApplePhotos --format=text --progress=log` (2026-10-15 baseline: hashing 0:45 to 4:56, `ETA 0:00` from 3:16 to 4:56) shows no `ETA 0:00` on any `Hashing:` log line earlier than 10 seconds before the phase's final line, and the ETA on the first line at or above 99% of bytes is within half to double of the time actually left
+  - Run 2026-10-15 with the 5-second base: hashing 0:59 to 4:20. `ETA 0:00` appears only on the final line at 4:20. The first line at or above 99%, at 3:29 (`618 / 5,756 files`), read `ETA 1:28` with 51 s left (1.7x); later lines read 1:10 (46 s left), 0:43 (31 s), 0:28 (21 s), 0:11 (5 s). Before 99% the ETA read 3:08 at 1:04 against 3:16 real. Summary unchanged: `573 sets, 1,391 files, 11.2 GB reclaimable, 0 skipped, 25,296 excluded`.
 
 ## Open questions
 

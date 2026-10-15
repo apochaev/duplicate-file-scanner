@@ -189,6 +189,84 @@ class ProgressDisplayTest {
         assertTrue(lines.get(1).startsWith("Hashing:    20 / 20 files") && lines.get(1).endsWith("  0:07"), lines.get(1));
     }
 
+    @Test
+    @DisplayName("DFS-025.AC-1 Before 99% of bytes, the ETA adds a per-file cost for the files left")
+    void etaAddsPerFileCost() {
+        ProgressDisplay display = sampledThenHashing(100);
+
+        send(display, 20, new ScanEvent.HashProgress(FULL_HASH, 10, 110, 500_000_000, 1_000_000_000));
+
+        // bytes: 500,000,000 left at 50,000,000 per second = 10 s; files: 100 left x 0.1 s = 10 s
+        assertTrue(display.line().contains("ETA 0:20"), display.line());
+    }
+
+    @Test
+    @DisplayName("DFS-025.AC-1 From 99% of bytes on, the ETA uses the recent files rate")
+    void etaFollowsRecentFilesRate() {
+        ProgressDisplay display = sampledThenHashing(100);
+
+        send(display, 60, new ScanEvent.HashProgress(FULL_HASH, 50, 110, 990_000_000, 1_000_000_000));
+        send(display, 70, new ScanEvent.HashProgress(FULL_HASH, 70, 110, 995_000_000, 1_000_000_000));
+
+        // base: the report at 60 s, the newest at least 5 s old; 20 files in 10 s = 2 per second; 40 left / 2 = 20 s
+        assertTrue(display.line().contains("ETA 0:20"), display.line());
+    }
+
+    @Test
+    @DisplayName("DFS-025.AC-1 The existing guards still show no estimate too early")
+    void etaGuardsStay() {
+        ProgressDisplay early = sampledThenHashing(100);
+        send(early, 12, new ScanEvent.HashProgress(FULL_HASH, 2, 110, 100_000_000, 1_000_000_000));
+        assertTrue(early.line().contains("ETA --:--"), early.line());
+
+        ProgressDisplay small = sampledThenHashing(100);
+        send(small, 20, new ScanEvent.HashProgress(FULL_HASH, 3, 110, 5_000_000, 1_000_000_000));
+        assertTrue(small.line().contains("ETA --:--"), small.line());
+    }
+
+    @Test
+    @DisplayName("DFS-025.AC-2 With no files sampled, the per-file cost is 0")
+    void etaWithoutSamplingIsByteBased() {
+        ProgressDisplay display = sampledThenHashing(0);
+
+        send(display, 20, new ScanEvent.HashProgress(FULL_HASH, 10, 110, 500_000_000, 1_000_000_000));
+
+        assertTrue(display.line().contains("ETA 0:10"), display.line());
+    }
+
+    @Test
+    @DisplayName("DFS-025.AC-2 From 99% of bytes on, with no file finished since the recent base, the ETA falls back")
+    void etaFallsBackWhenNoFileFinished() {
+        ProgressDisplay display = sampledThenHashing(100);
+
+        send(display, 60, new ScanEvent.HashProgress(FULL_HASH, 50, 110, 990_000_000, 1_000_000_000));
+        send(display, 70, new ScanEvent.HashProgress(FULL_HASH, 50, 110, 995_000_000, 1_000_000_000));
+
+        // bytes: 5,000,000 left at 995,000,000 per 60 s, about 0.3 s; files: 60 left x 0.1 s = 6 s
+        assertTrue(display.line().contains("ETA 0:06"), display.line());
+    }
+
+    @Test
+    @DisplayName("DFS-025.AC-3 The percentage stays a byte percentage")
+    void percentageStaysBytes() {
+        ProgressDisplay display = sampledThenHashing(100);
+
+        send(display, 70, new ScanEvent.HashProgress(FULL_HASH, 50, 110, 995_000_000, 1_000_000_000));
+
+        assertTrue(display.line().contains("(99%)"), display.line());
+    }
+
+    /** Sampling from 0 s to 10 s over {@code sampled} files, then hashing from 10 s (DFS-025's Background). */
+    private ProgressDisplay sampledThenHashing(long sampled) {
+        ProgressDisplay display = display(ProgressDisplay.Mode.OFF);
+        send(display, 0, new ScanEvent.PhaseStarted(PARTIAL_HASH));
+        if (sampled > 0) {
+            send(display, 0, new ScanEvent.HashProgress(PARTIAL_HASH, sampled, sampled, sampled * 1000, sampled * 1000));
+        }
+        send(display, 10, new ScanEvent.PhaseStarted(FULL_HASH));
+        return display;
+    }
+
     private ProgressDisplay display(ProgressDisplay.Mode mode) {
         return new ProgressDisplay(mode, new PrintStream(bytes, true, StandardCharsets.UTF_8), clock::get);
     }
