@@ -1,7 +1,7 @@
 ---
 id: DFS-027
 title: Exclude known system files by default
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner, cli]
 archetype: pipeline-stage
@@ -12,11 +12,11 @@ touches:
   - file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ScanConfig.java
   - file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ScanResult.java
   - file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ScanPipeline.java
-  - file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ (one new filter class)
+  - file-scanner/src/main/java/us/pochaev/dfs/scanner/application/
   - file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanConfigTest.java
   - file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanPipelineTest.java
   - file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanServiceTest.java
-  - file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ (the new filter's test)
+  - file-scanner/src/test/java/us/pochaev/dfs/scanner/application/
   - file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/ScanPipelineEndToEndTest.java
   - cli/src/main/java/us/pochaev/dfs/cli/ScanCommand.java
   - cli/src/main/java/us/pochaev/dfs/cli/TextReport.java

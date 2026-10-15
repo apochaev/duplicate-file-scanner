@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 
 /**
  * Runs one scan synchronously, end to end (DFS-005): resolves the start locations, walks them into
- * a {@link SizeIndex}, then feeds its groups one at a time through {@link PartialHashFilter},
+ * a {@link SizeIndex} (leaving out what {@link DefaultExcludeFilter} excludes, DFS-027), then feeds its groups one at a time through {@link PartialHashFilter},
  * {@link FullHashConfirmer} and {@link HardLinkDetector} (CLAUDE.md design decision 3).
  * <p>
  * Stateless and reusable: its fields are its ports only. Every piece of per-scan state (the
@@ -101,8 +101,9 @@ public final class ScanPipeline implements ScanRunner {
         };
 
         HardLinkDetector hardLinkDetector = new HardLinkDetector(identity, sink);
+        DefaultExcludeFilter excludeFilter = new DefaultExcludeFilter(config.defaultExcludes());
 
-        walkLocations(kept, sizeIndex, sink, listener, stopSignal);
+        walkLocations(kept, excludeFilter, sizeIndex, sink, listener, stopSignal);
 
         List<CandidateGroup> initialGroups = sizeIndex.groups();
         PartialHashFilter partialHashFilter = new PartialHashFilter(hasher, config.sampleSize(),
@@ -117,7 +118,7 @@ public final class ScanPipeline implements ScanRunner {
         List<DuplicateSet> hardLinkOutput = runGroupPhase(
                 ScanPhase.HARD_LINKS, fullOutput, hardLinkDetector::detect, listener, stopSignal);
 
-        return new ScanResult(hardLinkOutput, skipped);
+        return new ScanResult(hardLinkOutput, skipped, excludeFilter.excluded());
     }
 
     /** {@link ScanRunner}'s method: exactly {@link #scan}, same arguments, same contract (DFS-018). */
@@ -127,8 +128,15 @@ public final class ScanPipeline implements ScanRunner {
         return scan(locations, config, listener, stopSignal);
     }
 
-    private void walkLocations(List<Path> kept, SizeIndex sizeIndex, Consumer<WalkEvent.Skipped> sink,
-                               ScanListener listener, BooleanSupplier stopSignal) throws IOException {
+    /**
+     * Walks {@code kept} in order. Every {@code FileFound} is reported as {@link ScanEvent.FileWalked}
+     * first, so excluded files still count as found (DFS-027 decision 4), then goes through
+     * {@code excludeFilter} and, if kept, into {@code sizeIndex} (name check before size check,
+     * DFS-027 decision 7).
+     */
+    private void walkLocations(List<Path> kept, DefaultExcludeFilter excludeFilter, SizeIndex sizeIndex,
+                               Consumer<WalkEvent.Skipped> sink, ScanListener listener,
+                               BooleanSupplier stopSignal) throws IOException {
         listener.onEvent(new ScanEvent.PhaseStarted(ScanPhase.WALK));
         AtomicLong count = new AtomicLong();
         AtomicLong bytes = new AtomicLong();
@@ -142,9 +150,11 @@ public final class ScanPipeline implements ScanRunner {
                         return false;
                     }
                     if (event instanceof WalkEvent.FileFound found) {
-                        sizeIndex.add(found.entry());
                         listener.onEvent(new ScanEvent.FileWalked(count.incrementAndGet(),
                                 bytes.addAndGet(found.entry().size())));
+                        if (excludeFilter.keep(found.entry())) {
+                            sizeIndex.add(found.entry());
+                        }
                     } else if (event instanceof WalkEvent.DirectoryEntered) {
                         listener.onEvent(new ScanEvent.DirectoryWalked(directories.incrementAndGet()));
                     } else if (event instanceof WalkEvent.Skipped s) {

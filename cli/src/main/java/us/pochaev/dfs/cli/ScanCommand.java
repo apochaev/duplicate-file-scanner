@@ -110,7 +110,9 @@ public final class ScanCommand {
             return usage(err, "no folder given");
         }
         boolean text = "text".equals(format);
-        ScanConfig config = new ScanConfig(minSize, defaults.sampleSize(), defaults.partialHashThreshold());
+        // DFS-027: the fourth argument becomes false when --no-default-excludes is given
+        ScanConfig config = new ScanConfig(minSize, defaults.sampleSize(), defaults.partialHashThreshold(),
+                defaults.defaultExcludes());
 
         ProgressDisplay display = new ProgressDisplay(
                 progress == null ? ProgressDisplay.Mode.LIVE : ProgressDisplay.Mode.valueOf(progress.toUpperCase()),
