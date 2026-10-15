@@ -11,7 +11,7 @@ depends_on: [DFS-024]
 touches: []
 blocked_reason:
 created: 2026-10-13
-updated: 2026-10-13
+updated: 2026-10-14
 completed:
 ---
 
@@ -26,6 +26,8 @@ So that the report shows only the duplicates worth reclaiming, and those files a
 ## Context
 
 On 2026-10-13 a scan of `C:/Media D:/Media E:/Media F:/Media` (7.3 TB, 700,488 files) reported 11,590 duplicate sets and 46,567 files, 438.1 GB reclaimable. 29,565 of those 46,567 paths were macOS metadata (`._*` AppleDouble files and `.DS_Store`), about 4 KB each, so about 115 MB of the 438 GB. The two largest sets were exactly these files (7,993 copies of one `._*` file in a `.photoslibrary`, and 4,920 copies of `._.DS_Store`), and they caused an 18-minute stall in the hard-link phase (see DFS-026).
+
+Where the 7,993 copies of that one `._*` file live (from the same report, 2026-10-14): 7,790 under `F:\Media\Catalogs\ApplePhotos` and 203 under `E:\Media\iPhone\2018-03 Photoslibrary` (sha256 `51dfecee9153`), so the set spans two libraries, not one. A smaller scan on 2026-10-14 (`E:/Media/iPhone/2018-03 Photoslibrary E:/Media/iPhone/iPhoneOxana F:/Media/iPhone/oxana E:/Media/Video/Import E:/Media/iPhone/GMetrix`: 573 sets, 1,633 files, 3.2 GB reclaimable) shows the same pattern at small scale: the photoslibrary's 203 copies are set #97, and many further sets are 4 KB `._*` files, including `._.DS_Store` (#303, 4 copies) and `._VIRB04xx.MP4` sidecars next to camera videos (#207, 11 copies).
 
 A `._<name>` file holds the Mac metadata of `<name>` (resource fork, extended attributes, Finder tags). Pairing it off on its own as a duplicate is meaningless, and deleting it apart from its main file loses that metadata.
 
