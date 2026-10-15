@@ -1,7 +1,7 @@
 ---
 id: DFS-025
 title: Make the hashing ETA and percentage account for files left, not only bytes
-status: in-progress
+status: done
 type: fix
 scope: [cli]
 archetype: none
@@ -14,7 +14,7 @@ touches:
 blocked_reason:
 created: 2026-10-13
 updated: 2026-10-15
-completed:
+completed: 2026-10-15
 ---
 
 # DFS-025: Make the hashing ETA and percentage account for files left, not only bytes
