@@ -1,7 +1,7 @@
 ---
 id: DFS-029
 title: Write the report to a file with --output
-status: in-progress
+status: done
 type: feature
 scope: [cli]
 archetype: none
@@ -11,8 +11,8 @@ depends_on: []
 touches: [cli, CLAUDE.md]
 blocked_reason:
 created: 2026-10-14
-updated: 2026-10-15
-completed:
+updated: 2026-10-19
+completed: 2026-10-19
 ---
 
 # DFS-029: Write the report to a file with --output
