@@ -2,7 +2,7 @@
 name: learn
 description: Record and manage friction in each ticket's own learnings.md - add an entry, review the open ones across every ticket, decide, apply a change, or reflect on a finished ticket. Run only by the user.
 argument-hint: add|review|decide|apply|reflect [args]
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Learn
