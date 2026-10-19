@@ -28,12 +28,15 @@ import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
@@ -44,6 +47,7 @@ import java.util.Arrays;
 import java.util.Deque;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -722,6 +726,198 @@ class ScanCommandTest {
         assertEquals(0, run.jsonLines().getLast().get("excluded").asLong());
     }
 
+    // --- DFS-029: --output
+
+    /** The Background: "Café" holds two files with the same 2,000 bytes, and "out" is an empty folder. */
+    private Path cafe() throws IOException {
+        Path cafe = Files.createDirectories(tmp.resolve("Café"));
+        String content = "x".repeat(2_000);
+        write(cafe.resolve("a.txt"), content);
+        write(cafe.resolve("b.txt"), content);
+        Files.createDirectories(tmp.resolve("out"));
+        return cafe;
+    }
+
+    @Test
+    @DisplayName("DFS-029.AC-1 The text report goes to the file as UTF-8 and not to stdout")
+    void textReportGoesToFile() throws IOException {
+        Path cafe = cafe();
+        Path report = tmp.resolve("out").resolve("report.txt");
+
+        Run plain = scan(cafe.toString(), "--format=text", "--progress=off");
+        Run run = scan(cafe.toString(), "--format=text", "--progress=log", "--output=" + report);
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals("", run.out);
+        assertTrue(plain.out.contains(cafe.resolve("a.txt").toString()), plain.out);
+        assertEquals(Arrays.toString(plain.out.getBytes(StandardCharsets.UTF_8)),
+                Arrays.toString(Files.readAllBytes(report)));
+        List<String> err = run.err.lines().toList();
+        assertEquals("Report written to " + report.toAbsolutePath(), err.getLast(), run.err);
+        assertTrue(err.get(err.size() - 2).startsWith("Done in "), run.err);
+        assertEquals(List.of("report.txt"), names(tmp.resolve("out")));
+    }
+
+    @Test
+    @DisplayName("DFS-029.AC-1 The JSONL report goes to the file")
+    void jsonlReportGoesToFile() throws IOException {
+        Path cafe = cafe();
+        Path report = tmp.resolve("out").resolve("report.jsonl");
+
+        Run run = scan(cafe.toString(), "--progress=log", "--output=" + report);
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals("", run.out);
+        List<JsonNode> lines = new Run(0, Files.readString(report, StandardCharsets.UTF_8), "").jsonLines();
+        assertEquals(List.of("set", "summary"), lines.stream().map(l -> l.get("type").asString()).toList());
+        assertEquals(2, lines.getFirst().get("copies").size());
+    }
+
+    @Test
+    @DisplayName("DFS-029.AC-1 No confirmation line with progress off")
+    void noConfirmationWithProgressOff() throws IOException {
+        Path cafe = cafe();
+        Path report = tmp.resolve("out").resolve("report.jsonl");
+
+        Run run = scan(cafe.toString(), "--progress=off", "--output=" + report);
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals("", run.err);
+        assertEquals("", run.out);
+        assertTrue(Files.readString(report, StandardCharsets.UTF_8).contains("\"type\":\"summary\""));
+    }
+
+    @Test
+    @DisplayName("DFS-029.AC-2 An existing file is replaced")
+    void existingFileIsReplaced() throws IOException {
+        Path cafe = cafe();
+        Path report = write(tmp.resolve("out").resolve("report.txt"), "old report");
+
+        Run run = scan(cafe.toString(), "--format=text", "--progress=off", "--output=" + report);
+
+        assertEquals(0, run.exitCode, run.err);
+        String content = Files.readString(report, StandardCharsets.UTF_8);
+        assertFalse(content.contains("old report"), content);
+        assertTrue(content.contains(cafe.resolve("a.txt").toString()), content);
+        assertEquals(List.of("report.txt"), names(tmp.resolve("out")));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @ValueSource(strings = {"missing", "parent is a file", "folder", "invalid"})
+    @DisplayName("DFS-029.AC-3 A bad output location is a usage error before scanning")
+    void badOutputLocationIsUsageError(String example) throws IOException {
+        Path out = Files.createDirectories(tmp.resolve("out"));
+        String output = switch (example) {
+            case "missing" -> out.resolve("missing").resolve("report.txt").toString();
+            case "parent is a file" -> write(out.resolve("file.txt"), "x").resolve("report.txt").toString();
+            case "folder" -> out.toString();
+            default -> out + "/a\u0000b.txt";
+        };
+        List<String> before = names(out);
+        FakePorts fake = new FakePorts(snapshot(ScanStatus.COMPLETED, null));
+
+        Run run = run(fake, tmp.toString(), "--progress=log", "--output=" + output);
+
+        assertEquals(2, run.exitCode, run.err);
+        List<String> err = run.err.lines().toList();
+        assertTrue(err.getFirst().startsWith("error: "), run.err);
+        assertEquals(ScanCommand.USAGE_LINE, err.getLast(), run.err);
+        assertEquals(2, err.size(), run.err);
+        assertEquals(0, fake.starts);
+        assertEquals(before, names(out));
+    }
+
+    @Test
+    @DisplayName("DFS-029.AC-3 A folder where no file can be created is a usage error before scanning")
+    void unwritableFolderIsUsageError() throws IOException {
+        Path out = Files.createDirectories(tmp.resolve("out"));
+        PosixFileAttributeView view = Files.getFileAttributeView(out, PosixFileAttributeView.class);
+        assumeTrue(view != null, "no POSIX permissions on this platform");
+        Set<PosixFilePermission> original = view.readAttributes().permissions();
+        view.setPermissions(Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE));
+        try {
+            assumeTrue(!Files.isWritable(out), "the current user can write anyway (root)");
+            FakePorts fake = new FakePorts(snapshot(ScanStatus.COMPLETED, null));
+
+            Run run = run(fake, tmp.toString(), "--output=" + out.resolve("report.txt"));
+
+            assertEquals(2, run.exitCode, run.err);
+            assertTrue(run.err.startsWith("error: cannot create a file in " + out), run.err);
+            assertEquals(0, fake.starts);
+            assertEquals(List.of(), names(out));
+        } finally {
+            view.setPermissions(original);
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-029.AC-4, DFS-029.AC-5 Writing fails after the scan")
+    void writeFailureKeepsOldReport() throws IOException {
+        Path out = Files.createDirectories(tmp.resolve("out"));
+        Path report = write(out.resolve("report.txt"), "old report");
+        FakePorts fake = new FakePorts(snapshot(ScanStatus.COMPLETED, null));
+        ReportFile.Opener failing = file -> new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+                throw new IOException("disk full");
+            }
+        };
+
+        Run run = run(new ScanCommand(fake, fake, fake, Duration.ZERO, failing),
+                tmp.toString(), "--format=text", "--progress=log", "--output=" + report);
+
+        assertEquals(1, run.exitCode, run.err);
+        assertEquals("error: could not write the report to " + report + ": IOException: disk full",
+                run.err.lines().toList().getLast(), run.err);
+        assertEquals("", run.out);
+        assertEquals("old report", Files.readString(report, StandardCharsets.UTF_8));
+        assertEquals(List.of("report.txt"), names(out));
+    }
+
+    @Test
+    @DisplayName("DFS-029.AC-5 A failed scan leaves an existing file and no temporary file")
+    void failedScanKeepsOldReport() throws IOException {
+        Path out = Files.createDirectories(tmp.resolve("out"));
+        Path report = write(out.resolve("report.txt"), "old report");
+        FakePorts fake = new FakePorts(snapshot(ScanStatus.FAILED, "java.io.UncheckedIOException: disk gone"));
+
+        Run run = run(fake, tmp.toString(), "--output=" + report);
+
+        assertEquals(1, run.exitCode, run.err);
+        assertEquals("old report", Files.readString(report, StandardCharsets.UTF_8));
+        assertEquals(List.of("report.txt"), names(out));
+    }
+
+    @Test
+    @DisplayName("DFS-029.AC-5 A refused scan leaves no file")
+    void refusedScanLeavesNoFile() throws IOException {
+        Path out = Files.createDirectories(tmp.resolve("out"));
+
+        Run run = scan(tmp.resolve("does-not-exist").toString(), "--output=" + out.resolve("report.txt"));
+
+        assertEquals(1, run.exitCode, run.err);
+        assertEquals(List.of(), names(out));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @ValueSource(strings = {"twice", "empty"})
+    @DisplayName("DFS-029.AC-6 --output given twice or empty is a usage error")
+    void outputTwiceOrEmpty(String example) throws IOException {
+        Path out = Files.createDirectories(tmp.resolve("out"));
+        String[] args = example.equals("twice")
+                ? new String[] {tmp.toString(), "--output=" + out.resolve("a.txt"), "--output=" + out.resolve("b.txt")}
+                : new String[] {tmp.toString(), "--output="};
+        FakePorts fake = new FakePorts(snapshot(ScanStatus.COMPLETED, null));
+
+        Run run = run(fake, args);
+
+        assertEquals(2, run.exitCode, run.err);
+        String message = example.equals("twice") ? "--output given more than once" : "--output needs a file path";
+        assertEquals(List.of("error: " + message, ScanCommand.USAGE_LINE), run.err.lines().toList());
+        assertEquals(0, fake.starts);
+        assertEquals(List.of(), names(out));
+    }
+
     // --- helpers
 
     private Run scan(String... args) {
@@ -768,6 +964,12 @@ class ScanCommandTest {
 
     private static Path write(Path file, String content) throws IOException {
         return Files.writeString(file, content, StandardCharsets.UTF_8);
+    }
+
+    private static List<String> names(Path dir) throws IOException {
+        try (var files = Files.list(dir)) {
+            return files.map(p -> p.getFileName().toString()).sorted().toList();
+        }
     }
 
     private static String real(Path path) throws IOException {

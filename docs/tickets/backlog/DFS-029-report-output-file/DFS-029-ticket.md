@@ -1,7 +1,7 @@
 ---
 id: DFS-029
 title: Write the report to a file with --output
-status: ready
+status: in-progress
 type: feature
 scope: [cli]
 archetype: none
@@ -103,9 +103,9 @@ Feature: Report written to a file
       | <tmp>/out/missing/report.txt   | the folder does not exist  |
       | <tmp>/out/file.txt/report.txt  | the parent is a file       |
       | <tmp>/out                      | the path is a folder       |
-      | <tmp>/out/a<b.txt              | not a valid path (Windows) |
+      | <tmp>/out/a<NUL>b.txt          | not a valid path           |
 
-    (For the "parent is a file" row, "<tmp>/out/file.txt" exists beforehand as a file.)
+    (For the "parent is a file" row, "<tmp>/out/file.txt" exists beforehand as a file. `<NUL>` is the character U+0000, invalid in a path on every platform.)
 
   @AC-3
   Scenario: A folder where no file can be created is a usage error before scanning
@@ -156,11 +156,12 @@ Feature: Report written to a file
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `CLAUDE.md` has the `--output` example, the PowerShell sentence and the "Current state" mention (decision 5)
-- [ ] A real run from PowerShell 5.1 with `--format=text --output=<file>` over a folder with a non-ASCII name produces a file that is byte-identical to the same run's stdout redirected from cmd
+- [x] Every scenario above is an automated test and passes: 10 `DFS-029.AC-*` tests in `ScanCommandTest` (14 cases with the parameterized ones), all passing except the read-only-folder case, which needs POSIX permissions and skips on Windows
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests): 329 tests, 0 failed, 3 skipped
+- [x] No files changed outside the paths listed under Touches: `ScanCommand.java`, the new `ReportFile.java`, `ScanCommandTest.java`, `CLAUDE.md` and this ticket
+- [x] `CLAUDE.md` has the `--output` example, the PowerShell sentence and the "Current state" mention (decision 5)
+- [x] A real run from PowerShell 5.1 with `--format=text --output=<file>` over a folder with a non-ASCII name produces a file that is byte-identical to the same run's stdout redirected from cmd
+  - Run 2026-10-15 on a folder `Café-Ünïcode` holding `naïve.bin` and `sub/naïve-copy.bin` (3,000 identical bytes): PowerShell 5.1 with `--format=text --output=<file>` exited 0, stderr ended `Done in 0:00: …` then `Report written to <absolute path>`; the file and cmd's `> file` of the same scan are both 530 bytes, SHA-256 `720FC7E43401EFD26400410238FBF6FF09881571FFC0813703C1D8BF8CDCDE18`, and no `.part` file was left. A folder name with a space could not be passed through PowerShell into `gradlew.bat --args` (Gradle read the rest as task names), unrelated to this ticket.
 
 ## Open questions
 

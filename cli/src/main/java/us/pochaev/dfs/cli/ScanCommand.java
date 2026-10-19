@@ -17,7 +17,9 @@ import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -34,6 +36,7 @@ import java.util.Objects;
  * <p>Stdout carries only JSONL: a {@code set} line per duplicate set, a {@code skipped} line per
  * skipped path, then one {@code summary} line (decision 3). Progress and errors go to {@code err}
  * (decision 4), shown by {@link ProgressDisplay} (DFS-024). Exit codes: 0 completed, 1 refused start or failed scan, 2 usage error (decision 6).
+ * With {@code --output=<file>} the report goes to that file instead of {@code out}, through a {@link ReportFile} (DFS-029).
  */
 public final class ScanCommand {
 
@@ -43,23 +46,32 @@ public final class ScanCommand {
 
     static final String USAGE_LINE =
             "usage: duplicate-file-scanner <folder>... [--min-size=<bytes>] [--format=jsonl|text]"
-                    + " [--progress=live|log|off] [--no-default-excludes]";
+                    + " [--progress=live|log|off] [--no-default-excludes] [--output=<file>]";
     private static final String NO_DEFAULT_EXCLUDES = "--no-default-excludes";
     private static final String MIN_SIZE = "--min-size=";
     private static final String FORMAT = "--format=";
     private static final String PROGRESS = "--progress=";
+    private static final String OUTPUT = "--output=";
 
     private final StartScan start;
     private final GetScanStatus status;
     private final GetScanResult result;
     private final Duration pollInterval;
+    private final ReportFile.Opener opener;
     private final JsonMapper json = JsonMapper.builder().build();
 
     public ScanCommand(StartScan start, GetScanStatus status, GetScanResult result, Duration pollInterval) {
+        this(start, status, result, pollInterval, file -> Files.newOutputStream(file));
+    }
+
+    /** @param opener opens the {@code --output} report's temporary file; replaced in tests to make the write fail */
+    ScanCommand(StartScan start, GetScanStatus status, GetScanResult result, Duration pollInterval,
+            ReportFile.Opener opener) {
         this.start = Objects.requireNonNull(start, "start");
         this.status = Objects.requireNonNull(status, "status");
         this.result = Objects.requireNonNull(result, "result");
         this.pollInterval = Objects.requireNonNull(pollInterval, "pollInterval");
+        this.opener = Objects.requireNonNull(opener, "opener");
     }
 
     /** Runs the command and returns the process exit code; never calls {@code System.exit}. */
@@ -70,6 +82,7 @@ public final class ScanCommand {
         String format = null;
         String progress = null;
         boolean noDefaultExcludes = false;
+        String output = null;
         for (String arg : args) {
             if (arg.startsWith(MIN_SIZE)) {
                 String value = arg.substring(MIN_SIZE.length());
@@ -102,14 +115,21 @@ public final class ScanCommand {
                     return usage(err, NO_DEFAULT_EXCLUDES + " given more than once");
                 }
                 noDefaultExcludes = true;
+            } else if (arg.startsWith(OUTPUT)) {
+                if (output != null) {
+                    return usage(err, "--output given more than once");
+                }
+                output = arg.substring(OUTPUT.length());
+                if (output.isEmpty()) {
+                    return usage(err, "--output needs a file path");
+                }
             } else if (arg.startsWith("--")) {
                 return usage(err, "unknown option: " + arg);
             } else {
                 try {
                     folders.add(Path.of(arg));
                 } catch (InvalidPathException e) {
-                    return usage(err, "not a valid path: \"" + arg + "\" (" + e.getReason()
-                            + (e.getIndex() < 0 ? "" : " at index " + e.getIndex()) + ")");
+                    return usage(err, notValid(arg, e));
                 }
             }
         }
@@ -119,10 +139,45 @@ public final class ScanCommand {
         boolean text = "text".equals(format);
         ScanConfig config = new ScanConfig(minSize, defaults.sampleSize(), defaults.partialHashThreshold(),
                 !noDefaultExcludes);
+        ProgressDisplay.Mode mode =
+                progress == null ? ProgressDisplay.Mode.LIVE : ProgressDisplay.Mode.valueOf(progress.toUpperCase());
 
-        ProgressDisplay display = new ProgressDisplay(
-                progress == null ? ProgressDisplay.Mode.LIVE : ProgressDisplay.Mode.valueOf(progress.toUpperCase()),
-                err, System::nanoTime);
+        if (output == null) {
+            return scan(folders, config, mode, text, null, out, err);
+        }
+        Path target;
+        try {
+            target = Path.of(output).toAbsolutePath();
+        } catch (InvalidPathException e) {
+            return usage(err, notValid(output, e));
+        }
+        Path parent = target.getParent();
+        if (parent == null || Files.isDirectory(target)) {
+            return usage(err, "--output is a folder: " + target);
+        }
+        if (!Files.exists(parent)) {
+            return usage(err, "--output folder does not exist: " + parent);
+        }
+        if (!Files.isDirectory(parent)) {
+            return usage(err, "--output folder is not a folder: " + parent);
+        }
+        ReportFile report;
+        try {
+            report = ReportFile.create(target, opener);
+        } catch (IOException e) {
+            return usage(err, "cannot create a file in " + parent + ": " + describe(e));
+        }
+        try {
+            return scan(folders, config, mode, text, report, out, err);
+        } finally {
+            report.discard();
+        }
+    }
+
+    /** Runs the scan and writes its report to {@code report}, or to {@code out} when it is null. */
+    private int scan(List<Path> folders, ScanConfig config, ProgressDisplay.Mode mode, boolean text,
+            ReportFile report, PrintStream out, PrintStream err) {
+        ProgressDisplay display = new ProgressDisplay(mode, err, System::nanoTime);
         display.start();
 
         ScanId id;
@@ -155,10 +210,18 @@ public final class ScanCommand {
         return switch (result.result(id)) {
             case Result.Success<ScanResult> s -> {
                 display.completed(s.value().sets().size());
-                if (text) {
-                    TextReport.write(s.value(), out);
-                } else {
-                    write(s.value(), out);
+                if (report == null) {
+                    write(s.value(), text, out);
+                    yield OK;
+                }
+                try {
+                    report.commit(file -> write(s.value(), text, file));
+                } catch (IOException e) {
+                    yield error(err, "could not write the report to " + report.target() + ": " + describe(e));
+                }
+                if (mode != ProgressDisplay.Mode.OFF) {
+                    err.print("Report written to " + report.target() + "\n");
+                    err.flush();
                 }
                 yield OK;
             }
@@ -182,6 +245,14 @@ public final class ScanCommand {
                 }
                 default -> Thread.sleep(pollInterval);
             }
+        }
+    }
+
+    private void write(ScanResult scan, boolean text, PrintStream out) {
+        if (text) {
+            TextReport.write(scan, out);
+        } else {
+            write(scan, out);
         }
     }
 
@@ -226,6 +297,16 @@ public final class ScanCommand {
     private void line(PrintStream out, ObjectNode node) {
         out.print(json.writeValueAsString(node));
         out.print('\n');
+    }
+
+    private static String notValid(String path, InvalidPathException e) {
+        return "not a valid path: \"" + path + "\" (" + e.getReason()
+                + (e.getIndex() < 0 ? "" : " at index " + e.getIndex()) + ")";
+    }
+
+    private static String describe(IOException e) {
+        return e.getMessage() == null ? e.getClass().getSimpleName()
+                : e.getClass().getSimpleName() + ": " + e.getMessage();
     }
 
     private static int usage(PrintStream err, String problem) {
