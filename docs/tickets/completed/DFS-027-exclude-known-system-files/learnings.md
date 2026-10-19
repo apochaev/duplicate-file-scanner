@@ -73,11 +73,11 @@
 
 ### DFS-027.L-6: The tests phase's artifacts listed only new test files, so freeze and disabled skipped the edited ones
 
-- Status: proposed
+- Status: applied
 - Impact: shared (a skill: `.claude/skills/story/SKILL.md`)
 - Target: `.claude/skills/story/SKILL.md`
 - Change: in resume step 8, add: the phase's `artifacts` in `plan.json` lists every file its commit added or changed, taken from `git -C <worktree> show --name-only --format= <commit>`, not from the agent's report, since `freeze` and `disabled` judge only the files listed there.
 - Evidence: DFS-027 tests commit d96c5e1 changed 7 test files, but `plan.json`'s tests phase lists only `DefaultExcludeFilterTest.java` and `ScanResultTest.java` (plus `test-plan.md`); `tools/story-gate/FreezeCheck.java` and `DisabledCheck.java` read that list, so `ScanCommandTest`, `TextReportTest`, `ScanConfigTest`, `ScanPipelineTest` and `ScanServiceTest` could have been edited by the implementer unnoticed.
 - Recurrences: 1 (DFS-027)
 - Recommendation: apply; the freeze guarantee silently covered 2 of 7 test files, and taking the list from git makes it complete by construction.
-- Decision:
+- Decision: applied 2026-10-19 by the user; commit `docs: apply DFS-027.L-6 [DFS-027]`
