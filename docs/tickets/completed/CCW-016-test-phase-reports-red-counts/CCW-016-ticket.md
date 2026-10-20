@@ -1,7 +1,7 @@
 ---
 id: CCW-016
 title: Report the red counts when test-phase passes
-status: in-progress
+status: done
 type: fix
 scope: [build]
 archetype: none
@@ -12,7 +12,7 @@ touches: [tools/story-gate, .claude/skills/story/SKILL.md]
 blocked_reason:
 created: 2026-10-19
 updated: 2026-10-19
-completed:
+completed: 2026-10-19
 ---
 
 # CCW-016: Report the red counts when test-phase passes
