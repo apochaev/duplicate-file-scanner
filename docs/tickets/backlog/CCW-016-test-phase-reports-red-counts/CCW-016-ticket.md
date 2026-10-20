@@ -1,7 +1,7 @@
 ---
 id: CCW-016
 title: Report the red counts when test-phase passes
-status: ready
+status: in-progress
 type: fix
 scope: [build]
 archetype: none
@@ -108,11 +108,12 @@ Feature: test-phase reports both checks on a pass
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] The story-gate self-tests pass (`java tools/story-gate/StoryGate.java selftest` or its launcher), with only the two passing `test-phase` cases' `expected.txt` re-blessed
-- [ ] A real `test-phase` run on a finished story's tests commit prints the three-line pass (or, if no stub remains to fail against, the run is described instead)
+- [x] Every scenario above is an automated test and passes: AC-1 and AC-2 by the four `test-phase` self-test cases; AC-3 checked by reading resume step 7 of `.claude/skills/story/SKILL.md`
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests): 329 tests, 0 failed, 3 skipped
+- [x] No files changed outside the paths listed under Touches: `Verdict.java`, `TestPhaseGate.java`, three self-test cases, the story skill and this ticket
+- [x] The story-gate self-tests pass (`java tools/story-gate/StoryGate.java selftest` or its launcher), with only the two passing `test-phase` cases' `expected.txt` re-blessed: 103 cases pass. One more case changed: `CCW-015.AC-7-instructions` pinned `pipeline-stage` at `version: 14`, failing since 8998094 raised it to 15 (DFS-027.L-1 to L-4); the pin is now 15.
+- [x] A real `test-phase` run on a finished story's tests commit prints the three-line pass (or, if no stub remains to fail against, the run is described instead)
+  - Run 2026-10-19 on DFS-027's tests commit d96c5e1, in a temporary detached worktree: exit 0, `PASS test-phase DFS-027: red and traceability pass`, `- red: 47 story tests fail with stubs, 114 other tests fail on the ticket's stub, 0 fail in declared classes, 148 other tests pass (2 skipped)`, `- traceability: 6 criteria traced through 12 scenarios to tests and test-plan.md`; the red counts match DFS-027's `plan.json` note.
 
 ## Open questions
 

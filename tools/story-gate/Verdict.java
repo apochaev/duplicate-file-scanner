@@ -16,6 +16,11 @@ record Verdict(Status status, String check, String subject, String summary, List
         return new Verdict(Status.PASS, check, subject, summary, List.of());
     }
 
+    /** A passing verdict with detail lines, rendered beneath the summary like a failure's problems (CCW-016). */
+    static Verdict pass(String check, String subject, String summary, List<String> details) {
+        return new Verdict(Status.PASS, check, subject, summary, List.copyOf(details));
+    }
+
     /** A failing verdict; the problems are one line each, and the rendering caps how many are shown. */
     static Verdict fail(String check, String subject, List<String> problems) {
         String summary = problems.size() + (problems.size() == 1 ? " problem" : " problems");

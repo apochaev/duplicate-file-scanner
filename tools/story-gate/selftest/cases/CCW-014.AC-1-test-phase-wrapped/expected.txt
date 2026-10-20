@@ -1,1 +1,3 @@
-PASS traceability DFS-001: 3 criteria traced through 3 scenarios to tests and test-plan.md
+PASS test-phase DFS-001: red and traceability pass
+- red: 3 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 0 other tests pass
+- traceability: 3 criteria traced through 3 scenarios to tests and test-plan.md

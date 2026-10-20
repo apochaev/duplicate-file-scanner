@@ -32,7 +32,7 @@
       "every class declared under `## Expected breakage`, by name"
     ],
     ".claude/archetypes/pipeline-stage/archetype.md": [
-      "\nversion: 14\n"
+      "\nversion: 15\n"
     ],
     ".claude/archetypes/use-case/archetype.md": [
       "\nversion: 4\n"

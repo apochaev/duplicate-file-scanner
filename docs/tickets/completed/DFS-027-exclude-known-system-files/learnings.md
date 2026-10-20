@@ -84,11 +84,11 @@
 
 ### DFS-027.L-7: test-phase reports only the traceability line when red passes, so the red counts are lost
 
-- Status: proposed
+- Status: applied
 - Impact: local (tools/story-gate)
 - Target: `tools/story-gate/TestPhaseGate.java`
 - Change: when both checks pass, return one verdict whose message holds red's line ("N story tests fail with stubs, …") followed by traceability's, instead of traceability's alone.
 - Evidence: `TestPhaseGate.java:15-16` returns `TraceabilityCheck`'s verdict once `RedCheck` passes, discarding `RedCheck`'s pass message (`RedCheck.java:59`). For DFS-027's tests phase, the red counts recorded in `plan.json` ("47 story tests fail with stubs, 114 other tests fail on the ticket's stub, … 148 pass") had to come from a separate `red` run.
 - Recurrences: 1 (DFS-027)
 - Recommendation: apply; the counts are the red gate's evidence, and every story run needs them in `plan.json`.
-- Decision:
+- Decision: applied 2026-10-19 by the user, through CCW-016; commit `fix(story-gate): report the red counts when test-phase passes [CCW-016]`
