@@ -57,6 +57,8 @@ Open the URL it prints, then stop it with Ctrl+C.
 
 Implemented by hand in one session. The tests passed on the first run, and the full build was green the first time. The one surprise was the `bootRun` process outliving its stopped Gradle task, which is noted above.
 
+After DFS-031 (`scanner-spring`) landed on `main`, `main` was merged into this branch (`0abe7c0`). The two conflicts were both "a subproject was added": `settings.gradle.kts` now includes all four, and `CLAUDE.md` lists four subprojects. Full build green again on the merged tree, with all 7 server tests passing.
+
 ## Summary
 
 8 criteria met: 6 by automated tests (7 tests), AC-1 by the green build, AC-8 by reading. Manual `bootRun` check done. Scope respected.
