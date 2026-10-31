@@ -19,7 +19,7 @@ A test that proves more than one criterion lists every ID, comma-separated, at t
 - Call the factory and assert on what it returns through the exported ports only: a request started through one returned port is known to the others (shared state, checklist item 1), and two calls give independent sets when the design says so.
 - One real-thread test with a real virtual-thread executor proves the wiring end to end on a `@TempDir`, waiting for the terminal state with a bounded poll (a deadline of a few seconds), never an unbounded loop.
 - A `null` executor or other rejected argument: `try { ...; fail(...); } catch (NullPointerException expected) {}`, never `assertThrows` (the stub's exception must propagate uncaught; CCW-005.L-3, DFS-019.L-1).
-- Guard-test edits the design specifies (`ArchitectureTest`, `allowEmptyShould`) are yours to make; they are not story tests and carry no criterion ID.
+- Guard-test edits the design specifies (`ArchitectureTest`, `allowEmptyShould`) are yours to make; they are not story tests and carry no criterion ID. When the ticket makes a static guard itself a criterion (for example "depends on nothing in `application` or `infra`, enforced by ArchUnit"), the rule alone passes against the stubs and fails the red gate: keep the rule, and have the criterion's story test also reach a stub, for example by starting the context and checking the beans it provides (DFS-026.L-3, DFS-031.L-1).
 
 ## Testing a composition root: two levels
 

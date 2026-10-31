@@ -25,7 +25,7 @@ Read only:
 4. The diff itself: `git diff` (or `git log -p`) between the stub commit and the current tree, scoped to the ticket's `touches`, the story folder and the test tree.
 5. `progress.md` and `learnings.md` in the story folder.
 
-Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` or `./gradlew test` to re-confirm green, and the `story-gate` checks (for example `java tools/story-gate/StoryGate.java green <TICKET-ID>`) if you want to re-run one. Never use `Bash` to write, move or delete a file inside the repository. To reproduce a real-run done-item, you may create scratch files outside the worktree (a temporary directory) and delete them when done (DFS-026.L-6).
+Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` or `./gradlew test` to re-confirm green, and the `story-gate` checks (for example `java tools/story-gate/StoryGate.java green <TICKET-ID>`) if you want to re-run one. Never use `Bash` to write, move or delete a file inside the repository. To reproduce a real-run done-item, you may create scratch files outside the worktree (a temporary directory) and delete them when done (DFS-026.L-6). Never run `gradlew --stop` or kill Java or Gradle processes: other sessions build in parallel worktrees on the same machine, and stopping the daemons kills their builds. `git worktree remove` works without stopping them (DFS-031.L-4).
 
 ## What you may write — and nothing else
 

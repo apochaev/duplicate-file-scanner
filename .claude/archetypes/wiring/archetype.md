@@ -1,6 +1,6 @@
 ---
 name: wiring
-version: 2
+version: 3
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
@@ -32,6 +32,7 @@ Written from DFS-019 (a factory, run through the pipeline as `use-case`, which m
 - A Spring-level story test of a composition root fails against those stubs with the stub wrapped: a stubbed `@Bean` fails context startup with `BeanCreationException`, a stubbed command makes `SpringApplication.run` throw `IllegalStateException("Failed to execute ApplicationRunner")`, and the stub is only the trace's root cause (`Caused by: java.lang.UnsupportedOperationException: not implemented: ...`). The red gate accepts that as a stub failure since CCW-014, so such tests need no unwrapping helper.
 - A data record (the factory's result record) is not stubbed: write its components and leave its compact constructor without checks, listing the checks it needs in `design.md` for the implementer (as `use-case` does).
 - An edit to an existing guard test named in `touches` (an `ArchitectureTest` rule, `allowEmptyShould`) belongs to the test-author; the architect specifies it in `design.md` (DFS-019).
+- A ticket that moves a composition root (for example from an app's `@Configuration` into an autoconfigure module) deletes the replaced wiring, and the tests that compile against it, in the design phase, alongside the new stubs. Left in place, the old beans satisfy every `@ConditionalOnMissingBean`, the new beans back off, and the story tests pass against the stubs (DFS-031.L-2).
 - The architect copies `skeletons/PortBeansConfiguration.java.tmpl` for a composition root's `@Configuration`, replacing every `<...>`.
 
 ## Edge-case checklist
