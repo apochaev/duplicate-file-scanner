@@ -261,13 +261,13 @@ Feature: Complete scan export
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] The heap benchmark for 100,000 folders is committed `@Disabled`, was run once by hand, and its figure (bytes per folder, total) is recorded in this ticket (decision 10)
-- [ ] `tools/analysis/overlaps.sql` runs without error under DuckDB against a version 2 export of the test fixtures, and its `folders` view shows totals. Checked by hand after the pipeline, not by Gradle; the result is noted in this ticket
-- [ ] `CLAUDE.md` decision 1 and its JSONL description match decisions 1 and 7; checked by reading
-- [ ] `README.md`'s text report example shows the new header; checked by reading
+- [x] Every scenario above is an automated test and passes (verifier: all 18 scenarios mapped to passing tests; see verification.md)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests) (verifier: re-run at 56b5667, green; gate 363 passed / 3 skipped)
+- [x] No files changed outside the paths listed under Touches (verifier: diff vs 8ccbe31 holds only touched paths and the story folder; gate touches PASS)
+- [x] The heap benchmark for 100,000 folders is committed `@Disabled`, was run once by hand, and its figure (bytes per folder, total) is recorded in this ticket (decision 10). Committed as a plain method `FolderCounterHeapBenchmark` (the story gate rejects `@Disabled`). Figure: about 176.6 B/folder, 16.8 MB total for 100,000 folders (3 files each), reproduced by an earlier verify run; the implementer measured 177 B/folder, 16.9 MB. This verifier did not re-run it
+- [x] `tools/analysis/overlaps.sql` runs without error under DuckDB against a version 2 export of the test fixtures, and its `folders` view shows totals. Checked by hand after the pipeline, not by Gradle; the result is noted in this ticket. Verifier, 2026-10-31: the CLI jar scanned the fixtures to v2 JSONL (1 scan, 7 folder, 2 set, 1 summary lines). Under Python DuckDB 2.0.0 the script ran without error. `folders` has 5 rows with total_files/total_bytes (fixtures root 23 files/329 B, `folders` 5/127, `folder1` 2/52, `folder2` 3/75, `basic` 3/67), and roll-up stops at the root. Defect found: a drive-root scan root (`C:\`, `/`) leaves `folders` empty (see verification.md)
+- [x] `CLAUDE.md` decision 1 and its JSONL description match decisions 1 and 7; checked by reading (verifier: confirmed)
+- [x] `README.md`'s text report example shows the new header; checked by reading (verifier: confirmed)
 
 ## Open questions
 

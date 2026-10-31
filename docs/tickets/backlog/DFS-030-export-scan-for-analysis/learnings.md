@@ -5,3 +5,5 @@
 - **test-author:** the design asks for a `@Disabled` heap benchmark, but DisabledCheck rejects any `@Disabled` in the story tests; wrote it as a plain method (as DFS-001 did). Real-scan AC-9 test was dropped: a real scan on the stub ends FAILED with empty output, so it cannot fail with the raw stub exception.
 
 - DFS-030: Instant.toString() pads fractions to 3/6/9 digits; design said to use it, tests want minimal fractions, so ScanCommand.iso trims trailing zeros.
+- **verifier:** `overlaps.sql` stops roll-up at the roots with `starts_with(anc, root || '/')`. A drive root (`F:\` becomes `F:/`) or `/` already ends in `/`, so nothing matches and `folders` comes out empty. The DuckDB done-item used one fixtures root only, so it could not catch this. A done-item that hand-checks a path-prefix query should also try a drive-root (or filesystem-root) root.
+- **verifier:** running `overlaps.sql` from Python DuckDB needs `con.execute(script)` followed by `con.fetchall()` before the next query (DuckDB 2.0 keeps the multi-statement result open), and `PYTHONIOENCODING=utf-8` on a Windows console for the box-drawn tables.
