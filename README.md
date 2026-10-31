@@ -85,6 +85,7 @@ Use `gradlew.bat` instead of `./gradlew` in cmd or PowerShell.
 ## Project layout
 
 - `file-scanner/`: the core library. Spring-free, a Java module, hexagonal architecture; layering is enforced by ArchUnit tests.
+- `scanner-spring/`: Spring Boot autoconfiguration that wires the library's ports as beans, shared by the apps.
 - `cli/`: a Spring Boot command-line app that wires the library together and prints the report.
 - `server/`: the local web server for the planned UI (`docs/design/ui.md`); for now a skeleton you start with `./gradlew :server:bootRun`.
 - `docs/tickets/`: the backlog, written as user stories with Gherkin acceptance criteria.

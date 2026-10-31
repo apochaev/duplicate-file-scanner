@@ -1,0 +1,127 @@
+{
+  "ticket": "DFS-031",
+  "archetype": {
+    "name": "wiring",
+    "version": 2
+  },
+  "branch": "tickets/DFS-031-extract-scanner-spring-module",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-031-extract-scanner-spring-module",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 21,
+          "wallClockSeconds": 388,
+          "outcome": "passed",
+          "note": "PASS touches DFS-031: 12 changed files, all inside touches; base is HEAD, so only uncommitted changes were seen (pass --base <ref>); turns = subagent tool uses"
+        }
+      ],
+      "artifacts": [
+        "cli/build.gradle.kts",
+        "cli/src/main/java/us/pochaev/dfs/cli/ScannerConfiguration.java",
+        "cli/src/test/java/us/pochaev/dfs/cli/ScannerConfigurationTest.java",
+        "docs/tickets/backlog/DFS-031-extract-scanner-spring-module/DFS-031-ticket.md",
+        "docs/tickets/backlog/DFS-031-extract-scanner-spring-module/design.md",
+        "docs/tickets/backlog/DFS-031-extract-scanner-spring-module/learnings.md",
+        "docs/tickets/backlog/DFS-031-extract-scanner-spring-module/progress.md",
+        "scanner-spring/build.gradle.kts",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java",
+        "scanner-spring/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports",
+        "settings.gradle.kts"
+      ],
+      "commit": "2bec7f18d6aa7023f3d15528f696105c869f343f"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 19,
+          "wallClockSeconds": 135,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-031: red and traceability pass; - red: 8 story tests fail with stubs, 1 other tests fail on the ticket's stub, 0 fail in declared classes, 364 other tests pass (3 skipped); - traceability: 5 criteria traced through 8 scenarios to tests and test-plan.md; turns = subagent tool uses"
+        }
+      ],
+      "artifacts": [
+        "cli/src/test/java/us/pochaev/dfs/cli/CliApplicationTest.java",
+        "docs/tickets/backlog/DFS-031-extract-scanner-spring-module/test-plan.md",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ArchitectureTest.java",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java"
+      ],
+      "commit": "ddf443ff32c1e6a522931359fba94937e43c8575"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 8,
+          "wallClockSeconds": 61,
+          "outcome": "passed",
+          "note": "PASS green DFS-031: build and tests green: 370 passed, 3 skipped; PASS disabled DFS-031: no @Disabled tests in the 3 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-031: none of the 3 test files of the tests phase changed since ddf443ff; PASS touches DFS-031: 18 changed files, all inside touches; PASS stubs DFS-031: no stub markers in 61 production files; PASS traceability DFS-031: 5 criteria traced through 8 scenarios to tests and test-plan.md; PASS consistency DFS-031: plan.json parses; state running agrees with ticket status in-progress; turns = subagent tool uses"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "README.md",
+        "docs/tickets/backlog/DFS-031-extract-scanner-spring-module/progress.md",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "c4210d3bc7a8c22de233cf4c85d91574e9b87c42"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 20,
+          "wallClockSeconds": 194,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-031: plan.json parses; state running agrees with ticket status in-progress; turns = subagent tool uses"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-031-extract-scanner-spring-module/DFS-031-ticket.md",
+        "docs/tickets/backlog/DFS-031-extract-scanner-spring-module/learnings.md",
+        "docs/tickets/backlog/DFS-031-extract-scanner-spring-module/verification.md"
+      ],
+      "commit": "e2dd464ab1869aeda0c967e0d64019ff3215bd3c"
+    }
+  ],
+  "gates": [
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": []
+}
