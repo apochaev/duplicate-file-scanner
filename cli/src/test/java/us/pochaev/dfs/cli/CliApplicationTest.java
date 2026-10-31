@@ -51,4 +51,26 @@ class CliApplicationTest {
         assertTrue(output.getErr().contains("Walking:"), output.getErr());
         assertTrue(output.getErr().contains("Hashing:"), output.getErr());
     }
+
+    @Test
+    @DisplayName("DFS-031.AC-5 The CLI scans through the autoconfigured beans")
+    void scansThroughAutoconfiguredBeans(CapturedOutput output) throws IOException {
+        Files.writeString(tmp.resolve("a.txt"), "0123456789");
+        Files.writeString(tmp.resolve("b.txt"), "0123456789");
+
+        int exitCode;
+        try (ConfigurableApplicationContext context = SpringApplication.run(Main.class, tmp.toString())) {
+            exitCode = SpringApplication.exit(context);
+        }
+
+        assertEquals(0, exitCode, output.getErr());
+        JsonMapper json = JsonMapper.builder().build();
+        List<JsonNode> sets = output.getOut().lines().map(json::readTree)
+                .filter(n -> "set".equals(n.get("type").asString())).toList();
+        assertEquals(1, sets.size(), output.getOut());
+        String set = sets.get(0).toString();
+        assertTrue(set.contains("a.txt") && set.contains("b.txt"), set);
+        org.junit.jupiter.api.Assertions.assertThrows(ClassNotFoundException.class,
+                () -> Class.forName("us.pochaev.dfs.cli.ScannerConfiguration"));
+    }
 }
