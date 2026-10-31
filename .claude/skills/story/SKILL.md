@@ -1,6 +1,6 @@
 ---
 name: story
-description: Advance a ready ticket through the story pipeline (architect, test-author, implementer, verifier, retro), launching each phase's agent, stopping at human gates, and resuming from plan.json. Run only by the user.
+description: Advance a ready ticket through the story pipeline (architect, test-author, implementer, verifier, retro), launching each phase's agent, stopping at human gates, and resuming from plan.json. Run by the user, or started by Claude only through the tickets skill's autonomous launch for an autorun ticket.
 argument-hint: run|status|approve|learn <ID> [feedback]
 disable-model-invocation: false
 ---
@@ -9,7 +9,7 @@ disable-model-invocation: false
 
 The orchestrator for the story pipeline (`docs/design/story-orchestration.md`, D1–D12). It runs in the main session, launches the phase agents (`.claude/agents/architect.md`, `test-author.md`, `implementer.md`, `verifier.md`, `retro.md`) as subagents, and stops at every human gate and at `blocked`. Every invocation either advances to the next stop and shows it, or refuses and says why — never a bare status (D12).
 
-Usage: `/story <mode> <ID> [args]`. Modes: `run`, `status`, `approve`, `learn`. This skill is `disable-model-invocation: true`: run it only when the user types the command, never launch it on your own judgement — a run spends real tokens, makes real commits, and can flip a ticket's status.
+Usage: `/story <mode> <ID> [args]`. Modes: `run`, `status`, `approve`, `learn`. This skill is `disable-model-invocation: false` so that the `tickets` skill can start it, but it is not Claude's to launch on its own judgement — a run spends real tokens, makes real commits, and can flip a ticket's status. Claude may start `run <ID>` only through the `tickets` skill's "Autonomous launch" (CCW-017): right after `refine`'s ready commit, or after `done` closes the ticket's last dependency, for a ticket with `autorun: true` that passed the launch check. Every other `run`, and every `approve`, `status` and `learn`, happens only when the user types it. `approve` is never invoked by Claude: the gates are the user's.
 
 ## Story folder and `plan.json`
 
@@ -86,7 +86,7 @@ A gate in `archetype.md`'s `gates:` list names either an actual phase id (pause 
    - **(e) the branch is checked out in place in a checkout that is not a story worktree** (the old in-place `/story run`; `git worktree list` shows it on the repo checkout or another tree not named `../<repo-dir>-<TICKET-ID>-<slug>`): refuse, naming that checkout's path, and tell the user to switch it back to `main` (`git -C <that checkout> checkout main`) and rerun. Never move someone's checkout automatically.
 
    If `git worktree add` refuses, stop and report git's message.
-4. Create `plan.json` in the worktree's story folder from the resolved archetype's `phases:`, `gates:` and `models:` (per the table above), with `worktree` set to the worktree's path as `git worktree list --porcelain` prints it, state `running`, every phase `pending`, no defects.
+4. Create `plan.json` in the worktree's story folder from the resolved archetype's `phases:` and `models:` and the gates (per the table above) — the gates are the ticket's own `gates:` when it has one, otherwise the archetype's `gates:` (CCW-017; the `tickets` skill's `refine` decides them per ticket), with `worktree` set to the worktree's path as `git worktree list --porcelain` prints it, state `running`, every phase `pending`, no defects.
 5. Run the `tickets` skill's `start <ID>`. A worktree now holds the branch, so `start` makes its `in-progress` edit inside the worktree, never in the repo checkout (its first branch, CCW-008). In state (c) the ticket is already `in-progress`; `start` accepts that and changes nothing. `start` refuses only if its own preconditions somehow no longer hold, which this preflight has already checked.
 6. Continue into the resume protocol below, in the same invocation.
 
@@ -109,14 +109,28 @@ Ported from D5, with the escalation, blocked-clearing and gate-summary rules fro
 
 Shown once, whenever step 10 above stops the run:
 
-- The authoring agent's own `## Summary` section, verbatim, from `design.md` (the `design` gate) or `verification.md` (the `done` gate) — nothing else in that file is read for this purpose.
+- At the `design` gate: the architect's `## Summary` section from `design.md`, verbatim.
+- At the `done` gate (the product-owner review, CCW-017): the verifier's `## Product owner review` section from `verification.md`, verbatim; when `verification.md` has no such section (written before CCW-017), its `## Summary` instead. Nothing else in the file is read for this purpose.
 - Ends with the exact command: `/story approve <TICKET-ID>` (approve and continue), and a one-line reminder that free-text feedback instead of approval is read from the conversation, not a flag.
+- Then sends the stop's notification (see "Notifications").
+
+## Notifications (CCW-017)
+
+At every stop that needs the user — a human gate, `blocked`, and a refused autonomous launch (the `tickets` skill's launch check) — send exactly one notification with the `PushNotification` tool, `status: "proactive"`. It is a deferred tool: load it first with `ToolSearch` (`select:PushNotification`) if its schema is not yet loaded. The message is one line under 200 characters, no markdown, starting with the ticket ID and what the user should act on and ending with the exact next command, for example:
+
+- `CCW-018 ready for your review: 7/7 criteria met — /story approve CCW-018`
+- `DFS-031 design ready for review — /story approve DFS-031`
+- `DFS-031 blocked in implement: green failed twice — /story status DFS-031`
+- `DFS-032 not launched: ticket changed after approval — re-confirm with /tickets refine DFS-032`
+
+The tool skips itself when the user is at the terminal and may report "not sent"; that is expected, never an error, and changes nothing about the stop. Send none for routine progress (a phase finishing, a retry).
 
 ## Blocked
 
 Shown once, whenever step 9 above sets state `blocked`:
 
 - Names the phase, the open defect's summary, and the concrete options (D12): retry — fix whatever the defect names, then plain `/story run <TICKET-ID>` (step 3 above reconciles or re-attempts fresh, attempt counter reset); edit the ticket or `design.md` by hand and resume the same way; or cancel via `/tickets cancel <TICKET-ID>` — a cancelled ticket is never `ready`/`in-progress`, so a later `run` refuses it on its own, with no separate `/story cancel`.
+- Then sends the stop's notification (see "Notifications").
 
 ## Finishing
 

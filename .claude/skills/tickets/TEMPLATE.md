@@ -6,6 +6,8 @@ type: feature
 scope: []
 archetype:
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
+# gates: [done]        # pipeline tickets: decided in refine, required from ready on
+# autorun: false       # pipeline tickets: true lets Claude start /story run itself
 priority: medium
 depends_on: []
 touches: []
