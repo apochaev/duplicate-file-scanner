@@ -18,9 +18,10 @@
 -- subtree, "elsewhere" means outside that subtree. File counts count paths; byte counts count
 -- each physical copy once, so hard links do not inflate the space figures.
 
--- The scanned roots, with forward slashes.
+-- The scanned roots, with forward slashes and no trailing slash, so a drive root (F:\ becomes F:)
+-- or the filesystem root (/ becomes the empty string) still matches its folders' ancestors.
 CREATE OR REPLACE TABLE roots AS
-SELECT replace(unnest(roots), '\', '/') AS root
+SELECT rtrim(replace(unnest(roots), '\', '/'), '/') AS root
 FROM read_json(getvariable('report'), format = 'newline_delimited',
                columns = {type: 'VARCHAR', roots: 'VARCHAR[]'})
 WHERE type = 'scan';
