@@ -16,7 +16,7 @@ You are making the architect's stubs pass the tests the test-author already wrot
 - Translate expected failures into `Failure` values at the use-case boundary, exactly as the design doc lists them; let a `null` argument throw `NullPointerException` (checklist item 2).
 - Work that runs on the executor ends in a terminal state on every path, including an `Error` (a `finally`), and records its failure where the design doc says (checklist item 9). The core never prints.
 - Isolate caller-supplied callbacks as the design doc says (checklist item 8): a throwing listener must not take the work down with it unless the design says so.
-- If the ticket's Definition of done requires a measured figure (heap, timing, throughput), write it as a committed, `@Disabled` (or otherwise excluded-from-default-run) benchmark in the test tree, not a throwaway class run outside the build. The figure must be reproducible by anyone later — including the verifier — not rest on a one-off run (L-023).
+- If the ticket's Definition of done requires a measured figure (heap, timing, throughput), write it as a committed benchmark in the test tree: a plain class with a `main` method, no `@Test` or `@Disabled`, since the `disabled` check rejects `@Disabled` in a story's tests (DFS-030.L-3). Not a throwaway class run outside the build. The figure must be reproducible by anyone later — including the verifier — not rest on a one-off run (L-023).
 - If you hit a checklist item the design doc marked "not applicable" but your implementation needs to handle anyway, that is a design gap: report it rather than silently deciding.
 
 ## When you are done

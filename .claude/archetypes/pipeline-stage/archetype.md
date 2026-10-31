@@ -1,6 +1,6 @@
 ---
 name: pipeline-stage
-version: 15
+version: 16
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
@@ -31,7 +31,7 @@ Written from what refining DFS-001 (group scanned files by size) surfaced. DFS-0
 
 Work through every item that applies to this stage; skip and say why for one that does not. Each item traces back to a DFS-001 decision (named in parentheses) or a CLAUDE.md convention this archetype generalizes.
 
-1. **Accumulation and merging.** Does this stage accumulate results from input that could arrive in parts (a walk in progress, parallel workers)? If so: give it an `add`/`merge` shape, document that it is deliberately not thread-safe, make `merge(other)` copy `other`'s entries and leave `other` unchanged, and never let output depend on insertion or arrival order. If the stage instead consumes a finished `List` of groups from the previous stage (as DFS-002 and DFS-003 do), it has nothing to merge — say so and move on. (DFS-001: the mergeable, non-thread-safe accumulator.)
+1. **Accumulation and merging.** Does this stage accumulate results from input that could arrive in parts (a walk in progress, parallel workers)? If so: give it an `add`/`merge` shape, document that it is deliberately not thread-safe, make `merge(other)` copy `other`'s entries and leave `other` unchanged, and never let output depend on insertion or arrival order. If the stage instead consumes a finished `List` of groups from the previous stage (as DFS-002 and DFS-003 do), it has nothing to merge — say so and move on. If it accumulates, the ticket's `touches` lists the accumulator's own file (as `SizeIndex` has one), or a refinement decision says it goes inside an existing file, so the architect is not forced into a nested class by omission (DFS-030.L-1). (DFS-001: the mergeable, non-thread-safe accumulator.)
 2. **Inter-stage currency invariants.** Whatever record carries data into and out of this stage (a candidate group, a hashed group, ...), does its constructor reject the cases that break its own definition (too few files, a size/hash mismatch among members, a null entry), and take an immutable defensive copy? (DFS-001: `CandidateGroup`'s invariants.)
 3. **Deterministic output order.** Is the stage's output ordered the same way regardless of arrival order — for a grouping/accumulating stage, largest group first with paths ascending inside each group; for a filtering stage, the order it received its input in? State the canonical order in the design doc. (DFS-001: largest-first, ascending paths.)
 4. **Immutable results.** Are the values this stage returns immutable, so a later stage (possibly on another thread, per DFS-005/DFS-006) cannot see them change underneath it? (DFS-001: returned groups are immutable.)
