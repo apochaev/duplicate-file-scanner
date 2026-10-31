@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-031-extract-scanner-spring-module",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-031-extract-scanner-spring-module",
-  "state": "awaiting-approval",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -120,7 +120,7 @@
   "gates": [
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": []

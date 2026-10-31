@@ -1,7 +1,7 @@
 ---
 id: DFS-031
 title: Extract the scanner wiring into a scanner-spring module
-status: in-progress
+status: in-review
 type: refactor
 scope: [cli, build, docs]
 archetype: wiring
