@@ -5,6 +5,7 @@ status: draft
 type: feature
 scope: [file-scanner]
 priority: low
+lane: backend
 depends_on: [DFS-005]
 touches: [us.pochaev.dfs.scanner.infra.port, us.pochaev.dfs.scanner.infra.adapter]
 blocked_reason:

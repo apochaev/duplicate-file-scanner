@@ -5,6 +5,7 @@ status: draft
 type: spike
 scope: [file-scanner]
 priority: low
+lane: backend
 depends_on: [DFS-003]
 touches: [file-scanner/src/test/java/us/pochaev/dfs/scanner/bench, docs/tickets/backlog/DFS-007-benchmark-hash-vs-compare]
 blocked_reason:

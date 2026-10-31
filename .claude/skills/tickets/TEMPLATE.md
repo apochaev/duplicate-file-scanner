@@ -9,6 +9,7 @@ archetype:
 # gates: [done]        # pipeline tickets: decided in refine, required from ready on
 # autorun: false       # pipeline tickets: true lets Claude start /story run itself
 priority: medium
+lane:                  # backend | frontend | harness (every CCW ticket); see docs/tickets/lanes.md
 depends_on: []
 touches: []
 blocked_reason:

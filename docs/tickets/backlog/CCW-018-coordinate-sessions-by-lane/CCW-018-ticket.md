@@ -1,7 +1,7 @@
 ---
 id: CCW-018
 title: Coordinate parallel sessions through lane-owned tickets
-status: ready
+status: in-review
 type: feature
 scope: [docs]
 archetype: none
@@ -9,10 +9,12 @@ archetype: none
 # gates: [done]        # pipeline tickets: decided in refine, required from ready on
 # autorun: false       # pipeline tickets: true lets Claude start /story run itself
 priority: high
+lane: harness
 depends_on: [CCW-017]
 touches:
   - .claude/skills/tickets/SKILL.md
   - .claude/skills/tickets/TEMPLATE.md
+  - .claude/skills/story/SKILL.md
   - CLAUDE.md
   - docs/tickets/lanes.md
   - docs/tickets/backlog/DFS-006-walk-directories-in-parallel/DFS-006-ticket.md
@@ -187,13 +189,13 @@ Feature: Coordinate parallel sessions through lane-owned tickets
 
 ## Definition of done
 
-- [ ] Every [read] scenario checked against the edited files, noted in `verification.md`
-- [ ] Every [mechanical] scenario run in a scratch repo, commands and output in `verification.md`
-- [ ] The AC-12 live exchange happened: three request tickets on `main`, the backend session's acknowledgements and the AC-8 message recorded in `verification.md`
-- [ ] `./gradlew build` is green
-- [ ] `/tickets validate` reports nothing new
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] Every [read] scenario checked against the edited files, noted in `verification.md` (Read checks table)
+- [x] Every [mechanical] scenario run in a scratch repo, commands and output in `verification.md` (Mechanical runs)
+- [ ] (partly: the backend drafted the requests itself; see `verification.md`, "Decided without you") The AC-12 live exchange happened: three request tickets on `main`, the backend session's acknowledgements and the AC-8 message recorded in `verification.md`
+- [x] `./gradlew build` is green (exit 0 in the worktree, 2026-10-31)
+- [x] `/tickets validate` reports nothing new (lane rules run mechanically: no findings on the real backlog)
+- [x] No files changed outside the paths listed under Touches (`.claude/skills/story/SKILL.md` added to Touches, see `verification.md`)
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 

@@ -7,6 +7,7 @@ scope: [cli]
 archetype: wiring
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 priority: medium
+lane: backend
 depends_on: [DFS-020, DFS-022]
 touches: [us.pochaev.dfs.cli]
 blocked_reason:

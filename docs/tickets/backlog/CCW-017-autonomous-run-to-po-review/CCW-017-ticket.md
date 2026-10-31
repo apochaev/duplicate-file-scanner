@@ -7,6 +7,7 @@ scope: [docs]
 archetype: none
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 priority: high
+lane: harness
 depends_on: []
 touches:
   - .claude/skills/tickets/SKILL.md

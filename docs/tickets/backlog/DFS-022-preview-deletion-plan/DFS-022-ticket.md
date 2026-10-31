@@ -7,6 +7,7 @@ scope: [file-scanner]
 archetype: use-case
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 priority: medium
+lane: backend
 depends_on: [DFS-019]
 touches: [us.pochaev.dfs.scanner.domain.usecases.query, us.pochaev.dfs.scanner.domain.model, us.pochaev.dfs.scanner.application, us.pochaev.dfs.scanner.domain.factory]
 blocked_reason:
