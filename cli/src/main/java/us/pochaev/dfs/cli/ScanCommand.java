@@ -5,6 +5,7 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
+import us.pochaev.dfs.scanner.domain.model.FolderTotal;
 import us.pochaev.dfs.scanner.domain.model.PhysicalCopy;
 import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.scanner.domain.model.ScanConfig;
@@ -22,7 +23,9 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,8 +36,11 @@ import java.util.Objects;
  * Kept free of Spring so it can be tested with plain streams and fake ports (decision 8);
  * {@link ScanRunner} wires it to the process.
  *
- * <p>Stdout carries only JSONL: a {@code set} line per duplicate set, a {@code skipped} line per
- * skipped path, then one {@code summary} line (decision 3). Progress and errors go to {@code err}
+ * <p>Stdout carries only JSONL (format version {@value #SCHEMA_VERSION}, DFS-030): one {@code scan}
+ * header line (roots, settings, start and finish times), a {@code folder} line per folder total, a
+ * {@code set} line per duplicate set, a {@code skipped} line per skipped path, then one
+ * {@code summary} line (DFS-020 decision 3, DFS-030 decision 5). The start and finish times come
+ * from the injected {@link Clock}, read once just before the scan starts and once after it completes. Progress and errors go to {@code err}
  * (decision 4), shown by {@link ProgressDisplay} (DFS-024). Exit codes: 0 completed, 1 refused start or failed scan, 2 usage error (decision 6).
  * With {@code --output=<file>} the report goes to that file instead of {@code out}, through a {@link ReportFile} (DFS-029).
  */
@@ -53,24 +59,31 @@ public final class ScanCommand {
     private static final String PROGRESS = "--progress=";
     private static final String OUTPUT = "--output=";
 
+    /** The JSONL format version written in the {@code scan} line; bumped only for breaking changes (DFS-030 decision 7). */
+    static final int SCHEMA_VERSION = 2;
+
     private final StartScan start;
     private final GetScanStatus status;
     private final GetScanResult result;
     private final Duration pollInterval;
     private final ReportFile.Opener opener;
+    private final Clock clock;
     private final JsonMapper json = JsonMapper.builder().build();
 
-    public ScanCommand(StartScan start, GetScanStatus status, GetScanResult result, Duration pollInterval) {
-        this(start, status, result, pollInterval, file -> Files.newOutputStream(file));
+    /** @param clock gives the scan's start and finish times written in the report header (DFS-030 decision 4) */
+    public ScanCommand(StartScan start, GetScanStatus status, GetScanResult result, Duration pollInterval,
+            Clock clock) {
+        this(start, status, result, pollInterval, clock, file -> Files.newOutputStream(file));
     }
 
     /** @param opener opens the {@code --output} report's temporary file; replaced in tests to make the write fail */
     ScanCommand(StartScan start, GetScanStatus status, GetScanResult result, Duration pollInterval,
-            ReportFile.Opener opener) {
+            Clock clock, ReportFile.Opener opener) {
         this.start = Objects.requireNonNull(start, "start");
         this.status = Objects.requireNonNull(status, "status");
         this.result = Objects.requireNonNull(result, "result");
         this.pollInterval = Objects.requireNonNull(pollInterval, "pollInterval");
+        this.clock = Objects.requireNonNull(clock, "clock");
         this.opener = Objects.requireNonNull(opener, "opener");
     }
 
@@ -180,6 +193,7 @@ public final class ScanCommand {
         ProgressDisplay display = new ProgressDisplay(mode, err, System::nanoTime);
         display.start();
 
+        Instant startedAt = clock.instant();
         ScanId id;
         switch (start.start(folders, config, display)) {
             case Result.Success<ScanId> s -> id = s.value();
@@ -206,16 +220,17 @@ public final class ScanCommand {
                     ? error(err, "scan failed: " + last.failureMessage())
                     : error(err, "scan " + last.status().name().toLowerCase());
         }
+        Instant finishedAt = clock.instant();
 
         return switch (result.result(id)) {
             case Result.Success<ScanResult> s -> {
                 display.completed(s.value().sets().size());
                 if (report == null) {
-                    write(s.value(), text, out);
+                    write(s.value(), config, startedAt, finishedAt, text, out);
                     yield OK;
                 }
                 try {
-                    report.commit(file -> write(s.value(), text, file));
+                    report.commit(file -> write(s.value(), config, startedAt, finishedAt, text, file));
                 } catch (IOException e) {
                     yield error(err, "could not write the report to " + report.target() + ": " + describe(e));
                 }
@@ -248,15 +263,21 @@ public final class ScanCommand {
         }
     }
 
-    private void write(ScanResult scan, boolean text, PrintStream out) {
+    private void write(ScanResult scan, ScanConfig config, Instant startedAt, Instant finishedAt, boolean text,
+            PrintStream out) {
         if (text) {
-            TextReport.write(scan, out);
+            TextReport.write(scan, config, startedAt, finishedAt, out);
         } else {
-            write(scan, out);
+            write(scan, config, startedAt, finishedAt, out);
         }
     }
 
-    private void write(ScanResult scan, PrintStream out) {
+    /** The JSONL report, lines in the order {@code scan}, {@code folder}, {@code set}, {@code skipped}, {@code summary}. */
+    private void write(ScanResult scan, ScanConfig config, Instant startedAt, Instant finishedAt, PrintStream out) {
+        line(out, scanLine(scan, config, startedAt, finishedAt));
+        for (FolderTotal folder : scan.folders()) {
+            line(out, folderLine(folder));
+        }
         long files = 0;
         long reclaimable = 0;
         for (DuplicateSet set : scan.sets()) {
@@ -264,13 +285,7 @@ public final class ScanCommand {
             line.put("type", "set");
             line.put("size", set.size());
             line.put("digest", set.digest());
-            ArrayNode copies = line.putArray("copies");
-            for (PhysicalCopy copy : set.copies()) {
-                ArrayNode links = copies.addArray();
-                for (FileEntry link : copy.links()) {
-                    links.add(link.path().toString());
-                }
-            }
+            line.set("copies", copies(set));
             line(out, line);
             files += set.files().size();
             reclaimable += set.size() * (set.copies().size() - 1);
@@ -292,6 +307,31 @@ public final class ScanCommand {
         summary.put("excluded", scan.excluded());
         line(out, summary);
         out.flush();
+    }
+
+    /**
+     * The {@code scan} header line (DFS-030 decision 4): {@code type}, {@code schemaVersion}
+     * ({@link #SCHEMA_VERSION}), {@code roots} (from {@link ScanResult#roots()}, as strings),
+     * {@code minSize}, {@code sampleSize}, {@code partialHashThreshold}, {@code defaultExcludes}
+     * (from {@code config}), {@code startedAt} and {@code finishedAt} ({@link Instant#toString()}, ISO-8601 UTC).
+     */
+    private ObjectNode scanLine(ScanResult scan, ScanConfig config, Instant startedAt, Instant finishedAt) {
+        throw new UnsupportedOperationException("not implemented: DFS-030");
+    }
+
+    /** A {@code folder} line (DFS-030 decision 5): {@code type}, {@code path}, {@code files}, {@code bytes}. */
+    private ObjectNode folderLine(FolderTotal folder) {
+        throw new UnsupportedOperationException("not implemented: DFS-030");
+    }
+
+    /**
+     * A set's {@code copies} array (DFS-030 decision 6): one array per {@link PhysicalCopy}, in
+     * {@code set.copies()} order, holding one object per link, in {@code copy.links()} order, with
+     * {@code path} (the path as a string) and {@code modified} ({@link FileEntry#lastModified()} as
+     * {@link Instant#toString()}, full precision).
+     */
+    private ArrayNode copies(DuplicateSet set) {
+        throw new UnsupportedOperationException("not implemented: DFS-030");
     }
 
     private void line(PrintStream out, ObjectNode node) {

@@ -2,6 +2,7 @@ package us.pochaev.dfs.scanner.application;
 
 import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
+import us.pochaev.dfs.scanner.domain.model.FolderTotal;
 import us.pochaev.dfs.scanner.domain.model.ScanConfig;
 import us.pochaev.dfs.scanner.domain.model.ScanEvent;
 import us.pochaev.dfs.scanner.domain.model.ScanListener;
@@ -29,6 +30,8 @@ import java.util.function.Consumer;
  * Runs one scan synchronously, end to end (DFS-005): resolves the start locations, walks them into
  * a {@link SizeIndex} (leaving out what {@link DefaultExcludeFilter} excludes, DFS-027), then feeds its groups one at a time through {@link PartialHashFilter},
  * {@link FullHashConfirmer} and {@link HardLinkDetector} (CLAUDE.md design decision 3).
+ * While walking it also totals each folder's counted files in a {@link FolderCounter}, and the result
+ * records the walked roots and those totals (DFS-030).
  * <p>
  * Stateless and reusable: its fields are its ports only. Every piece of per-scan state (the
  * {@code SizeIndex}, the stage instances built from the {@link ScanConfig}, the skip collector, the
@@ -56,7 +59,8 @@ public final class ScanPipeline implements ScanRunner {
     }
 
     /**
-     * Scans {@code locations} and returns the confirmed duplicate sets and every skip.
+     * Scans {@code locations} and returns the walked roots, the per-folder totals, the confirmed
+     * duplicate sets and every skip.
      * <p>
      * Before any event is sent: an empty {@code locations} throws {@link IllegalArgumentException};
      * each location is resolved through {@link LocationResolver#realPath}, and the first that fails
@@ -103,7 +107,9 @@ public final class ScanPipeline implements ScanRunner {
         HardLinkDetector hardLinkDetector = new HardLinkDetector(identity, sink);
         DefaultExcludeFilter excludeFilter = new DefaultExcludeFilter(config.defaultExcludes());
 
-        walkLocations(kept, excludeFilter, sizeIndex, sink, listener, stopSignal);
+        FolderCounter folderCounter = new FolderCounter(config.minSize());
+
+        walkLocations(kept, excludeFilter, sizeIndex, folderCounter, sink, listener, stopSignal);
 
         List<CandidateGroup> initialGroups = sizeIndex.groups();
         PartialHashFilter partialHashFilter = new PartialHashFilter(hasher, config.sampleSize(),
@@ -118,7 +124,7 @@ public final class ScanPipeline implements ScanRunner {
         List<DuplicateSet> hardLinkOutput = runGroupPhase(
                 ScanPhase.HARD_LINKS, fullOutput, hardLinkDetector::detect, listener, stopSignal);
 
-        return new ScanResult(hardLinkOutput, skipped, excludeFilter.excluded());
+        return new ScanResult(kept, folderCounter.totals(), hardLinkOutput, skipped, excludeFilter.excluded());
     }
 
     /** {@link ScanRunner}'s method: exactly {@link #scan}, same arguments, same contract (DFS-018). */
@@ -132,10 +138,12 @@ public final class ScanPipeline implements ScanRunner {
      * Walks {@code kept} in order. Every {@code FileFound} is reported as {@link ScanEvent.FileWalked}
      * first, so excluded files still count as found (DFS-027 decision 4), then goes through
      * {@code excludeFilter} and, if kept, into {@code sizeIndex} (name check before size check,
-     * DFS-027 decision 7).
+     * DFS-027 decision 7). A file goes into {@code folderCounter} exactly when it is kept and at
+     * least {@link ScanConfig#minSize()}, the point where it enters the {@code SizeIndex} (DFS-030
+     * decision 9).
      */
     private void walkLocations(List<Path> kept, DefaultExcludeFilter excludeFilter, SizeIndex sizeIndex,
-                               Consumer<WalkEvent.Skipped> sink, ScanListener listener,
+                               FolderCounter folderCounter, Consumer<WalkEvent.Skipped> sink, ScanListener listener,
                                BooleanSupplier stopSignal) throws IOException {
         listener.onEvent(new ScanEvent.PhaseStarted(ScanPhase.WALK));
         AtomicLong count = new AtomicLong();
@@ -154,6 +162,7 @@ public final class ScanPipeline implements ScanRunner {
                                 bytes.addAndGet(found.entry().size())));
                         if (excludeFilter.keep(found.entry())) {
                             sizeIndex.add(found.entry());
+                            folderCounter.add(found.entry());
                         }
                     } else if (event instanceof WalkEvent.DirectoryEntered) {
                         listener.onEvent(new ScanEvent.DirectoryWalked(directories.incrementAndGet()));
@@ -229,6 +238,39 @@ public final class ScanPipeline implements ScanRunner {
 
         private void send(long bytesDone) {
             listener.onEvent(new ScanEvent.HashProgress(phase, filesDone, filesTotal, bytesDone, bytesTotal));
+        }
+    }
+
+    /**
+     * Totals the counted files of one scan per folder they directly sit in (DFS-030 decision 2).
+     * Fed by the walk callback on the scan's thread; deliberately not thread-safe and never merged:
+     * one instance belongs to one {@link #scan} call (checklist items 1 and 13). Package-private so
+     * the heap benchmark can measure it on its own (DFS-030 decision 10).
+     */
+    static final class FolderCounter {
+
+        private final long minSize;
+
+        /** @param minSize the scan's {@link ScanConfig#minSize()}: a smaller file is not counted */
+        FolderCounter(long minSize) {
+            this.minSize = minSize;
+        }
+
+        /**
+         * Counts {@code file} in the total of its parent folder ({@code file.path().getParent()}), if
+         * it is at least {@code minSize} bytes; a smaller file is ignored. The caller has already
+         * applied the default excludes. Every call counts, so two hard-linked paths count twice.
+         */
+        void add(FileEntry file) {
+            throw new UnsupportedOperationException("not implemented: DFS-030");
+        }
+
+        /**
+         * One {@link FolderTotal} per folder that received at least one counted file, sorted ascending
+         * by folder path ({@link Path#compareTo}), as an immutable list; empty if nothing was counted.
+         */
+        List<FolderTotal> totals() {
+            throw new UnsupportedOperationException("not implemented: DFS-030");
         }
     }
 

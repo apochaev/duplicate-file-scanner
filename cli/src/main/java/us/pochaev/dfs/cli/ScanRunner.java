@@ -10,6 +10,7 @@ import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
 
 /**
@@ -26,7 +27,7 @@ class ScanRunner implements ApplicationRunner, ExitCodeGenerator {
     private int exitCode;
 
     ScanRunner(StartScan start, GetScanStatus status, GetScanResult result) {
-        this.command = new ScanCommand(start, status, result, POLL_INTERVAL);
+        this.command = new ScanCommand(start, status, result, POLL_INTERVAL, Clock.systemUTC());
     }
 
     @Override

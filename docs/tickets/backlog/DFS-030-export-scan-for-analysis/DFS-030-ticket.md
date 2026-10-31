@@ -1,7 +1,7 @@
 ---
 id: DFS-030
 title: Export a complete scan for analysis
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner, cli]
 archetype: pipeline-stage

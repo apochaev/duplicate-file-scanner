@@ -3,6 +3,7 @@ package us.pochaev.dfs.cli;
 import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
 import us.pochaev.dfs.scanner.domain.model.PhysicalCopy;
+import us.pochaev.dfs.scanner.domain.model.ScanConfig;
 import us.pochaev.dfs.scanner.domain.model.ScanResult;
 import us.pochaev.dfs.scanner.domain.model.WalkEvent;
 
@@ -10,12 +11,14 @@ import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * The human-readable scan report written by {@code --format=text} (DFS-023): one entry per
+ * The human-readable scan report written by {@code --format=text} (DFS-023): a two-line header
+ * saying what was scanned, when and with which settings (DFS-030 decision 8), then one entry per
  * duplicate set, largest reclaimable space first, then the skipped paths, then a summary line.
  * Formatting is locale-independent and adds only ASCII, so tests can match it exactly.
  */
@@ -33,7 +36,10 @@ final class TextReport {
     private TextReport() {
     }
 
-    static void write(ScanResult scan, PrintStream out) {
+    static void write(ScanResult scan, ScanConfig config, Instant startedAt, Instant finishedAt, PrintStream out) {
+        for (String text : header(scan.roots(), config, startedAt, finishedAt)) {
+            line(out, text);
+        }
         List<Entry> entries = scan.sets().stream().map(Entry::of).sorted(ORDER).toList();
         long files = 0;
         long reclaimable = 0;
@@ -63,6 +69,16 @@ final class TextReport {
                 + size(reclaimable) + " reclaimable, " + count(scan.skipped().size()) + " skipped, "
                 + count(scan.excluded()) + " excluded");
         out.flush();
+    }
+
+    /**
+     * The report's two header lines (DFS-030 decision 8): {@code Scan of <roots joined by ", ">},
+     * then {@code "  <start> to <finish>, minimum size <size(minSize)>, default excludes on|off"}.
+     * Times are UTC as {@code yyyy-MM-dd HH:mm:ssZ}; the finish drops its date when it falls on the
+     * start's date ({@code 2026-10-31 09:12:03Z to 11:47:55Z}), and keeps it otherwise.
+     */
+    static List<String> header(List<Path> roots, ScanConfig config, Instant startedAt, Instant finishedAt) {
+        throw new UnsupportedOperationException("not implemented: DFS-030");
     }
 
     /** Bytes in 1024-based units with one decimal, rounded half-up; below 1024 a whole number of B. */

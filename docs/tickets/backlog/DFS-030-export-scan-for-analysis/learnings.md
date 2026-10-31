@@ -1,0 +1,4 @@
+# DFS-030 learnings
+
+- **architect:** `touches` named only `ScanPipeline.java` in `application` main, so the per-folder accumulator had to be a nested class (`ScanPipeline.FolderCounter`) instead of its own file the way `SizeIndex` is. When a pipeline-stage ticket adds an accumulator, refinement could list its file in `touches` (or say explicitly that it goes inside an existing file).
+- **architect:** the ticket's list of existing `new ScanResult(...)` callers (decision 2) missed `CliApplicationTest`, which asserts the JSONL line types `["set","summary"]` and so has to change with the new `scan`/`folder` lines. It sits inside the `cli` test `touches`, so this ticket is not blocked, but a ticket that changes an output format should search for tests asserting that format, not just for constructor callers.
