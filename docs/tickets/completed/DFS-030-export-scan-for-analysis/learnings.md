@@ -45,11 +45,11 @@
 
 ### DFS-030.L-4: A done-item hand-checking a path-prefix query used only one ordinary root
 
-- Status: proposed
+- Status: parked
 - Impact: shared (an agent prompt)
 - Target: `.claude/agents/verifier.md`
 - Change: add: when a done-item hand-checks code that matches paths by prefix, also try a drive root (`C:\`) and the filesystem root (`/`), whose trailing separator breaks naive `root || '/'` checks.
 - Evidence: `overlaps.sql` roll-up was empty for drive roots; the verifier found it by trying one, after the done-item's single fixtures root passed (verifier note above; fixed in 9b619d4).
 - Recurrences: 1 (DFS-030)
 - Recommendation: park; one data point, and SQL-analysis tickets are rare.
-- Decision:
+- Decision: parked 2026-10-31 by the user
