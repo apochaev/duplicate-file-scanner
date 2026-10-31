@@ -1,7 +1,7 @@
 ---
 id: CCW-018
 title: Coordinate parallel sessions through lane-owned tickets
-status: in-review
+status: done
 type: feature
 scope: [docs]
 archetype: none
@@ -27,7 +27,7 @@ touches:
 blocked_reason:
 created: 2026-10-31
 updated: 2026-10-31
-completed:
+completed: 2026-10-31
 ---
 
 # CCW-018: Coordinate parallel sessions through lane-owned tickets
@@ -191,7 +191,7 @@ Feature: Coordinate parallel sessions through lane-owned tickets
 
 - [x] Every [read] scenario checked against the edited files, noted in `verification.md` (Read checks table)
 - [x] Every [mechanical] scenario run in a scratch repo, commands and output in `verification.md` (Mechanical runs)
-- [ ] (partly: the backend drafted the requests itself; see `verification.md`, "Decided without you") The AC-12 live exchange happened: three request tickets on `main`, the backend session's acknowledgements and the AC-8 message recorded in `verification.md`
+- [x] (accepted in a different form by the product owner at close, 2026-10-31: the backend drafted the requests itself; see `verification.md`, "Decided without you") The AC-12 live exchange happened: three request tickets on `main`, the backend session's acknowledgements and the AC-8 message recorded in `verification.md`
 - [x] `./gradlew build` is green (exit 0 in the worktree, 2026-10-31)
 - [x] `/tickets validate` reports nothing new (lane rules run mechanically: no findings on the real backlog)
 - [x] No files changed outside the paths listed under Touches (`.claude/skills/story/SKILL.md` added to Touches, see `verification.md`)
