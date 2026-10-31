@@ -10,7 +10,7 @@ Run two sessions side by side, named `dfs-frontend` and `dfs-backend`. Each one 
 
 - **AC-1** met (mechanical): validate flags a missing lane, the lane `ui`, and a `CCW` ticket in `backend`, and leaves a `done` ticket without a lane alone.
 - **AC-2** met (mechanical): a lane owned twice and an unknown lane `ops` are both flagged. The real `lanes.md` passes.
-- **AC-3** met (read). Live part pending: this session is still named `duplicate-file-scanner-d1`, which isn't in `lanes.md`, so the fallback question applies until you rename it.
+- **AC-3** met (read and live): after `/rename`, `ListAgents` reports "This session is dfs-frontend" and the peer as `dfs-backend` ("was DFS-main until 1m ago"); `lanes.md` gives this session frontend and harness without asking.
 - **AC-4** met (mechanical): closing DFS-950 in `dfs-backend` launches DFS-951 (backend) and sends one message to `dfs-frontend` naming DFS-952 and DFS-953.
 - **AC-5** met (mechanical): `dfs-frontend` ignores DFS-951 (backend), launches DFS-952 (approved, unchanged), and refuses DFS-953 (edited after approval).
 - **AC-6** met (mechanical for `done`, read for `list`): with no frontend owner running, DFS-952 and DFS-953 are named as waiting for lane frontend.
@@ -31,7 +31,7 @@ Run two sessions side by side, named `dfs-frontend` and `dfs-backend`. Each one 
 - **Story skill added to `touches`.** `.claude/skills/story/SKILL.md` listed only CCW-017's two launch points, so read strictly it would have forbidden the third one (an unblock message). I added one clause to it and added the file to the ticket's `touches`. Refinement should have caught this (CCW-005.L-5).
 - **AC-12 accepted in a different form.** The backend session filed the three requests on its own before CCW-018 existed, and asked me to leave them alone. I didn't duplicate them through AC-7. The first real `new --for` request will exercise AC-7 live.
 - **Request form syntax:** `/tickets new <title> --for <lane> --by <requesting ID>`.
-- **Session names** are set with `claude -n <name>` (verified in `claude --help`) or `/rename <name>` in a running session (not yet verified live).
+- **Session names** are set with `claude -n <name>` (verified in `claude --help`) or `/rename <name>` in a running session (verified live 2026-10-31 for both sessions).
 - **Lane-map commit subject:** `docs: map <name> to <lanes>`, for the AC-3 fallback.
 
 ### Known limits
@@ -54,7 +54,7 @@ Implemented by hand in one session, no retries. One out-of-scope dependency was 
 
 ## Summary
 
-12 criteria: 11 met (6 mechanically, 5 by reading, with live parts of AC-3 and AC-8 pending a rename and the merge), and AC-12 met in a different form. Build: green. Scope: Touches plus `.claude/skills/story/SKILL.md`, as decided above.
+12 criteria: 11 met (6 mechanically, 5 by reading, AC-3 also live; AC-8 sent on merge `1f95b25`), and AC-12 met in a different form. Build: green. Scope: Touches plus `.claude/skills/story/SKILL.md`, as decided above.
 
 ## Mechanical runs
 
