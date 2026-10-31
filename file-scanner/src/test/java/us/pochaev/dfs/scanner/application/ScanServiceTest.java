@@ -89,7 +89,7 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-2 A scan runs, is RUNNING while the pipeline works and completes with its result")
     void aScanRunsAndCompletesWithItsResult() throws Exception {
         Env env = new Env();
-        ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of(), 0);
+        ScanResult expected = new ScanResult(List.of(), List.of(), List.of(duplicateSet()), List.of(), 0);
         env.runner.events = List.of(new ScanEvent.PhaseStarted(ScanPhase.WALK), new ScanEvent.FileWalked(1, 0));
         env.runner.blockAfter = 1;
         env.runner.result = expected;
@@ -276,7 +276,7 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-10 Completion wins over a cancel request that arrived first")
     void completionWinsOverAnEarlierCancel() throws Exception {
         Env env = new Env();
-        ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of(), 0);
+        ScanResult expected = new ScanResult(List.of(), List.of(), List.of(duplicateSet()), List.of(), 0);
         env.runner.events = List.of(new ScanEvent.FileWalked(1, 0));
         env.runner.blockAfter = 1;
         env.runner.result = expected;
@@ -294,7 +294,7 @@ class ScanServiceTest {
     @DisplayName("DFS-018.AC-10 A cancel request after completion is a no-op")
     void cancelAfterCompletionIsANoOp() {
         Env env = new Env();
-        ScanResult expected = new ScanResult(List.of(duplicateSet()), List.of(), 0);
+        ScanResult expected = new ScanResult(List.of(), List.of(), List.of(duplicateSet()), List.of(), 0);
         env.runner.result = expected;
         ScanId id = success(env.service.start(List.of(A), config()));
         env.executor.runNext();
@@ -579,7 +579,7 @@ class ScanServiceTest {
     static final class ScriptedRunner implements ScanRunner {
         List<ScanEvent> events = List.of();
         int blockAfter = -1;
-        ScanResult result = new ScanResult(List.of(), List.of(), 0);
+        ScanResult result = new ScanResult(List.of(), List.of(), List.of(), List.of(), 0);
         Throwable failure;
         final AtomicInteger calls = new AtomicInteger();
         final CountDownLatch blocked = new CountDownLatch(1);

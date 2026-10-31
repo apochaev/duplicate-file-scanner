@@ -12,6 +12,7 @@ import us.pochaev.dfs.scanner.domain.factory.ScanUseCases;
 import us.pochaev.dfs.scanner.domain.factory.ScannerFactories;
 import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
+import us.pochaev.dfs.scanner.domain.model.FolderTotal;
 import us.pochaev.dfs.scanner.domain.model.PhysicalCopy;
 import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.scanner.domain.model.ScanConfig;
@@ -22,6 +23,8 @@ import us.pochaev.dfs.scanner.domain.model.ScanPhase;
 import us.pochaev.dfs.scanner.domain.model.ScanResult;
 import us.pochaev.dfs.scanner.domain.model.ScanSnapshot;
 import us.pochaev.dfs.scanner.domain.model.ScanStatus;
+import us.pochaev.dfs.scanner.domain.model.SkipReason;
+import us.pochaev.dfs.scanner.domain.model.WalkEvent;
 import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
@@ -39,8 +42,11 @@ import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,6 +74,8 @@ class ScanCommandTest {
 
     private static final String DUP = "hello duplicate";
     private static final JsonMapper JSON = JsonMapper.builder().build();
+    /** A fixed clock for scans whose times do not matter, so two runs write identical headers. */
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-31T09:12:03Z"), ZoneOffset.UTC);
 
     @TempDir
     Path tmp;
@@ -186,7 +194,8 @@ class ScanCommandTest {
         Run run = scan(tmp.toString());
 
         assertEquals(0, run.exitCode);
-        assertEquals("{\"type\":\"summary\",\"sets\":0,\"files\":0,\"skipped\":0,\"reclaimableBytes\":0,\"excluded\":0}\n", run.out);
+        assertEquals("{\"type\":\"summary\",\"sets\":0,\"files\":0,\"skipped\":0,\"reclaimableBytes\":0,\"excluded\":0}",
+                run.out.lines().toList().getLast());
     }
 
     @Test
@@ -266,15 +275,15 @@ class ScanCommandTest {
                 snapshot(ScanStatus.COMPLETED, null));
         FileEntry p = new FileEntry(Path.of("p.txt"), 4, Instant.EPOCH);
         FileEntry q = new FileEntry(Path.of("q.txt"), 4, Instant.EPOCH);
-        fake.result = new ScanResult(List.of(new DuplicateSet(4, "ab", List.of(p, q),
+        fake.result = new ScanResult(List.of(), List.of(), List.of(new DuplicateSet(4, "ab", List.of(p, q),
                 List.of(new PhysicalCopy(List.of(p)), new PhysicalCopy(List.of(q))))), List.of(), 0);
 
         Run run = run(fake, tmp.toString());
 
         assertEquals(0, run.exitCode);
         assertEquals(List.of("status", "status", "status", "result"), fake.calls);
-        List<JsonNode> lines = run.jsonLines();
-        assertEquals(List.of("set", "summary"), lines.stream().map(l -> l.get("type").asString()).toList());
+        assertEquals(List.of("scan", "set", "summary"),
+                run.allJsonLines().stream().map(l -> l.get("type").asString()).toList());
     }
 
     // --- DFS-023: the text report
@@ -297,7 +306,7 @@ class ScanCommandTest {
                 "    " + real(x),
                 "    " + real(z),
                 "    " + real(y),
-                "Summary: 1 sets, 3 files, 30 B reclaimable, 0 skipped, 0 excluded"), run.out.lines().toList());
+                "Summary: 1 sets, 3 files, 30 B reclaimable, 0 skipped, 0 excluded"), run.textBody());
         assertTrue(run.out.endsWith("\n"), run.out);
         assertTrue(run.err.contains("Walking:"), run.err);
     }
@@ -338,7 +347,7 @@ class ScanCommandTest {
                 "    " + real(link),
                 "      (hard link) " + real(x),
                 "    " + real(y),
-                "Summary: 1 sets, 3 files, 15 B reclaimable, 0 skipped, 0 excluded"), run.out.lines().toList());
+                "Summary: 1 sets, 3 files, 15 B reclaimable, 0 skipped, 0 excluded"), run.textBody());
     }
 
     @Test
@@ -355,7 +364,7 @@ class ScanCommandTest {
 
         Run run = scan(tmp.toString(), "--format=text");
 
-        List<String> lines = run.out.lines().toList();
+        List<String> lines = run.textBody();
         assertEquals(6, lines.size(), run.out);
         assertTrue(lines.get(0).startsWith("#1  15 B reclaimable  (2 copies x 15 B"), run.out);
         assertEquals("Skipped (1):", lines.get(3));
@@ -372,7 +381,8 @@ class ScanCommandTest {
         Run run = scan(tmp.toString(), "--format=text");
 
         assertEquals(0, run.exitCode, run.err);
-        assertEquals("No duplicates found.\nSummary: 0 sets, 0 files, 0 B reclaimable, 0 skipped, 0 excluded\n", run.out);
+        assertEquals(List.of("No duplicates found.",
+                "Summary: 0 sets, 0 files, 0 B reclaimable, 0 skipped, 0 excluded"), run.textBody());
     }
 
     @ParameterizedTest(name = "[{index}] args: {0}")
@@ -408,7 +418,7 @@ class ScanCommandTest {
                 "#1  15 B reclaimable  (2 copies x 15 B, sha256 " + sha256(DUP).substring(0, 12) + ")",
                 "    " + real(x),
                 "    " + real(y),
-                "Summary: 1 sets, 2 files, 15 B reclaimable, 0 skipped, 0 excluded"), run.out.lines().toList());
+                "Summary: 1 sets, 2 files, 15 B reclaimable, 0 skipped, 0 excluded"), run.textBody());
         switch (option) {
             case "--progress=off" -> assertEquals("", run.err);
             case "--progress=log" -> {
@@ -575,7 +585,7 @@ class ScanCommandTest {
         Run run = scan(media.toString(), "--format=text");
 
         assertEquals(0, run.exitCode, run.err);
-        assertEquals("Summary: 1 sets, 2 files, 6.0 KB reclaimable, 0 skipped, 4 excluded", run.out.lines().toList().getLast());
+        assertEquals("Summary: 1 sets, 2 files, 6.0 KB reclaimable, 0 skipped, 4 excluded", run.textBody().getLast());
     }
 
     @Test
@@ -678,11 +688,12 @@ class ScanCommandTest {
     @DisplayName("DFS-027.AC-3 The summary reports the excluded count of the scan result")
     void summaryReportsResultCount() {
         FakePorts fake = new FakePorts(snapshot(ScanStatus.COMPLETED, null));
-        fake.result = new ScanResult(List.of(), List.of(), 29565);
+        fake.result = new ScanResult(List.of(), List.of(), List.of(), List.of(), 29565);
 
         Run run = run(fake, tmp.toString());
 
-        assertEquals(List.of("summary"), run.jsonLines().stream().map(l -> l.get("type").asString()).toList());
+        assertEquals(List.of("scan", "summary"),
+                run.allJsonLines().stream().map(l -> l.get("type").asString()).toList());
         assertEquals(29565, run.jsonLines().getLast().get("excluded").asLong());
     }
 
@@ -768,9 +779,10 @@ class ScanCommandTest {
 
         assertEquals(0, run.exitCode, run.err);
         assertEquals("", run.out);
-        List<JsonNode> lines = new Run(0, Files.readString(report, StandardCharsets.UTF_8), "").jsonLines();
-        assertEquals(List.of("set", "summary"), lines.stream().map(l -> l.get("type").asString()).toList());
-        assertEquals(2, lines.getFirst().get("copies").size());
+        List<JsonNode> lines = new Run(0, Files.readString(report, StandardCharsets.UTF_8), "").allJsonLines();
+        assertEquals(List.of("scan", "folder", "set", "summary"),
+                lines.stream().map(l -> l.get("type").asString()).toList());
+        assertEquals(2, lines.get(2).get("copies").size());
     }
 
     @Test
@@ -863,7 +875,7 @@ class ScanCommandTest {
             }
         };
 
-        Run run = run(new ScanCommand(fake, fake, fake, Duration.ZERO, failing),
+        Run run = run(new ScanCommand(fake, fake, fake, Duration.ZERO, CLOCK, failing),
                 tmp.toString(), "--format=text", "--progress=log", "--output=" + report);
 
         assertEquals(1, run.exitCode, run.err);
@@ -918,15 +930,195 @@ class ScanCommandTest {
         assertEquals(List.of(), names(out));
     }
 
+    // --- DFS-030: the complete export
+
+    private static final String START = "2026-10-31T09:12:03Z";
+    private static final String FINISH = "2026-10-31T11:47:55Z";
+
+    /** A clock that returns the given instants in turn, then repeats the last: one read per call to instant(). */
+    private static Clock clockReading(String... instants) {
+        Deque<Instant> queue = new ArrayDeque<>(Arrays.stream(instants).map(Instant::parse).toList());
+        return new Clock() {
+            @Override
+            public ZoneId getZone() {
+                return ZoneOffset.UTC;
+            }
+
+            @Override
+            public Clock withZone(ZoneId zone) {
+                return this;
+            }
+
+            @Override
+            public Instant instant() {
+                return queue.size() > 1 ? queue.pop() : queue.peek();
+            }
+        };
+    }
+
+    private static FakePorts completed(ScanResult result) {
+        FakePorts fake = new FakePorts(snapshot(ScanStatus.COMPLETED, null));
+        fake.result = result;
+        return fake;
+    }
+
+    private static ScanResult resultWithRoots(String... roots) {
+        return new ScanResult(Arrays.stream(roots).map(Path::of).toList(), List.of(), List.of(), List.of(), 0);
+    }
+
+    private static List<String> types(List<JsonNode> lines) {
+        return lines.stream().map(l -> l.get("type").asString()).toList();
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-7 The JSONL output starts with the scan header")
+    void jsonlStartsWithTheScanHeader() {
+        FakePorts fake = completed(resultWithRoots("D:\\Photos", "E:\\Backup"));
+
+        Run run = run(fake, clockReading(START, FINISH), tmp.toString());
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals(JSON.readTree("{\"type\":\"scan\",\"schemaVersion\":2,\"roots\":[\"D:\\\\Photos\",\"E:\\\\Backup\"],"
+                + "\"minSize\":1,\"sampleSize\":65536,\"partialHashThreshold\":131072,\"defaultExcludes\":true,"
+                + "\"startedAt\":\"2026-10-31T09:12:03Z\",\"finishedAt\":\"2026-10-31T11:47:55Z\"}"),
+                run.allJsonLines().getFirst());
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-7 The scan header holds the settings the scan ran with")
+    void scanHeaderHoldsTheScanSettings() {
+        FakePorts fake = completed(resultWithRoots("D:\\Photos"));
+
+        Run run = run(fake, clockReading(START, FINISH), tmp.toString(), "--min-size=10", "--no-default-excludes");
+
+        JsonNode header = run.allJsonLines().getFirst();
+        assertEquals("scan", header.get("type").asString());
+        assertEquals(10, header.get("minSize").asLong());
+        assertFalse(header.get("defaultExcludes").asBoolean());
+        assertEquals(2, header.get("schemaVersion").asInt());
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-7 The scan header times are read before the scan starts and after it finishes")
+    void scanHeaderTimesComeFromTheClockAroundTheScan() {
+        FakePorts fake = new FakePorts(snapshot(ScanStatus.RUNNING, null), snapshot(ScanStatus.COMPLETED, null));
+        fake.result = resultWithRoots("D:\\Photos");
+        Clock clock = clockReading("2026-01-02T03:04:05.5Z", "2026-01-02T05:06:07Z", "2099-01-01T00:00:00Z");
+
+        Run run = run(fake, clock, tmp.toString());
+
+        JsonNode header = run.allJsonLines().getFirst();
+        assertEquals("2026-01-02T03:04:05.5Z", header.get("startedAt").asString());
+        assertEquals("2026-01-02T05:06:07Z", header.get("finishedAt").asString());
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-8 Folder lines follow the header, one per folder total")
+    void folderLinesFollowTheHeader() {
+        FakePorts fake = completed(new ScanResult(List.of(Path.of("D:\\Photos")), List.of(
+                new FolderTotal(Path.of("D:\\Photos\\2019"), 400, 10485760000L),
+                new FolderTotal(Path.of("D:\\Photos\\2020"), 3, 900)), List.of(), List.of(), 0));
+
+        Run run = run(fake, tmp.toString());
+
+        List<JsonNode> lines = run.allJsonLines();
+        assertEquals(JSON.readTree("{\"type\":\"folder\",\"path\":\"D:\\\\Photos\\\\2019\",\"files\":400,\"bytes\":10485760000}"),
+                lines.get(1));
+        assertEquals(JSON.readTree("{\"type\":\"folder\",\"path\":\"D:\\\\Photos\\\\2020\",\"files\":3,\"bytes\":900}"),
+                lines.get(2));
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-9 Each path in a set carries its modification time")
+    void eachPathInASetCarriesItsModificationTime() {
+        FileEntry a = new FileEntry(Path.of("D:\\a\\x.jpg"), 27, Instant.parse("2019-07-14T10:22:31.4512345Z"));
+        FileEntry b = new FileEntry(Path.of("D:\\b\\x.jpg"), 27, Instant.parse("2020-01-02T03:04:05Z"));
+        FileEntry link = new FileEntry(Path.of("D:\\b\\link.jpg"), 27, Instant.parse("2020-01-02T03:04:05Z"));
+        DuplicateSet set = new DuplicateSet(27, "dg", List.of(a, b, link),
+                List.of(new PhysicalCopy(List.of(a)), new PhysicalCopy(List.of(b, link))));
+        FakePorts fake = completed(new ScanResult(List.of(), List.of(), List.of(set), List.of(), 0));
+
+        Run run = run(fake, tmp.toString());
+
+        JsonNode setLine = setLines(run).getFirst();
+        assertEquals(27, setLine.get("size").asLong());
+        assertEquals(JSON.readTree("[[{\"path\":\"D:\\\\a\\\\x.jpg\",\"modified\":\"2019-07-14T10:22:31.4512345Z\"}],"
+                + "[{\"path\":\"D:\\\\b\\\\x.jpg\",\"modified\":\"2020-01-02T03:04:05Z\"},"
+                + "{\"path\":\"D:\\\\b\\\\link.jpg\",\"modified\":\"2020-01-02T03:04:05Z\"}]]"), setLine.get("copies"));
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-10 The line types come in a fixed order and the summary is unchanged")
+    void lineTypesComeInAFixedOrder() {
+        FileEntry p = new FileEntry(Path.of("p.txt"), 4, Instant.EPOCH);
+        FileEntry q = new FileEntry(Path.of("q.txt"), 4, Instant.EPOCH);
+        DuplicateSet set = new DuplicateSet(4, "ab", List.of(p, q));
+        WalkEvent.Skipped skipped = new WalkEvent.Skipped(Path.of("s.txt"), SkipReason.SYMLINK, "symbolic link");
+        FakePorts fake = completed(new ScanResult(List.of(Path.of("root")), List.of(
+                new FolderTotal(Path.of("root/a"), 1, 4), new FolderTotal(Path.of("root/b"), 1, 4)),
+                List.of(set), List.of(skipped), 7));
+
+        Run run = run(fake, tmp.toString());
+
+        List<JsonNode> lines = run.allJsonLines();
+        assertEquals(List.of("scan", "folder", "folder", "set", "skipped", "summary"), types(lines));
+        assertEquals(JSON.readTree("{\"type\":\"summary\",\"sets\":1,\"files\":2,\"skipped\":1,"
+                + "\"reclaimableBytes\":4,\"excluded\":7}"), lines.getLast());
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-10 An empty result still has the header and the summary")
+    void anEmptyResultStillHasHeaderAndSummary() {
+        FakePorts fake = completed(new ScanResult(List.of(), List.of(), List.of(), List.of(), 0));
+
+        Run run = run(fake, tmp.toString());
+
+        assertEquals(List.of("scan", "summary"), types(run.allJsonLines()));
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-11 The text report starts with what was scanned")
+    void textReportStartsWithWhatWasScanned() {
+        FileEntry p = new FileEntry(Path.of("p.txt"), 4, Instant.EPOCH);
+        FileEntry q = new FileEntry(Path.of("q.txt"), 4, Instant.EPOCH);
+        FakePorts fake = completed(new ScanResult(List.of(Path.of("D:\\Photos"), Path.of("E:\\Backup")), List.of(),
+                List.of(new DuplicateSet(4, "ab", List.of(p, q))), List.of(), 0));
+
+        Run run = run(fake, clockReading(START, FINISH), tmp.toString(), "--format=text");
+
+        List<String> lines = run.out.lines().toList();
+        assertEquals("Scan of D:\\Photos, E:\\Backup", lines.get(0));
+        assertEquals("  2026-10-31 09:12:03Z to 11:47:55Z, minimum size 1 B, default excludes on", lines.get(1));
+        assertTrue(lines.get(2).startsWith("#1  "), run.out);
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-11 A scan that crosses midnight shows both dates")
+    void aScanThatCrossesMidnightShowsBothDates() {
+        FakePorts fake = completed(resultWithRoots("D:\\Photos"));
+
+        Run run = run(fake, clockReading("2026-10-31T23:50:00Z", "2026-11-01T00:20:00Z"), tmp.toString(),
+                "--format=text", "--min-size=1048576", "--no-default-excludes");
+
+        List<String> lines = run.out.lines().toList();
+        assertEquals("Scan of D:\\Photos", lines.get(0));
+        assertEquals("  2026-10-31 23:50:00Z to 2026-11-01 00:20:00Z, minimum size 1.0 MB, default excludes off",
+                lines.get(1));
+    }
+
     // --- helpers
 
     private Run scan(String... args) {
         ScanUseCases ports = ScannerFactories.scanUseCases(executor);
-        return run(new ScanCommand(ports.start(), ports.status(), ports.result(), Duration.ofMillis(10)), args);
+        return run(new ScanCommand(ports.start(), ports.status(), ports.result(), Duration.ofMillis(10), CLOCK), args);
     }
 
     private Run run(FakePorts fake, String... args) {
-        return run(new ScanCommand(fake, fake, fake, Duration.ZERO), args);
+        return run(fake, CLOCK, args);
+    }
+
+    private Run run(FakePorts fake, Clock clock, String... args) {
+        return run(new ScanCommand(fake, fake, fake, Duration.ZERO, clock), args);
     }
 
     private static Run run(ScanCommand command, String... args) {
@@ -939,8 +1131,20 @@ class ScanCommandTest {
 
     private record Run(int exitCode, String out, String err) {
 
-        /** Every stdout line, each asserted to parse as exactly one JSON object. */
+        /** The set, skipped and summary lines: every stdout line but the scan header and the folder totals (DFS-030). */
         List<JsonNode> jsonLines() {
+            return allJsonLines().stream()
+                    .filter(l -> !l.get("type").asString().equals("scan") && !l.get("type").asString().equals("folder"))
+                    .toList();
+        }
+
+        /** The text report without its two header lines (DFS-030 decision 8). */
+        List<String> textBody() {
+            return out.lines().skip(2).toList();
+        }
+
+        /** Every stdout line, each asserted to parse as exactly one JSON object. */
+        List<JsonNode> allJsonLines() {
             assertTrue(out.isEmpty() || out.endsWith("\n"), out);
             List<JsonNode> nodes = new ArrayList<>();
             for (String line : out.lines().toList()) {
@@ -956,7 +1160,7 @@ class ScanCommandTest {
         List<List<String>> copies = new ArrayList<>();
         for (JsonNode copy : set.get("copies")) {
             List<String> links = new ArrayList<>();
-            copy.forEach(link -> links.add(link.asString()));
+            copy.forEach(link -> links.add(link.get("path").asString()));
             copies.add(links);
         }
         return copies;
@@ -995,7 +1199,7 @@ class ScanCommandTest {
         private final ScanId id = ScanId.random();
         private final Deque<ScanSnapshot> snapshots;
         final List<String> calls = new ArrayList<>();
-        ScanResult result = new ScanResult(List.of(), List.of(), 0);
+        ScanResult result = new ScanResult(List.of(), List.of(), List.of(), List.of(), 0);
         List<ScanEvent> events = List.of();
         int starts;
         ScanConfig config;

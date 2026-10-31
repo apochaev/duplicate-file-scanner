@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
 import us.pochaev.dfs.scanner.domain.model.PhysicalCopy;
+import us.pochaev.dfs.scanner.domain.model.ScanConfig;
 import us.pochaev.dfs.scanner.domain.model.ScanResult;
 
 import java.io.ByteArrayOutputStream;
@@ -34,7 +35,7 @@ class TextReportTest {
     @Test
     @DisplayName("DFS-023.AC-4 Sets are ordered by reclaimable bytes, then size, then first path")
     void setsAreOrdered() {
-        ScanResult scan = new ScanResult(List.of(
+        ScanResult scan = new ScanResult(List.of(), List.of(), List.of(
                 set("A", 1000, "/m/a2", "/m/a1"),
                 set("B", 100, "/z/b1", "/z/b2", "/z/b3", "/z/b4"),
                 set("C", 300, "/n/c2", "/n/c1", "/n/c4", "/n/c3"),
@@ -85,7 +86,7 @@ class TextReportTest {
             paths[i] = String.format("/s/d%02d/f%05d", i % 50, i);
         }
 
-        String header = render(new ScanResult(List.of(set("a", 4096, paths)), List.of(), 0)).getFirst();
+        String header = render(new ScanResult(List.of(), List.of(), List.of(set("a", 4096, paths)), List.of(), 0)).getFirst();
 
         assertTrue(header.contains("(7,993 copies x "), header);
     }
@@ -93,7 +94,7 @@ class TextReportTest {
     @Test
     @DisplayName("DFS-028.AC-2 A small set's header is unchanged")
     void smallCopyCountIsUnchanged() {
-        String header = render(new ScanResult(List.of(set("a", 15, "/a", "/b", "/c")), List.of(), 0)).getFirst();
+        String header = render(new ScanResult(List.of(), List.of(), List.of(set("a", 15, "/a", "/b", "/c")), List.of(), 0)).getFirst();
 
         assertTrue(header.contains("(3 copies x 15 B"), header);
     }
@@ -101,7 +102,7 @@ class TextReportTest {
     @Test
     @DisplayName("DFS-027.AC-3 The summary line ends with the excluded count")
     void summaryEndsWithExcludedCount() {
-        List<String> lines = render(new ScanResult(List.of(set("A", 4096, "/a", "/b")), List.of(), 29565));
+        List<String> lines = render(new ScanResult(List.of(), List.of(), List.of(set("A", 4096, "/a", "/b")), List.of(), 29565));
 
         assertEquals("Summary: 1 sets, 2 files, 4.0 KB reclaimable, 0 skipped, 29,565 excluded", lines.getLast());
     }
@@ -109,16 +110,57 @@ class TextReportTest {
     @Test
     @DisplayName("DFS-027.AC-3 With nothing excluded the summary ends with 0 excluded")
     void summaryShowsZeroExcluded() {
-        List<String> lines = render(new ScanResult(List.of(), List.of(), 0));
+        List<String> lines = render(new ScanResult(List.of(), List.of(), List.of(), List.of(), 0));
 
         assertEquals(List.of("No duplicates found.", "Summary: 0 sets, 0 files, 0 B reclaimable, 0 skipped, 0 excluded"),
                 lines);
     }
 
+    private static final Instant START = Instant.parse("2026-10-31T09:12:03Z");
+    private static final Instant FINISH = Instant.parse("2026-10-31T11:47:55Z");
+
+    /** The report without its two header lines (DFS-030 decision 8). */
     private static List<String> render(ScanResult scan) {
+        return renderAll(scan).subList(2, renderAll(scan).size());
+    }
+
+    private static List<String> renderAll(ScanResult scan) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        TextReport.write(scan, new PrintStream(bytes, true, StandardCharsets.UTF_8));
+        TextReport.write(scan, ScanConfig.defaults(), START, FINISH, new PrintStream(bytes, true, StandardCharsets.UTF_8));
         return bytes.toString(StandardCharsets.UTF_8).lines().toList();
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-11 The report starts with the roots and the times, before the first set")
+    void reportStartsWithTheHeader() {
+        ScanResult scan = new ScanResult(List.of(Path.of("D:\\Photos"), Path.of("E:\\Backup")), List.of(),
+                List.of(set("A", 4096, "/a", "/b")), List.of(), 0);
+
+        List<String> lines = renderAll(scan);
+
+        assertEquals("Scan of D:\\Photos, E:\\Backup", lines.get(0));
+        assertEquals("  2026-10-31 09:12:03Z to 11:47:55Z, minimum size 1 B, default excludes on", lines.get(1));
+        assertTrue(lines.get(2).startsWith("#1  "), lines.toString());
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-11 A scan that crosses midnight shows both dates, and a larger minimum size and excludes off show")
+    void headerAcrossMidnightWithOtherSettings() {
+        ScanConfig config = new ScanConfig(1048576, 65536, 131072, false);
+
+        List<String> header = TextReport.header(List.of(Path.of("D:\\Photos")), config,
+                Instant.parse("2026-10-31T23:50:00Z"), Instant.parse("2026-11-01T00:20:00Z"));
+
+        assertEquals(List.of("Scan of D:\\Photos",
+                "  2026-10-31 23:50:00Z to 2026-11-01 00:20:00Z, minimum size 1.0 MB, default excludes off"), header);
+    }
+
+    @Test
+    @DisplayName("DFS-030.AC-11 A single root shows no separator")
+    void singleRootHasNoSeparator() {
+        List<String> header = TextReport.header(List.of(Path.of("F:\\Media")), ScanConfig.defaults(), START, FINISH);
+
+        assertEquals("Scan of F:\\Media", header.getFirst());
     }
 
     /** A set whose digest is its name, with one single-link copy per path, in the order given. */
