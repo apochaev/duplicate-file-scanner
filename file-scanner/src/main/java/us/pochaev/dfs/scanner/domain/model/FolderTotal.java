@@ -21,9 +21,12 @@ public record FolderTotal(Path folder, long files, long bytes) {
      * @throws IllegalArgumentException if {@code files} is below 1 or {@code bytes} is negative
      */
     public FolderTotal {
-        throw new UnsupportedOperationException("not implemented: DFS-030");
-        // implementer: requireNonNull(folder, "folder"); reject files < 1 and bytes < 0 with
-        // IllegalArgumentException (DFS-030.AC-6). Deliberately not in the stub, so the
-        // validation tests fail red on this throw instead of passing (L-013).
+        java.util.Objects.requireNonNull(folder, "folder");
+        if (files < 1) {
+            throw new IllegalArgumentException("files must be at least 1: " + files);
+        }
+        if (bytes < 0) {
+            throw new IllegalArgumentException("bytes must not be negative: " + bytes);
+        }
     }
 }

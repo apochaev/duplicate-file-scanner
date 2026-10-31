@@ -316,12 +316,30 @@ public final class ScanCommand {
      * (from {@code config}), {@code startedAt} and {@code finishedAt} ({@link Instant#toString()}, ISO-8601 UTC).
      */
     private ObjectNode scanLine(ScanResult scan, ScanConfig config, Instant startedAt, Instant finishedAt) {
-        throw new UnsupportedOperationException("not implemented: DFS-030");
+        ObjectNode line = json.createObjectNode();
+        line.put("type", "scan");
+        line.put("schemaVersion", SCHEMA_VERSION);
+        ArrayNode roots = line.putArray("roots");
+        for (Path root : scan.roots()) {
+            roots.add(root.toString());
+        }
+        line.put("minSize", config.minSize());
+        line.put("sampleSize", config.sampleSize());
+        line.put("partialHashThreshold", config.partialHashThreshold());
+        line.put("defaultExcludes", config.defaultExcludes());
+        line.put("startedAt", iso(startedAt));
+        line.put("finishedAt", iso(finishedAt));
+        return line;
     }
 
     /** A {@code folder} line (DFS-030 decision 5): {@code type}, {@code path}, {@code files}, {@code bytes}. */
     private ObjectNode folderLine(FolderTotal folder) {
-        throw new UnsupportedOperationException("not implemented: DFS-030");
+        ObjectNode line = json.createObjectNode();
+        line.put("type", "folder");
+        line.put("path", folder.folder().toString());
+        line.put("files", folder.files());
+        line.put("bytes", folder.bytes());
+        return line;
     }
 
     /**
@@ -331,7 +349,21 @@ public final class ScanCommand {
      * {@link Instant#toString()}, full precision).
      */
     private ArrayNode copies(DuplicateSet set) {
-        throw new UnsupportedOperationException("not implemented: DFS-030");
+        ArrayNode copies = json.createArrayNode();
+        for (PhysicalCopy copy : set.copies()) {
+            ArrayNode links = copies.addArray();
+            for (FileEntry link : copy.links()) {
+                ObjectNode node = links.addObject();
+                node.put("path", link.path().toString());
+                node.put("modified", iso(link.lastModified()));
+            }
+        }
+        return copies;
+    }
+
+    /** ISO-8601 UTC at full precision, without trailing zeros in the fraction ({@code ...05.5Z}, {@code ...05Z}). */
+    private static String iso(Instant instant) {
+        return instant.toString().replaceFirst("(\\.\\d*?)0+Z$", "$1Z").replaceFirst("\\.Z$", "Z");
     }
 
     private void line(PrintStream out, ObjectNode node) {

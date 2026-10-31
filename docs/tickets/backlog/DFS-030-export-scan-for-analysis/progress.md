@@ -10,3 +10,10 @@
 ## tests (test-author)
 
 - Wrote ScanFolderTotalsTest, FolderCounterTest, FolderTotalTest, FolderCounterHeapBenchmark; updated ScanResultTest, ScanServiceTest, ScanCommandTest, TextReportTest, CliApplicationTest. Expected commit: `test: add DFS-030 tests [DFS-030]`.
+
+## Implementer
+- Implemented FolderTotal, ScanResult validation, ScanPipeline.FolderCounter (HashMap of long[2], sorted in totals()), ScanCommand scan/folder/copies lines, TextReport.header; updated tools/analysis/overlaps.sql (v2, folder totals, roll-up stops at roots), CLAUDE.md, README.md.
+- Timestamps: Instant.toString() pads fractions to 3/6/9 digits, but the tests expect minimal fractions (`.5Z`, `.4512345Z`), so ScanCommand.iso strips trailing zeros of the fraction (learning).
+- Heap benchmark (100,000 folders, 3 files each, run by hand): ~177 bytes/folder, 16.9 MB total.
+- overlaps.sql ran under DuckDB against a v2 export of the test fixtures; `folders` view shows total_files/total_bytes.
+- Expected commit: feat(file-scanner): export roots, folder totals and times in the scan report [DFS-030]

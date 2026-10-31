@@ -250,6 +250,7 @@ public final class ScanPipeline implements ScanRunner {
     static final class FolderCounter {
 
         private final long minSize;
+        private final java.util.Map<Path, long[]> totals = new java.util.HashMap<>();
 
         /** @param minSize the scan's {@link ScanConfig#minSize()}: a smaller file is not counted */
         FolderCounter(long minSize) {
@@ -262,7 +263,12 @@ public final class ScanPipeline implements ScanRunner {
          * applied the default excludes. Every call counts, so two hard-linked paths count twice.
          */
         void add(FileEntry file) {
-            throw new UnsupportedOperationException("not implemented: DFS-030");
+            if (file.size() < minSize) {
+                return;
+            }
+            long[] total = totals.computeIfAbsent(file.path().getParent(), k -> new long[2]);
+            total[0]++;
+            total[1] += file.size();
         }
 
         /**
@@ -270,7 +276,10 @@ public final class ScanPipeline implements ScanRunner {
          * by folder path ({@link Path#compareTo}), as an immutable list; empty if nothing was counted.
          */
         List<FolderTotal> totals() {
-            throw new UnsupportedOperationException("not implemented: DFS-030");
+            return totals.entrySet().stream()
+                    .sorted(java.util.Map.Entry.comparingByKey())
+                    .map(e -> new FolderTotal(e.getKey(), e.getValue()[0], e.getValue()[1]))
+                    .toList();
         }
     }
 

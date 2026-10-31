@@ -53,9 +53,11 @@ Exit codes: `0` the scan completed, `1` the scan could not start or failed, `2` 
 
 ### Text report
 
-Duplicate sets are listed by reclaimable space, largest first:
+A two-line header says what was scanned, when and with which settings. Duplicate sets are then listed by reclaimable space, largest first:
 
 ```
+Scan of D:\Photos, E:\Backup
+  2026-10-31 09:12:03Z to 11:47:55Z, minimum size 1 B, default excludes on
 #1  27 B reclaimable  (2 copies x 27 B, sha256 c2b8e254e569)
     D:\Photos\folder1\photo.jpg
     E:\Backup\folder2\photo-copy.jpg
@@ -66,6 +68,10 @@ Summary: 2 sets, 4 files, 45 B reclaimable, 0 skipped, 0 excluded
 ```
 
 "Reclaimable" is the space freed by keeping one copy of each set.
+
+### JSONL report
+
+One JSON object per line, in this order: a `scan` header (`schemaVersion`, the scanned roots, the settings, start and finish times), a `folder` line per folder with its direct file count and bytes, a `set` line per duplicate set (each copy path an object with `path` and `modified`), a `skipped` line per skipped path, and a `summary` line. This holds everything an analysis tool needs to work out which folders overlap; `tools/analysis/overlaps.sql` does that in DuckDB. `schemaVersion` is currently 2 and goes up only for breaking changes, so readers should ignore fields and line types they do not know.
 
 ## Building and testing
 

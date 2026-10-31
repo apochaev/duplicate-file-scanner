@@ -34,10 +34,12 @@ public record ScanResult(List<Path> roots, List<FolderTotal> folders, List<Dupli
      * @throws IllegalArgumentException if {@code excluded} is negative
      */
     public ScanResult {
-        throw new UnsupportedOperationException("not implemented: DFS-030");
-        // implementer: keep the existing checks for sets, skipped and excluded; add
-        // requireNonNull for roots and folders, reject a null element in either (List.copyOf does
-        // this with a NullPointerException), and assign List.copyOf of all four lists
-        // (DFS-030.AC-6). Deliberately not in the stub, so the validation tests fail red (L-013).
+        if (excluded < 0) {
+            throw new IllegalArgumentException("excluded must not be negative: " + excluded);
+        }
+        roots = List.copyOf(java.util.Objects.requireNonNull(roots, "roots"));
+        folders = List.copyOf(java.util.Objects.requireNonNull(folders, "folders"));
+        sets = List.copyOf(java.util.Objects.requireNonNull(sets, "sets"));
+        skipped = List.copyOf(java.util.Objects.requireNonNull(skipped, "skipped"));
     }
 }

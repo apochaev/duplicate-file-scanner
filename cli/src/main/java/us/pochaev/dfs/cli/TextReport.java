@@ -78,7 +78,17 @@ final class TextReport {
      * start's date ({@code 2026-10-31 09:12:03Z to 11:47:55Z}), and keeps it otherwise.
      */
     static List<String> header(List<Path> roots, ScanConfig config, Instant startedAt, Instant finishedAt) {
-        throw new UnsupportedOperationException("not implemented: DFS-030");
+        java.time.ZonedDateTime start = startedAt.atZone(java.time.ZoneOffset.UTC);
+        java.time.ZonedDateTime finish = finishedAt.atZone(java.time.ZoneOffset.UTC);
+        java.time.format.DateTimeFormatter full =
+                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss'Z'", Locale.ROOT);
+        java.time.format.DateTimeFormatter timeOnly =
+                java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss'Z'", Locale.ROOT);
+        String end = finish.toLocalDate().equals(start.toLocalDate()) ? timeOnly.format(finish) : full.format(finish);
+        return List.of(
+                "Scan of " + roots.stream().map(Path::toString).collect(java.util.stream.Collectors.joining(", ")),
+                "  " + full.format(start) + " to " + end + ", minimum size " + size(config.minSize())
+                        + ", default excludes " + (config.defaultExcludes() ? "on" : "off"));
     }
 
     /** Bytes in 1024-based units with one decimal, rounded half-up; below 1024 a whole number of B. */
