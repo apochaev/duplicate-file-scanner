@@ -1,7 +1,7 @@
 ---
 id: CCW-017
 title: Run a ready ticket autonomously to product-owner review
-status: in-review
+status: done
 type: feature
 scope: [docs]
 archetype: none
@@ -20,7 +20,7 @@ touches:
 blocked_reason:
 created: 2026-10-31
 updated: 2026-10-31
-completed:
+completed: 2026-10-31
 ---
 
 # CCW-017: Run a ready ticket autonomously to product-owner review
