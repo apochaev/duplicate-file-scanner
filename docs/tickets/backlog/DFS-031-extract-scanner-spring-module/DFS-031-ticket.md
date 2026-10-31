@@ -149,12 +149,12 @@ Feature: Shared scanner wiring
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] Every item of the `wiring` archetype's checklist is addressed in `design.md` or marked not applicable with a reason
-- [ ] `cli`'s `ArchitectureTest` is unchanged and still forbids the scanner's `application` and `infra` packages
-- [ ] `dfs.bat` on the 25-file test fixtures folder (never a real drive) prints the same report before and after the change
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] Every item of the `wiring` archetype's checklist is addressed in `design.md` or marked not applicable with a reason
+- [x] `cli`'s `ArchitectureTest` is unchanged and still forbids the scanner's `application` and `infra` packages
+- [x] `dfs.bat` on the 25-file test fixtures folder (never a real drive) prints the same report before and after the change (verifier: 3eed87d vs c4210d3, `--format=text`: identical except the timestamp line; JSONL identical apart from `startedAt`/`finishedAt`; both exit 0)
 
 ## Open questions
 
