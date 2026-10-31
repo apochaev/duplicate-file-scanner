@@ -8,3 +8,5 @@
 - `cli/build.gradle.kts` adds `implementation(project(":scanner-spring"))`; `cli`'s `ScannerConfiguration.java` and `ScannerConfigurationTest.java` deleted (staged with `git rm`) so the CLI reaches the stubs at red.
 - Verified: `:scanner-spring:compileJava :cli:compileJava :cli:compileTestJava` compile; existing `CliApplicationTest` fails with root cause `UnsupportedOperationException: not implemented: DFS-031` (autoconfiguration picked up through the imports file).
 - Expected commit: `refactor(cli): stub scanner-spring autoconfiguration [DFS-031]` (design.md, progress.md, learnings.md, the files above).
+
+Implementer: ScannerAutoConfiguration bodies filled from the deleted cli ScannerConfiguration; CLAUDE.md and README.md edited. Expected commit: feat(scanner-spring): implement ScannerAutoConfiguration [DFS-031]

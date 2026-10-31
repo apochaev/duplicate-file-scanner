@@ -85,6 +85,7 @@ Use `gradlew.bat` instead of `./gradlew` in cmd or PowerShell.
 ## Project layout
 
 - `file-scanner/`: the core library. Spring-free, a Java module, hexagonal architecture; layering is enforced by ArchUnit tests.
+- `scanner-spring/`: Spring Boot autoconfiguration that wires the library's ports as beans, shared by the apps.
 - `cli/`: a Spring Boot command-line app that wires the library together and prints the report.
 - `docs/tickets/`: the backlog, written as user stories with Gherkin acceptance criteria.
 - `.claude/` and `tools/story-gate/`: the Claude Code workflow this project is built with (agents, skills, ticket archetypes and the pipeline's gate checks).

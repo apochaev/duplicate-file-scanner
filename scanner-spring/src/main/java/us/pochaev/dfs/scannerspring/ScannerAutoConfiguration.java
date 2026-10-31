@@ -6,13 +6,20 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import us.pochaev.dfs.scanner.domain.factory.ScanUseCases;
 import us.pochaev.dfs.scanner.domain.factory.ScannerFactories;
+import us.pochaev.dfs.scanner.domain.model.Result;
+import us.pochaev.dfs.scanner.domain.model.ScanConfig;
+import us.pochaev.dfs.scanner.domain.model.ScanId;
+import us.pochaev.dfs.scanner.domain.model.ScanListener;
 import us.pochaev.dfs.scanner.domain.usecases.command.CancelScan;
 import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
 
+import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The scanner's shared Spring wiring (CLAUDE.md decision 6, DFS-031), registered through
@@ -40,7 +47,7 @@ public class ScannerAutoConfiguration {
     @Bean(destroyMethod = "shutdownNow")
     @ConditionalOnMissingBean(name = "scanExecutor")
     public ExecutorService scanExecutor() {
-        throw new UnsupportedOperationException("not implemented: DFS-031");
+        return Executors.newVirtualThreadPerTaskExecutor();
     }
 
     /**
@@ -50,34 +57,45 @@ public class ScannerAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ScanUseCases scanUseCases(@Qualifier("scanExecutor") Executor scanExecutor) {
-        throw new UnsupportedOperationException("not implemented: DFS-031");
+        return ScannerFactories.scanUseCases(scanExecutor);
     }
 
     /** {@code StartScan} has two methods, so an anonymous class delegating both. */
     @Bean
     @ConditionalOnMissingBean
     public StartScan startScan(ScanUseCases useCases) {
-        throw new UnsupportedOperationException("not implemented: DFS-031");
+        StartScan start = useCases.start();
+        return new StartScan() {
+            @Override
+            public Result<ScanId> start(List<Path> locations, ScanConfig config) {
+                return start.start(locations, config);
+            }
+
+            @Override
+            public Result<ScanId> start(List<Path> locations, ScanConfig config, ScanListener listener) {
+                return start.start(locations, config, listener);
+            }
+        };
     }
 
     /** A method reference, an instance of {@code CancelScan} alone. */
     @Bean
     @ConditionalOnMissingBean
     public CancelScan cancelScan(ScanUseCases useCases) {
-        throw new UnsupportedOperationException("not implemented: DFS-031");
+        return useCases.cancel()::cancel;
     }
 
     /** A method reference, an instance of {@code GetScanStatus} alone. */
     @Bean
     @ConditionalOnMissingBean
     public GetScanStatus getScanStatus(ScanUseCases useCases) {
-        throw new UnsupportedOperationException("not implemented: DFS-031");
+        return useCases.status()::status;
     }
 
     /** A method reference, an instance of {@code GetScanResult} alone. */
     @Bean
     @ConditionalOnMissingBean
     public GetScanResult getScanResult(ScanUseCases useCases) {
-        throw new UnsupportedOperationException("not implemented: DFS-031");
+        return useCases.result()::result;
     }
 }
