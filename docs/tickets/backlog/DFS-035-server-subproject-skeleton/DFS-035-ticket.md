@@ -1,7 +1,7 @@
 ---
 id: DFS-035
 title: Add the server subproject skeleton
-status: ready
+status: in-review
 type: build
 scope: [build]
 archetype: none
@@ -149,12 +149,12 @@ Feature: Server subproject skeleton
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes, except AC-1 (the build) and AC-8 (read), each noted in `verification.md`
-- [ ] Each test's `@DisplayName` starts with its criterion ID (`DFS-035.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] `./gradlew :server:bootRun` started by hand once: the URL line appears and the page opens in a browser, noted in `verification.md`
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] Every scenario above is an automated test and passes, except AC-1 (the build) and AC-8 (read), each noted in `verification.md` (7 tests, 0 skipped)
+- [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-035.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests) (2026-10-31, worktree)
+- [x] `./gradlew :server:bootRun` started by hand once: the URL line appears and the page opens in a browser, noted in `verification.md` (port 61011)
+- [x] No files changed outside the paths listed under Touches
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 

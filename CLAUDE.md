@@ -4,12 +4,12 @@
 
 Finds duplicate files anywhere on disk from a start location and organizes them by **source location**, so the user can delete duplicates safely and confidently, individually or in bulk. Example: folder1 and folder2 overlap (fully or partially); the user can choose "delete every file in folder2 that has a confirmed duplicate in folder1".
 
-Two Gradle subprojects (Java 25, Gradle 9.6 wrapper, group `us.pochaev.dfs`):
+Three Gradle subprojects (Java 25, Gradle 9.6 wrapper, group `us.pochaev.dfs`):
 
 - `file-scanner`: the core library, hexagonal architecture, a Java module, Spring-free.
 - `cli`: Spring Boot CLI. Depends on `file-scanner` via `implementation(project(":file-scanner"))`. It is a primary adapter and the composition root.
 
-Planned, not yet created: `server`, a third subproject (separate from `cli` and `file-scanner`): a Spring Boot server on localhost with an Angular UI in `server/frontend/`, for exploring a scan, building a deletion plan and double-checking it. It also hosts the folder overlap analysis. Design and decisions (U1–U11, D1–D7) in `docs/design/ui.md`.
+- `server`: Spring Boot web server on localhost (separate from `cli` and `file-scanner`), depends on `file-scanner` like `cli` and has the same ArchUnit guard. Planned: an Angular UI in `server/frontend/` for exploring a scan, building a deletion plan and double-checking it, and the folder overlap analysis. So far a skeleton (DFS-035): it listens on `127.0.0.1` on a random port, logs `DFS server listening on http://127.0.0.1:<port>/` and serves a placeholder page; no `/api` until the security ticket (U10). Design and decisions (U1–U11, D1–D7) in `docs/design/ui.md`.
 
 ## Commands
 
@@ -24,6 +24,9 @@ Run from the repo root (`./gradlew` works in Git Bash; use `gradlew.bat` in cmd/
 ./gradlew -q :cli:run --args="C:/a --format=text --output=C:/abs/report.txt"   # write the report to a file instead of stdout
 ./gradlew -q :cli:run --args="C:/a --progress=log" 2> progress.log   # plain progress lines for a file
 ./gradlew -q :cli:run --args="C:/a --no-default-excludes"    # also scan .DS_Store and ._* files (left out by default)
+./gradlew :server:bootRun                         # start the local server; open the URL it logs
+./gradlew :server:bootJar                         # server/build/libs/dfs-server.jar
+./gradlew :server:installBootDist                 # server/build/install/dfs-server-boot/bin/dfs-server(.bat)
 ```
 
 `:cli:run` starts in `cli/`, so pass **absolute** paths. `-q` keeps Gradle's own lines out of stdout, which must carry only the output. Stdout is always UTF-8; to see non-ASCII paths correctly on a Windows console, switch it to UTF-8 first (`chcp 65001` in cmd, `[Console]::OutputEncoding = [Text.Encoding]::UTF8` in PowerShell). In Windows PowerShell 5.1, `>` re-encodes a program's output as UTF-16 and mangles non-ASCII paths, so use `--output=<file>` (an absolute path) there instead of `>`: the report is written as UTF-8, an existing file is replaced only by a complete report, and stderr ends with `Report written to <path>`. Progress goes to stderr, by default as one line per phase redrawn in place (`--progress=live`); use `--progress=log` when stderr goes to a file and `--progress=off` for none. Gradle 9.6 on JDK 25 prints a harmless "restricted method in java.lang.System" warning at startup. The scanner calls native code on Windows; every launcher passes `--enable-native-access=ALL-UNNAMED` (or the `Enable-Native-Access` manifest attribute), and an embedding app must do the same.
