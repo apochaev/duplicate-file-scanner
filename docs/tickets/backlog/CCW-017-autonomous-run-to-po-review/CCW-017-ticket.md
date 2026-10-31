@@ -219,7 +219,7 @@ Feature: Run a ready ticket autonomously to product-owner review
 
 - [x] Every [read] scenario checked against the edited files, noted in `verification.md` (Read checks table)
 - [x] Every [mechanical] scenario run against the real repository (scratch copies, never real tickets edited), commands and output in `verification.md` (AC-3, AC-5, AC-6; AC-6 found and fixed a defect)
-- [ ] The AC-12 live run reached the scanner-spring ticket's `done` gate with no user input between `ready` and the gate; its `plan.json` and the notification text recorded in `verification.md`
+- [x] The AC-12 live run reached the scanner-spring ticket's `done` gate with no user input between `ready` and the gate; its `plan.json` and the notification text recorded in `verification.md` (DFS-031, 2026-10-31; one resume after the backend session's usage limit, see `verification.md`)
 - [x] `./gradlew build` is green (worktree, exit 0)
 - [x] `/tickets validate` reports nothing new (new gates/autorun rules over every ticket: no field set anywhere; the only ready-or-later ticket, CCW-017, is `none`)
 - [x] No files changed outside the paths listed under Touches (`git status`: 8 files, all listed)

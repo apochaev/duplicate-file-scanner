@@ -19,7 +19,7 @@ Refine a pipeline ticket with me as before, then answer "ready, autorun". I comm
 - **AC-9** met (read): the verifier writes this section with these seven headings, then the Summary.
 - **AC-10** met (read): the done gate shows this section, or the Summary for older files.
 - **AC-11** met: this file.
-- **AC-12** pending: the live run on the `scanner-spring` ticket hasn't happened yet.
+- **AC-12** met (live, with one caveat): DFS-031 (`scanner-spring`), refined with `gates: [done]` and `autorun: true` in approval commit `3eed87d`, passed the launch check and ran design, tests, implement and verify (each on attempt 1, 0 defects) to the product-owner review in the backend session; `plan.json` committed in `8f0174a` on `tickets/DFS-031-extract-scanner-spring-module`, state `awaiting-approval`. Notification: "DFS-031 ready for your review: 5/5 criteria met — /story approve DFS-031". Caveat: the run paused after the tests phase when that session hit its usage limit, and its user typed "keep going pls" to resume; no gate or decision was asked for. Reported by the backend session and checked here against git (commits, ticket frontmatter at `3eed87d`, `plan.json`).
 
 ### Try it
 
@@ -36,7 +36,7 @@ Refine the `scanner-spring` extraction ticket (`docs/design/ui.md` D1) with `/ti
 
 - `autorun` doesn't apply to hand-implemented tickets (decision 7).
 - When one close unblocks several tickets, only one launches. The rest are listed.
-- None of this has run end to end yet (AC-12).
+- The end-to-end run (AC-12) was one ticket, in the backend session; a usage-limit pause needs a manual resume, since nothing restarts the run on its own.
 - The read checks confirm the instructions say the right thing, not that every mode behaves correctly in practice.
 
 ### Evidence
@@ -49,11 +49,11 @@ Refine the `scanner-spring` extraction ticket (`docs/design/ui.md` D1) with `/ti
 
 Implemented by hand in one session. One defect was found by the mechanical AC-6 run and fixed: the approving-commit rule. No retries.
 
-Ready for your approval of the instructions. The ticket stays `in-review` until the AC-12 live run.
+Ready for your approval of the instructions. The AC-12 live run is recorded above.
 
 ## Summary
 
-12 criteria: 11 met (6 by reading, 3 mechanically after one fix, 1 by this file's existence), AC-12 pending its live run. Build green, scope respected.
+12 criteria: 11 met (6 by reading, 3 mechanically after one fix, 1 by this file's existence), AC-12 met live on DFS-031, with one usage-limit resume. Build green, scope respected.
 
 ## Mechanical runs
 
