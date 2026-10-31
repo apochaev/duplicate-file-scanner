@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-030-export-scan-for-analysis",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-030-export-scan-for-analysis",
-  "state": "running",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -113,10 +113,25 @@
       "after": [
         "implement"
       ],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 17,
+          "wallClockSeconds": 197,
+          "outcome": "passed",
+          "note": "an earlier launch was stopped by the user before writing anything and is not counted; turns counted as tool uses; PASS consistency DFS-030: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-030-export-scan-for-analysis/DFS-030-ticket.md",
+        "docs/tickets/backlog/DFS-030-export-scan-for-analysis/learnings.md",
+        "docs/tickets/backlog/DFS-030-export-scan-for-analysis/plan.json",
+        "docs/tickets/backlog/DFS-030-export-scan-for-analysis/verification.md"
+      ],
+      "commit": "f6b0b718c797e513955778ff15b887da2add065c"
     }
   ],
   "gates": [
@@ -126,7 +141,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": []
