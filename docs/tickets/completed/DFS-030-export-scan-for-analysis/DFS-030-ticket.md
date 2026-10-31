@@ -1,7 +1,7 @@
 ---
 id: DFS-030
 title: Export a complete scan for analysis
-status: in-review
+status: done
 type: feature
 scope: [file-scanner, cli]
 archetype: pipeline-stage
@@ -23,7 +23,7 @@ touches:
 blocked_reason:
 created: 2026-10-31
 updated: 2026-10-31
-completed:
+completed: 2026-10-31
 ---
 
 # DFS-030: Export a complete scan for analysis
