@@ -8,6 +8,7 @@ plugins {
 dependencies {
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
     implementation(project(":file-scanner"))
+    implementation(project(":scanner-spring"))
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-jackson")
 

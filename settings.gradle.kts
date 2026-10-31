@@ -1,3 +1,3 @@
 rootProject.name = "duplicate-file-scanner"
 
-include("file-scanner", "cli")
+include("file-scanner", "scanner-spring", "cli")
