@@ -34,4 +34,4 @@ DFS-030's JSONL export: a `scan` header (roots, settings, start time, schema ver
 ## Open
 
 - Scale: pairs grow quadratically with the folders a set spans. Measure on a real export (the 2026-10-31 scan of a 3.1 TB drive: 153,028 files, 8,816 folders).
-- Where the tool lives: a separate app, a subproject, or queries over DuckDB or SQLite.
+- Where the tool lives: settled 2026-10-31, in Java in the planned `server` subproject (`docs/design/ui.md`, U5b). `tools/analysis/overlaps.sql` and `tools/viewer/analysis.js` stay as standalone tools.

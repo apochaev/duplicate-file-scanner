@@ -7,7 +7,9 @@ Finds duplicate files anywhere on disk from a start location and organizes them 
 Two Gradle subprojects (Java 25, Gradle 9.6 wrapper, group `us.pochaev.dfs`):
 
 - `file-scanner`: the core library, hexagonal architecture, a Java module, Spring-free.
-- `cli`: Spring Boot CLI (a Spring Boot server may follow). Depends on `file-scanner` via `implementation(project(":file-scanner"))`. It is a primary adapter and the composition root.
+- `cli`: Spring Boot CLI. Depends on `file-scanner` via `implementation(project(":file-scanner"))`. It is a primary adapter and the composition root.
+
+Planned, not yet created: `server`, a third subproject (separate from `cli` and `file-scanner`): a Spring Boot server on localhost with an Angular UI in `server/frontend/`, for exploring a scan, building a deletion plan and double-checking it. It also hosts the folder overlap analysis. Design and decisions (U1–U11, D1–D7) in `docs/design/ui.md`.
 
 ## Commands
 
