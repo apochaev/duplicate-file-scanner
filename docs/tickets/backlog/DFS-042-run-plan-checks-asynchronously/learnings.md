@@ -1,0 +1,3 @@
+
+- DFS-042 design: the architect ran out of turns before writing design.md. A use case with shared machinery, a generic port, a service and Spring wiring is about 18 files, which is too many for 35 turns once exploration is done. Write the design.md Summary and skeleton before the stubs (archetype "where files go" last bullet), and batch stub writes with the Write tool. A Git Bash heredoc batch failed on quoting and wasted a turn.
+- The DFS-042 AC-14 scenario waits on a latch released by the last EntryChecked, then asserts COMPLETED. The final status update happens after that event, so the latch alone is racy. Refinement of real-thread scenarios should name a wait on the task's completion (the Future), not on a listener event.
