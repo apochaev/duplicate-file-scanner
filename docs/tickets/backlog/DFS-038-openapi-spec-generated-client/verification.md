@@ -103,4 +103,4 @@ Implemented by hand in one session, tests first. These were found and fixed alon
 - by one recorded run each: AC-2, AC-4 and AC-6
 - by search and reading: AC-5 and AC-7
 
-Two deviations are recorded: AC-2's scenario wording, and AC-4, which was fixed and re-run. Tests ran red before the implementation and green after it. Build green, scope respected. Still yours: the browser check in "Try it".
+Two deviations are recorded: AC-2's scenario wording, and AC-4, which was fixed and re-run. Tests ran red before the implementation and green after it. Build green, scope respected. You checked it in the browser on 2026-11-01 from `installBootDist`: the page loaded (step 3, "Connected", not separately reported), and `/v3/api-docs` showed Spring's "Whitelabel Error Page" with status 404.

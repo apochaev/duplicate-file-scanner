@@ -166,7 +166,7 @@ Feature: Generated OpenAPI spec and API client
 - [x] The tests ran red before the implementation; the failing run and the commit it preceded are recorded in `verification.md` (decision 4)
 - [x] Each Java test's `@DisplayName` and each Vitest test's name starts with its criterion ID (`DFS-038.AC-n`)
 - [x] `./gradlew build` is green (includes the ArchUnit and module-export tests and the Vitest tests)
-- [ ] Started by hand once on Windows: the page shows "Connected", and `/v3/api-docs` answers `404`
+- [x] Started by hand once on Windows: the page shows "Connected", and `/v3/api-docs` answers `404`
 - [x] No files changed outside the paths listed under Touches
 - [x] `verification.md` opens with the `## Product owner review` section
 
