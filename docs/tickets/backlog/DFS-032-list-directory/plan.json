@@ -1,0 +1,61 @@
+{
+  "ticket": "DFS-032",
+  "archetype": {
+    "name": "use-case",
+    "version": 5
+  },
+  "branch": "tickets/DFS-032-list-directory",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-032-list-directory",
+  "state": "running",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    }
+  ],
+  "gates": [
+    {
+      "after": "done",
+      "status": "pending"
+    }
+  ],
+  "defects": []
+}

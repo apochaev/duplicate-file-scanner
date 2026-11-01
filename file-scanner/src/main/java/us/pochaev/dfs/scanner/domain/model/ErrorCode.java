@@ -8,12 +8,26 @@ public enum ErrorCode {
     UNKNOWN_SCAN,
     /** {@code StartScan} was given an empty location list. */
     NO_LOCATIONS,
-    /** A start location does not exist ({@link java.nio.file.NoSuchFileException}). */
+    /**
+     * A start location, or a folder given to {@code ListDirectory}, does not exist
+     * ({@link java.nio.file.NoSuchFileException}).
+     */
     LOCATION_NOT_FOUND,
-    /** A start location is not a directory ({@link java.nio.file.NotDirectoryException}). */
+    /**
+     * A start location, or a folder given to {@code ListDirectory}, is not a directory
+     * ({@link java.nio.file.NotDirectoryException}).
+     */
     NOT_A_DIRECTORY,
-    /** A start location could not be resolved for another I/O reason (for example access denied). */
+    /**
+     * A start location could not be resolved, or a folder given to {@code ListDirectory} could not be opened or read to
+     * the end, for another I/O reason (for example access denied).
+     */
     LOCATION_UNREADABLE,
+    /**
+     * A folder given to {@code ListDirectory} is a symlink, junction or other reparse point, which the listing never
+     * follows (DFS-032 decision 4). A scan's start location is resolved instead.
+     */
+    LOCATION_IS_LINK,
     /** The caller-supplied executor rejected the scan's task. */
     EXECUTOR_REJECTED,
     /** {@code GetScanResult} on a scan whose status is not COMPLETED; the message names the status. */
