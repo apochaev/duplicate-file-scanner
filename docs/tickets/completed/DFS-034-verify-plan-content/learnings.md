@@ -23,11 +23,11 @@
 
 ### DFS-034.L-2: a chunked compare checks cancel before end-of-file and drops a finished entry
 
-- Status: proposed
+- Status: parked
 - Impact: shared (touches `.claude/archetypes/`, read by the implementer and test-author)
 - Target: `.claude/archetypes/use-case/impl-guide.md` and `test-guide.md`
 - Change: impl-guide: a chunked read loop checks end-of-file (position == size) before reading the cancel signal; test-guide: pin a cancel raised in the last chunk's progress callback.
 - Evidence: DFS-034 verification.md "Known limits" and learnings.md (verifier note): `NioContentComparator` checks `cancelled` first and detects EOF by a short read, so a file whose size is an exact multiple of 1 MiB is dropped as interrupted when the cancel arrives in its last callback.
 - Recurrences: 1 (DFS-034)
 - Recommendation: park; harmless (a cancelled run reports one entry fewer) and one adapter only; reconsider in DFS-042's refinement, which reuses this comparator.
-- Decision:
+- Decision: parked 2026-11-01 by the user
