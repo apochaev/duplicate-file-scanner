@@ -82,7 +82,9 @@ class SecurityTest {
             HttpResponse<String> r = server.get("/", null);
 
             assertEquals(200, r.statusCode());
-            assertTrue(r.body().contains("DFS server is running"), r.body());
+            // The page is the Angular app now; its text is rendered in the browser (DFS-037.AC-7).
+            assertTrue(r.body().contains("<app-root"), r.body());
+            assertTrue(r.body().contains("<title>DFS</title>"), r.body());
         }
     }
 
