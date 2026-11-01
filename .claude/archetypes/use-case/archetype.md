@@ -1,10 +1,10 @@
 ---
 name: use-case
-version: 5
+version: 6
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
-  architect: {model: opus, effort: high, maxTurns: 25}
+  architect: {model: opus, effort: high, maxTurns: 35}
   verifier: {model: opus, effort: medium, maxTurns: 20}
   implementer: {model: sonnet, effort: medium, maxTurns: 40}
   test-author: {model: sonnet, effort: medium, maxTurns: 40}
@@ -28,6 +28,9 @@ Written from what refining DFS-018 (track scans asynchronously) surfaced (CCW-01
 - A data record (a result, a snapshot, a state record) is not stubbed: write its components and leave its compact constructor without checks, and list the checks it needs (non-null components, ranges) in `design.md` for the implementer to add (DFS-018).
 - A port method this ticket deliberately does not implement, deferring it to a later ticket (for example `ContentHasher.fullHash`, deferred by DFS-002 to DFS-003): stub it like any other method (the standard `not implemented: <TICKET-ID>` message) — the implementer is the one who changes it. The implementer replaces that message with a permanent one that does *not* use the `not implemented:` prefix and names the ticket that will implement it (for example `"full hash is implemented by DFS-003"`), so `StubsCheck` never reads it as a leftover stub. See `test-guide.md`, "Testing a port method deferred to a later ticket," for how to keep such a method's test correctly red now and green later without a new stub-recognition mechanism. The ticket that later implements the method finishes the handover in two steps. Its architect re-stubs the method back to `not implemented: <its own ID>`, because the deferring ticket's permanent message does not start with `not implemented:`, so `RedCheck` would reject the new story tests failing on it; the architect also names the deferring ticket's test file in `design.md`, since the test-author reads only files the design names. Its test-author removes the deferring ticket's stand-in test, which would otherwise fail `RedCheck` as a regression and then `green` once the method works, and writes tests for the method's real behavior. See `test-guide.md` (DFS-003.L-2).
 - An edit to an existing test named in `touches` (a guard such as `ArchitectureTest`, changed by the ticket rather than written for a criterion) belongs to the test-author, not the architect; the architect specifies the edit in `design.md` (DFS-019).
+- A factory method or Spring bean that exposes the use case (a `ScannerFactories` method, a `ScannerAutoConfiguration` bean) is written for real at design, not stubbed: a throwing factory fails every context that loads the auto-configuration. A criterion about it (the bean exists, it backs off) therefore has no code path through a stub, so `design.md` tells the test-author to call the use case through the factory or bean before the wiring assertion, which makes the test fail red on the use case's stub (DFS-022.L-1; the `wiring` archetype's DFS-031.L-1).
+- A helper shared with existing code (for example a classification moved out of an adapter): the architect adds the helper as a stub and leaves the existing consumer untouched; the implementer moves the consumer onto it, and the consumer's existing tests must pass unchanged (the `freeze` and `green` checks prove it). Refactoring the consumer at design would break its tests before implementation (DFS-032.L-2).
+- Write `design.md`'s `## Summary` early and batch stub writes, so a stop at the turn cap still leaves a usable design (DFS-032.L-1).
 
 ## Edge-case checklist
 
@@ -53,6 +56,6 @@ Work through every item that applies to this use case; skip and say why for one 
 Beyond the standard checks (every scenario automated and passing, `./gradlew build` green including ArchUnit and module-export tests, no files changed outside `touches`):
 
 - Every item of the checklist above is either addressed in the design doc or explicitly marked not applicable with a one-line reason.
-- No test uses `Thread.sleep`; waiting is on a latch, a future or a bounded poll (checklist item 13).
+- No test this ticket adds or changes uses `Thread.sleep`; waiting is on a latch, a future or a bounded poll (checklist item 13). A sleep already in a touched test class from an earlier ticket does not fail this item (DFS-032.L-4).
 - The service implementing the use cases has no field other than its ports, its seams and the executor (checklist item 6).
 - A use case that adds a type to an exported package keeps `ModuleExportsTest` green; one that adds a new exported package updates `module-info.java`'s `exports` (checklist item 14).
