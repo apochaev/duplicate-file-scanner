@@ -1,7 +1,7 @@
 ---
 id: DFS-033
 title: Check a deletion plan for drift since the scan
-status: in-progress
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: use-case
