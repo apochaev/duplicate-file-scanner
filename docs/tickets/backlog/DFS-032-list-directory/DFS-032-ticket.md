@@ -1,7 +1,7 @@
 ---
 id: DFS-032
 title: List one directory level
-status: in-progress
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: use-case
