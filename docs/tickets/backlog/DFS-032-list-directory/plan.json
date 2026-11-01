@@ -1,0 +1,141 @@
+{
+  "ticket": "DFS-032",
+  "archetype": {
+    "name": "use-case",
+    "version": 5
+  },
+  "branch": "tickets/DFS-032-list-directory",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-032-list-directory",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 40,
+          "wallClockSeconds": 440,
+          "outcome": "passed",
+          "note": "resumed once via SendMessage after hitting the 25-turn cap with stubs written but no design.md; turns and time are both invocations combined; PASS touches DFS-032: 17 changed files, all inside touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-032-list-directory/DFS-032-ticket.md",
+        "docs/tickets/backlog/DFS-032-list-directory/design.md",
+        "docs/tickets/backlog/DFS-032-list-directory/learnings.md",
+        "docs/tickets/backlog/DFS-032-list-directory/plan.json",
+        "docs/tickets/backlog/DFS-032-list-directory/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ListDirectoryService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DirectoryEntry.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DirectoryListing.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/ListDirectory.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/DirectoryAccess.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/EntryKind.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioDirectoryReader.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/DirectoryReader.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/LinkNotFollowedException.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "73dff48da7f035a1563dc76347844a8af9381e60"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 18,
+          "wallClockSeconds": 142,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-032: red and traceability pass; - red: 20 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 433 other tests pass (3 skipped); - traceability: 9 criteria traced through 12 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-032-list-directory/plan.json",
+        "docs/tickets/backlog/DFS-032-list-directory/progress.md",
+        "docs/tickets/backlog/DFS-032-list-directory/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ListDirectoryServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/ListDirectoryRealDiskTest.java",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java"
+      ],
+      "commit": "fbd0e09003304aac97533b1ed099bc1e356547ca"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 10,
+          "wallClockSeconds": 122,
+          "outcome": "passed",
+          "note": "PASS green DFS-032: build and tests green: 450 passed, 3 skipped; PASS disabled DFS-032: no @Disabled tests in the 3 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-032: none of the 3 test files of the tests phase changed since fbd0e090; PASS touches DFS-032: 22 changed files, all inside touches; PASS stubs DFS-032: no stub markers in 90 production files; PASS traceability DFS-032: 9 criteria traced through 12 scenarios to tests and test-plan.md; PASS consistency DFS-032: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-032-list-directory/plan.json",
+        "docs/tickets/backlog/DFS-032-list-directory/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ListDirectoryService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DirectoryEntry.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DirectoryListing.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/DirectoryAccess.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/EntryKind.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioDirectoryReader.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileTreeWalker.java"
+      ],
+      "commit": "2e5e8c5f0e446c999d33e612f9160ae4ed16fefd"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 9,
+          "wallClockSeconds": 136,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-032: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-032-list-directory/DFS-032-ticket.md",
+        "docs/tickets/backlog/DFS-032-list-directory/learnings.md",
+        "docs/tickets/backlog/DFS-032-list-directory/plan.json",
+        "docs/tickets/backlog/DFS-032-list-directory/verification.md"
+      ],
+      "commit": "fcd17592f0834176e290d96c90899b18b597528f"
+    }
+  ],
+  "gates": [
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": []
+}

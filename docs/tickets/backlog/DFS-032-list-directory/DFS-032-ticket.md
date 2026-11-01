@@ -1,7 +1,7 @@
 ---
 id: DFS-032
 title: List one directory level
-status: ready
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: use-case
@@ -177,14 +177,14 @@ Feature: List one directory level
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `design.md` addresses every item of the `use-case` edge-case checklist or marks it not applicable with a one-line reason (decision 6 lists the ones expected not to apply)
-- [ ] `NioFileTreeWalker`'s existing tests pass unchanged after the shared classification helper is introduced
-- [ ] Symlinks and junctions are created at test time and their tests skip through `Assumptions` where the platform or privileges do not allow them; nothing platform-specific is committed under `fixtures/`
-- [ ] No test uses `Thread.sleep`, and no test reads or writes outside a `@TempDir`
-- [ ] `module-info.java` is unchanged and `ModuleExportsTest` stays green
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] `design.md` addresses every item of the `use-case` edge-case checklist or marks it not applicable with a one-line reason (decision 6 lists the ones expected not to apply)
+- [x] `NioFileTreeWalker`'s existing tests pass unchanged after the shared classification helper is introduced
+- [x] Symlinks and junctions are created at test time and their tests skip through `Assumptions` where the platform or privileges do not allow them; nothing platform-specific is committed under `fixtures/`
+- [x] No test uses `Thread.sleep`, and no test reads or writes outside a `@TempDir`
+- [x] `module-info.java` is unchanged and `ModuleExportsTest` stays green
 
 ## Open questions
 

@@ -1,11 +1,14 @@
 package us.pochaev.dfs.scanner.domain.factory;
 
+import us.pochaev.dfs.scanner.application.ListDirectoryService;
 import us.pochaev.dfs.scanner.application.PreviewDeletionPlanService;
 import us.pochaev.dfs.scanner.application.ScanPipeline;
 import us.pochaev.dfs.scanner.application.ScanService;
+import us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory;
 import us.pochaev.dfs.scanner.domain.usecases.query.PreviewDeletionPlan;
 import us.pochaev.dfs.scanner.infra.adapter.InMemoryScanRepository;
 import us.pochaev.dfs.scanner.infra.adapter.NioContentHasher;
+import us.pochaev.dfs.scanner.infra.adapter.NioDirectoryReader;
 import us.pochaev.dfs.scanner.infra.adapter.NioFileIdentity;
 import us.pochaev.dfs.scanner.infra.adapter.NioFileTreeWalker;
 import us.pochaev.dfs.scanner.infra.adapter.NioLocationResolver;
@@ -51,5 +54,16 @@ public final class ScannerFactories {
      */
     public static PreviewDeletionPlan previewDeletionPlan() {
         return new PreviewDeletionPlanService();
+    }
+
+    /**
+     * Builds the one-level folder listing (DFS-032 decision 6) on the NIO directory reader: stateless, with no scan
+     * state and no executor, so it is not part of {@link ScanUseCases}. It lists any folder it is given; limiting
+     * paths to a scan's roots is the caller's job.
+     *
+     * @return a new {@link ListDirectory}
+     */
+    public static ListDirectory listDirectory() {
+        return new ListDirectoryService(new NioDirectoryReader());
     }
 }

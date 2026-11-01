@@ -14,6 +14,7 @@ import us.pochaev.dfs.scanner.domain.usecases.command.CancelScan;
 import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
+import us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory;
 import us.pochaev.dfs.scanner.domain.usecases.query.PreviewDeletionPlan;
 
 import java.nio.file.Path;
@@ -108,5 +109,15 @@ public class ScannerAutoConfiguration {
     @ConditionalOnMissingBean
     public PreviewDeletionPlan previewDeletionPlan() {
         return ScannerFactories.previewDeletionPlan();
+    }
+
+    /**
+     * The one-level folder listing (DFS-032 decision 6), straight from its own factory like the preview: stateless,
+     * independent of {@link ScanUseCases}, and its implementation serves this one port only.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ListDirectory listDirectory() {
+        return ScannerFactories.listDirectory();
     }
 }
