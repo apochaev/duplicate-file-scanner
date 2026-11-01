@@ -101,7 +101,7 @@ Per CLAUDE.md decision 6: extract the scanner wiring from `cli` into a `scanner-
 
 ### D2. API style
 
-JSON REST under `/api`; Server-Sent Events for scan and verify progress. An OpenAPI spec generated from the Spring controllers; the Angular API client and models generated from it, so the frontend and server types cannot drift.
+JSON REST under `/api`; Server-Sent Events for scan and verify progress. An OpenAPI spec generated from the Spring controllers; the Angular API client and models generated from it, so the frontend and server types cannot drift. Built in DFS-038: springdoc-openapi 3.2.0 produces the spec, committed as `server/frontend/openapi.json` and checked by `OpenApiSpecTest` (`./gradlew :server:updateOpenApi` rewrites it); `ng-openapi-gen` 1.1.0 generates services and models from it on every frontend build, not committed. The spec is not served at runtime.
 
 ### D3. Scans in a session
 
