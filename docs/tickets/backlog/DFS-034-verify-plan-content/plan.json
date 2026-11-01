@@ -77,10 +77,29 @@
       "after": [
         "tests"
       ],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 14,
+          "wallClockSeconds": 207,
+          "outcome": "passed",
+          "note": "PASS green DFS-034: build and tests green: 494 passed, 3 skipped; PASS disabled DFS-034: no @Disabled tests in the 3 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-034: none of the 3 test files of the tests phase changed since 949be3d6; PASS touches DFS-034: 19 changed files, all inside touches; PASS stubs DFS-034: no stub markers in 107 production files; PASS traceability DFS-034: 10 criteria traced through 12 scenarios to tests and test-plan.md; PASS consistency DFS-034: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-034-verify-plan-content/plan.json",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/VerifyPlanContentService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/OperationCheck.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/VerifyEvent.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/VerifyReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentComparator.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ContentComparator.java"
+      ],
+      "commit": "f09068dfcece0fa1285d6567e6e69a332fd77c78"
     },
     {
       "id": "verify",
@@ -88,7 +107,7 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
