@@ -12,4 +12,9 @@ import java.nio.file.Path;
  * @param quarantineIn the folder whose copies are quarantined; must not equal {@code keep} or lie under it
  */
 public record KeepAndQuarantine(Path keep, Path quarantineIn) {
+
+    public KeepAndQuarantine {
+        java.util.Objects.requireNonNull(keep, "keep");
+        java.util.Objects.requireNonNull(quarantineIn, "quarantineIn");
+    }
 }

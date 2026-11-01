@@ -10,4 +10,9 @@ import java.nio.file.Path;
  * @param keep   a link of the copy to keep, exactly as the scan recorded it
  */
 public record KeepCopy(String digest, Path keep) {
+
+    public KeepCopy {
+        java.util.Objects.requireNonNull(digest, "digest");
+        java.util.Objects.requireNonNull(keep, "keep");
+    }
 }

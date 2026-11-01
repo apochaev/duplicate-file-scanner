@@ -12,6 +12,13 @@ public sealed interface Source {
      * @param rule  the rule itself
      */
     record FromRule(int index, KeepAndQuarantine rule) implements Source {
+
+        public FromRule {
+            java.util.Objects.requireNonNull(rule, "rule");
+            if (index < 0) {
+                throw new IllegalArgumentException("index must not be negative: " + index);
+            }
+        }
     }
 
     /**
@@ -20,5 +27,9 @@ public sealed interface Source {
      * @param pick the pick itself
      */
     record FromPick(KeepCopy pick) implements Source {
+
+        public FromPick {
+            java.util.Objects.requireNonNull(pick, "pick");
+        }
     }
 }

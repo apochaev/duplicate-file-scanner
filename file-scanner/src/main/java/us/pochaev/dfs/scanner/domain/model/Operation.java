@@ -23,5 +23,18 @@ public sealed interface Operation {
      * @param source the rule or pick that produced it
      */
     record Quarantine(String digest, long size, List<Path> links, Path keeper, Source source) implements Operation {
+
+        public Quarantine {
+            java.util.Objects.requireNonNull(digest, "digest");
+            java.util.Objects.requireNonNull(keeper, "keeper");
+            java.util.Objects.requireNonNull(source, "source");
+            links = List.copyOf(links);
+            if (links.isEmpty()) {
+                throw new IllegalArgumentException("links must not be empty");
+            }
+            if (size < 0) {
+                throw new IllegalArgumentException("size must not be negative: " + size);
+            }
+        }
     }
 }

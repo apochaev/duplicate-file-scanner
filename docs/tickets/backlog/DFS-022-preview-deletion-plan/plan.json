@@ -53,10 +53,27 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 16,
+          "wallClockSeconds": 204,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-022: red and traceability pass; - red: 29 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 402 other tests pass (3 skipped); - traceability: 14 criteria traced through 24 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/plan.json",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/progress.md",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PreviewDeletionPlanServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/domain/factory/PreviewDeletionPlanFactoryTest.java",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java"
+      ],
+      "commit": "a657d694763a9d9fd2bada14682704bf06c76598"
     },
     {
       "id": "implement",

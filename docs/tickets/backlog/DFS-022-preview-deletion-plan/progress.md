@@ -7,3 +7,6 @@
 
 ## Test phase
 Tests written: PreviewDeletionPlanServiceTest (26), PreviewDeletionPlanFactoryTest (1), 2 added to ScannerAutoConfigurationTest; all 29 fail with the stub message only. Expected commit: test(file-scanner): add DFS-022 preview tests [DFS-022]
+
+## Implementation (attempt 1)
+Implemented PreviewDeletionPlanService.preview per design.md and added record constructor checks. ./gradlew build green. Commit: orchestrator's.

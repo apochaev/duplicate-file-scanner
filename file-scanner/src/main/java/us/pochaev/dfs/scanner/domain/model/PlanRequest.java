@@ -12,4 +12,11 @@ import java.util.List;
  * @param picks      at most one pick per digest
  */
 public record PlanRequest(List<KeepAndQuarantine> rules, List<Path> exceptions, List<KeepCopy> picks) {
+
+    /** @throws NullPointerException if a list is null or holds a null element */
+    public PlanRequest {
+        rules = List.copyOf(rules);
+        exceptions = List.copyOf(exceptions);
+        picks = List.copyOf(picks);
+    }
 }

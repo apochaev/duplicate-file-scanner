@@ -12,4 +12,11 @@ import java.nio.file.Path;
  * @param bytes     their summed size in bytes
  */
 public record LeftBehind(int ruleIndex, Path folder, long files, long bytes) {
+
+    public LeftBehind {
+        java.util.Objects.requireNonNull(folder, "folder");
+        if (ruleIndex < 0 || files < 0 || bytes < 0) {
+            throw new IllegalArgumentException("negative value: " + ruleIndex + ", " + files + ", " + bytes);
+        }
+    }
 }

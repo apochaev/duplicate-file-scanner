@@ -10,4 +10,12 @@ import java.util.List;
  * @param sources every rule that would have produced an entry in that set, by ascending index
  */
 public record Conflict(String digest, List<Source> sources) {
+
+    public Conflict {
+        java.util.Objects.requireNonNull(digest, "digest");
+        sources = List.copyOf(sources);
+        if (sources.isEmpty()) {
+            throw new IllegalArgumentException("sources must not be empty");
+        }
+    }
 }
