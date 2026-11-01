@@ -1,7 +1,7 @@
 ---
 id: CCW-019
 title: Add the endpoint archetype
-status: in-review
+status: done
 type: feature
 scope: [docs]
 archetype: none
@@ -19,7 +19,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # CCW-019: Add the endpoint archetype
