@@ -1,7 +1,7 @@
 ---
 id: DFS-036
 title: Secure the local server against other pages in the browser
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -22,7 +22,7 @@ touches:
 blocked_reason:
 created: 2026-10-31
 updated: 2026-10-31
-completed:
+completed: 2026-10-31
 ---
 
 # DFS-036: Secure the local server against other pages in the browser
