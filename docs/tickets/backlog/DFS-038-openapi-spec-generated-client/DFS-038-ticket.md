@@ -1,7 +1,7 @@
 ---
 id: DFS-038
 title: Generate the OpenAPI spec and the Angular API client
-status: in-progress
+status: in-review
 type: build
 scope: [build]
 archetype: none
@@ -162,13 +162,13 @@ Feature: Generated OpenAPI spec and API client
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes, except those run once and recorded in `verification.md` (see the note above the scenarios)
-- [ ] The tests ran red before the implementation; the failing run and the commit it preceded are recorded in `verification.md` (decision 4)
-- [ ] Each Java test's `@DisplayName` and each Vitest test's name starts with its criterion ID (`DFS-038.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests and the Vitest tests)
+- [x] Every scenario above is an automated test and passes, except those run once and recorded in `verification.md` (see the note above the scenarios)
+- [x] The tests ran red before the implementation; the failing run and the commit it preceded are recorded in `verification.md` (decision 4)
+- [x] Each Java test's `@DisplayName` and each Vitest test's name starts with its criterion ID (`DFS-038.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests and the Vitest tests)
 - [ ] Started by hand once on Windows: the page shows "Connected", and `/v3/api-docs` answers `404`
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] No files changed outside the paths listed under Touches
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 
