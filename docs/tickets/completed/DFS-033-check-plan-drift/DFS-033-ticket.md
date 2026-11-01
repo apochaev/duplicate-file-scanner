@@ -1,7 +1,7 @@
 ---
 id: DFS-033
 title: Check a deletion plan for drift since the scan
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: use-case
@@ -23,7 +23,7 @@ touches:
 blocked_reason:
 created: 2026-10-31
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # DFS-033: Check a deletion plan for drift since the scan
