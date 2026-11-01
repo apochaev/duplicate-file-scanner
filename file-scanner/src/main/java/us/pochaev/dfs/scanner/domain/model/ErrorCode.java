@@ -39,5 +39,10 @@ public enum ErrorCode {
     /** A pick's {@code keep} is not a link of the set it names; the message names the digest. */
     PATH_NOT_IN_SET,
     /** A second pick for a digest already picked; the message names the digest. */
-    DUPLICATE_PICK
+    DUPLICATE_PICK,
+    /**
+     * {@code CheckPlanDrift} was given a plan whose operation digest is not a set of the scan, or whose link or keeper
+     * is not a path of that set's copies (DFS-033 decision 4); the message names the first such digest or path.
+     */
+    PLAN_NOT_FROM_SCAN
 }

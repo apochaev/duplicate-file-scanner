@@ -12,6 +12,7 @@ import us.pochaev.dfs.scanner.domain.model.ScanId;
 import us.pochaev.dfs.scanner.domain.model.ScanListener;
 import us.pochaev.dfs.scanner.domain.usecases.command.CancelScan;
 import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
+import us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
 import us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory;
@@ -119,5 +120,15 @@ public class ScannerAutoConfiguration {
     @ConditionalOnMissingBean
     public ListDirectory listDirectory() {
         return ScannerFactories.listDirectory();
+    }
+
+    /**
+     * The plan drift check (DFS-033 decision 7), straight from its own factory like the preview: stateless,
+     * independent of {@link ScanUseCases}, and its implementation serves this one port only.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public CheckPlanDrift checkPlanDrift() {
+        return ScannerFactories.checkPlanDrift();
     }
 }
