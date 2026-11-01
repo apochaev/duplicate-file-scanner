@@ -15,6 +15,11 @@ import java.nio.file.Path;
 public record PathDrift(Path path, Role role, String digest, DriftKind kind, String detail) {
 
     public PathDrift {
+        java.util.Objects.requireNonNull(path, "path");
+        java.util.Objects.requireNonNull(role, "role");
+        java.util.Objects.requireNonNull(digest, "digest");
+        java.util.Objects.requireNonNull(kind, "kind");
+        java.util.Objects.requireNonNull(detail, "detail");
     }
 
     /** The part a path plays in the plan. */

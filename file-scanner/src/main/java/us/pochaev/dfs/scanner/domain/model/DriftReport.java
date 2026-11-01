@@ -12,5 +12,10 @@ import java.util.List;
 public record DriftReport(String planId, int checked, List<PathDrift> drifts) {
 
     public DriftReport {
+        java.util.Objects.requireNonNull(planId, "planId");
+        if (checked < 0) {
+            throw new IllegalArgumentException("checked must not be negative: " + checked);
+        }
+        drifts = List.copyOf(drifts);
     }
 }

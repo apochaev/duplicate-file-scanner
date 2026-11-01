@@ -8,3 +8,6 @@
 - Edited: `ErrorCode` (`PLAN_NOT_FROM_SCAN`), `ScannerFactories.checkPlanDrift()` (real), `ScannerAutoConfiguration.checkPlanDrift` bean (real).
 - `./gradlew :file-scanner:compileJava :scanner-spring:compileJava` passes. Expected breakage: none. `module-info.java` unchanged.
 - Expected commit: `feat(file-scanner): design plan drift check stubs [DFS-033]` (made by the orchestrator).
+
+## Implement
+Implemented CheckPlanDriftService.check, NioFileAttributesReader.read and the DriftReport/PathDrift constructor checks per design.md. ./gradlew build green. Expected commit: feat(file-scanner): check plan drift [DFS-033].

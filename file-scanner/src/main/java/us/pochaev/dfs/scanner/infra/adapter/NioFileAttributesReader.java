@@ -14,6 +14,6 @@ public final class NioFileAttributesReader implements FileAttributesReader {
 
     @Override
     public BasicFileAttributes read(Path path) throws IOException {
-        throw new UnsupportedOperationException("not implemented: DFS-033");
+        return java.nio.file.Files.readAttributes(path, BasicFileAttributes.class, java.nio.file.LinkOption.NOFOLLOW_LINKS);
     }
 }
