@@ -1,7 +1,7 @@
 ---
 id: DFS-038
 title: Generate the OpenAPI spec and the Angular API client
-status: ready
+status: in-progress
 type: build
 scope: [build]
 archetype: none
