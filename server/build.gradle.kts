@@ -1,4 +1,5 @@
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
+import com.github.gradle.node.npm.task.NpmTask
 
 plugins {
     application
@@ -13,6 +14,39 @@ node {
     npmInstallCommand = "ci"
     nodeProjectDir = file("frontend")
 }
+
+// Everything the frontend build reads, so an unchanged frontend is not rebuilt (DFS-037.AC-5).
+val frontendSources = fileTree("frontend") {
+    exclude("node_modules/**", "dist/**", ".angular/**")
+}
+
+val ngBuild by tasks.registering(NpmTask::class) {
+    description = "Builds the Angular app into frontend/dist."
+    dependsOn(tasks.npmInstall)
+    npmCommand = listOf("run", "build")
+    inputs.files(frontendSources).withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName("frontendSources")
+    outputs.dir("frontend/dist/frontend/browser").withPropertyName("browserBundle")
+}
+
+// The built app becomes static/ on the classpath, so the jar, bootRun and the tests serve it (DFS-037 decision 2).
+val frontendResources by tasks.registering(Sync::class) {
+    description = "Copies the Angular build into build/generated/frontend/static."
+    from(ngBuild) { into("static") }
+    into(layout.buildDirectory.dir("generated/frontend"))
+}
+sourceSets.main { resources.srcDir(frontendResources) }
+
+val npmTest by tasks.registering(NpmTask::class) {
+    description = "Runs the Angular unit tests (Vitest)."
+    group = "verification"
+    dependsOn(tasks.npmInstall)
+    npmCommand = listOf("test", "--", "--watch=false")
+    inputs.files(frontendSources).withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName("frontendSources")
+    val passed = layout.buildDirectory.file("frontend-test/passed")
+    outputs.file(passed).withPropertyName("passedMarker")
+    doLast { passed.get().asFile.writeText("ok\n") }
+}
+tasks.check { dependsOn(npmTest) }
 
 dependencies {
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
