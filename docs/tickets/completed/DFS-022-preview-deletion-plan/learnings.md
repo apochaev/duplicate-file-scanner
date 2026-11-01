@@ -47,11 +47,11 @@
 
 ### DFS-022.L-4: a tests rework replaces the phase's artifacts, so freeze and disabled stop guarding the earlier test files
 
-- Status: proposed
+- Status: applied
 - Impact: shared (touches a skill: the story skill's rework and commit steps)
 - Target: `.claude/skills/story/SKILL.md` (`approve <ID> [feedback]`, and resume step 8)
 - Change: when a reopened phase is committed again, set its artifacts to the union of the earlier and the new commit's files (or keep a list of commits), so freeze and disabled still judge every test file the phase ever wrote.
 - Evidence: DFS-022 plan.json: after the rework (commit 59b6a4b) the tests phase lists only PreviewDeletionPlanServiceTest.java; the implement re-check printed "disabled ... in the 1 test files of the tests phase" and "freeze ... none of the 1 test files", where the first run guarded 3 (PreviewDeletionPlanFactoryTest and ScannerAutoConfigurationTest dropped out).
 - Recurrences: 1 (DFS-022)
 - Recommendation: apply, a quiet loss of a deterministic guard.
-- Decision:
+- Decision: applied 2026-11-01 by the user; commit `docs: apply DFS-022.L-4`
