@@ -34,7 +34,7 @@ Open the URL it prints, then stop it with Ctrl+C.
 
 ### Known limits
 
-- **Stopping `bootRun`:** stopping the Gradle task from outside (not with Ctrl+C in a terminal) left the server's Java process running during my manual check, and I killed it by PID. Ctrl+C in a terminal normally stops both, but I couldn't test that here.
+- **Stopping `bootRun` from outside:** stopping the Gradle task from outside a terminal left the server's Java process running, and I killed it by PID. In a real terminal, Ctrl+C stopped the server cleanly (confirmed by the product owner, 2026-10-31).
 - **Linux/macOS untested:** the script test runs only the script for the current platform, so `bin/dfs-server` (the `sh` script) has not been run on this Windows machine.
 - **Bind address in the test:** "bound only to loopback" is checked by connecting through this machine's non-loopback addresses. A machine with none checks loopback reachability only.
 - **No security yet:** U10 (token, cookie, `Host`/`Origin`) is the next ticket. Until then the server has no API, by design.
