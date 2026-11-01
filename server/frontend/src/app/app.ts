@@ -1,10 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { SessionService } from './api/services';
 
 type Connection = 'checking' | 'connected' | 'disconnected';
 
-/** The page shell: a toolbar and whether this browser holds the session cookie (DFS-037.AC-3, DFS-036.AC-8). */
+/**
+ * The page shell: a toolbar and whether this browser holds the session cookie (DFS-037.AC-3, DFS-036.AC-8). The
+ * session is read through the client generated from openapi.json (DFS-038), so a server-side rename breaks this file.
+ */
 @Component({
   selector: 'app-root',
   imports: [MatToolbarModule],
@@ -15,11 +18,11 @@ export class App {
   protected readonly connection = signal<Connection>('checking');
 
   constructor() {
-    inject(HttpClient)
-      .get('/api/session')
-      .subscribe({
-        next: () => this.connection.set('connected'),
-        error: () => this.connection.set('disconnected'),
-      });
+    inject(SessionService)
+      .getSession()
+      .then(
+        (status) => this.connection.set(status.authenticated ? 'connected' : 'disconnected'),
+        () => this.connection.set('disconnected'),
+      );
   }
 }

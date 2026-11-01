@@ -21,6 +21,8 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     answer(http.expectOne('/api/session'));
+    // The generated SessionService returns a Promise: let it settle before change detection (DFS-038).
+    await new Promise((resolve) => setTimeout(resolve));
     await fixture.whenStable();
     fixture.detectChanges();
     return (fixture.nativeElement as HTMLElement).textContent ?? '';

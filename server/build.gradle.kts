@@ -17,7 +17,8 @@ node {
 
 // Everything the frontend build reads, so an unchanged frontend is not rebuilt (DFS-037.AC-5).
 val frontendSources = fileTree("frontend") {
-    exclude("node_modules/**", "dist/**", ".angular/**")
+    // src/app/api is generated from openapi.json inside these tasks (DFS-038), so it is not an input.
+    exclude("node_modules/**", "dist/**", ".angular/**", "src/app/api/**")
 }
 
 val ngBuild by tasks.registering(NpmTask::class) {
@@ -53,6 +54,8 @@ dependencies {
     implementation(project(":file-scanner"))
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    // The OpenAPI spec from the controllers, served only when switched on (DFS-038 decisions 1 and 3).
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:3.2.0")
 
     testImplementation(platform(SpringBootPlugin.BOM_COORDINATES))
     testImplementation("org.springframework.boot:spring-boot-test")
@@ -90,4 +93,16 @@ tasks.test {
     })
     // OpenApiSpecTest compares the live spec with this file, so a changed file reruns the tests (DFS-038).
     inputs.files(openApiFile).withPropertyName("openApiSpec").withPathSensitivity(PathSensitivity.RELATIVE)
+}
+
+// Rewrites frontend/openapi.json from the controllers: OpenApiSpecTest in write mode (DFS-038 decision 1).
+val updateOpenApi by tasks.registering(Test::class) {
+    description = "Writes the OpenAPI spec the controllers produce to frontend/openapi.json."
+    group = "build"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("us.pochaev.dfs.server.OpenApiSpecTest.committedSpecMatchesTheControllers") }
+    systemProperty("dfs.openapi.update", "true")
+    systemProperty("dfs.openapi.file", openApiFile.asFile.absolutePath)
+    outputs.upToDateWhen { false }
 }
