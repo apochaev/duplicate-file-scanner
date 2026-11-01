@@ -1,0 +1,134 @@
+{
+  "ticket": "DFS-033",
+  "archetype": {
+    "name": "use-case",
+    "version": 6
+  },
+  "branch": "tickets/DFS-033-check-plan-drift",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-033-check-plan-drift",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 16,
+          "wallClockSeconds": 263,
+          "outcome": "passed",
+          "note": "PASS touches DFS-033: 15 changed files, all inside touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-033-check-plan-drift/DFS-033-ticket.md",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/design.md",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/learnings.md",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/plan.json",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/CheckPlanDriftService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DriftKind.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DriftReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PathDrift.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/CheckPlanDrift.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileAttributesReader.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/FileAttributesReader.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "bbd07f47f1d9f0ce0033b8ee2ab93fc62e4f73b5"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 14,
+          "wallClockSeconds": 139,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-033: red and traceability pass; - red: 16 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 459 other tests pass (3 skipped); - traceability: 9 criteria traced through 11 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-033-check-plan-drift/plan.json",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/CheckPlanDriftTest.java",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java"
+      ],
+      "commit": "f4f2997dac8efb6dc2adc3269e142dead9505725"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 6,
+          "wallClockSeconds": 142,
+          "outcome": "passed",
+          "note": "PASS green DFS-033: build and tests green: 472 passed, 3 skipped; PASS disabled DFS-033: no @Disabled tests in the 2 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-033: none of the 2 test files of the tests phase changed since f4f2997d; PASS touches DFS-033: 18 changed files, all inside touches; PASS stubs DFS-033: no stub markers in 99 production files; PASS traceability DFS-033: 9 criteria traced through 11 scenarios to tests and test-plan.md; PASS consistency DFS-033: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-033-check-plan-drift/plan.json",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/CheckPlanDriftService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DriftReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PathDrift.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileAttributesReader.java"
+      ],
+      "commit": "b42d1f090d2ffc667b9c281db7bec098ea4d0ec0"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 16,
+          "wallClockSeconds": 127,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-033: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-033-check-plan-drift/DFS-033-ticket.md",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/learnings.md",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/plan.json",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/verification.md"
+      ],
+      "commit": "6e333cbd9d84af1cb4c304dc75dd801a5aca4e22"
+    }
+  ],
+  "gates": [
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": []
+}
