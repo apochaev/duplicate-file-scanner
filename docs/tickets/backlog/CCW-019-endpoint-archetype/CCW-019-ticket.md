@@ -1,7 +1,7 @@
 ---
 id: CCW-019
 title: Add the endpoint archetype
-status: ready
+status: in-progress
 type: feature
 scope: [docs]
 archetype: none
