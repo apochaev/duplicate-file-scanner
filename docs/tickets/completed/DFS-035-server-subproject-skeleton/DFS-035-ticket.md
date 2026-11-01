@@ -1,7 +1,7 @@
 ---
 id: DFS-035
 title: Add the server subproject skeleton
-status: in-review
+status: done
 type: build
 scope: [build]
 archetype: none
@@ -24,7 +24,7 @@ touches:
 blocked_reason:
 created: 2026-10-31
 updated: 2026-10-31
-completed:
+completed: 2026-10-31
 ---
 
 # DFS-035: Add the server subproject skeleton
