@@ -1,0 +1,4 @@
+## design (architect) — 2026-11-01
+
+- **Wiring criteria pass against stubs.** AC-14 ("the bean backs off when the app declares its own") would pass with only stubs in place, and the red gate rejects a story test that passes. The factory method and the bean can't be stubbed, because a throwing factory fails every context that loads `ScannerAutoConfiguration` in `scanner-spring` and `cli`. Worked around in design.md by telling the test-author to call `preview` through the factory or bean before the back-off assertion. The use-case archetype could say how to handle a criterion whose observable part is pure wiring (a factory method or a Spring bean).
+- **Null-element NPE criteria and unchecked records.** The archetype leaves data records unchecked at design. A criterion such as "a null list element throws NPE" therefore stays red only if the test builds the record inside the `assertThrows` lambda along with the stubbed call. Worth a line in `test-guide.md`.

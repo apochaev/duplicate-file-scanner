@@ -1,7 +1,9 @@
 package us.pochaev.dfs.scanner.domain.factory;
 
+import us.pochaev.dfs.scanner.application.PreviewDeletionPlanService;
 import us.pochaev.dfs.scanner.application.ScanPipeline;
 import us.pochaev.dfs.scanner.application.ScanService;
+import us.pochaev.dfs.scanner.domain.usecases.query.PreviewDeletionPlan;
 import us.pochaev.dfs.scanner.infra.adapter.InMemoryScanRepository;
 import us.pochaev.dfs.scanner.infra.adapter.NioContentHasher;
 import us.pochaev.dfs.scanner.infra.adapter.NioFileIdentity;
@@ -39,5 +41,15 @@ public final class ScannerFactories {
                 new NioFileIdentity());
         ScanService service = new ScanService(resolver, pipeline, new InMemoryScanRepository(), executor);
         return new ScanUseCases(service, service, service, service);
+    }
+
+    /**
+     * Builds the deletion-plan preview (DFS-022 decision 8): a pure function of a {@code ScanResult} and a request,
+     * with no scan state and no executor, so it is not part of {@link ScanUseCases}.
+     *
+     * @return a new {@link PreviewDeletionPlan}
+     */
+    public static PreviewDeletionPlan previewDeletionPlan() {
+        return new PreviewDeletionPlanService();
     }
 }
