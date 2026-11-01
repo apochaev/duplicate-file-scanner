@@ -1,0 +1,23 @@
+package us.pochaev.dfs.server.<feature>;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.time.Instant;
+import java.util.List;
+
+/**
+ * <What this record is> (<TICKET-ID>). One of the API's own records: it maps from the core's
+ * {@code <core type>} and is what the spec and the generated client show, never the core type itself (endpoint
+ * archetype, checklist item 5). Not stubbed: components and {@code @Schema} marks are written in the design phase.
+ * <p>
+ * <Document here any field whose meaning changes over the resource's life.>
+ */
+@Schema(name = "<Feature>Entry")
+public record <Feature>Entry(
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String id,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+                allowableValues = {"<VALUE_A>", "<VALUE_B>"}) String status,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant <createdAt>,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<String> <items>,
+        @Schema(nullable = true) String <optionalDetail>) {
+}

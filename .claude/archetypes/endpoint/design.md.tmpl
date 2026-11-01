@@ -1,0 +1,77 @@
+# <TICKET-ID>: <ticket title> — design
+
+Filled in by the architect during the `design` phase. This is the artifact the design gate summarizes for the human, so keep it short: it is a contract, not an essay. Delete this instruction paragraph and every `<...>` placeholder when filling it in.
+
+## Summary
+
+About 20 lines, written last: which endpoints this ticket adds or changes, the feature package, the state the server keeps (if any), whether there is a stream, and anything the human should look at closely (a changed record the frontend uses, a new error code, a timing-sensitive test).
+
+## Endpoints
+
+One row per operation. The tag and operation IDs name the generated service and methods (checklist item 6).
+
+| Method | Path | Tag | Operation ID | Request body | Success | Errors (status: code) |
+|---|---|---|---|---|---|---|
+| `<POST>` | `/api/<feature>` | `<feature>` | `<verbNoun>` | `<Record or none>` | `<201 Record, Location /api/...>` | `<400: CODE_A, CODE_B; 404: UNKNOWN_THING>` |
+
+## Security matrix
+
+Every new path, and how each rule is tested (checklist items 1 and 2).
+
+| Path | Cookie | `Host` | `Origin` (state-changing only) | Path inside a scan's roots | Side effect checked absent after a refusal |
+|---|---|---|---|---|---|
+| `<path>` | `<test name>` | `<test name or "covered on <path>">` | `<test name or "not state-changing">` | `<test name or "not applicable: <reason>">` | `<how>` |
+
+## API records
+
+Each record with its components, the core type it maps from, and its `@Schema` marks (required, nullable, allowable values, a meaning that changes over time). Checklist item 5.
+
+- `<Record>(<components>)`: from `<core type>`; required: `<...>`; nullable: `<...>`
+
+## State and threads
+
+What the server keeps beside the core, its lifetime, who writes it on which thread, and what is created before the core can call back (checklist item 8). For a stream: event name, data schema, first event, throttle, terminal event, reconnect, timeout, shutdown (checklist item 9). "None." if the ticket keeps no state and has no stream.
+
+## Layer and package placement
+
+- `us.pochaev.dfs.server.<feature>`: `<controller, registry, records>`
+- `us.pochaev.dfs.server.api` (shared): `<ApiError/ApiException moved here, or "unchanged">`
+- `server/src/main/resources/application.properties`: `<changes or "none">`
+- `server/frontend/openapi.json`: regenerated in this phase (commit below)
+- Frontend code changed to keep the build green with the regenerated client: `<files or "none">`
+
+## Spec and client
+
+- `./gradlew :server:updateOpenApi` run after the stubs; the operations and schemas it added or changed: `<list>`
+- What `ng-openapi-gen` generates for them (checklist item 7): `<services and methods; a stream operation's method is not used>`
+
+## Checklist disposition
+
+One line per item of `archetype.md`'s edge-case checklist: how this ticket addresses it, or "not applicable: <reason>".
+
+1. Security on every new path: <...>
+2. Paths inside a scan: <...>
+3. Input validation and error codes: <...>
+4. Status codes and headers: <...>
+5. The API records: <...>
+6. The spec: <...>
+7. The generated client: <...>
+8. State kept in `server`: <...>
+9. Streams: <...>
+10. Asynchronous states in tests: <...>
+11. The dev proxy: <...>
+12. Docs: <...>
+
+## Expected breakage
+
+Existing test classes (not this ticket's story tests) that the stubs will make fail without the stub in the failure or its root cause, one bullet each: `` - `<SimpleClassName>`: <reason> ``. The red gate (`RedCheck`) tolerates failures only in classes listed here. With the spec regenerated in this phase, `OpenApiSpecTest` should not be one of them. "None." if there is none.
+
+## Open design notes (as of the design phase)
+
+Anything the architect deviated from in the ticket, or a decision made while designing that the ticket left open. "None." if there is nothing to add.
+
+## Stubs (as of the design phase)
+
+- Files stubbed: `<list>`
+- Each method throws `new UnsupportedOperationException("not implemented: <TICKET-ID>")`. Over HTTP the client sees a `500`; `TestServer` rethrows the recorded exception, so the story test fails with the stub's own exception (`StubSurfacingConfiguration`, CCW-019).
+- Commit (stubs and the regenerated spec): `<hash, filled in after the design commit>`

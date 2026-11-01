@@ -124,7 +124,7 @@ Draft (editable) → previewed (frozen, has an ID; U7) → editing creates a new
 
 ### D7. Ticket namespaces
 
-Product UI work goes under `DFS`. Harness work goes under `CCW`: archetypes for Angular components and API endpoints, and Node/npm steps in the pipeline gates.
+Product UI work goes under `DFS`. Harness work goes under `CCW`: archetypes for Angular components and API endpoints, and Node/npm steps in the pipeline gates. The endpoint archetype exists (`.claude/archetypes/endpoint/`, CCW-019, written from DFS-036, DFS-038 and DFS-040); the pipeline gates needed no Node/npm change, since the green gate already runs the frontend build and its tests. The Angular component archetype follows DFS-041, written from that screen.
 
 ## What the UI needs from the core (`file-scanner`)
 

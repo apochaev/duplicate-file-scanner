@@ -1,0 +1,22 @@
+# <TICKET-ID>: <ticket title> — test plan
+
+Filled in by the test-author during the `test` phase, before writing any test. `tools/story-gate`'s `TraceabilityCheck` reads this file and requires every live criterion's full ID (`<TICKET-ID>.AC-<n>`) to appear in it, so list every criterion, including any checked only by hand or by reading (say so in the Level column). Delete this paragraph and every `<...>` when filling it in.
+
+## Criterion → scenario → test
+
+| Criterion | Scenario | Test (`@DisplayName`) | Level | Timing-sensitive |
+|---|---|---|---|---|
+| `<TICKET-ID>.AC-1` | `<scenario title from the ticket>` | `<TICKET-ID>.AC-1 <short readable title>` | `<real server over HTTP / raw socket / by hand / read>` | `<no, or: what is timed, the margin, how it was measured>` |
+
+One row per scenario; a scenario outline gets one row naming its parameterized test. A criterion about the spec is proven by `OpenApiSpecTest` (not a story test) plus the verifier's reading of `openapi.json`; name it here with Level `spec (OpenApiSpecTest)`.
+
+## Fixtures and test configurations
+
+- Folders: `<@TempDir trees built in the test: sizes, duplicates, how large a "still working" fixture is>`
+- Bean overrides: `<test configurations replacing a bean by name, for example HoldingExecutorConfiguration for QUEUED scans, or none>`
+- Session: `TestServer.start(...)`, `server.login(server.token(output.getOut()))` with `OutputCaptureExtension`
+- Streams: `<read line by line with HttpClient and BodyHandlers.ofLines(), with a request timeout>`
+
+## Notes for the implementer
+
+Anything a test relies on that is not obvious from its name: an exact error code or message prefix, a header value, an event name, the minimum spacing a stream test asserts. "None." if there is nothing to add.
