@@ -1,0 +1,13 @@
+<mat-toolbar>
+  <h1>DFS server is running</h1>
+</mat-toolbar>
+<main>
+  @switch (connection()) {
+    @case ('connected') {
+      <p>Connected</p>
+    }
+    @case ('disconnected') {
+      <p>Open the link printed in the console</p>
+    }
+  }
+</main>

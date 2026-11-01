@@ -75,7 +75,7 @@ The file-serving endpoint serves only paths inside the scan's roots (U10).
 
 ### U9. Frontend: Angular with Angular Material and the CDK
 
-In `server/frontend/`, built by Gradle (a Node Gradle plugin downloads Node; nothing installed globally) and packaged into the server jar, so `./gradlew build` builds everything. Material and the CDK provide the tree, paged and sorted tables, virtual scrolling, tabs, dialogs and progress bars. During development, the Angular dev server proxies `/api` to a running server for hot reload. Chosen over React because agents write the code and the user reviews it: one sanctioned way per concern, services with dependency injection like the Spring side, and simpler archetypes.
+In `server/frontend/`, built by Gradle (a Node Gradle plugin downloads Node; nothing installed globally) and packaged into the server jar, so `./gradlew build` builds everything. Built in DFS-037 with the `com.github.node-gradle.node` plugin 7.1.0, Node 24.22.2 and Angular 22.2 (versions pinned exactly, `npm ci`), Vitest for unit tests. Material and the CDK provide the tree, paged and sorted tables, virtual scrolling, tabs, dialogs and progress bars. During development, the Angular dev server proxies `/api` to a running server for hot reload. Chosen over React because agents write the code and the user reviews it: one sanctioned way per concern, services with dependency injection like the Spring side, and simpler archetypes.
 
 ### U10. Security
 

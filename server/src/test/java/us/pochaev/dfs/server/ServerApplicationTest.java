@@ -79,7 +79,9 @@ class ServerApplicationTest {
             HttpResponse<String> page = client.send(
                     HttpRequest.newBuilder(URI.create(base + "/")).build(), HttpResponse.BodyHandlers.ofString());
             assertEquals(200, page.statusCode());
-            assertTrue(page.body().contains("DFS server is running"), page.body());
+            // The page is the Angular app now; its text is rendered in the browser (DFS-037.AC-7).
+            assertTrue(page.body().contains("<app-root"), page.body());
+            assertTrue(page.body().contains("<title>DFS</title>"), page.body());
             // "/api does not exist" (404) became "/api needs the session cookie" (403): DFS-036.AC-4.
         }
     }
