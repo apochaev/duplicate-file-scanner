@@ -25,9 +25,12 @@ record TestServer(ConfigurableApplicationContext context, int port) implements A
 
     static final Pattern OPEN_LINE = Pattern.compile("Open (http://127\\.0\\.0\\.1:(\\d+)/\\?token=([A-Za-z0-9_-]+))");
 
-    /** Starts the server with the browser opener off, plus any extra sources (a fake opener) and arguments. */
+    /**
+     * Starts the server with the browser opener off and {@link StubSurfacingConfiguration} loaded, plus any extra
+     * sources (a fake opener) and arguments.
+     */
     static TestServer start(Class<?>[] extraSources, String... args) {
-        List<Class<?>> sources = new ArrayList<>(List.of(Main.class));
+        List<Class<?>> sources = new ArrayList<>(List.of(Main.class, StubSurfacingConfiguration.class));
         sources.addAll(List.of(extraSources));
         SpringApplication app = new SpringApplication(sources.toArray(Class<?>[]::new));
         List<String> all = new ArrayList<>(List.of(args));
@@ -72,7 +75,7 @@ record TestServer(ConfigurableApplicationContext context, int port) implements A
             b.header("Cookie", cookie);
         }
         try (HttpClient c = client()) {
-            return c.send(b.build(), HttpResponse.BodyHandlers.ofString());
+            return surfaced(c.send(b.build(), HttpResponse.BodyHandlers.ofString()));
         }
     }
 
@@ -87,7 +90,7 @@ record TestServer(ConfigurableApplicationContext context, int port) implements A
             b.header("Origin", origin);
         }
         try (HttpClient c = client()) {
-            return c.send(b.build(), HttpResponse.BodyHandlers.ofString());
+            return surfaced(c.send(b.build(), HttpResponse.BodyHandlers.ofString()));
         }
     }
 
@@ -104,8 +107,27 @@ record TestServer(ConfigurableApplicationContext context, int port) implements A
             b.header("Origin", origin);
         }
         try (HttpClient c = client()) {
-            return c.send(b.build(), HttpResponse.BodyHandlers.ofString());
+            return surfaced(c.send(b.build(), HttpResponse.BodyHandlers.ofString()));
         }
+    }
+
+    /**
+     * Rethrows the exception a controller method threw when the response is {@code 500}, so a test fails with the
+     * server's own exception (a stub's {@code not implemented: <ID>} included) instead of a status mismatch; any
+     * other response clears what was recorded (CCW-019 decision 5).
+     */
+    private <T> HttpResponse<T> surfaced(HttpResponse<T> response) {
+        Throwable thrown = context.getBean(StubSurfacingConfiguration.ServerExceptions.class).take();
+        if (response.statusCode() == 500 && thrown != null) {
+            if (thrown instanceof RuntimeException e) {
+                throw e;
+            }
+            if (thrown instanceof Error e) {
+                throw e;
+            }
+            throw new AssertionError("the server answered 500 after " + thrown, thrown);
+        }
+        return response;
     }
 
     /** This server's own origin, as the browser sends it. */
