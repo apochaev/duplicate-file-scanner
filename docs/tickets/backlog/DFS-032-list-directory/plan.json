@@ -79,10 +79,30 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 10,
+          "wallClockSeconds": 122,
+          "outcome": "passed",
+          "note": "PASS green DFS-032: build and tests green: 450 passed, 3 skipped; PASS disabled DFS-032: no @Disabled tests in the 3 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-032: none of the 3 test files of the tests phase changed since fbd0e090; PASS touches DFS-032: 22 changed files, all inside touches; PASS stubs DFS-032: no stub markers in 90 production files; PASS traceability DFS-032: 9 criteria traced through 12 scenarios to tests and test-plan.md; PASS consistency DFS-032: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-032-list-directory/plan.json",
+        "docs/tickets/backlog/DFS-032-list-directory/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ListDirectoryService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DirectoryEntry.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DirectoryListing.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/DirectoryAccess.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/EntryKind.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioDirectoryReader.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileTreeWalker.java"
+      ],
+      "commit": "2e5e8c5f0e446c999d33e612f9160ae4ed16fefd"
     },
     {
       "id": "verify",
