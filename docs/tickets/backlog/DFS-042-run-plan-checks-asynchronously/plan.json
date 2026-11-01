@@ -12,10 +12,43 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 37,
+          "wallClockSeconds": 493,
+          "outcome": "passed",
+          "note": "PASS touches DFS-042: 22 changed files, all inside touches; resumed once: the first invocation stopped at the architect's 25-turn cap (the archetype's maxTurns 35 cannot be passed through the Agent tool) with stubs on disk and no design.md; turns and seconds cover both invocations"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/DFS-042-ticket.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/design.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/learnings.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/plan.json",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/Job.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/JobRunner.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanVerifyProgress.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanVerifyService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/PlanVerifyUseCases.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/JobStatus.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanVerifyId.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanVerifySnapshot.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/command/CancelPlanVerify.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/command/StartPlanVerify.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/GetPlanVerifyResult.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/GetPlanVerifyStatus.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/InMemoryJobStore.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/JobStore.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "fdea28ad7081240aca1e07ea55cb0c414a6e5f0d"
     },
     {
       "id": "tests",
@@ -23,7 +56,7 @@
       "after": [
         "design"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
@@ -54,7 +87,7 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
