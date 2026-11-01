@@ -40,4 +40,11 @@ describe('App', () => {
     expect(text).toContain('Open the link printed in the console');
     expect(text).not.toContain('Connected');
   });
+
+  it('DFS-038.AC-5 does not show "Connected" when /api/session answers authenticated: false', async () => {
+    const text = await render((req) => req.flush({ authenticated: false }));
+
+    expect(text).toContain('Open the link printed in the console');
+    expect(text).not.toContain('Connected');
+  });
 });

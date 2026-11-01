@@ -77,12 +77,17 @@ tasks.bootJar {
 // NativeAccessTest reads the jar's manifest (dfs.bootJar); LaunchScriptTest runs the installed start script (dfs.installDir).
 val bootJarFile = tasks.bootJar.flatMap { it.archiveFile }
 val installDir = layout.buildDirectory.dir("install/dfs-server-boot")
+// The committed OpenAPI spec (DFS-038 decision 1).
+val openApiFile = layout.projectDirectory.file("frontend/openapi.json")
 tasks.test {
     dependsOn(tasks.bootJar, tasks.named("installBootDist"))
     jvmArgumentProviders.add(CommandLineArgumentProvider {
         listOf(
             "-Ddfs.bootJar=" + bootJarFile.get().asFile.absolutePath,
             "-Ddfs.installDir=" + installDir.get().asFile.absolutePath,
+            "-Ddfs.openapi.file=" + openApiFile.asFile.absolutePath,
         )
     })
+    // OpenApiSpecTest compares the live spec with this file, so a changed file reruns the tests (DFS-038).
+    inputs.files(openApiFile).withPropertyName("openApiSpec").withPathSensitivity(PathSensitivity.RELATIVE)
 }
