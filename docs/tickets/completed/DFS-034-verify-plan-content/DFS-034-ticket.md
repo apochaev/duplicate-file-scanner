@@ -1,7 +1,7 @@
 ---
 id: DFS-034
 title: Verify a deletion plan's content against its keepers
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: use-case
@@ -23,7 +23,7 @@ touches:
 blocked_reason:
 created: 2026-10-31
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # DFS-034: Verify a deletion plan's content against its keepers
