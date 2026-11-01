@@ -15,5 +15,8 @@ import java.util.List;
 public record VerifyReport(String planId, List<OperationCheck> checks, boolean cancelled, String listenerFailure) {
 
     public VerifyReport {
+        java.util.Objects.requireNonNull(planId, "planId");
+        java.util.Objects.requireNonNull(listenerFailure, "listenerFailure");
+        checks = List.copyOf(checks);
     }
 }

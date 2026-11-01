@@ -8,3 +8,6 @@
 
 ## Tests phase (attempt 1)
 Wrote VerifyPlanContentServiceTest, NioContentComparatorTest, 2 ScannerAutoConfigurationTest tests, test-plan.md. All fail with the stub exception. Expected commit: test(file-scanner): add plan content verify tests [DFS-034]
+
+## Implement
+Implemented VerifyPlanContentService.verify and NioContentComparator.compare per design.md, plus the record checks the design listed. `./gradlew build` green. Expected commit: feat(file-scanner): verify plan content [DFS-034].

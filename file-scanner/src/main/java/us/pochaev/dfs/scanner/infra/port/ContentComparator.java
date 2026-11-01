@@ -36,6 +36,12 @@ public interface ContentComparator {
 
         /** The first difference is at the zero-based byte {@code offset}. */
         record Differs(long offset) implements Comparison {
+
+            public Differs {
+                if (offset < 0) {
+                    throw new IllegalArgumentException("offset must not be negative: " + offset);
+                }
+            }
         }
 
         /** The cancel signal stopped the compare before its end. */

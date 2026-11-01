@@ -18,6 +18,11 @@ import java.nio.file.Path;
 public record OperationCheck(String digest, Path candidate, Path keeper, Outcome outcome, String detail) {
 
     public OperationCheck {
+        java.util.Objects.requireNonNull(digest, "digest");
+        java.util.Objects.requireNonNull(candidate, "candidate");
+        java.util.Objects.requireNonNull(keeper, "keeper");
+        java.util.Objects.requireNonNull(outcome, "outcome");
+        java.util.Objects.requireNonNull(detail, "detail");
     }
 
     /** The outcome of one check, in precedence order: the first that applies is reported. */

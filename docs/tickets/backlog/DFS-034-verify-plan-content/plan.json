@@ -49,10 +49,27 @@
       "after": [
         "design"
       ],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 16,
+          "wallClockSeconds": 190,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-034: red and traceability pass; - red: 22 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 475 other tests pass (3 skipped); - traceability: 10 criteria traced through 12 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-034-verify-plan-content/plan.json",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/progress.md",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/VerifyPlanContentServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NioContentComparatorTest.java",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java"
+      ],
+      "commit": "949be3d66847e43571a6f89e47a6ff04b62852c7"
     },
     {
       "id": "implement",
@@ -60,7 +77,7 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null

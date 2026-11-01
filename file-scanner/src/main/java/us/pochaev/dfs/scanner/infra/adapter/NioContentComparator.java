@@ -3,7 +3,11 @@ package us.pochaev.dfs.scanner.infra.adapter;
 import us.pochaev.dfs.scanner.infra.port.ContentComparator;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.function.BooleanSupplier;
 import java.util.function.LongConsumer;
 
@@ -34,6 +38,46 @@ public final class NioContentComparator implements ContentComparator {
     @Override
     public Comparison compare(Path candidate, Path keeper, LongConsumer bytesCompared, BooleanSupplier cancelled)
             throws IOException {
-        throw new UnsupportedOperationException("not implemented: DFS-034");
+        try (FileChannel a = FileChannel.open(candidate, StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS);
+             FileChannel b = FileChannel.open(keeper, StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS)) {
+            ByteBuffer bufA = ByteBuffer.allocate(chunkSize);
+            ByteBuffer bufB = ByteBuffer.allocate(chunkSize);
+            long done = 0;
+            while (true) {
+                if (cancelled.getAsBoolean()) {
+                    return new Comparison.Cancelled();
+                }
+                bufA.clear();
+                bufB.clear();
+                int na = fill(a, bufA);
+                int nb = fill(b, bufB);
+                int common = Math.min(na, nb);
+                for (int i = 0; i < common; i++) {
+                    if (bufA.get(i) != bufB.get(i)) {
+                        return new Comparison.Differs(done + i);
+                    }
+                }
+                if (na != nb) {
+                    return new Comparison.Differs(done + common);
+                }
+                if (na == 0) {
+                    return new Comparison.Identical();
+                }
+                done += na;
+                bytesCompared.accept(done);
+                if (na < chunkSize) {
+                    return new Comparison.Identical();
+                }
+            }
+        }
+    }
+
+    private static int fill(FileChannel channel, ByteBuffer buffer) throws IOException {
+        while (buffer.hasRemaining()) {
+            if (channel.read(buffer) < 0) {
+                break;
+            }
+        }
+        return buffer.position();
     }
 }

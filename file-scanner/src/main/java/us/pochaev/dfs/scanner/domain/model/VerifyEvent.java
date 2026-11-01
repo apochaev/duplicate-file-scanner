@@ -12,6 +12,9 @@ public sealed interface VerifyEvent {
     record BytesCompared(long bytesDone, long bytesTotal) implements VerifyEvent {
 
         public BytesCompared {
+            if (bytesDone < 0 || bytesDone > bytesTotal) {
+                throw new IllegalArgumentException("need 0 <= bytesDone <= bytesTotal: " + bytesDone + ", " + bytesTotal);
+            }
         }
     }
 
@@ -19,6 +22,10 @@ public sealed interface VerifyEvent {
     record EntryChecked(OperationCheck check, int done, int total) implements VerifyEvent {
 
         public EntryChecked {
+            java.util.Objects.requireNonNull(check, "check");
+            if (done < 1 || done > total) {
+                throw new IllegalArgumentException("need 1 <= done <= total: " + done + ", " + total);
+            }
         }
     }
 }
