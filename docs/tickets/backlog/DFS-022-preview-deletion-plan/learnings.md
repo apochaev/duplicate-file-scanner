@@ -5,3 +5,7 @@
 ## verify (verifier) — 2026-11-01
 
 - **A content-derived ID with a documented encoding has no test pinning it.** design.md fixes the plan-ID encoding (and even the empty-plan message), but no test asserts a known ID, so the encoding could drift and stay green; DFS-033 will recompute it. The verifier checked it by hand. When design.md commits to an exact encoding or format, the test-author should add one golden-value test (e.g. the empty-plan ID).
+
+## verify after tests rework (verifier) — 2026-11-01
+
+- **Golden test closed the gap, but only for the paths exercised.** The rework pins the empty-plan ID and a rule-sourced operation; the `pick` source and conflict encodings stay unpinned. When asking for a golden test of a variant-bearing encoding, name each variant (here rule, pick, conflict) so one round covers them all.

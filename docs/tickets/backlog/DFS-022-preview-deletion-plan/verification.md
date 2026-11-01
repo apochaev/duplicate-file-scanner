@@ -8,7 +8,7 @@ The scanner library can now turn a finished scan plus a set of rules ("keep C:/A
 
 ### Acceptance criteria
 
-- **DFS-022.AC-1** met: each plan has a 64-character hex ID; the same request gives the same ID, a different plan gives a different one.
+- **DFS-022.AC-1** met: each plan has a 64-character hex ID; the same request gives the same ID, a different plan gives a different one, and two golden-value tests now pin the exact encoding from `design.md`, so changing it fails a test.
 - **DFS-022.AC-2** met: preview works on paths that do not exist and changes no files.
 - **DFS-022.AC-3** met: a rule quarantines the copies under B that have a copy under A; `C:/A` does not cover `C:/AB`.
 - **DFS-022.AC-4** met: an exception (a file or a folder above it) keeps that file out of every rule.
@@ -32,7 +32,7 @@ Nothing is user-visible yet: no CLI command or server endpoint calls it (DFS-021
 ./gradlew :scanner-spring:test --tests "*ScannerAutoConfigurationTest"
 ```
 
-Look for 26 + 1 passing tests in `file-scanner` and 8 (2 new) in `scanner-spring`, all named `DFS-022.AC-n ...`.
+Look for 28 + 1 passing tests in `file-scanner` and 8 (2 new) in `scanner-spring`, all named `DFS-022.AC-n ...`.
 
 ### Decided without you
 
@@ -47,16 +47,19 @@ Look for 26 + 1 passing tests in `file-scanner` and 8 (2 new) in `scanner-spring
 ### Known limits
 
 - No CLI command, server endpoint, execution, quarantine or undo yet (DFS-021, later tickets).
-- No test pins the exact plan-ID encoding from `design.md`; I checked it by hand (empty plan and one-operation plan both match the documented encoding), but a future change to the encoding would not fail a test. DFS-033 (drift check) relies on it.
+- The golden-value tests pin the encoding for an operation from a rule and for the empty plan; the `pick` source and the conflict encoding are covered only by `design.md` and a by-hand check, not by a golden test.
+- The one-operation golden test builds its expected value with the platform's path separator, so it passes on every OS, but it does not show that IDs match across OSes (they are not meant to).
 - "Every set keeps a copy" is proven by the scenario tests and by the code structure, not by a property test over random plans.
 - The plan is computed per request with no storage; the caller keeps the plan it previewed (as decided).
 
 ### Evidence
 
-- `file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PreviewDeletionPlanServiceTest.java`: 26 tests, 0 failures (every scenario of AC-1 to AC-13, null cases as 4 tests).
+- `file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PreviewDeletionPlanServiceTest.java`: 28 tests, 0 failures (every scenario of AC-1 to AC-13, null cases as 4 tests, plus 2 AC-1 golden-value tests added in the rework, commit 59b6a4b; re-run by the verifier).
+- Golden tests: the empty-plan ID is a literal, `2595215d468c0b2d3ebc46c59adc5a0b94291f671100841f55d8424925bd9740`, which the verifier recomputed independently (`sha256sum` of `19:dfs-deletion-plan/11:01:0`); the one-operation test builds the length-prefixed message by hand with its own `str` and `MessageDigest` helpers (no service code), field by field as `design.md` states.
 - `file-scanner/src/test/java/us/pochaev/dfs/scanner/domain/factory/PreviewDeletionPlanFactoryTest.java`: 1 test (AC-14 factory).
 - `scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java`: 2 new tests (AC-14 bean and back-off), 8 total, 0 failures.
 - `./gradlew build` re-run by the verifier on 395fd1b: green; `ArchitectureTest` and `ModuleExportsTest` green; `module-info.java` unchanged since refinement.
+- Deterministic gate on 59b6a4b (rework): green 430 passed / 3 skipped, disabled, freeze, touches, stubs, traceability, consistency; no `src/main` change since 395fd1b.
 - Deterministic gate on 395fd1b: green 428 passed / 3 skipped, disabled, freeze, touches (23 files, all in touches), stubs, traceability (14 criteria, 24 scenarios), consistency.
 - Verifier probe (scratch file outside the worktree, deleted): empty-plan ID `2595215d...bd9740` equals SHA-256 of `19:dfs-deletion-plan/11:01:0`; a one-operation plan's ID equals a hand-built encoding per `design.md`; a mixed hard-link set with two opposite rules keeps a copy.
 
@@ -65,15 +68,18 @@ Look for 26 + 1 passing tests in `file-scanner` and 8 (2 new) in `scanner-spring
 - Design: 1 attempt (opus, 28 turns), design gate approved.
 - Tests: 1 attempt (sonnet, 16 turns), 29 tests red against the stubs.
 - Implement: 1 attempt (sonnet, 15 turns), gate green on the first try.
-- No defects, retries or escalations recorded in `plan.json`.
+- Verify: 1 attempt (opus, 12 turns), passed, with the missing encoding test listed under Known limits.
+- Done gate: the user sent the tests phase back to add golden-value tests for the plan-ID encoding. Tests rework: 1 run (sonnet, 11 turns), 2 tests added, green against the existing implementation, no `src/main` change.
+- Verify after the rework: 1 attempt, passed.
+- No defects in the code; one test gap found by the verifier and closed by the user's send-back. No escalations.
 
 Ready for the user's approval.
 
 ## Summary
 
-All 14 criteria met; ready for the human done gate.
+All 14 criteria met (re-verified after the tests rework, 59b6a4b); ready for the human done gate.
 
-- DFS-022.AC-1 met: 64-hex ID, stable for the same request, different for different entries; encoding matches design.md (verifier probe).
+- DFS-022.AC-1 met: 64-hex ID, stable for the same request, different for different entries; encoding pinned by two golden tests (empty-plan literal, hand-built one-operation message).
 - DFS-022.AC-2 met: works on non-existent paths, `@TempDir` listing unchanged; service has no I/O.
 - DFS-022.AC-3 met: exact operation list asserted; whole-component matching via `Path.startsWith`.
 - DFS-022.AC-4 met: folder and file exceptions both tested.
@@ -88,7 +94,7 @@ All 14 criteria met; ready for the human done gate.
 - DFS-022.AC-13 met: all four codes, first-problem order, keep-under-quarantine valid.
 - DFS-022.AC-14 met: factory works; bean present once and backs off.
 
-Test quality: strong (full-equality assertions on operation lists, conflicts, totals and left-behind). Gap: no test pins the canonical ID encoding (verified by hand). Invariants: never-last-copy holds structurally (rule keepers are never in the quarantined set, pick keepers never quarantined); preview is pure (no fields, no I/O); hard links handled per physical copy. Symlink, empty-file and execution-time re-verify invariants do not apply.
+Test quality: strong (full-equality assertions on operation lists, conflicts, totals and left-behind). The canonical ID encoding is now pinned by golden tests, independent of the service and portable across OSes (rule source only; pick and conflict encodings are not pinned). Invariants: never-last-copy holds structurally (rule keepers are never in the quarantined set, pick keepers never quarantined); preview is pure (no fields, no I/O); hard links handled per physical copy. Symlink, empty-file and execution-time re-verify invariants do not apply.
 
 ## Details
 
@@ -108,5 +114,5 @@ Test quality: strong (full-equality assertions on operation lists, conflicts, to
 ### Test quality notes
 
 - Tests compare entire `operations`, `conflicts`, `leftBehind` and `totals` values, so wrong keepers, sources, order or extra entries fail.
-- AC-1's "different ID" uses only one variant; the exact encoding is not pinned (see Known limits).
+- AC-1's "different ID" uses only one variant. The rework's golden tests pin the encoding: the empty-plan ID is a literal; the one-operation test rebuilds the message from `design.md` with test-local helpers, so a change to the version tag, field order, length prefixes, size or source encoding fails it. Its expected value uses `Path.toString()`, so it holds on Windows and POSIX alike; the non-ASCII `yé.jpg` checks UTF-8 byte-length prefixes (sources compile as UTF-8; the fixture tests already need a UTF-8-capable path encoding).
 - The `Thread.sleep(10)` in `ScannerAutoConfigurationTest.await` predates this ticket (DFS-031, ddf443f); the DFS-022 tests use none.
