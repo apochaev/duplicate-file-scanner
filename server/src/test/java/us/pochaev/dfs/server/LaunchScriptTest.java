@@ -37,6 +37,8 @@ class LaunchScriptTest {
         ProcessBuilder builder = new ProcessBuilder(command).redirectErrorStream(true);
         // The scripts take Java from JAVA_HOME; use this test's Java 25 rather than whatever is on PATH.
         builder.environment().put("JAVA_HOME", System.getProperty("java.home"));
+        // Never open a browser tab from a test (DFS-036 decision 8).
+        builder.environment().put("DFS_SERVER_OPENBROWSER", "false");
 
         Process process = builder.start();
         List<ProcessHandle> started = new ArrayList<>();

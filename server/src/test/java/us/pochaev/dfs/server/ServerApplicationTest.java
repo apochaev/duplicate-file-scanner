@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ServerApplicationTest {
 
     private static ConfigurableApplicationContext start() {
-        return SpringApplication.run(Main.class);
+        return SpringApplication.run(Main.class, "--dfs.server.open-browser=false");
     }
 
     private static int port(ConfigurableApplicationContext context) {
@@ -71,8 +71,8 @@ class ServerApplicationTest {
     }
 
     @Test
-    @DisplayName("DFS-035.AC-4 GET / serves the placeholder page and /api does not exist")
-    void servesPlaceholderAndNoApi() throws IOException, InterruptedException {
+    @DisplayName("DFS-035.AC-4 GET / serves the placeholder page")
+    void servesPlaceholder() throws IOException, InterruptedException {
         try (var context = start(); HttpClient client = HttpClient.newHttpClient()) {
             String base = "http://127.0.0.1:" + port(context);
 
@@ -80,11 +80,7 @@ class ServerApplicationTest {
                     HttpRequest.newBuilder(URI.create(base + "/")).build(), HttpResponse.BodyHandlers.ofString());
             assertEquals(200, page.statusCode());
             assertTrue(page.body().contains("DFS server is running"), page.body());
-
-            HttpResponse<String> api = client.send(
-                    HttpRequest.newBuilder(URI.create(base + "/api/anything")).build(),
-                    HttpResponse.BodyHandlers.ofString());
-            assertEquals(404, api.statusCode());
+            // "/api does not exist" (404) became "/api needs the session cookie" (403): DFS-036.AC-4.
         }
     }
 
