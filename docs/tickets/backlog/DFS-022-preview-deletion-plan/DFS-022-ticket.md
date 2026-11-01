@@ -1,7 +1,7 @@
 ---
 id: DFS-022
 title: Preview a deletion plan
-status: in-progress
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: use-case
