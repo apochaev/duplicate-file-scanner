@@ -1,7 +1,7 @@
 ---
 id: DFS-038
 title: Generate the OpenAPI spec and the Angular API client
-status: in-review
+status: done
 type: build
 scope: [build]
 archetype: none
@@ -22,7 +22,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # DFS-038: Generate the OpenAPI spec and the Angular API client
