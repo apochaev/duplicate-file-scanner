@@ -1,7 +1,7 @@
 ---
 id: DFS-040
 title: Add the scan API to start, list, follow and cancel scans
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -22,7 +22,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # DFS-040: Add the scan API to start, list, follow and cancel scans
