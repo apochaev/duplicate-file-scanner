@@ -16,7 +16,8 @@ The server's page is now an Angular 22 app with Angular Material, built by `./gr
 - **AC-3** met by 2 Vitest tests:
   - `200` shows the heading and "Connected"
   - `403` shows "Open the link printed in the console" and no "Connected"
-  - **Browser check still pending: yours** (see "Try it").
+  - browser check, by you, 2026-11-01: the tab opened by `bin\dfs-server.bat` showed "DFS server is running" and "Connected"
+  - the private-window case was not checked in the browser; the Vitest test covers it, and so did DFS-036.AC-8 for the same request
 - **AC-4** met (one run): a frontend test changed to expect "Disconnected" made `./gradlew build` fail at `:server:npmTest`, which named the test. With the change reverted, the build is green.
 - **AC-5** met (one run): the second `./gradlew :server:processResources` reported `npmInstall`, `ngBuild`, `frontendResources` and `processResources` all `UP-TO-DATE`, in 3 s.
 - **AC-6** met (one run, without a browser):
@@ -37,7 +38,7 @@ The server's page is now an Angular 22 app with Angular Material, built by `./gr
 server\build\install\dfs-server-boot\bin\dfs-server.bat
 ```
 
-A browser tab opens with a blue Material toolbar reading "DFS server is running", and below it "Connected". Copy the address without `?token` into a private window: it says "Open the link printed in the console". Stop with Ctrl+C. This is also the done-item "started by hand once from `installBootDist`", which is still open.
+A browser tab opens with a blue Material toolbar reading "DFS server is running", and below it "Connected". Copy the address without `?token` into a private window: it says "Open the link printed in the console". Stop with Ctrl+C. Done by you on 2026-11-01, which also ticked the `installBootDist` done-item. The first try ran Java 17 from the window's `JAVA_HOME` and failed with `UnsupportedClassVersionError`; with `JAVA_HOME` set to the JDK 25 it started (see Known limits).
 
 To try hot reload, open two terminals. In the first, run `.\gradlew.bat :server:bootRun --args=--server.port=8080`. In the second, run `.\gradlew.bat :server:npm_run_start`. Open the `Open ...?token=` link from the first terminal, then `http://127.0.0.1:4200`, and edit `server/frontend/src/app/app.html`.
 
@@ -54,6 +55,7 @@ To try hot reload, open two terminals. In the first, run `.\gradlew.bat :server:
 - **The first build needs the network:** about 1 minute for the Node download plus `npm ci`. Later builds use the cache under `server/.gradle/` and `server/frontend/node_modules`.
 - **`bootRun` and `ng serve` outlive their Gradle tasks on Windows.** After the AC-6 run, both still listened (ports 8080 and 4200) and were killed by PID. Ctrl+C in your own terminal stops them, but a background-stopped Gradle task does not.
 - **No `Origin` rewrite in the dev proxy:** a `POST` through port 4200 would get `403`. The first ticket with a state-changing endpoint decides how to handle it (decision 4).
+- **The start scripts need Java 25 in `JAVA_HOME` (or on `PATH`)**, as U11 says. With Java 17 they fail with a raw `UnsupportedClassVersionError` stack trace instead of a clear message (seen at this review).
 - **The worktree's test reports keep long paths:** removing this worktree may again hit "Filename too long" (as on DFS-036).
 
 ### Evidence
@@ -81,4 +83,4 @@ Implemented by hand in one session, tests first, with no failures after the firs
 - by one recorded run each: AC-1's clean build, AC-4, AC-5 and AC-6
 - by reading: AC-7's docs
 
-Still open, and yours: the browser check of AC-3 and the `installBootDist` start ("Try it"). Tests ran red before the implementation and green after it. Build green, scope respected.
+You checked AC-3 in the browser ("Connected") and started the server from `installBootDist`. Tests ran red before the implementation and green after it. Build green, scope respected.

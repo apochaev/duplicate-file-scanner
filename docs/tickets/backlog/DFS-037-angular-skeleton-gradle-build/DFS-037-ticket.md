@@ -163,7 +163,7 @@ Feature: Angular skeleton built and packaged by Gradle
 - [x] The tests ran red before the implementation; the failing run and the commit it preceded are recorded in `verification.md` (decision 5)
 - [x] Each Java test's `@DisplayName` and each Vitest test's name starts with its criterion ID (`DFS-037.AC-n`)
 - [x] `./gradlew build` is green (includes the ArchUnit and module-export tests and the Vitest tests)
-- [ ] Started by hand once on Windows from `installBootDist`: the browser opens on the link and the Angular page shows "Connected"
+- [x] Started by hand once on Windows from `installBootDist`: the browser opens on the link and the Angular page shows "Connected"
 - [x] No files changed outside the paths listed under Touches
 - [x] `verification.md` opens with the `## Product owner review` section
 
