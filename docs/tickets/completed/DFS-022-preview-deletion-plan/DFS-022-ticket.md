@@ -1,7 +1,7 @@
 ---
 id: DFS-022
 title: Preview a deletion plan
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: use-case
@@ -21,7 +21,7 @@ touches:
 blocked_reason:
 created: 2026-10-13
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # DFS-022: Preview a deletion plan
