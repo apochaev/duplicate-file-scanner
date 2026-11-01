@@ -244,4 +244,58 @@ class ScannerAutoConfigurationTest {
                     us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory.class).size());
         });
     }
+
+    private ScanResult driftScan() throws java.io.IOException {
+        List<FileEntry> entries = new java.util.ArrayList<>();
+        for (String folder : List.of("A", "B")) {
+            Path p = tmp.resolve(folder).resolve("x.jpg");
+            java.nio.file.Files.createDirectories(p.getParent());
+            java.nio.file.Files.write(p, new byte[5]);
+            java.nio.file.attribute.BasicFileAttributes a = java.nio.file.Files.readAttributes(p,
+                    java.nio.file.attribute.BasicFileAttributes.class, java.nio.file.LinkOption.NOFOLLOW_LINKS);
+            entries.add(new FileEntry(p, a.size(), a.lastModifiedTime().toInstant()));
+        }
+        return new ScanResult(List.of(tmp), List.of(), List.of(new DuplicateSet(5, "d1", entries)), List.of(), 0);
+    }
+
+    private DeletionPlan driftPlan(ScanResult scan) {
+        return ((Result.Success<DeletionPlan>) ScannerFactories.previewDeletionPlan().preview(scan,
+                new PlanRequest(List.of(new KeepAndQuarantine(tmp.resolve("A"), tmp.resolve("B"))), List.of(),
+                        List.of()))).value();
+    }
+
+    @Test
+    @DisplayName("DFS-033.AC-9 The autoconfiguration provides one working CheckPlanDrift bean")
+    void providesCheckPlanDriftBean() throws java.io.IOException {
+        ScanResult scan = driftScan();
+        DeletionPlan plan = driftPlan(scan);
+        runner().run(context -> {
+            us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift bean =
+                    context.getBean(us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift.class);
+            assertEquals(1, context.getBeansOfType(
+                    us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift.class).size());
+            us.pochaev.dfs.scanner.domain.model.DriftReport report =
+                    ((Result.Success<us.pochaev.dfs.scanner.domain.model.DriftReport>)
+                            assertInstanceOf(Result.Success.class, bean.check(scan, plan))).value();
+            assertEquals(2, report.checked());
+            assertTrue(report.drifts().isEmpty());
+        });
+    }
+
+    @Test
+    @DisplayName("DFS-033.AC-9 An app's own CheckPlanDrift bean replaces the default")
+    void appCheckPlanDriftReplacesDefault() throws java.io.IOException {
+        ScanResult scan = driftScan();
+        DeletionPlan plan = driftPlan(scan);
+        us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift mine =
+                (s, p) -> new Result.Failure<>(ErrorCode.PLAN_NOT_FROM_SCAN, "mine");
+        // exercise the factory first: it is the default the bean backs off from
+        assertInstanceOf(Result.Success.class, ScannerFactories.checkPlanDrift().check(scan, plan));
+        runner().withBean("myCheckPlanDrift", us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift.class,
+                () -> mine).run(context -> {
+            assertSame(mine, context.getBean(us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift.class));
+            assertEquals(1, context.getBeansOfType(
+                    us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift.class).size());
+        });
+    }
 }

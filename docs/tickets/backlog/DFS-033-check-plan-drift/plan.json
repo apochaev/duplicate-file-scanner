@@ -12,10 +12,36 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 16,
+          "wallClockSeconds": 263,
+          "outcome": "passed",
+          "note": "PASS touches DFS-033: 15 changed files, all inside touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-033-check-plan-drift/DFS-033-ticket.md",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/design.md",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/learnings.md",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/plan.json",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/CheckPlanDriftService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DriftKind.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DriftReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PathDrift.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/CheckPlanDrift.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileAttributesReader.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/FileAttributesReader.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "bbd07f47f1d9f0ce0033b8ee2ab93fc62e4f73b5"
     },
     {
       "id": "tests",
