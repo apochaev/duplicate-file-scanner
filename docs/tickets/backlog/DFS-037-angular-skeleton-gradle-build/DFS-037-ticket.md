@@ -1,7 +1,7 @@
 ---
 id: DFS-037
 title: Add the Angular skeleton built and packaged by Gradle
-status: ready
+status: in-progress
 type: build
 scope: [build]
 archetype: none
