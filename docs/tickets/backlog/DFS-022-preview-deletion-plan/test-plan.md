@@ -8,6 +8,7 @@ Tests live in `file-scanner/.../application/PreviewDeletionPlanServiceTest.java`
 |---|---|---|
 | `DFS-022.AC-1` | The same request on the same scan gives the same plan ID | S: `DFS-022.AC-1 The same request on the same scan gives the same 64-character hex plan id` |
 | `DFS-022.AC-1` | A request that changes the plan's entries changes the plan ID | S: `DFS-022.AC-1 A request that changes the plan's entries changes the plan id` |
+| `DFS-022.AC-1` | The plan ID follows the documented encoding (golden values, added at the done gate) | S: `DFS-022.AC-1 The empty plan has the fixed id of the documented encoding`; S: `DFS-022.AC-1 A one-operation plan's id is the SHA-256 of the documented length-prefixed encoding` (expected built by hand with the platform path separator) |
 | `DFS-022.AC-2` | Preview reads only the scan result | S: `DFS-022.AC-2 Preview reads only the scan result and leaves the disk alone` |
 | `DFS-022.AC-3` | A rule quarantines the copies under B that have a copy under A | S: `DFS-022.AC-3 A rule quarantines the copies under B that have a copy under A` |
 | `DFS-022.AC-3` | A rule folder covers whole path components only | S: `DFS-022.AC-3 A rule folder covers whole path components only` |

@@ -10,3 +10,7 @@ Tests written: PreviewDeletionPlanServiceTest (26), PreviewDeletionPlanFactoryTe
 
 ## Implementation (attempt 1)
 Implemented PreviewDeletionPlanService.preview per design.md and added record constructor checks. ./gradlew build green. Commit: orchestrator's.
+
+## tests: user feedback at the done gate (2026-11-01)
+
+Add golden-value tests that pin the plan-ID encoding documented in design.md, so a future change to the encoding fails a test (DFS-033 and execution recompute the ID): at least the empty plan's exact ID (SHA-256 of `19:dfs-deletion-plan/11:01:0`, `2595215d...bd9740`, compute the full value from the documented encoding) and one one-operation plan's exact ID built by hand from the encoding. Tag them with the AC-1 ID (`DFS-022.AC-1 ...`). Do not change existing tests or src/main; the implementation already exists, so these tests must pass against it (verified with the green check, not red).

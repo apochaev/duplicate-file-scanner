@@ -128,6 +128,40 @@ class PreviewDeletionPlanServiceTest {
         assertNotEquals(keepA.id(), keepB.id());
     }
 
+    @Test
+    @DisplayName("DFS-022.AC-1 The empty plan has the fixed id of the documented encoding")
+    void emptyPlanGoldenId() {
+        DeletionPlan empty = plan(scan(), new PlanRequest(List.of(), List.of(), List.of()));
+        assertEquals("2595215d468c0b2d3ebc46c59adc5a0b94291f671100841f55d8424925bd9740", empty.id());
+    }
+
+    private static String str(String s) {
+        return s.getBytes(java.nio.charset.StandardCharsets.UTF_8).length + ":" + s;
+    }
+
+    private static String sha256Hex(String message) throws java.security.NoSuchAlgorithmException {
+        byte[] hash = java.security.MessageDigest.getInstance("SHA-256")
+                .digest(message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        return java.util.HexFormat.of().formatHex(hash);
+    }
+
+    @Test
+    @DisplayName("DFS-022.AC-1 A one-operation plan's id is the SHA-256 of the documented length-prefixed encoding")
+    void oneOperationPlanGoldenId() throws java.security.NoSuchAlgorithmException {
+        // Expected value is built by hand from design.md's encoding using Path.toString(), so it holds on
+        // every platform (the platform separator is part of the encoded path text).
+        ScanResult scan = scan(plain(10, "d1", "A/x.jpg", "B/yé.jpg"));
+        DeletionPlan plan = plan(scan, rules(rule("A", "B")));
+        String keeper = p("A/x.jpg").toString();
+        String dup = p("B/yé.jpg").toString();
+        String source = str("rule") + str("0") + str(p("A").toString()) + str(p("B").toString());
+        String operation = str("quarantine") + str("d1") + str("10")
+                + str("1") + str(dup) + str(keeper) + source;
+        String message = str("dfs-deletion-plan/1") + str("1") + operation + str("0");
+        assertEquals(1, plan.operations().size());
+        assertEquals(sha256Hex(message), plan.id());
+    }
+
     // ---- AC-2 ----
 
     @Test
