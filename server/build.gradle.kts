@@ -3,6 +3,15 @@ import org.springframework.boot.gradle.plugin.SpringBootPlugin
 plugins {
     application
     id("org.springframework.boot") version "4.1.1"
+    id("com.github.node-gradle.node") version "7.1.0"
+}
+
+// The Angular app in frontend/ (DFS-037): Gradle downloads Node under server/.gradle, nothing is installed globally.
+node {
+    version = "24.22.2"
+    download = true
+    npmInstallCommand = "ci"
+    nodeProjectDir = file("frontend")
 }
 
 dependencies {
