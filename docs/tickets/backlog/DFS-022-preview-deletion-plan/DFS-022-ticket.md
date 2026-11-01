@@ -1,7 +1,7 @@
 ---
 id: DFS-022
 title: Preview a deletion plan
-status: ready
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: use-case
@@ -295,14 +295,14 @@ Feature: Previewing a deletion plan
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `design.md` addresses every item of the `use-case` edge-case checklist or marks it not applicable with a one-line reason (decision 8 lists the ones expected not to apply)
-- [ ] `design.md` gives the exact canonical encoding the plan ID is computed over (decision 1)
-- [ ] The service implementing `PreviewDeletionPlan` has no fields: it is a pure function of its arguments
-- [ ] No test uses `Thread.sleep`, and no test reads or writes outside a `@TempDir`
-- [ ] `module-info.java` is unchanged and `ModuleExportsTest` stays green
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] `design.md` addresses every item of the `use-case` edge-case checklist or marks it not applicable with a one-line reason (decision 8 lists the ones expected not to apply)
+- [x] `design.md` gives the exact canonical encoding the plan ID is computed over (decision 1)
+- [x] The service implementing `PreviewDeletionPlan` has no fields: it is a pure function of its arguments
+- [x] No test uses `Thread.sleep`, and no test reads or writes outside a `@TempDir` (the DFS-022 tests; the `Thread.sleep(10)` in `ScannerAutoConfigurationTest.await` predates this ticket, DFS-031)
+- [x] `module-info.java` is unchanged and `ModuleExportsTest` stays green
 
 ## Open questions
 

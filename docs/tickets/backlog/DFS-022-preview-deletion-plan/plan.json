@@ -1,0 +1,165 @@
+{
+  "ticket": "DFS-022",
+  "archetype": {
+    "name": "use-case",
+    "version": 5
+  },
+  "branch": "tickets/DFS-022-preview-deletion-plan",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-022-preview-deletion-plan",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 28,
+          "wallClockSeconds": 302,
+          "outcome": "passed",
+          "note": "PASS touches DFS-022: 19 changed files, all inside touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/DFS-022-ticket.md",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/design.md",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/learnings.md",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/plan.json",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PreviewDeletionPlanService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Conflict.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DeletionPlan.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/KeepAndQuarantine.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/KeepCopy.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/LeftBehind.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Operation.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanRequest.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanTotals.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Source.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/PreviewDeletionPlan.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "af6ade438c2c02d90f3ae84aaffd360c0dbd2f2e"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 16,
+          "wallClockSeconds": 204,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-022: red and traceability pass; - red: 29 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 402 other tests pass (3 skipped); - traceability: 14 criteria traced through 24 scenarios to tests and test-plan.md"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 11,
+          "wallClockSeconds": 79,
+          "outcome": "passed",
+          "note": "rework from user feedback at the done gate (golden plan-ID tests); verified with green, not test-phase: PASS green DFS-022: build and tests green: 430 passed, 3 skipped; both new DFS-022.AC-1 golden tests present and passing in the JUnit XML"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/plan.json",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/progress.md",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PreviewDeletionPlanServiceTest.java"
+      ],
+      "commit": "59b6a4b9f333e14fa4bde2108b0d2ae35c9064e9"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 15,
+          "wallClockSeconds": 223,
+          "outcome": "passed",
+          "note": "PASS green DFS-022: build and tests green: 428 passed, 3 skipped; PASS disabled DFS-022: no @Disabled tests in the 3 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-022: none of the 3 test files of the tests phase changed since a657d694; PASS touches DFS-022: 23 changed files, all inside touches; PASS stubs DFS-022: no stub markers in 81 production files; PASS traceability DFS-022: 14 criteria traced through 24 scenarios to tests and test-plan.md; PASS consistency DFS-022: plan.json parses; state running agrees with ticket status in-progress; reconciled after the tests rework (59b6a4b) without relaunch: green 430 passed, disabled, freeze, touches (24 files), stubs, traceability, consistency all PASS"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/plan.json",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PreviewDeletionPlanService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Conflict.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DeletionPlan.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/KeepAndQuarantine.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/KeepCopy.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/LeftBehind.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Operation.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanRequest.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanTotals.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Source.java"
+      ],
+      "commit": "395fd1b23c016bdd76d32d3743d4514cb1a4287b"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 12,
+          "wallClockSeconds": 146,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-022: plan.json parses; state running agrees with ticket status in-progress"
+        },
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 9,
+          "wallClockSeconds": 79,
+          "outcome": "passed",
+          "note": "re-verify after the tests rework (counter reset by the user's feedback); PASS consistency DFS-022: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/learnings.md",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/plan.json",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/verification.md"
+      ],
+      "commit": "bd95580e185efecc209c8484160259f8ac01c3f2"
+    }
+  ],
+  "gates": [
+    {
+      "after": "design",
+      "status": "approved"
+    },
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": []
+}

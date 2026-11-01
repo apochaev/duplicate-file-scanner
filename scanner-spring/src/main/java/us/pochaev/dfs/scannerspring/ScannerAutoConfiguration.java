@@ -14,6 +14,7 @@ import us.pochaev.dfs.scanner.domain.usecases.command.CancelScan;
 import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
+import us.pochaev.dfs.scanner.domain.usecases.query.PreviewDeletionPlan;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -97,5 +98,15 @@ public class ScannerAutoConfiguration {
     @ConditionalOnMissingBean
     public GetScanResult getScanResult(ScanUseCases useCases) {
         return useCases.result()::result;
+    }
+
+    /**
+     * The deletion-plan preview (DFS-022 decision 8), straight from its own factory: it holds no scan state, so it is
+     * independent of {@link ScanUseCases}, and its implementation serves this one port only, so it needs no delegate.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public PreviewDeletionPlan previewDeletionPlan() {
+        return ScannerFactories.previewDeletionPlan();
     }
 }
