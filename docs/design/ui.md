@@ -17,7 +17,7 @@ Explore overlaps, duplicate sets and folders; build a deletion plan; preview and
 
 ### U2. Scans start from the UI
 
-A start screen takes folders and settings, shows live progress from the scanner's `ScanEvent`s, then opens the result. Goes through the core ports: `StartScan` → `GetScanStatus`/`GetScanResult` → `PreviewDeletionPlan` on that scan ID. Results live in memory (the in-memory `ScanRepository`) and are lost on restart. Saving and reopening scans (the JSONL export as storage format) is a later ticket behind `ScanRepository`, with no UI redesign.
+A start screen takes folders and settings, shows live progress from the scanner's `ScanEvent`s, then opens the result. Goes through the core ports: `StartScan` → `GetScanStatus`/`GetScanResult` → `PreviewDeletionPlan` on that scan ID. Results live in memory (the in-memory `ScanRepository`) and are lost on restart. Saving and reopening scans (the JSONL export as storage format) is a later ticket behind `ScanRepository`, with no UI redesign. The API (DFS-040): `POST /api/scans` starts a scan, `GET /api/scans` lists this server run's scans, `GET /api/scans/{id}` and `POST /api/scans/{id}/cancel` read and cancel one, and `GET /api/scans/{id}/events` streams a throttled `ScanProgress` (Server-Sent Events, at most every 250 ms) until the scan ends; the screen itself is DFS-041.
 
 ### U3. Navigation: a folder tree plus Overlaps and Sets tabs
 
