@@ -38,14 +38,14 @@
 
 ### DFS-031.L-3: `ApplicationContextRunner` assertions may hide the stub from the red gate
 
-- Status: proposed
+- Status: parked
 - Impact: local (one archetype's test guide)
 - Target: `.claude/archetypes/wiring/test-guide.md`
 - Change: add: read a context in a story test through `context.getBean(...)`, which throws with the startup failure as its cause, rather than `assertThat(context).hasSingleBean(...)` on a failed context, whose trace may not show the stub as root cause.
 - Evidence: DFS-031 architect note "`ApplicationContextRunner` and the red gate (unverified, from Spring Boot's documented behaviour)" above; the tests in ddf443f used `getBean` and passed the red gate, so the AssertJ form was never tried.
 - Recurrences: 1 (DFS-031)
 - Recommendation: park; unverified, and verify it against the red gate before writing it into a guide.
-- Decision:
+- Decision: parked 2026-10-31 by the user
 
 ### DFS-031.L-4: The verifier ran `gradlew --stop`, stopping other sessions' Gradle daemons
 
@@ -60,22 +60,22 @@
 
 ### DFS-031.L-5: A criterion listing several bean types was tested with one
 
-- Status: proposed
+- Status: parked
 - Impact: local (one archetype's test guide)
 - Target: `.claude/archetypes/wiring/test-guide.md`
 - Change: add: an override criterion that lists several bean types ("any one of N") gets one parameterized case per type, named per DFS-018.L-1 so each invocation keeps the criterion ID.
 - Evidence: DFS-031 verifier note "'Any one of N' criteria tested with one instance" above: AC-3 names four port types; `ScannerAutoConfigurationTest` (ddf443f) covers only `GetScanResult`; accepted in verification.md's Known limits.
 - Recurrences: 1 (DFS-031)
 - Recommendation: park; one occurrence, and the gap was accepted without a defect.
-- Decision:
+- Decision: parked 2026-10-31 by the user
 
 ### DFS-031.L-6: A "same report before and after" done-item needs a pre-change build recipe
 
-- Status: proposed
+- Status: parked
 - Impact: local (one archetype)
 - Target: `.claude/archetypes/wiring/archetype.md` (or a future refactor archetype)
 - Change: add a recipe for behaviour-preserving done-items: build the pre-change commit in a temporary detached worktree outside the repo, run both builds on the fixtures folder only, compare after stripping timestamps, then `git worktree remove` it.
 - Evidence: DFS-031 verifier note "A 'same report before and after' done-item needs the pre-change build" above; verification.md Evidence: detached worktree at 3eed87d, text and JSONL compared. DFS-026.L-6 (applied) allows scratch files outside the tree but gives no recipe.
 - Recurrences: 1 (DFS-031)
 - Recommendation: park; one occurrence, and the verifier managed without the recipe.
-- Decision:
+- Decision: parked 2026-10-31 by the user
