@@ -1,0 +1,40 @@
+@let p = progress();
+<div class="head">
+  <span [class]="'scan-status status-' + p.status.toLowerCase()">{{ statusLabel(p.status) }}</span>
+  <time [attr.datetime]="entry().startedAt">{{ entry().startedAt | date: 'medium' }}</time>
+  @if (cancellable() || status() === 'CANCELLING') {
+    <button mat-stroked-button type="button" [disabled]="cancelRequested() || !cancellable()" (click)="cancel()">
+      Cancel
+    </button>
+  }
+</div>
+<ul class="scan-folders">
+  @for (location of entry().locations; track $index) {
+    <li>{{ location }}</li>
+  }
+</ul>
+@switch (p.status) {
+  @case ('COMPLETED') {
+    <p class="scan-counts">
+      {{ plural(p.files, 'file') }} · {{ formatBytes(p.bytes) }} · {{ plural(p.groupsTotal, 'duplicate set') }}
+    </p>
+  }
+  @case ('FAILED') {
+    <p class="scan-failure">{{ p.failureMessage }}</p>
+  }
+  @case ('CANCELLED') {}
+  @default {
+    @if (p.phase) {
+      <span class="scan-phase">{{ phaseLabel(p.phase) }}</span>
+    }
+    <p class="scan-counts">
+      {{ plural(p.directories, 'folder') }} · {{ plural(p.files, 'file') }} · {{ formatBytes(p.bytes) }}
+    </p>
+    @if (hashing()) {
+      <mat-progress-bar mode="determinate" [value]="hashPercent()" aria-label="Hashing progress" />
+    }
+    @if (lost()) {
+      <p class="stream-lost" role="alert">Live progress lost; reload the page</p>
+    }
+  }
+}

@@ -1,0 +1,11 @@
+:host {
+  display: block;
+}
+
+.scans {
+  margin-top: 24px;
+}
+
+.load-error {
+  color: var(--mat-sys-error, #b3261e);
+}
