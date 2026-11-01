@@ -19,11 +19,11 @@
 
 ### DFS-033.L-2: scenario data reused across test classes is rebuilt smaller without saying so
 
-- Status: parked
+- Status: applied
 - Impact: shared (touches `.claude/archetypes/`, read by the test-author on every use-case ticket)
 - Target: `.claude/archetypes/use-case/test-guide.md`
 - Change: add: when a scenario reuses another scenario's data in a different test class (for example "the bean checks the same plan"), reproduce that data exactly or record the deviation in `test-plan.md`; and note that a junction test cannot prove "not followed" by outcome alone (a followed junction is a directory, also not a regular file), so a no-follow proof needs another observable, such as a recording reader asserting `isOther()`.
 - Evidence: DFS-033 learnings.md (verifier notes): the AC-9 bean test built a one-set fixture (checked 2) instead of the first scenario's plan (checked 4) because the fixture helpers are private to `CheckPlanDriftTest`; the junction test's outcome matches both followed and not followed, and the symlink test carried the no-follow proof.
-- Recurrences: 1 (DFS-033)
-- Recommendation: park; harmless here and a single occurrence; re-propose if a verifier finds it again.
-- Decision: parked 2026-11-01 by the user
+- Recurrences: 2 (DFS-033: see Evidence; DFS-034: AC-10 Spring test reused DFS-033's one-entry `driftPlan` instead of the first scenario's plan (2026-11-01))
+- Recommendation: apply; recurred in the next story, so the rule earns its place; also make wiring scenarios say "a plan" rather than naming one from another test class.
+- Decision: applied 2026-11-01 by the user; commit `docs: apply DFS-033.L-2 and DFS-027.L-5`

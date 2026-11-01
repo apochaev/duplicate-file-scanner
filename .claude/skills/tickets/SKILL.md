@@ -72,7 +72,7 @@ A ticket may be set to `ready` only when all of these hold, and only after the u
 - Scenarios are concrete (specific values, observable outcomes) and cover the happy path, the edge cases, and every safety invariant in `CLAUDE.md` that applies (never delete the last copy, re-verify at execution time, preview is a pure query, hard links are not duplicates, no symlink or junction following, empty files excluded).
 - Consistent with the settled design decisions in `CLAUDE.md`; any conflict is resolved or raised.
 - `depends_on` lists real ticket IDs, with no cycles.
-- `touches` and "Out of scope" are filled in. The frontmatter `touches` lists every path or package the Scope section's Touches list names, and is never empty on a ticket whose archetype is not `none`: the story pipeline's `touches` check reads only the frontmatter (DFS-026.L-1).
+- `touches` and "Out of scope" are filled in. The frontmatter `touches` lists every path or package the Scope section's Touches list names, and is never empty on a ticket whose archetype is not `none`: the story pipeline's `touches` check reads only the frontmatter (DFS-026.L-1). Each `touches` entry is a bare path or package with nothing after it: a note on what the entry is for goes in the Scope section, since the `touches` check reads an entry containing `/` as a literal path prefix (DFS-027.L-5).
 - Definition of done includes the standard checks plus anything specific to the ticket.
 - Open questions read "None."
 
