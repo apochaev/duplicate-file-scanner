@@ -1,0 +1,142 @@
+{
+  "ticket": "DFS-034",
+  "archetype": {
+    "name": "use-case",
+    "version": 6
+  },
+  "branch": "tickets/DFS-034-verify-plan-content",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-034-verify-plan-content",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 28,
+          "wallClockSeconds": 306,
+          "outcome": "passed",
+          "note": "PASS touches DFS-034: 15 changed files, all inside touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-034-verify-plan-content/DFS-034-ticket.md",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/design.md",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/learnings.md",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/plan.json",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/VerifyPlanContentService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/OperationCheck.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/VerifyEvent.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/VerifyListener.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/VerifyReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/VerifyPlanContent.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentComparator.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ContentComparator.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "bd29b264e63dc2dd75aed306ca215af65c820e23"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 16,
+          "wallClockSeconds": 190,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-034: red and traceability pass; - red: 22 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 475 other tests pass (3 skipped); - traceability: 10 criteria traced through 12 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-034-verify-plan-content/plan.json",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/progress.md",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/VerifyPlanContentServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NioContentComparatorTest.java",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java"
+      ],
+      "commit": "949be3d66847e43571a6f89e47a6ff04b62852c7"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 14,
+          "wallClockSeconds": 207,
+          "outcome": "passed",
+          "note": "PASS green DFS-034: build and tests green: 494 passed, 3 skipped; PASS disabled DFS-034: no @Disabled tests in the 3 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-034: none of the 3 test files of the tests phase changed since 949be3d6; PASS touches DFS-034: 19 changed files, all inside touches; PASS stubs DFS-034: no stub markers in 107 production files; PASS traceability DFS-034: 10 criteria traced through 12 scenarios to tests and test-plan.md; PASS consistency DFS-034: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-034-verify-plan-content/plan.json",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/VerifyPlanContentService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/OperationCheck.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/VerifyEvent.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/VerifyReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentComparator.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ContentComparator.java"
+      ],
+      "commit": "f09068dfcece0fa1285d6567e6e69a332fd77c78"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 10,
+          "wallClockSeconds": 106,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-034: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-034-verify-plan-content/DFS-034-ticket.md",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/learnings.md",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/plan.json",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/verification.md"
+      ],
+      "commit": "88bbfd74a4bb617e09361788e2a581d7b6f899dd"
+    }
+  ],
+  "gates": [
+    {
+      "after": "design",
+      "status": "approved"
+    },
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": []
+}

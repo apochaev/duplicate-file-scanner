@@ -17,6 +17,7 @@ import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
 import us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory;
 import us.pochaev.dfs.scanner.domain.usecases.query.PreviewDeletionPlan;
+import us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -130,5 +131,15 @@ public class ScannerAutoConfiguration {
     @ConditionalOnMissingBean
     public CheckPlanDrift checkPlanDrift() {
         return ScannerFactories.checkPlanDrift();
+    }
+
+    /**
+     * The plan content verify (DFS-034 decision 7), straight from its own factory like the preview: stateless,
+     * synchronous, independent of {@link ScanUseCases}, and its implementation serves this one port only.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public VerifyPlanContent verifyPlanContent() {
+        return ScannerFactories.verifyPlanContent();
     }
 }
