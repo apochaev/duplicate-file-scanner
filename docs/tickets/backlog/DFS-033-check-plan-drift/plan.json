@@ -75,10 +75,27 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 6,
+          "wallClockSeconds": 142,
+          "outcome": "passed",
+          "note": "PASS green DFS-033: build and tests green: 472 passed, 3 skipped; PASS disabled DFS-033: no @Disabled tests in the 2 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-033: none of the 2 test files of the tests phase changed since f4f2997d; PASS touches DFS-033: 18 changed files, all inside touches; PASS stubs DFS-033: no stub markers in 99 production files; PASS traceability DFS-033: 9 criteria traced through 11 scenarios to tests and test-plan.md; PASS consistency DFS-033: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-033-check-plan-drift/plan.json",
+        "docs/tickets/backlog/DFS-033-check-plan-drift/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/CheckPlanDriftService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DriftReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PathDrift.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileAttributesReader.java"
+      ],
+      "commit": "b42d1f090d2ffc667b9c281db7bec098ea4d0ec0"
     },
     {
       "id": "verify",
