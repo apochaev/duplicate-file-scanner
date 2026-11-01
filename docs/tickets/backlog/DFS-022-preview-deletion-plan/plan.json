@@ -12,10 +12,40 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 28,
+          "wallClockSeconds": 302,
+          "outcome": "passed",
+          "note": "PASS touches DFS-022: 19 changed files, all inside touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/DFS-022-ticket.md",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/design.md",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/learnings.md",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/plan.json",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PreviewDeletionPlanService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Conflict.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DeletionPlan.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/KeepAndQuarantine.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/KeepCopy.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/LeftBehind.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Operation.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanRequest.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanTotals.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Source.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/PreviewDeletionPlan.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "af6ade438c2c02d90f3ae84aaffd360c0dbd2f2e"
     },
     {
       "id": "tests",
@@ -54,7 +84,7 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",

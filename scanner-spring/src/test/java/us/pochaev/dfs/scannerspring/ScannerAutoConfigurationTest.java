@@ -19,6 +19,14 @@ import us.pochaev.dfs.scanner.domain.usecases.command.CancelScan;
 import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
+import us.pochaev.dfs.scanner.domain.usecases.query.PreviewDeletionPlan;
+import us.pochaev.dfs.scanner.domain.model.DeletionPlan;
+import us.pochaev.dfs.scanner.domain.model.DuplicateSet;
+import us.pochaev.dfs.scanner.domain.model.FileEntry;
+import us.pochaev.dfs.scanner.domain.model.KeepAndQuarantine;
+import us.pochaev.dfs.scanner.domain.model.PlanRequest;
+import us.pochaev.dfs.scanner.domain.model.ScanResult;
+import java.time.Instant;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -171,5 +179,36 @@ class ScannerAutoConfigurationTest {
         } finally {
             counting.shutdownNow();
         }
+    }
+
+    private static Result<DeletionPlan> previewSample(PreviewDeletionPlan preview) {
+        ScanResult scan = new ScanResult(List.of(), List.of(), List.of(new DuplicateSet(10, "d1", List.of(
+                new FileEntry(Path.of("C:/A/x.jpg"), 10, Instant.EPOCH),
+                new FileEntry(Path.of("C:/B/x.jpg"), 10, Instant.EPOCH)))), List.of(), 0);
+        return preview.preview(scan, new PlanRequest(
+                List.of(new KeepAndQuarantine(Path.of("C:/A"), Path.of("C:/B"))), List.of(), List.of()));
+    }
+
+    @Test
+    @DisplayName("DFS-022.AC-14 The autoconfiguration provides one working PreviewDeletionPlan bean")
+    void providesPreviewBean() {
+        runner().run(context -> {
+            PreviewDeletionPlan bean = context.getBean(PreviewDeletionPlan.class);
+            assertEquals(1, context.getBeansOfType(PreviewDeletionPlan.class).size());
+            assertEquals(1, ((Result.Success<DeletionPlan>) assertInstanceOf(Result.Success.class,
+                    previewSample(bean))).value().operations().size());
+        });
+    }
+
+    @Test
+    @DisplayName("DFS-022.AC-14 An app's own PreviewDeletionPlan bean replaces the default")
+    void appPreviewReplacesDefault() {
+        PreviewDeletionPlan mine = (scan, request) -> new Result.Failure<>(ErrorCode.INVALID_RULE, "mine");
+        // exercise the factory first: it is the default the bean backs off from
+        assertInstanceOf(Result.Success.class, previewSample(ScannerFactories.previewDeletionPlan()));
+        runner().withBean("myPreview", PreviewDeletionPlan.class, () -> mine).run(context -> {
+            assertSame(mine, context.getBean(PreviewDeletionPlan.class));
+            assertEquals(1, context.getBeansOfType(PreviewDeletionPlan.class).size());
+        });
     }
 }
