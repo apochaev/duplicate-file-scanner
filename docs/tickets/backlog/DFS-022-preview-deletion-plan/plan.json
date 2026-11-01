@@ -81,10 +81,33 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 15,
+          "wallClockSeconds": 223,
+          "outcome": "passed",
+          "note": "PASS green DFS-022: build and tests green: 428 passed, 3 skipped; PASS disabled DFS-022: no @Disabled tests in the 3 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-022: none of the 3 test files of the tests phase changed since a657d694; PASS touches DFS-022: 23 changed files, all inside touches; PASS stubs DFS-022: no stub markers in 81 production files; PASS traceability DFS-022: 14 criteria traced through 24 scenarios to tests and test-plan.md; PASS consistency DFS-022: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/plan.json",
+        "docs/tickets/backlog/DFS-022-preview-deletion-plan/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PreviewDeletionPlanService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Conflict.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DeletionPlan.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/KeepAndQuarantine.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/KeepCopy.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/LeftBehind.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Operation.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanRequest.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanTotals.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/Source.java"
+      ],
+      "commit": "395fd1b23c016bdd76d32d3743d4514cb1a4287b"
     },
     {
       "id": "verify",
