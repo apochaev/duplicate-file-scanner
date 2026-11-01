@@ -82,10 +82,10 @@ In `server/frontend/`, built by Gradle (a Node Gradle plugin downloads Node; not
 A server on localhost is reachable from any page in the user's browser (cross-site request forgery; with DNS rebinding a page can also read responses). So:
 
 - Listen on `127.0.0.1` only, on a random port.
-- At startup, generate a random token, print `http://127.0.0.1:<port>/?token=…` and open it in the browser. The page exchanges the token for an `HttpOnly`, `SameSite=Strict` session cookie and removes it from the URL. Every API request needs the cookie.
+- At startup, generate a random token, print `http://127.0.0.1:<port>/?token=…` and open it in the browser. The server exchanges the token for an `HttpOnly`, `SameSite=Strict` session cookie and redirects to `/`, so the token leaves the URL before any script runs; the token stays valid for the server run. Every API request (`/api/**`) needs the cookie; the page itself is public, since it carries no data (DFS-036).
 - Reject requests whose `Host` is not `127.0.0.1:<port>` or `localhost:<port>` (blocks DNS rebinding).
 - State-changing requests need a matching `Origin`. No CORS.
-- Folder listings, previews, file contents and plan entries are accepted only for paths inside the scan's roots.
+- Folder listings, previews, file contents and plan entries are accepted only for paths inside the scan's roots. Built with the first endpoint that takes a path, which carries the criterion "a path outside the scan's roots → 403" (DFS-036 decision 1).
 
 Built with Spring Security as the **first server ticket**, before any endpoint that reads the disk, so no endpoint ever exists unprotected.
 

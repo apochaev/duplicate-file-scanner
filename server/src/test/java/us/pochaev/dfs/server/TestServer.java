@@ -30,8 +30,10 @@ record TestServer(ConfigurableApplicationContext context, int port) implements A
         List<Class<?>> sources = new ArrayList<>(List.of(Main.class));
         sources.addAll(List.of(extraSources));
         SpringApplication app = new SpringApplication(sources.toArray(Class<?>[]::new));
-        List<String> all = new ArrayList<>(List.of("--dfs.server.open-browser=false"));
-        all.addAll(List.of(args));
+        List<String> all = new ArrayList<>(List.of(args));
+        if (all.stream().noneMatch(a -> a.startsWith("--dfs.server.open-browser="))) {
+            all.add("--dfs.server.open-browser=false");
+        }
         ConfigurableApplicationContext context = app.run(all.toArray(String[]::new));
         return new TestServer(context, ((WebServerApplicationContext) context).getWebServer().getPort());
     }

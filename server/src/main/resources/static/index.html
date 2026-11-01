@@ -6,6 +6,18 @@
 </head>
 <body>
   <p>DFS server is running.</p>
+  <p id="session">Checking the session…</p>
   <!-- Placeholder until the Angular UI is built into the jar (docs/design/ui.md U9). -->
+  <script>
+    // DFS-036.AC-8: tell the user whether this browser holds the session cookie from the printed link.
+    fetch('/api/session', {credentials: 'same-origin'})
+      .then(r => {
+        document.getElementById('session').textContent =
+          r.ok ? 'Connected' : 'Open the link printed in the console';
+      })
+      .catch(() => {
+        document.getElementById('session').textContent = 'Open the link printed in the console';
+      });
+  </script>
 </body>
 </html>
