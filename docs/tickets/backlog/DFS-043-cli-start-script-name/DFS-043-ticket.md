@@ -1,5 +1,5 @@
 ---
-id: DFS-042
+id: DFS-043
 title: Name the CLI start script dfs and document installing outside the repo
 status: draft
 type: build
@@ -18,7 +18,7 @@ updated: 2026-11-01
 completed:
 ---
 
-# DFS-042: Name the CLI start script dfs and document installing outside the repo
+# DFS-043: Name the CLI start script dfs and document installing outside the repo
 
 ## Story
 
@@ -34,7 +34,7 @@ Today `./gradlew :cli:installBootDist` produces `cli/build/install/cli-boot/bin/
 
 ## Acceptance criteria
 
-The full ID of each criterion is `DFS-042.AC-<n>`.
+The full ID of each criterion is `DFS-043.AC-<n>`.
 
 - **AC-1** <to be refined>
 
