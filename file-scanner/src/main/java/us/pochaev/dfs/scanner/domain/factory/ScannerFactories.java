@@ -5,10 +5,13 @@ import us.pochaev.dfs.scanner.application.ListDirectoryService;
 import us.pochaev.dfs.scanner.application.PreviewDeletionPlanService;
 import us.pochaev.dfs.scanner.application.ScanPipeline;
 import us.pochaev.dfs.scanner.application.ScanService;
+import us.pochaev.dfs.scanner.application.VerifyPlanContentService;
 import us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift;
 import us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory;
 import us.pochaev.dfs.scanner.domain.usecases.query.PreviewDeletionPlan;
+import us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent;
 import us.pochaev.dfs.scanner.infra.adapter.InMemoryScanRepository;
+import us.pochaev.dfs.scanner.infra.adapter.NioContentComparator;
 import us.pochaev.dfs.scanner.infra.adapter.NioContentHasher;
 import us.pochaev.dfs.scanner.infra.adapter.NioDirectoryReader;
 import us.pochaev.dfs.scanner.infra.adapter.NioFileAttributesReader;
@@ -78,5 +81,16 @@ public final class ScannerFactories {
      */
     public static CheckPlanDrift checkPlanDrift() {
         return new CheckPlanDriftService(new NioFileAttributesReader());
+    }
+
+    /**
+     * Builds the plan content verify (DFS-034 decision 7) on the NIO attributes reader and the NIO content comparator
+     * (1 MiB chunks): stateless, synchronous and read-only, with no scan state and no executor, so it is not part of
+     * {@link ScanUseCases}.
+     *
+     * @return a new {@link VerifyPlanContent}
+     */
+    public static VerifyPlanContent verifyPlanContent() {
+        return new VerifyPlanContentService(new NioFileAttributesReader(), new NioContentComparator());
     }
 }

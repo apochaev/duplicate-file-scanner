@@ -1,7 +1,7 @@
 ---
 id: DFS-034
 title: Verify a deletion plan's content against its keepers
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner]
 archetype: use-case
