@@ -91,6 +91,28 @@ record TestServer(ConfigurableApplicationContext context, int port) implements A
         }
     }
 
+    /** Sends a JSON body with the given method; a null cookie or origin leaves that header out (DFS-040). */
+    HttpResponse<String> sendJson(String method, String path, String cookie, String origin, String json)
+            throws IOException, InterruptedException {
+        HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(base() + path))
+                .method(method, HttpRequest.BodyPublishers.ofString(json))
+                .header("Content-Type", "application/json");
+        if (cookie != null) {
+            b.header("Cookie", cookie);
+        }
+        if (origin != null) {
+            b.header("Origin", origin);
+        }
+        try (HttpClient c = client()) {
+            return c.send(b.build(), HttpResponse.BodyHandlers.ofString());
+        }
+    }
+
+    /** This server's own origin, as the browser sends it. */
+    String origin() {
+        return "http://127.0.0.1:" + port;
+    }
+
     /** Exchanges the token and returns the session cookie as "DFS_SESSION=value". */
     String login(String token) throws IOException, InterruptedException {
         HttpResponse<String> r = get("/?token=" + token, null);
