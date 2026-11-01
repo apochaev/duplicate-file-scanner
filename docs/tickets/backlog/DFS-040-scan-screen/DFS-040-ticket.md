@@ -1,7 +1,7 @@
 ---
 id: DFS-040
 title: Add the scan API to start, list, follow and cancel scans
-status: ready
+status: in-review
 type: feature
 scope: [build]
 archetype: none
@@ -231,13 +231,13 @@ Feature: Scan API
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes, except AC-9 (by hand) and AC-10 (read), each recorded in `verification.md`
-- [ ] The tests ran red before the implementation; the failing run and the commit it preceded are recorded in `verification.md` (decision 6)
-- [ ] Each test's `@DisplayName` starts with its criterion ID (`DFS-040.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests, `OpenApiSpecTest` and the Vitest tests)
-- [ ] Started by hand once on Windows: a real folder scanned with `curl` (start, stream, list, cancel), the server log free of errors
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] Every scenario above is an automated test and passes, except AC-9 (by hand) and AC-10 (read), each recorded in `verification.md`
+- [x] The tests ran red before the implementation; the failing run and the commit it preceded are recorded in `verification.md` (decision 6)
+- [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-040.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests, `OpenApiSpecTest` and the Vitest tests)
+- [x] Started by hand once on Windows: a real folder scanned with `curl` (start, stream, list, cancel), the server log free of errors
+- [x] No files changed outside the paths listed under Touches
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 

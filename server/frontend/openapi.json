@@ -8,6 +8,102 @@
     "url" : ""
   } ],
   "paths" : {
+    "/api/scans" : {
+      "get" : {
+        "tags" : [ "scans" ],
+        "summary" : "The scans of this server run, newest first",
+        "operationId" : "listScans",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ScanEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "scans" ],
+        "summary" : "Start a scan of absolute folders",
+        "operationId" : "startScan",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/StartScanRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Started; Location names the scan",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ScanEntry"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Refused; nothing was started",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scans/{id}/cancel" : {
+      "post" : {
+        "tags" : [ "scans" ],
+        "summary" : "Request that a scan stop",
+        "operationId" : "cancelScan",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The scan after the request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ScanEntry"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such scan in this server run",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/session" : {
       "get" : {
         "tags" : [ "session" ],
@@ -26,10 +122,193 @@
           }
         }
       }
+    },
+    "/api/scans/{id}" : {
+      "get" : {
+        "tags" : [ "scans" ],
+        "summary" : "One scan and its progress",
+        "operationId" : "getScan",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ScanEntry"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such scan in this server run",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scans/{id}/events" : {
+      "get" : {
+        "tags" : [ "scans" ],
+        "summary" : "Server-Sent Events: a progress event with a ScanProgress at most every 250 ms, ending with the terminal status",
+        "operationId" : "streamScanEvents",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/event-stream" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ScanProgress"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such scan in this server run",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components" : {
     "schemas" : {
+      "StartScanRequest" : {
+        "type" : "object",
+        "properties" : {
+          "locations" : {
+            "type" : "array",
+            "description" : "Absolute paths of the folders to scan",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "minSize" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Files smaller than this many bytes are left out; at least 1 (default 1)"
+          },
+          "defaultExcludes" : {
+            "type" : "boolean",
+            "description" : "Leave out .DS_Store and ._* files (default true)"
+          }
+        },
+        "required" : [ "locations" ]
+      },
+      "ScanEntry" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "locations" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "progress" : {
+            "$ref" : "#/components/schemas/ScanProgress"
+          }
+        },
+        "required" : [ "id", "locations", "progress", "startedAt" ]
+      },
+      "ScanProgress" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "enum" : [ "QUEUED", "RUNNING", "CANCELLING", "COMPLETED", "CANCELLED", "FAILED" ]
+          },
+          "phase" : {
+            "type" : [ "string", "null" ],
+            "enum" : [ "WALK", "PARTIAL_HASH", "FULL_HASH", "HARD_LINKS" ]
+          },
+          "directories" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "files" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "bytes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "hashedFiles" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "hashFilesTotal" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "hashedBytes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "hashBytesTotal" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "groupsDone" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "groupsTotal" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "failureMessage" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "bytes", "directories", "files", "groupsDone", "groupsTotal", "hashBytesTotal", "hashFilesTotal", "hashedBytes", "hashedFiles", "status" ]
+      },
+      "ApiError" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "message" ]
+      },
       "SessionStatus" : {
         "type" : "object",
         "properties" : {

@@ -54,6 +54,8 @@ tasks.check { dependsOn(npmTest) }
 dependencies {
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
     implementation(project(":file-scanner"))
+    // The scan beans and their executor (D1; DFS-040 decision 7).
+    implementation(project(":scanner-spring"))
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-security")
     // The OpenAPI spec from the controllers, served only when switched on (DFS-038 decisions 1 and 3).

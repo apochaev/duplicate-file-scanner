@@ -1,0 +1,170 @@
+package us.pochaev.dfs.server.scan;
+
+import org.springframework.stereotype.Component;
+import us.pochaev.dfs.scanner.domain.model.Result;
+import us.pochaev.dfs.scanner.domain.model.ScanConfig;
+import us.pochaev.dfs.scanner.domain.model.ScanEvent;
+import us.pochaev.dfs.scanner.domain.model.ScanId;
+import us.pochaev.dfs.scanner.domain.model.ScanListener;
+import us.pochaev.dfs.scanner.domain.model.ScanSnapshot;
+import us.pochaev.dfs.scanner.domain.model.ScanStatus;
+import us.pochaev.dfs.scanner.domain.usecases.command.CancelScan;
+import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
+import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
+import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
+
+import java.nio.file.Path;
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
+/**
+ * The scans this server run started (DFS-040 decision 2), each with the counts its listener folds from the core's
+ * events (decision 3). The listener runs on the scanning thread and only writes memory, so a slow client can never
+ * hold up a scan; it never throws, since the core detaches a listener that does.
+ */
+@Component
+class ScanRegistry {
+
+    private final StartScan startScan;
+    private final CancelScan cancelScan;
+    private final GetScanStatus getScanStatus;
+    private final GetScanResult getScanResult;
+    private final Map<UUID, Tracked> scans = new ConcurrentHashMap<>();
+    private final AtomicLong sequence = new AtomicLong();
+
+    ScanRegistry(StartScan startScan, CancelScan cancelScan, GetScanStatus getScanStatus, GetScanResult getScanResult) {
+        this.startScan = startScan;
+        this.cancelScan = cancelScan;
+        this.getScanStatus = getScanStatus;
+        this.getScanResult = getScanResult;
+    }
+
+    /** Starts a scan through the core; the folders are recorded as the caller gave them. */
+    Result<ScanEntry> start(List<String> locations, List<Path> paths, ScanConfig config) {
+        Counters counters = new Counters();
+        Instant startedAt = Instant.now();
+        long seq = sequence.incrementAndGet();
+        return switch (startScan.start(paths, config, counters)) {
+            case Result.Failure<ScanId> f -> new Result.Failure<>(f.code(), f.message());
+            case Result.Success<ScanId> s -> {
+                Tracked t = new Tracked(s.value(), List.copyOf(locations), startedAt, seq, counters);
+                scans.put(s.value().value(), t);
+                yield new Result.Success<>(entry(t));
+            }
+        };
+    }
+
+    /** Every scan of this run, newest first. */
+    List<ScanEntry> list() {
+        return scans.values().stream()
+                .sorted(Comparator.comparingLong(Tracked::sequence).reversed())
+                .map(this::entry)
+                .toList();
+    }
+
+    Optional<ScanEntry> find(String id) {
+        return tracked(id).map(this::entry);
+    }
+
+    /** Requests a cancel; empty when the ID is unknown. */
+    Optional<ScanEntry> cancel(String id) {
+        return tracked(id).map(t -> {
+            cancelScan.cancel(t.id());
+            return entry(t);
+        });
+    }
+
+    /** The current progress of a known scan, for the event stream. */
+    Optional<ScanProgress> progress(String id) {
+        return tracked(id).map(this::progress);
+    }
+
+    static boolean terminal(ScanProgress p) {
+        return p.status().equals("COMPLETED") || p.status().equals("CANCELLED") || p.status().equals("FAILED");
+    }
+
+    private Optional<Tracked> tracked(String id) {
+        try {
+            return Optional.ofNullable(scans.get(UUID.fromString(id)));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    private ScanEntry entry(Tracked t) {
+        return new ScanEntry(t.id().value().toString(), t.locations(), t.startedAt(), progress(t));
+    }
+
+    private ScanProgress progress(Tracked t) {
+        ScanSnapshot s = switch (getScanStatus.status(t.id())) {
+            case Result.Success<ScanSnapshot> ok -> ok.value();
+            case Result.Failure<ScanSnapshot> f -> throw new IllegalStateException("tracked scan unknown to the core: " + f);
+        };
+        Counters c = t.counters();
+        int groupsDone = s.groupsDone();
+        int groupsTotal = s.groupsTotal();
+        if (s.status() == ScanStatus.COMPLETED) {
+            groupsDone = groupsTotal = t.setCount(getScanResult);
+        }
+        return new ScanProgress(s.status().name(), s.phase() == null ? null : s.phase().name(),
+                c.directories, c.files, c.bytes, c.hashedFiles, c.hashFilesTotal, c.hashedBytes, c.hashBytesTotal,
+                groupsDone, groupsTotal, s.failureMessage());
+    }
+
+    private record Tracked(ScanId id, List<String> locations, Instant startedAt, long sequence, Counters counters) {
+
+        int setCount(GetScanResult results) {
+            if (counters.sets < 0) {
+                counters.sets = switch (results.result(id)) {
+                    case Result.Success<us.pochaev.dfs.scanner.domain.model.ScanResult> ok -> ok.value().sets().size();
+                    case Result.Failure<us.pochaev.dfs.scanner.domain.model.ScanResult> f -> 0;
+                };
+            }
+            return counters.sets;
+        }
+    }
+
+    /** Counts folded from the events; written by the scanning thread only, read by any. */
+    private static final class Counters implements ScanListener {
+
+        volatile long directories;
+        volatile long files;
+        volatile long bytes;
+        volatile long hashedFiles;
+        volatile long hashFilesTotal;
+        volatile long hashedBytes;
+        volatile long hashBytesTotal;
+        volatile int sets = -1;
+
+        @Override
+        public void onEvent(ScanEvent event) {
+            switch (event) {
+                case ScanEvent.DirectoryWalked e -> directories = e.directoriesSoFar();
+                case ScanEvent.FileWalked e -> {
+                    files = e.filesSoFar();
+                    bytes = e.bytesSoFar();
+                }
+                case ScanEvent.PhaseStarted e -> {
+                    hashedFiles = 0;
+                    hashFilesTotal = 0;
+                    hashedBytes = 0;
+                    hashBytesTotal = 0;
+                }
+                case ScanEvent.HashProgress e -> {
+                    hashedFiles = e.filesDone();
+                    hashFilesTotal = e.filesTotal();
+                    hashedBytes = e.bytesDone();
+                    hashBytesTotal = e.bytesTotal();
+                }
+                default -> {
+                }
+            }
+        }
+    }
+}
