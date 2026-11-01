@@ -211,4 +211,37 @@ class ScannerAutoConfigurationTest {
             assertEquals(1, context.getBeansOfType(PreviewDeletionPlan.class).size());
         });
     }
+
+    @Test
+    @DisplayName("DFS-032.AC-9 The autoconfiguration provides one working ListDirectory bean")
+    void providesListDirectoryBean() throws java.io.IOException {
+        java.nio.file.Files.write(tmp.resolve("a.txt"), new byte[2]);
+        runner().run(context -> {
+            us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory bean =
+                    context.getBean(us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory.class);
+            assertEquals(1, context.getBeansOfType(
+                    us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory.class).size());
+            us.pochaev.dfs.scanner.domain.model.DirectoryListing listing =
+                    ((Result.Success<us.pochaev.dfs.scanner.domain.model.DirectoryListing>)
+                            assertInstanceOf(Result.Success.class, bean.list(tmp))).value();
+            assertEquals(1, listing.entries().size());
+            assertEquals("a.txt", listing.entries().get(0).name());
+        });
+    }
+
+    @Test
+    @DisplayName("DFS-032.AC-9 An app's own ListDirectory bean replaces the default")
+    void appListDirectoryReplacesDefault() throws java.io.IOException {
+        java.nio.file.Files.write(tmp.resolve("a.txt"), new byte[2]);
+        us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory mine =
+                folder -> new Result.Failure<>(ErrorCode.LOCATION_NOT_FOUND, "mine");
+        // exercise the factory first: it is the default the bean backs off from
+        assertInstanceOf(Result.Success.class, ScannerFactories.listDirectory().list(tmp));
+        runner().withBean("myListDirectory", us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory.class,
+                () -> mine).run(context -> {
+            assertSame(mine, context.getBean(us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory.class));
+            assertEquals(1, context.getBeansOfType(
+                    us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory.class).size());
+        });
+    }
 }

@@ -4,3 +4,8 @@
 - NioFileTreeWalker left unchanged; the implementer moves it onto EntryKind.
 - `./gradlew :file-scanner:compileJava :scanner-spring:compileJava` passes.
 - Expected commit: `docs(file-scanner): design DFS-032 list directory [DFS-032]` (design.md, progress.md, learnings.md, stubs).
+
+## tests (test-author) - 2026-11-01
+
+- Wrote ListDirectoryRealDiskTest (infra.adapter), ListDirectoryServiceTest (application), two AC-9 tests in ScannerAutoConfigurationTest, and test-plan.md. All 20 fail with the stub UnsupportedOperationException; none skipped on this platform (symlinks and junctions available).
+- Expected commit: test(file-scanner): add DFS-032 list directory tests [DFS-032]

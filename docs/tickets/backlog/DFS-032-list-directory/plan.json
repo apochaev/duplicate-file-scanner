@@ -12,10 +12,38 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 40,
+          "wallClockSeconds": 440,
+          "outcome": "passed",
+          "note": "resumed once via SendMessage after hitting the 25-turn cap with stubs written but no design.md; turns and time are both invocations combined; PASS touches DFS-032: 17 changed files, all inside touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-032-list-directory/DFS-032-ticket.md",
+        "docs/tickets/backlog/DFS-032-list-directory/design.md",
+        "docs/tickets/backlog/DFS-032-list-directory/learnings.md",
+        "docs/tickets/backlog/DFS-032-list-directory/plan.json",
+        "docs/tickets/backlog/DFS-032-list-directory/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ListDirectoryService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DirectoryEntry.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/DirectoryListing.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/ListDirectory.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/DirectoryAccess.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/EntryKind.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioDirectoryReader.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/DirectoryReader.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/LinkNotFollowedException.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "73dff48da7f035a1563dc76347844a8af9381e60"
     },
     {
       "id": "tests",
