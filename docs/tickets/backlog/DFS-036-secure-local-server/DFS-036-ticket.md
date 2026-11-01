@@ -1,7 +1,7 @@
 ---
 id: DFS-036
 title: Secure the local server against other pages in the browser
-status: ready
+status: in-review
 type: feature
 scope: [build]
 archetype: none
@@ -217,13 +217,13 @@ Feature: Secure the local server
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes, except AC-8 (by hand) and AC-9 (read), each noted in `verification.md`
-- [ ] The tests ran red before the implementation; the failing run and the commit it preceded are recorded in `verification.md` (decision 6)
-- [ ] Each test's `@DisplayName` starts with its criterion ID (`DFS-036.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] Started by hand once on Windows: the browser opens on the link, the page shows "Connected", and a private window shows "Open the link printed in the console"
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] Every scenario above is an automated test and passes, except AC-8 (by hand) and AC-9 (read), each noted in `verification.md` (29 server tests, 0 failed)
+- [x] The tests ran red before the implementation; the failing run and the commit it preceded are recorded in `verification.md` (decision 6) (22 of 29 failed at `59d0203`)
+- [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-036.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] Started by hand once on Windows: the browser opens on the link, the page shows "Connected", and a private window shows "Open the link printed in the console" (confirmed by the product owner, 2026-10-31)
+- [x] No files changed outside the paths listed under Touches
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 
