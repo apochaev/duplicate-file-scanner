@@ -20,6 +20,14 @@ The use-case ports and the types they take or return, with their full signature.
 - `application`: `<the service, and any package-private seam>`
 - `infra.port` / `infra.adapter`: `<state port and its in-memory adapter, or "none">`
 
+## Behavior (the contract the implementer follows)
+
+What each use-case method does, step by step, in the order the implementer will write it: inputs checked first, then each step with the outcome it produces and when it stops, then the result built. Name every outcome, error code and detail string a scenario asserts, and the order of listener events. Point to the stub each criterion reaches (architect step 3).
+
+### For the test-author
+
+How to build the fixtures each criterion needs (files in a `@TempDir`, records built in code), which fake or stub reaches which criterion, and any test that needs a fake collaborator handed to the service's constructor. "None." if the scenarios already say it all.
+
 ## State and transitions
 
 The states a request goes through, the legal transitions and what triggers each, and which states are terminal. A table is enough:
@@ -28,13 +36,15 @@ The states a request goes through, the legal transitions and what triggers each,
 |---|---|---|
 | `<STATE>` | `<command or completion>` | `<STATE>` |
 
-Then one line per command saying what it does in each state, including the terminal ones. "None: this use case has no lifecycle" if it does not apply.
+Then one line per command saying what it does in each state, including the terminal ones. For a synchronous, stateless use case, replace this section's body with the one line "Not applicable: synchronous, stateless query."
 
 ## Concurrency and atomicity
 
 - Which thread runs what: `<caller's thread: validation and recording; executor's thread: the work and callbacks>`
 - Where per-request state lives, and the one atomic operation every transition goes through: `<...>`
 - Each race the design must settle, and who wins: `<...>`
+
+For a synchronous, stateless use case, replace this section's body with the one line "Not applicable: synchronous, stateless query."
 
 ## Checklist disposition
 

@@ -1,6 +1,6 @@
 ---
 name: use-case
-version: 6
+version: 7
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
