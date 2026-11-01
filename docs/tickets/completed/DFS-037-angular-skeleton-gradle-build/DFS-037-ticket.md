@@ -1,7 +1,7 @@
 ---
 id: DFS-037
 title: Add the Angular skeleton built and packaged by Gradle
-status: in-review
+status: done
 type: build
 scope: [build]
 archetype: none
@@ -21,7 +21,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # DFS-037: Add the Angular skeleton built and packaged by Gradle
