@@ -42,3 +42,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Generated from openapi.json by ng-openapi-gen before every build, test and serve (DFS-038)
+/src/app/api/

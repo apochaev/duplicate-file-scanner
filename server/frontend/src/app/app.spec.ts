@@ -21,6 +21,8 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     answer(http.expectOne('/api/session'));
+    // The generated SessionService returns a Promise: let it settle before change detection (DFS-038).
+    await new Promise((resolve) => setTimeout(resolve));
     await fixture.whenStable();
     fixture.detectChanges();
     return (fixture.nativeElement as HTMLElement).textContent ?? '';
@@ -37,6 +39,13 @@ describe('App', () => {
     const text = await render((req) => req.flush('', { status: 403, statusText: 'Forbidden' }));
 
     expect(text).toContain('DFS server is running');
+    expect(text).toContain('Open the link printed in the console');
+    expect(text).not.toContain('Connected');
+  });
+
+  it('DFS-038.AC-5 does not show "Connected" when /api/session answers authenticated: false', async () => {
+    const text = await render((req) => req.flush({ authenticated: false }));
+
     expect(text).toContain('Open the link printed in the console');
     expect(text).not.toContain('Connected');
   });
