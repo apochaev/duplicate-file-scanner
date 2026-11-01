@@ -2,6 +2,8 @@ package us.pochaev.dfs.scanner.infra.adapter;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
@@ -15,12 +17,12 @@ interface DirectoryAccess {
     DirectoryAccess NIO = new DirectoryAccess() {
         @Override
         public DirectoryStream<Path> open(Path folder) throws IOException {
-            throw new UnsupportedOperationException("not implemented: DFS-032");
+            return Files.newDirectoryStream(folder);
         }
 
         @Override
         public BasicFileAttributes attributes(Path path) throws IOException {
-            throw new UnsupportedOperationException("not implemented: DFS-032");
+            return Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
         }
     };
 

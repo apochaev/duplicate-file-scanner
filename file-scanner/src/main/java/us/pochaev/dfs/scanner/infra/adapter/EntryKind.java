@@ -45,6 +45,15 @@ enum EntryKind {
      * {@link #DIRECTORY}; {@code isRegularFile()} is {@link #REGULAR_FILE}; anything else is {@link #SPECIAL_FILE}.
      */
     static EntryKind of(BasicFileAttributes attrs) {
-        throw new UnsupportedOperationException("not implemented: DFS-032");
+        if (attrs.isSymbolicLink()) {
+            return SYMLINK;
+        }
+        if (attrs.isOther()) {
+            return attrs.isDirectory() ? SPECIAL_DIRECTORY : SPECIAL_FILE;
+        }
+        if (attrs.isDirectory()) {
+            return DIRECTORY;
+        }
+        return attrs.isRegularFile() ? REGULAR_FILE : SPECIAL_FILE;
     }
 }

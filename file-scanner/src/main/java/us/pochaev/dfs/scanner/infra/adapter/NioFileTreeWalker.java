@@ -55,23 +55,24 @@ public final class NioFileTreeWalker implements FileTreeWalker {
 
         @Override
         public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-            if (!dir.equals(root) && attrs.isOther()) {
-                return emit(skipped(dir, SkipReason.SPECIAL_FILE, "reparse point or special directory"),
-                        FileVisitResult.SKIP_SUBTREE);
+            if (!dir.equals(root) && EntryKind.of(attrs) == EntryKind.SPECIAL_DIRECTORY) {
+                EntryKind kind = EntryKind.SPECIAL_DIRECTORY;
+                return emit(skipped(dir, kind.reason(), kind.detail()), FileVisitResult.SKIP_SUBTREE);
             }
             return emit(new WalkEvent.DirectoryEntered(dir), FileVisitResult.CONTINUE);
         }
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-            if (attrs.isSymbolicLink()) {
-                return emit(skipped(file, SkipReason.SYMLINK, "symbolic link"), FileVisitResult.CONTINUE);
+            EntryKind kind = EntryKind.of(attrs);
+            if (kind == EntryKind.SYMLINK) {
+                return emit(skipped(file, kind.reason(), kind.detail()), FileVisitResult.CONTINUE);
             }
-            if (attrs.isRegularFile()) {
+            if (kind == EntryKind.REGULAR_FILE) {
                 FileEntry entry = new FileEntry(file, attrs.size(), attrs.lastModifiedTime().toInstant());
                 return emit(new WalkEvent.FileFound(entry), FileVisitResult.CONTINUE);
             }
-            return emit(skipped(file, SkipReason.SPECIAL_FILE, "not a regular file"), FileVisitResult.CONTINUE);
+            return emit(skipped(file, EntryKind.SPECIAL_FILE.reason(), EntryKind.SPECIAL_FILE.detail()), FileVisitResult.CONTINUE);
         }
 
         @Override

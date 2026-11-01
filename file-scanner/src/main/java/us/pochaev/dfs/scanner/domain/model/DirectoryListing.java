@@ -12,5 +12,7 @@ import java.util.List;
 public record DirectoryListing(Path folder, List<DirectoryEntry> entries) {
 
     public DirectoryListing {
+        java.util.Objects.requireNonNull(folder, "folder");
+        entries = List.copyOf(entries);
     }
 }

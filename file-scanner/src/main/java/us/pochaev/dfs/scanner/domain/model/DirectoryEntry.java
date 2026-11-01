@@ -19,6 +19,12 @@ public sealed interface DirectoryEntry {
     record FileItem(String name, Path path, long size, Instant lastModified) implements DirectoryEntry {
 
         public FileItem {
+            java.util.Objects.requireNonNull(name, "name");
+            java.util.Objects.requireNonNull(path, "path");
+            java.util.Objects.requireNonNull(lastModified, "lastModified");
+            if (size < 0) {
+                throw new IllegalArgumentException("size must not be negative: " + size);
+            }
         }
     }
 
@@ -26,6 +32,9 @@ public sealed interface DirectoryEntry {
     record FolderItem(String name, Path path, Instant lastModified) implements DirectoryEntry {
 
         public FolderItem {
+            java.util.Objects.requireNonNull(name, "name");
+            java.util.Objects.requireNonNull(path, "path");
+            java.util.Objects.requireNonNull(lastModified, "lastModified");
         }
     }
 
@@ -37,6 +46,10 @@ public sealed interface DirectoryEntry {
     record SkippedItem(String name, Path path, SkipReason reason, String detail) implements DirectoryEntry {
 
         public SkippedItem {
+            java.util.Objects.requireNonNull(name, "name");
+            java.util.Objects.requireNonNull(path, "path");
+            java.util.Objects.requireNonNull(reason, "reason");
+            java.util.Objects.requireNonNull(detail, "detail");
         }
     }
 }
