@@ -1,7 +1,7 @@
 ---
 id: DFS-041
 title: Add the scan screen to start, follow and cancel scans
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: none
