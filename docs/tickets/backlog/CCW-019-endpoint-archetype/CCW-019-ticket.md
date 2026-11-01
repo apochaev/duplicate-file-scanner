@@ -1,7 +1,7 @@
 ---
 id: CCW-019
 title: Add the endpoint archetype
-status: in-progress
+status: in-review
 type: feature
 scope: [docs]
 archetype: none
@@ -130,10 +130,10 @@ Feature: Endpoint archetype
 
 ## Definition of done
 
-- [ ] Each scenario checked as the note above the scenarios says, recorded in `verification.md` as mechanical or by reading
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests), with the throwaway AC-4 files removed
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] Each scenario checked as the note above the scenarios says, recorded in `verification.md` as mechanical or by reading
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests), with the throwaway AC-4 files removed
+- [x] No files changed outside the paths listed under Touches
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 
