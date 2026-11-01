@@ -298,4 +298,30 @@ class ScannerAutoConfigurationTest {
                     us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift.class).size());
         });
     }
+
+    @Test
+    @DisplayName("DFS-034.AC-10 The autoconfiguration provides one working VerifyPlanContent bean")
+    void providesVerifyPlanContentBean() throws java.io.IOException {
+        DeletionPlan plan = driftPlan(driftScan());
+        runner().run(context -> {
+            us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent bean = context.getBean(us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent.class);
+            assertEquals(1, context.getBeansOfType(us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent.class).size());
+            us.pochaev.dfs.scanner.domain.model.VerifyReport report = ((Result.Success<us.pochaev.dfs.scanner.domain.model.VerifyReport>) assertInstanceOf(Result.Success.class, bean.verify(plan, e -> { }, () -> false))).value();
+            assertEquals(1, report.checks().size());
+            assertEquals(us.pochaev.dfs.scanner.domain.model.OperationCheck.Outcome.IDENTICAL, report.checks().get(0).outcome());
+        });
+    }
+
+    @Test
+    @DisplayName("DFS-034.AC-10 An app's own VerifyPlanContent bean replaces the default")
+    void appVerifyPlanContentReplacesDefault() throws java.io.IOException {
+        DeletionPlan plan = driftPlan(driftScan());
+        us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent mine = (p, l, c) -> new Result.Success<>(new us.pochaev.dfs.scanner.domain.model.VerifyReport(p.id(), List.of(), false, ""));
+        // exercise the factory first: it is the default the bean backs off from
+        assertInstanceOf(Result.Success.class, ScannerFactories.verifyPlanContent().verify(plan, e -> { }, () -> false));
+        runner().withBean("myVerifyPlanContent", us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent.class, () -> mine).run(context -> {
+            assertSame(mine, context.getBean(us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent.class));
+            assertEquals(1, context.getBeansOfType(us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent.class).size());
+        });
+    }
 }

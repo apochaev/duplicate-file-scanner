@@ -5,3 +5,6 @@
 - Real code: records/interfaces, constructors, `ScannerFactories.verifyPlanContent()`, `ScannerAutoConfiguration.verifyPlanContent()` bean.
 - `:file-scanner:compileJava :scanner-spring:compileJava` green. module-info unchanged. Expected breakage: none.
 - Expected commit: `feat(file-scanner): design plan content verify stubs [DFS-034]` (orchestrator commits).
+
+## Tests phase (attempt 1)
+Wrote VerifyPlanContentServiceTest, NioContentComparatorTest, 2 ScannerAutoConfigurationTest tests, test-plan.md. All fail with the stub exception. Expected commit: test(file-scanner): add plan content verify tests [DFS-034]

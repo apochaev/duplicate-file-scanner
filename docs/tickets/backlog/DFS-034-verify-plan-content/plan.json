@@ -12,10 +12,36 @@
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 28,
+          "wallClockSeconds": 306,
+          "outcome": "passed",
+          "note": "PASS touches DFS-034: 15 changed files, all inside touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-034-verify-plan-content/DFS-034-ticket.md",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/design.md",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/learnings.md",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/plan.json",
+        "docs/tickets/backlog/DFS-034-verify-plan-content/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/VerifyPlanContentService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/OperationCheck.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/VerifyEvent.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/VerifyListener.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/VerifyReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/VerifyPlanContent.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioContentComparator.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ContentComparator.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "bd29b264e63dc2dd75aed306ca215af65c820e23"
     },
     {
       "id": "tests",
@@ -23,7 +49,7 @@
       "after": [
         "design"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
@@ -54,7 +80,7 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
