@@ -1,15 +1,104 @@
 {
   "ticket": "DFS-048",
-  "archetype": {"name": "endpoint", "version": 2},
+  "archetype": {
+    "name": "endpoint",
+    "version": 2
+  },
   "branch": "tickets/DFS-048-overlaps-api",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-048-overlaps-api",
   "state": "running",
   "phases": [
-    {"id": "design", "agent": "architect", "after": [], "status": "pending", "runs": [], "artifacts": [], "commit": null},
-    {"id": "tests", "agent": "test-author", "after": ["design"], "status": "pending", "runs": [], "artifacts": [], "commit": null},
-    {"id": "implement", "agent": "implementer", "after": ["tests"], "status": "pending", "runs": [], "artifacts": [], "commit": null},
-    {"id": "verify", "agent": "verifier", "after": ["implement"], "status": "pending", "runs": [], "artifacts": [], "commit": null}
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 24,
+          "wallClockSeconds": 504,
+          "outcome": "passed",
+          "note": "PASS touches DFS-048: 14 changed files, all inside touches; turns counted as the agent's tool uses"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-048-overlaps-api/DFS-048-ticket.md",
+        "docs/tickets/backlog/DFS-048-overlaps-api/design.md",
+        "docs/tickets/backlog/DFS-048-overlaps-api/learnings.md",
+        "docs/tickets/backlog/DFS-048-overlaps-api/plan.json",
+        "docs/tickets/backlog/DFS-048-overlaps-api/progress.md",
+        "server/frontend/openapi.json",
+        "server/src/main/java/us/pochaev/dfs/server/result/FolderPairView.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/FolderSummaryView.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/OverlapController.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/OverlapIndex.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/OverlapState.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/PairPage.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/PairSideView.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/SummaryPage.java"
+      ],
+      "commit": "62afd5dbb9b3dba3a916483d742c1f5286ae10e4"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "pending",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 14,
+          "wallClockSeconds": 263,
+          "outcome": "failed-gate",
+          "note": "red passed (35 of 35 fail with the stub's exception); FAIL traceability DFS-048: 2 problems; - AC-10: no test display name starts with DFS-048.AC-10; - AC-11: no test display name starts with DFS-048.AC-11"
+        }
+      ],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    }
   ],
-  "gates": [{"after": "done", "status": "pending"}],
-  "defects": []
+  "gates": [
+    {
+      "after": "done",
+      "status": "pending"
+    }
+  ],
+  "defects": [
+    {
+      "id": 1,
+      "phase": "tests",
+      "route": "test-author",
+      "summary": "traceability: no test for AC-10 (the ticket names it a JUnit test in OverlapApiTest) or AC-11 (DFS-047 tested its docs criterion the same way)",
+      "status": "open"
+    }
+  ]
 }
