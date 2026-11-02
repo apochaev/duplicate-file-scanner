@@ -47,6 +47,8 @@ final class SelfTest {
         }
         cases++;
         problems.addAll(JsonSelfTest.run());
+        cases++; // the catch-up cases, in code like the JSON ones: see CatchUpSelfTest (CCW-021)
+        problems.addAll(CatchUpSelfTest.run());
         problems.addAll(coverage(root, claimed));
 
         if (!problems.isEmpty()) return Verdict.fail("selftest", "", problems);

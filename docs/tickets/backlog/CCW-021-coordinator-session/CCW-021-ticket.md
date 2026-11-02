@@ -1,7 +1,7 @@
 ---
 id: CCW-021
 title: Add a coordinator session that catches up from git
-status: ready
+status: in-progress
 type: feature
 scope: [docs, build]
 archetype: none
