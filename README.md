@@ -21,6 +21,8 @@ A sample can only rule files out. Every reported duplicate is confirmed by a ful
 
 ## Usage
 
+Inside the repo, use `dfs.bat` (or the `java -jar` line below): it rebuilds the CLI from source before every run, which suits development. To run DFS from any folder without the source tree, install it once and use the installed `dfs` command; see [Installing outside the repo](#installing-outside-the-repo).
+
 ### Windows: `dfs.bat`
 
 `dfs.bat` builds the CLI, then runs it with the arguments you give it:
@@ -72,6 +74,30 @@ Summary: 2 sets, 4 files, 45 B reclaimable, 0 skipped, 0 excluded
 ### JSONL report
 
 One JSON object per line, in this order: a `scan` header (`schemaVersion`, the scanned roots, the settings, start and finish times), a `folder` line per folder with its direct file count and bytes, a `set` line per duplicate set (each copy path an object with `path` and `modified`), a `skipped` line per skipped path, and a `summary` line. This holds everything an analysis tool needs to work out which folders overlap; `tools/analysis/overlaps.sql` does that in DuckDB. `schemaVersion` is currently 2 and goes up only for breaking changes, so readers should ignore fields and line types they do not know.
+
+## Installing outside the repo
+
+Build both start scripts, the CLI's `dfs` and the server's `dfs-server`:
+
+```sh
+./gradlew :cli:installBootDist :server:installBootDist
+```
+
+This writes `cli/build/install/dfs-boot` and `server/build/install/dfs-server-boot`, each with a `bin` folder (`dfs` and `dfs.bat`, `dfs-server` and `dfs-server.bat`) and a `lib` folder. Then:
+
+1. **Copy** both folders out of the repo, for example on Windows:
+
+   ```bat
+   robocopy cli\build\install\dfs-boot C:\Users\<user>\Apps\dfs\cli /MIR
+   robocopy server\build\install\dfs-server-boot C:\Users\<user>\Apps\dfs\server /MIR
+   ```
+
+2. **Add both `bin` folders to your user `PATH`** (`...\Apps\dfs\cli\bin` and `...\Apps\dfs\server\bin`).
+3. **Set your user `JAVA_HOME` to a Java 25.** The scripts use `JAVA_HOME` before `PATH`, so an older Java on `PATH` does not matter once it is set; without it, an older Java fails with `UnsupportedClassVersionError`.
+
+Open a new terminal, then run `dfs D:\Photos E:\Backup --format=text` or `dfs-server` from any folder.
+
+**Updating:** pull, run the two `installBootDist` tasks again and repeat the copy. Stop a running `dfs-server` first: Windows locks its jar while it runs, and the copy fails.
 
 ## Building and testing
 

@@ -18,6 +18,8 @@ dependencies {
 
 application {
     mainClass = "us.pochaev.dfs.cli.Main"
+    // installBootDist writes bin/dfs and bin/dfs.bat beside the server's dfs-server (DFS-043 decision 2).
+    applicationName = "dfs"
     // The scanner calls native code on Windows (DFS-026): :cli:run and the start scripts allow it.
     applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
 }
@@ -29,11 +31,16 @@ tasks.bootJar {
     }
 }
 
-// NativeAccessTest reads the bootJar's manifest from the path in system property dfs.bootJar.
+// NativeAccessTest reads the bootJar's manifest (dfs.bootJar); LaunchScriptTest runs the installed start script
+// (dfs.installDir, DFS-043 decision 3).
 val bootJarFile = tasks.bootJar.flatMap { it.archiveFile }
+val installDir = layout.buildDirectory.dir("install/dfs-boot")
 tasks.test {
-    dependsOn(tasks.bootJar)
+    dependsOn(tasks.bootJar, tasks.named("installBootDist"))
     jvmArgumentProviders.add(CommandLineArgumentProvider {
-        listOf("-Ddfs.bootJar=" + bootJarFile.get().asFile.absolutePath)
+        listOf(
+            "-Ddfs.bootJar=" + bootJarFile.get().asFile.absolutePath,
+            "-Ddfs.installDir=" + installDir.get().asFile.absolutePath,
+        )
     })
 }

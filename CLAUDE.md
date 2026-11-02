@@ -27,6 +27,7 @@ Run from the repo root (`./gradlew` works in Git Bash; use `gradlew.bat` in cmd/
 ./gradlew :server:bootRun                         # start the local server; open the URL it logs
 ./gradlew :server:bootJar                         # server/build/libs/dfs-server.jar
 ./gradlew :server:installBootDist                 # server/build/install/dfs-server-boot/bin/dfs-server(.bat)
+./gradlew :cli:installBootDist                    # cli/build/install/dfs-boot/bin/dfs(.bat); README: installing outside the repo
 ./gradlew :server:npmTest                         # the Angular unit tests (Vitest) alone
 ./gradlew :server:updateOpenApi                   # rewrite server/frontend/openapi.json after changing a controller
 ./gradlew :server:bootRun --args=--server.port=8080   # frontend development: the server on a fixed port, then

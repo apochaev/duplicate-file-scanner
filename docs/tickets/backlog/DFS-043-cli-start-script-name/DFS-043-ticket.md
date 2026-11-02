@@ -1,7 +1,7 @@
 ---
 id: DFS-043
 title: Name the CLI start script dfs and document installing outside the repo
-status: ready
+status: in-review
 type: build
 scope: [cli, docs]
 archetype: none
@@ -103,11 +103,11 @@ Feature: CLI start script name and installing outside the repo
 
 ## Definition of done
 
-- [ ] The AC-1 and AC-2 scenarios are automated tests in `LaunchScriptTest` and pass; AC-3 and AC-4 are checked by reading
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] Manually: `./gradlew :cli:installBootDist`, then `cli/build/install/dfs-boot/bin/dfs.bat <fixture copy in a temp folder> --format=text` prints a report (never a real drive)
-- [ ] `verification.md` opens with the product owner review, one verdict per criterion
+- [x] The AC-1 and AC-2 scenarios are automated tests in `LaunchScriptTest` and pass; AC-3 and AC-4 are checked by reading (2 tests, 0 failures; README and CLAUDE.md read, see verification.md)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests) (2026-11-01, worktree: 556 JUnit tests, 3 skipped, Vitest 21, 0 failures)
+- [x] No files changed outside the paths listed under Touches (`git status`: the four Touches paths plus this ticket's folder)
+- [x] Manually: `./gradlew :cli:installBootDist`, then `cli/build/install/dfs-boot/bin/dfs.bat <fixture copy in a temp folder> --format=text` prints a report (never a real drive) (2 sets, 4 files, 45 B reclaimable on a scratchpad fixture copy)
+- [x] `verification.md` opens with the product owner review, one verdict per criterion
 
 ## Open questions
 
