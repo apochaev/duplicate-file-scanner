@@ -3,8 +3,18 @@ package us.pochaev.dfs.scannerspring;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import us.pochaev.dfs.scanner.domain.factory.PlanExecutionUseCases;
 import us.pochaev.dfs.scanner.domain.factory.PlanVerifyUseCases;
+import us.pochaev.dfs.scanner.domain.model.ExecutionConfig;
+import us.pochaev.dfs.scanner.domain.model.ExecutionListener;
+import us.pochaev.dfs.scanner.domain.model.PlanExecutionId;
+import us.pochaev.dfs.scanner.domain.model.ScanResult;
+import us.pochaev.dfs.scanner.domain.usecases.command.CancelPlanExecution;
+import us.pochaev.dfs.scanner.domain.usecases.command.StartPlanExecution;
+import us.pochaev.dfs.scanner.domain.usecases.query.GetPlanExecutionResult;
+import us.pochaev.dfs.scanner.domain.usecases.query.GetPlanExecutionStatus;
 import us.pochaev.dfs.scanner.domain.factory.ScanUseCases;
 import us.pochaev.dfs.scanner.domain.factory.ScannerFactories;
 import us.pochaev.dfs.scanner.domain.model.DeletionPlan;
@@ -49,6 +59,7 @@ import java.util.concurrent.Executors;
  * started through an app's own {@code StartScan} is unknown to the autoconfigured {@code GetScanStatus}.
  */
 @AutoConfiguration
+@EnableConfigurationProperties(ExecutionProperties.class)
 public class ScannerAutoConfiguration {
 
     /**
@@ -208,6 +219,78 @@ public class ScannerAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public GetPlanVerifyResult getPlanVerifyResult(PlanVerifyUseCases useCases) {
+        return useCases.result()::result;
+    }
+
+    /**
+     * The plan execution settings from {@code dfs.execution.*} (DFS-051 decision 10). Building it reads properties
+     * only; nothing is created on disk until a run starts (decision 13). An app may declare its own.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ExecutionConfig executionConfig(ExecutionProperties properties) {
+        return properties.toConfig();
+    }
+
+    /**
+     * Virtual threads, one per plan execution (DFS-051 decision 10), separate from the scan and plan verify executors.
+     * Closed with {@code shutdownNow} like them; a run interrupted that way stops between files at worst mid-compare,
+     * never mid-rename (the manifest says which). An app supplies its own by declaring a bean named
+     * {@code planExecutionExecutor}.
+     */
+    @Bean(destroyMethod = "shutdownNow")
+    @ConditionalOnMissingBean(name = "planExecutionExecutor")
+    public ExecutorService planExecutionExecutor() {
+        return Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    /**
+     * Takes the executor by the name {@code planExecutionExecutor}, never by type. All four plan execution ports come
+     * from this one set, so they share one job store.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public PlanExecutionUseCases planExecutionUseCases(
+            @Qualifier("planExecutionExecutor") Executor planExecutionExecutor, ExecutionConfig executionConfig) {
+        return ScannerFactories.planExecutionUseCases(planExecutionExecutor, executionConfig);
+    }
+
+    /** {@code StartPlanExecution} has two methods, so an anonymous class delegating both, as for {@link StartScan}. */
+    @Bean
+    @ConditionalOnMissingBean
+    public StartPlanExecution startPlanExecution(PlanExecutionUseCases useCases) {
+        StartPlanExecution start = useCases.start();
+        return new StartPlanExecution() {
+            @Override
+            public Result<PlanExecutionId> start(ScanResult scan, DeletionPlan plan) {
+                return start.start(scan, plan);
+            }
+
+            @Override
+            public Result<PlanExecutionId> start(ScanResult scan, DeletionPlan plan, ExecutionListener listener) {
+                return start.start(scan, plan, listener);
+            }
+        };
+    }
+
+    /** A method reference, an instance of {@code CancelPlanExecution} alone. */
+    @Bean
+    @ConditionalOnMissingBean
+    public CancelPlanExecution cancelPlanExecution(PlanExecutionUseCases useCases) {
+        return useCases.cancel()::cancel;
+    }
+
+    /** A method reference, an instance of {@code GetPlanExecutionStatus} alone. */
+    @Bean
+    @ConditionalOnMissingBean
+    public GetPlanExecutionStatus getPlanExecutionStatus(PlanExecutionUseCases useCases) {
+        return useCases.status()::status;
+    }
+
+    /** A method reference, an instance of {@code GetPlanExecutionResult} alone. */
+    @Bean
+    @ConditionalOnMissingBean
+    public GetPlanExecutionResult getPlanExecutionResult(PlanExecutionUseCases useCases) {
         return useCases.result()::result;
     }
 }

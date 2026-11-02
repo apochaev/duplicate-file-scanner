@@ -2,7 +2,11 @@ package us.pochaev.dfs.scanner.domain.factory;
 
 import us.pochaev.dfs.scanner.application.CheckPlanDriftService;
 import us.pochaev.dfs.scanner.application.ListDirectoryService;
+import us.pochaev.dfs.scanner.application.PlanExecutionService;
 import us.pochaev.dfs.scanner.application.PlanVerifyService;
+import us.pochaev.dfs.scanner.domain.model.ExecutionConfig;
+import us.pochaev.dfs.scanner.infra.adapter.JsonLinesManifestWriter;
+import us.pochaev.dfs.scanner.infra.adapter.NioQuarantineDeleter;
 import us.pochaev.dfs.scanner.application.PreviewDeletionPlanService;
 import us.pochaev.dfs.scanner.application.ScanPipeline;
 import us.pochaev.dfs.scanner.application.ScanService;
@@ -112,5 +116,26 @@ public final class ScannerFactories {
                 new VerifyPlanContentService(new NioFileAttributesReader(), new NioContentComparator()),
                 new InMemoryJobStore<>(), executor);
         return new PlanVerifyUseCases(service, service, service, service);
+    }
+
+    /**
+     * Builds a fresh, independent set of the plan execution use cases (DFS-051 decision 10), all four backed by one
+     * service and one in-memory job store, on the NIO attributes reader, the NIO content comparator (1 MiB chunks), the
+     * NIO quarantine deleter (with {@code config}'s quarantine anchors) and the JSON Lines manifest writer. Runs go on
+     * {@code executor}, used as given. Nothing is created on disk until a run starts: the manifest folder and each
+     * quarantine folder are created on first use (decision 13).
+     *
+     * @param executor runs every run started through the returned {@link PlanExecutionUseCases#start}
+     * @param config   the manifest folder and quarantine anchors
+     * @return a new set whose ports share job state with each other and with no other set
+     * @throws NullPointerException if an argument is null
+     */
+    public static PlanExecutionUseCases planExecutionUseCases(Executor executor, ExecutionConfig config) {
+        Objects.requireNonNull(executor, "executor");
+        Objects.requireNonNull(config, "config");
+        PlanExecutionService service = new PlanExecutionService(new NioFileAttributesReader(),
+                new NioContentComparator(), new NioQuarantineDeleter(config.quarantineAnchors()),
+                new JsonLinesManifestWriter(), new InMemoryJobStore<>(), executor, config);
+        return new PlanExecutionUseCases(service, service, service, service);
     }
 }

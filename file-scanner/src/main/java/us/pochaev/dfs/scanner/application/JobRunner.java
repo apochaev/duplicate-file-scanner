@@ -83,12 +83,22 @@ final class JobRunner<I, P, T> {
         } catch (RejectedExecutionException e) {
             String failure = e.getClass().getName() + ": " + e.getMessage();
             markFailed(id, failure, true);
-            return new Result.Failure<>(ErrorCode.EXECUTOR_REJECTED, "executor rejected the plan verify: " + failure);
+            return new Result.Failure<>(ErrorCode.EXECUTOR_REJECTED, rejectionMessage(failure));
         } catch (RuntimeException e) {
             markFailed(id, e.getClass().getName() + ": " + e.getMessage(), true);
             throw e;
         }
         return new Result.Success<>(id);
+    }
+
+    /**
+     * The {@code EXECUTOR_REJECTED} message, naming no particular use case (DFS-051 decision 7c, DFS-042.L-3):
+     * {@code "executor rejected the task: " + failure}.
+     *
+     * @param failure {@code <exception class name>: <message>} of the rejection
+     */
+    static String rejectionMessage(String failure) {
+        throw new UnsupportedOperationException("not implemented: DFS-051");
     }
 
     private void markFailed(I id, String failure, boolean queuedToo) {
