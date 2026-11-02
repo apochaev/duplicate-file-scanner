@@ -150,10 +150,10 @@
           "attempt": 1,
           "model": "opus",
           "effort": "medium",
-          "turns": 29,
-          "wallClockSeconds": 219,
+          "turns": 32,
+          "wallClockSeconds": 309,
           "outcome": "passed",
-          "note": "PASS consistency DFS-051: plan.json parses; state running agrees with ticket status in-progress; two invocations as one run: the first stopped at the verifier's 20-turn cap with nothing written (29 tool uses, 219 s, about 148k subagent tokens); resumed with SendMessage to write verification.md and tick done-items; the resumed invocation's counts not reported yet"
+          "note": "PASS consistency DFS-051: plan.json parses; state running agrees with ticket status in-progress; two invocations as one run: the first stopped at the verifier's 20-turn cap with nothing written (29 tool uses, 219 s, about 148k subagent tokens); resumed with SendMessage to write verification.md and tick done-items; both invocations together: 32 tool uses, 309 s, about 156k subagent tokens"
         }
       ],
       "artifacts": [
