@@ -256,13 +256,13 @@ Feature: Overlaps API
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes, except AC-11 (read), recorded in `verification.md`
-- [ ] Each test's `@DisplayName` starts with its criterion ID (`DFS-048.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
-- [ ] Every endpoint-archetype checklist item is addressed in `design.md` or marked not applicable with a reason
-- [ ] No test this ticket adds uses `Thread.sleep` (AC-8 waits on latches)
-- [ ] Started by hand once on Windows: a real folder scanned, then the three endpoints exercised with `curl` (summaries with and without `under`, pairs under a folder, one pair, one refused pair), the server log free of warnings and errors
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above is an automated test and passes, except AC-11 (read), recorded in `verification.md`
+- [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-048.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
+- [x] Every endpoint-archetype checklist item is addressed in `design.md` or marked not applicable with a reason
+- [x] No test this ticket adds uses `Thread.sleep` (AC-8 waits on latches)
+- [x] Started by hand once on Windows: a real folder scanned, then the three endpoints exercised with `curl` (summaries with and without `under`, pairs under a folder, one pair, one refused pair), the server log free of warnings and errors (verifier, 2026-11-02: `bootRun` on Windows 10, scratch tree plus the worktree's `docs/` as a real folder, 206 files under `docs/tickets`; summaries with and without `under`, pairs under `Old`, pair Photos/Backup, pair across roots, refused NESTED_FOLDERS, MISSING_FOLDER, PATH_OUTSIDE_ROOTS, 403 without cookie; no WARN/ERROR line in the log)
+- [x] No files changed outside the paths listed under Touches
 
 ## Open questions
 

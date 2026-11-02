@@ -85,10 +85,28 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 43,
+          "wallClockSeconds": 187,
+          "outcome": "passed",
+          "note": "PASS green DFS-048: build and tests green: 657 passed, 3 skipped; PASS disabled DFS-048: no @Disabled tests in the 2 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-048: none of the 2 test files of the tests phase changed since 9b2e6476; PASS touches DFS-048: 19 changed files, all inside touches; PASS stubs DFS-048: no stub markers in 162 production files; PASS traceability DFS-048: 11 criteria traced through 15 scenarios to tests and test-plan.md; PASS consistency DFS-048: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-048-overlaps-api/plan.json",
+        "docs/tickets/backlog/DFS-048-overlaps-api/progress.md",
+        "server/src/main/java/us/pochaev/dfs/server/result/OverlapController.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/OverlapIndex.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/OverlapState.java"
+      ],
+      "commit": "1739600a43017345bff05507bdfa8f094383f8b7"
     },
     {
       "id": "verify",
