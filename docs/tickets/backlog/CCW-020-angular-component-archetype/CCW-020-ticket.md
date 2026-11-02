@@ -137,7 +137,7 @@ The full ID of each criterion is `CCW-020.AC-<n>`.
 - **AC-7** The gate's source checks see the frontend: `.ts` and `.html` files under `server/frontend/src` (minus `src/app/api`) are production unless named `*.spec.ts`, which are tests; the stubs check finds a marker in a component; the disabled check finds `it.skip`, `xit`, `describe.skip` and `xdescribe`; the freeze check counts a changed `*.spec.ts` as a test change.
 - **AC-8** `RedCheck` also runs `npmTest`, and `Build` treats a failed `npmTest` like a failed `test` task, so failing Vitest tests are judged by their reports rather than reported as a broken build.
 - **AC-9** The gate's self-test has a case for each change in AC-6 to AC-8, its report cases built from a real Vitest test case, and passes.
-- **AC-10** A throwaway component with a stub, and a spec whose test is named `CCW-020.AC-1 ...` inside a `describe`, passes the gate end to end on an unmerged branch: `red` sees the story test failing with its stub, then, once implemented, `green`, `stubs` and `traceability` pass.
+- **AC-10** On an unmerged branch, a throwaway ticket (`PROBE-001`, outside both ID sequences, three criteria) with a stubbed component and a spec of story tests named `PROBE-001.AC-n ...` inside a `describe`, one per way of reaching a stub (AC-13), passes the gate end to end: `red` sees every story test failing with its stub, then, once implemented, `green`, `stubs` and `traceability` pass. (Amended 2026-11-01 while implementing: traceability checks a whole ticket, so the throwaway run needs its own ticket rather than one CCW-020 criterion.)
 - **AC-11** `dry-run.md` traces each of DFS-041's decisions and each surprise met building DFS-037, DFS-038 and DFS-041 (listed in Context) to the checklist item or guide section that would have raised it, with none left untraced and no checklist item unused.
 - **AC-12** `docs/design/ui.md` D7 says the component archetype exists (CCW-020) and that the gates now run the Vitest tests; `docs/design/story-orchestration.md` and the `tickets` skill give the TypeScript stub and test-name forms beside the Java ones; the `endpoint` archetype's "does not apply" points to `component`.
 - **AC-13** With `server/frontend/src/testing/stub-surfacing.ts` (`provideStubSurfacing()`, `settle(fixture)`), a stub reached from a template, from a click handler through a Material harness, or in a generated-client Promise callback makes its test fail with the stub's `Error` itself; the gate counts files under a frontend's `src/testing/` as test code.
@@ -209,9 +209,9 @@ Feature: Angular component archetype
 
   @AC-10
   Scenario: A stubbed component goes red then green through the real gate
-    Given an unmerged branch with a stubbed component and a spec with describe("Thing") and it("CCW-020.AC-1 ...")
+    Given an unmerged branch with a throwaway ticket PROBE-001, a stubbed component and a spec with describe("Probe") and it("PROBE-001.AC-1 ...") to it("PROBE-001.AC-3 ...")
     When the red check runs
-    Then it passes with the story test failing on its stub
+    Then it passes with every story test failing on its stub
     When the component is implemented
     Then the green, stubs and traceability checks pass
     And the branch is deleted without merging
@@ -234,7 +234,7 @@ Feature: Angular component archetype
     Given a stubbed component whose stubs are reached from its template, from a click handler and in a generated-client Promise callback
     And a spec with one story test per way, using provideStubSurfacing() and settle(fixture)
     When the tests run
-    Then each story test fails with type Error and message "not implemented: CCW-020"
+    Then each story test fails with type Error and the stub's message "not implemented: <ID>"
     And the gate counts server/frontend/src/testing/stub-surfacing.ts as a test file
 ```
 

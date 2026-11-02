@@ -13,7 +13,8 @@ import java.util.function.Predicate;
 /**
  * Finds the project's Java and Kotlin sources: {@code <module>/src/main/**} is production, {@code src/test/**} is test.
  * Also the Angular frontend's TypeScript and templates (CCW-020): {@code .ts} and {@code .html} files under a
- * {@code src} folder outside {@code src/main} and {@code src/test}, where {@code *.spec.ts} is test and the rest
+ * {@code src} folder outside {@code src/main} and {@code src/test}, where {@code *.spec.ts} and the shared test
+ * helpers under {@code src/testing} are test and the rest
  * production, except the generated client under {@code src/app/api}.
  * Tooling and generated folders are skipped, so the fixtures under {@code tools/} never look like production code.
  * Nothing is skipped below a {@code src} folder: a package may be called {@code tools} or {@code build}.
@@ -43,15 +44,15 @@ final class Sources {
     }
 
     static Map<String, String> production(Path root) {
-        return scan(root, rel -> (isJvmSource(rel) && under(rel, "src/main/")) || (isFrontend(rel) && !isSpec(rel)));
+        return scan(root, rel -> (isJvmSource(rel) && under(rel, "src/main/")) || (isFrontend(rel) && !isFrontendTest(rel)));
     }
 
     static Map<String, String> test(Path root) {
-        return scan(root, rel -> (isJvmSource(rel) && under(rel, "src/test/")) || (isFrontend(rel) && isSpec(rel)));
+        return scan(root, rel -> (isJvmSource(rel) && under(rel, "src/test/")) || (isFrontend(rel) && isFrontendTest(rel)));
     }
 
     static boolean isTestPath(String path) {
-        return under(path, "src/test/") || (isFrontend(path) && isSpec(path));
+        return under(path, "src/test/") || (isFrontend(path) && isFrontendTest(path));
     }
 
     private static boolean isJvmSource(String rel) {
@@ -64,8 +65,9 @@ final class Sources {
                 && !under(rel, "src/main/") && !under(rel, "src/test/") && !under(rel, GENERATED_CLIENT);
     }
 
-    private static boolean isSpec(String rel) {
-        return rel.endsWith(".spec.ts");
+    /** A frontend test file: a spec, or a shared test helper under {@code src/testing} (CCW-020 decision 7). */
+    private static boolean isFrontendTest(String rel) {
+        return rel.endsWith(".spec.ts") || under(rel, "src/testing/");
     }
 
     /** Whether {@code rel} lies under a folder path {@code segment} (ending in a slash), at the top or deeper. */
