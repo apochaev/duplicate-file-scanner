@@ -50,6 +50,7 @@ Filed 2026-11-01 at the user's request, from the session `dfs-product`.
 6. **An autorun ticket the coordinator makes ready is handed to its owner as an unblock** (2026-11-01, follows from decision 3). The coordinator cannot launch (decision 1), so after its `ready` commit of an `autorun: true` ticket whose `depends_on` are all `done`, it sends the owner message 2's form (`<ID> ready in <sha>: unblocks <ID> (<lane>, autorun); run the launch check and start the lowest`), which the owner handles under "Receiving an unblock" (launch point 3). A ticket made ready with a dependency still open needs no message beyond message 1's form; the owner's `done` on the dependency launches it as today.
 7. **Pull, not push; advisory discovery folded in; the work split in three** (2026-11-01, re-refinement, decided by the user). Decisions 2 and 4 are superseded: no session reports ticket changes to the coordinator; the coordinator reads the state itself. Reason: long-lived main sessions dominate this project's token use (dfs-backend about 260k context per call, pipeline subagents under 10% of the total; `advisory/consultations/consult-001-question.md`), and every message wakes a session for a full turn at its current context size. The goal is parallel sessions optimized for token usage and speed, so sessions are disposable: state lives on disk and a session rebuilds it cheaply after a `/clear`. ADV-001-r1's advisory discovery (`advisory/proposals/ADV-001-r1.md`, contract in `advisory/README.md`) is the same mechanism and is built here. Split: CCW-021 builds the coordinator role and the catch-up (this ticket); CCW-022 adds the context-hygiene rules (where sessions clear and compact, the "safe to /clear" lines), depending on this ticket; CCW-023 wraps the contextual Codex consultation (ADV-002), depending on this ticket.
 8. **The catch-up script prints the full picture at session start and only changes on each prompt** (2026-11-01). At session start (startup, resume, `/clear`, compact) it prints, in a few lines: every worktree with its ticket ID and branch; each worktree's `plan.json` state and phase; uncommitted ticket and `plan.json` files in `main` and in every worktree. On each user prompt it prints only what changed since its last print, and nothing when nothing changed. Its cursor is a snapshot of branch tips (`git for-each-ref refs/heads`) plus a fingerprint of each tree's `git status --porcelain` limited to `docs/tickets/` and `plan.json` files; ticket IDs come from commit subjects' `[ID]` brackets and the changed paths. It prints IDs, branches, states and paths, never ticket content. Not changes-only with one commit cursor (a cleared session would get no picture, and one commit cannot mark "seen" across branches that move independently) and not the full picture on every prompt (adds context on turns where nothing changed, against ADV-001's "no pending advice means no added context").
+9. **Pending advice is listed at session start only** (2026-11-01, the user's choice). At session start the catch-up also lists every advisory proposal (`advisory/proposals/ADV-NNN-rN.md`; any other file, such as a `*.tmp`, is ignored) that has no response in `advisory/responses/` or a response with status `received`, one line each: ID, revision, title, path. An older revision is flagged `superseded by rM` when `ADV-NNN-rM.md` exists with M greater than N, cross-checked against the newer file's `Supersedes:` line; the coordinator records a `superseded` response for it instead of evaluating it. A response file that is not valid JSON is reported by path. Nothing advisory is printed on a prompt, and the advisory part keeps no cursor: it is read fresh at every start. Enough because sessions clear often (CCW-022 clears the coordinator after every refine), so a proposal waits at most until the next start; this is ADV-001's "next processing point". Not new proposals on each prompt (a cursor for little gain) and not pending proposals on every prompt (a line on every turn while advice waits).
 
 ## Acceptance criteria
 
@@ -65,6 +66,7 @@ The full ID of each criterion is `CCW-021.AC-<n>`.
 - **AC-8** No file under `.claude/`, `CLAUDE.md` or `docs/design/` still states the old message rule ("exactly three moments", "no others", "only when a request is filed"), and `CLAUDE.md`'s Tickets paragraph names the coordinator and message 4.
 - **AC-9** At session start (startup, resume, `/clear`, compact) in the coordinator, the catch-up prints every worktree with its ticket ID, branch and `plan.json` state and phase, and every uncommitted ticket or `plan.json` file in `main` and every worktree, as IDs, branches, states and paths without ticket content.
 - **AC-10** On each user prompt in the coordinator, the catch-up prints only the branch commits and uncommitted ticket or `plan.json` changes made since its last print, and prints nothing when nothing changed.
+- **AC-11** At session start in the coordinator, the catch-up lists each advisory proposal with no response or a `received` one (ID, revision, title, path), flags an older revision `superseded by rM` when a newer revision exists, ignores files not named `ADV-NNN-rN.md`, reports an invalid response file by path, and prints nothing advisory on a prompt.
 
 ## Scenarios
 
@@ -120,6 +122,26 @@ Feature: Coordinator session
     Given the catch-up printed at session start and nothing changed since
     When the user sends the next prompt in dfs-product
     Then the catch-up prints nothing
+
+  @AC-11
+  Scenario: [run] Pending advice is listed at session start
+    Given advisory/proposals/ holds ADV-001-r1.md with a received response, ADV-002-r1.md with an evaluated response, and a scratch ADV-003-r1.md with no response
+    When the user runs /clear in dfs-product
+    Then the catch-up lists ADV-001 r1 and ADV-003 r1 with their titles and paths
+    And it does not list ADV-002 r1
+
+  @AC-11
+  Scenario: [run] A superseded revision is flagged
+    Given a scratch ADV-003-r2.md whose Supersedes line names ADV-003-r1
+    When the user runs /clear in dfs-product
+    Then the catch-up flags ADV-003 r1 "superseded by r2" and lists ADV-003 r2 as pending
+
+  @AC-11
+  Scenario: [run] Temporary files and prompts stay silent
+    Given a scratch ADV-004-r1.md.tmp in advisory/proposals/
+    When the user runs /clear and then sends a prompt in dfs-product
+    Then the session-start list does not mention the .tmp file
+    And the prompt's catch-up prints nothing advisory
 
   @AC-3
   Scenario: [run] A pipeline stop reaches the coordinator
