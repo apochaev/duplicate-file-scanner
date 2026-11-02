@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-051-execute-plan-into-quarantine",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-051-execute-plan-into-quarantine",
-  "state": "running",
+  "state": "awaiting-approval",
   "phases": [
     {
       "id": "design",
@@ -144,10 +144,24 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 29,
+          "wallClockSeconds": 219,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-051: plan.json parses; state running agrees with ticket status in-progress; two invocations as one run: the first stopped at the verifier's 20-turn cap with nothing written (29 tool uses, 219 s, about 148k subagent tokens); resumed with SendMessage to write verification.md and tick done-items; the resumed invocation's counts not reported yet"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/DFS-051-ticket.md",
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/learnings.md",
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/verification.md"
+      ],
+      "commit": "c095771a263e97c7dd989763d1c20674bafb416e"
     }
   ],
   "gates": [
