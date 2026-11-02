@@ -1,0 +1,27 @@
+.scan-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.folders {
+  width: 100%;
+}
+
+.size {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.form-error,
+.size-error {
+  margin: 0;
+  color: var(--mat-sys-error, #b3261e);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}

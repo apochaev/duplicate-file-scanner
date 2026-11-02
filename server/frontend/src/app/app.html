@@ -4,7 +4,8 @@
 <main>
   @switch (connection()) {
     @case ('connected') {
-      <p>Connected</p>
+      <p class="connection">Connected</p>
+      <app-scan-screen />
     }
     @case ('disconnected') {
       <p>Open the link printed in the console</p>

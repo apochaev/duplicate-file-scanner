@@ -1,0 +1,12 @@
+<app-scan-form (started)="started($event)" />
+<section class="scans" aria-label="Scans">
+  <h2>Scans</h2>
+  @if (loadError()) {
+    <p class="load-error" role="alert">The scans could not be loaded; reload the page</p>
+  }
+  @for (scan of scans(); track scan.id) {
+    <app-scan-row [entry]="scan" />
+  } @empty {
+    <p class="no-scans">No scans in this server run yet</p>
+  }
+</section>

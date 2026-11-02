@@ -5,4 +5,11 @@ h1 {
 
 main {
   padding: 1rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.connection {
+  margin: 0 0 1rem;
+  color: var(--mat-sys-on-surface-variant, #555);
 }

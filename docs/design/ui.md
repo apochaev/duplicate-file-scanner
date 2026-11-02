@@ -17,7 +17,7 @@ Explore overlaps, duplicate sets and folders; build a deletion plan; preview and
 
 ### U2. Scans start from the UI
 
-A start screen takes folders and settings, shows live progress from the scanner's `ScanEvent`s, then opens the result. Goes through the core ports: `StartScan` → `GetScanStatus`/`GetScanResult` → `PreviewDeletionPlan` on that scan ID. Results live in memory (the in-memory `ScanRepository`) and are lost on restart. Saving and reopening scans (the JSONL export as storage format) is a later ticket behind `ScanRepository`, with no UI redesign. The API (DFS-040): `POST /api/scans` starts a scan, `GET /api/scans` lists this server run's scans, `GET /api/scans/{id}` and `POST /api/scans/{id}/cancel` read and cancel one, and `GET /api/scans/{id}/events` streams a throttled `ScanProgress` (Server-Sent Events, at most every 250 ms) until the scan ends; the screen itself is DFS-041.
+A start screen takes folders and settings, shows live progress from the scanner's `ScanEvent`s, then opens the result. Goes through the core ports: `StartScan` → `GetScanStatus`/`GetScanResult` → `PreviewDeletionPlan` on that scan ID. Results live in memory (the in-memory `ScanRepository`) and are lost on restart. Saving and reopening scans (the JSONL export as storage format) is a later ticket behind `ScanRepository`, with no UI redesign. The API (DFS-040): `POST /api/scans` starts a scan, `GET /api/scans` lists this server run's scans, `GET /api/scans/{id}` and `POST /api/scans/{id}/cancel` read and cancel one, and `GET /api/scans/{id}/events` streams a throttled `ScanProgress` (Server-Sent Events, at most every 250 ms) until the scan ends. The screen (DFS-041) is one page without a router: folders typed as absolute paths and kept as chips, the minimum size and the default exclusion in a Settings panel, Start; below, this server run's scans newest first, a running one with live progress (phase, counts, a hashing bar) and Cancel, a finished one with its totals or failure. Its stream is read with the browser's `EventSource`, the one call outside the generated client.
 
 ### U3. Navigation: a folder tree plus Overlaps and Sets tabs
 
@@ -146,7 +146,7 @@ These are `file-scanner` tickets, in the scanner session's area. The UI side is 
 2. `server` subproject skeleton, ArchUnit guard, launch scripts (U11, D5).
 3. Security: token, cookie, `Host`/`Origin` checks (U10).
 4. Angular skeleton built by Gradle, generated API client (U9, D2), plus the CCW archetypes (D7).
-5. Scan screen: start, progress over SSE, list, cancel (U2, D3).
+5. Scan screen: start, progress over SSE, list, cancel (U2, D3). Done: DFS-040 (API), DFS-041 (screen).
 6. Overlap analysis in Java (U5b).
 7. Tree plus Overlaps and Sets tabs (U3).
 8. Folder detail view (U4), once `ListDirectory` exists.

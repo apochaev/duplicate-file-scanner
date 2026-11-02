@@ -1,0 +1,59 @@
+<section class="scan-form" aria-label="Start a scan">
+  <mat-form-field class="folders" subscriptSizing="dynamic">
+    <mat-label>Folders to scan</mat-label>
+    <mat-chip-grid #folderGrid aria-label="Folders to scan">
+      @for (folder of folders(); track folder) {
+        <mat-chip-row (removed)="remove(folder)">
+          {{ folder }}
+          <button matChipRemove [attr.aria-label]="'Remove ' + folder">✕</button>
+        </mat-chip-row>
+      }
+      <input
+        placeholder="Type or paste an absolute path, then press Enter"
+        [matChipInputFor]="folderGrid"
+        (matChipInputTokenEnd)="add($event)"
+      />
+    </mat-chip-grid>
+  </mat-form-field>
+  @if (error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  <mat-expansion-panel class="settings">
+    <mat-expansion-panel-header>
+      <mat-panel-title>Settings</mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="size">
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>Minimum file size</mat-label>
+        <input
+          matInput
+          class="min-size"
+          type="number"
+          min="0"
+          [value]="sizeText()"
+          (input)="sizeText.set($any($event.target).value)"
+        />
+      </mat-form-field>
+      <mat-button-toggle-group
+        aria-label="Unit of the minimum file size"
+        [value]="unitFactor()"
+        (change)="unitFactor.set($event.value)"
+      >
+        @for (unit of units; track unit.label) {
+          <mat-button-toggle [value]="unit.factor">{{ unit.label }}</mat-button-toggle>
+        }
+      </mat-button-toggle-group>
+    </div>
+    @if (minSize() === null) {
+      <p class="size-error" role="alert">At least 1 byte</p>
+    }
+    <mat-checkbox [checked]="defaultExcludes()" (change)="defaultExcludes.set($event.checked)">
+      Skip .DS_Store and ._* files
+    </mat-checkbox>
+  </mat-expansion-panel>
+
+  <div class="actions">
+    <button mat-flat-button type="button" [disabled]="!canStart()" (click)="start()">Start</button>
+  </div>
+</section>
