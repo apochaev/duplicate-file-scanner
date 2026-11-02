@@ -153,3 +153,17 @@ These are `file-scanner` tickets, in the scanner session's area. The UI side is 
 9. Plan editor and preview (U6, U7.1, D4), once DFS-022 exists.
 10. Drift check and content verify (U7.2, U7.3).
 11. Show in Explorer, then inline previews (U8).
+
+## Milestones
+
+Planning labels for the suggested order above, set 2026-11-01. Ticket IDs are the backlog's; the steps refer to the list above.
+
+| Milestone | Goal | Steps | Tickets |
+|---|---|---|---|
+| **M-1** | See the results of a scan: folder tree, Overlaps and Sets tabs | 6, 7 | DFS-046 overlap analysis in Java (M-1.1), DFS-047 result API: tree and sets (M-1.2), DFS-048 overlaps API (M-1.3), DFS-049 result screen: tree and Sets tab (M-1.4), DFS-050 Overlaps tab (M-1.5) |
+| **M-2** | Inspect a folder: duplicate, unique, new-since-scan marks | 8 | not yet filed |
+| **M-3** | Build and check a plan: rules, preview, drift, verify, export as JSON | 9, 10 | not yet filed |
+| **M-4** | Show in Explorer | 11 | not yet filed |
+| **M-5** | Execute a plan: quarantine, manifest, undo, purge (U1's next version; needs the core executor first) | | not yet filed |
+
+M-1 runs in two tracks, DFS-046 → DFS-048 and DFS-047 → DFS-049, joining at DFS-050. DFS-045 (disk usage view) builds on DFS-047 and DFS-049.
