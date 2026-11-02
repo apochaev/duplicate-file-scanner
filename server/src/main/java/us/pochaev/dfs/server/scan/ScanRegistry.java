@@ -92,9 +92,17 @@ public class ScanRegistry {
 
     /**
      * The per-scan state of one {@code kind}, built by {@code build} from the scan's {@link ScanResult} the first time
-     * it is asked for and kept beside the scan's entry for this server run (DFS-047 decision 6). Thread-safe: for one
-     * scan and kind, {@code build} runs at most once, and concurrent callers get the same instance. DFS-048 adds the
+     * it is asked for and kept beside the scan's entry for this server run (DFS-047 decision 6). DFS-048 adds the
      * overlap analysis as a second kind.
+     * <p>
+     * Thread-safe, without holding any map lock during a build: each scan keeps one memoized
+     * {@code CompletableFuture} per kind, created once with {@code putIfAbsent}. The caller whose future went in runs
+     * {@code build} on its own thread, outside the map; concurrent callers for the same scan and kind wait on that
+     * future and get the same instance, so a successful build runs once. A build may itself call
+     * {@code completedState} for <em>another</em> kind of the same scan; asking for its own kind would wait on itself.
+     * When {@code build} throws, the future completes exceptionally and is removed (only if it is still the mapped
+     * one), so a failed build is never cached and the next request retries it; the builder and every caller waiting
+     * on that build get the build's exception, unwrapped.
      *
      * @param id    the scan ID as the client sent it, possibly malformed
      * @param kind  the state's type, the key it is kept under
@@ -102,6 +110,7 @@ public class ScanRegistry {
      * @return {@code Success} with the state; {@code Failure(UNKNOWN_SCAN)} for an unknown or malformed ID;
      *         {@code Failure(SCAN_NOT_COMPLETED)} with the core's message (naming the status) for a scan that is not
      *         COMPLETED, in which case nothing is built or kept
+     * @throws RuntimeException the exception {@code build} threw (to the builder and to every caller waiting on it)
      */
     public <T> Result<T> completedState(String id, Class<T> kind, Function<ScanResult, ? extends T> build) {
         throw new UnsupportedOperationException("not implemented: DFS-047");

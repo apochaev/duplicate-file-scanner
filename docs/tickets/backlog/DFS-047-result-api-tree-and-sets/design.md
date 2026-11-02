@@ -2,7 +2,7 @@
 
 ## Summary
 
-Two GET endpoints in the new feature package `us.pochaev.dfs.server.result`, tag `results` (generated `ResultsService`): `GET /api/scans/{id}/folders[?parent=]` (`listFolders`) and `GET /api/scans/{id}/sets[?under=&page=&size=]` (`listSets`). No stream, nothing state-changing. State: a per-scan `ResultIndex`, built at most once by the new `ScanRegistry.completedState(id, kind, build)` and kept beside the scan's entry for this server run. The error types move to the shared `us.pochaev.dfs.server.api`, and the advice now covers all of `us.pochaev.dfs.server`. `openapi.json` was regenerated: 299 lines added, none removed.
+Two GET endpoints in the new feature package `us.pochaev.dfs.server.result`, tag `results` (generated `ResultsService`): `GET /api/scans/{id}/folders[?parent=]` (`listFolders`) and `GET /api/scans/{id}/sets[?under=&page=&size=]` (`listSets`). No stream, nothing state-changing. State: a per-scan `ResultIndex`, built by the new `ScanRegistry.completedState(id, kind, build)` and kept beside the scan's entry for this server run, as one memoized future per kind (created with `putIfAbsent`, built outside the map's lock, shared by concurrent callers, removed when the build fails so the next request retries). The error types move to the shared `us.pochaev.dfs.server.api`, and the advice now covers all of `us.pochaev.dfs.server`. `openapi.json` was regenerated: 299 lines added, none removed.
 
 - AC-1 roots and one level: `ResultController.listFolders` → `ResultIndex.roots` / `children` (`FolderNode`)
 - AC-2 rolled-up totals, empty subtrees left out: `listFolders` → `ResultIndex.of` (the rollup) and `children`
@@ -15,7 +15,7 @@ Two GET endpoints in the new feature package `us.pochaev.dfs.server.result`, tag
 - AC-9 spec, client, moved types: the spec half passes from this phase on; the story test also calls both endpoints, which reach the stubs (see the open design notes)
 - AC-10 docs: checked by reading, recorded in `verification.md`; no stub
 
-Look closely at: the two new 400 codes `RELATIVE_PATH` and `INVALID_PAGE` and the 403 code `PATH_OUTSIDE_ROOTS`; `ScanRegistry` becoming `public` (one public method); an unparsable path answering `403` (open design notes). Checklist items not applicable: 9 (streams), 10 in part (the only asynchronous state is QUEUED), 11 (GET only). Expected breakage: none.
+Look closely at: the two new 400 codes `RELATIVE_PATH` and `INVALID_PAGE` and the 403 code `PATH_OUTSIDE_ROOTS`; `ScanRegistry` becoming `public` (one public method); `completedState`'s memoized future per kind, which no criterion tests (open design notes); an unparsable path answering `403` (open design notes). Checklist items not applicable: 9 (streams), 10 in part (the only asynchronous state is QUEUED), 11 (GET only). Expected breakage: none.
 
 ## Endpoints
 
@@ -48,12 +48,14 @@ Paths: `Path.toString()` of the scan's own paths, so backslashes on Windows (dec
 ## State and threads
 
 - **What:** one `ResultIndex` per COMPLETED scan: the folder tree as a map from `Path` to node, holding direct and rolled-up totals and the sorted child lists, plus the sets mapped to `DuplicateSetView`s and sorted once (reclaimable desc, size desc, digest asc). It is immutable once built.
-- **Where:** `ScanRegistry`'s private `Tracked` record gains a `ConcurrentHashMap<Class<?>, Object>` of per-scan state, keyed by kind, so DFS-048 can add the overlap analysis as a second kind.
+- **Where:** `ScanRegistry`'s private `Tracked` record gains a `ConcurrentHashMap<Class<?>, CompletableFuture<?>>` of per-scan state, one memoized future per kind, so DFS-048 can add the overlap analysis (up to about 10 s on a large scan) as a second kind.
 - **How:** `completedState(id, kind, build)`:
   - an unknown or malformed ID gives `Failure(UNKNOWN_SCAN)`;
-  - a kind already present is returned without calling the core;
-  - otherwise it calls `GetScanResult.result`, passes `Failure(SCAN_NOT_COMPLETED)` and its message through (nothing is kept), and builds with `computeIfAbsent`, so the build runs at most once per scan and kind and concurrent callers get the same instance.
-- **Threads:** the build runs on the first requesting Tomcat thread. Reads come from any thread. The core never calls back into this state, so nothing has to exist before a core call.
+  - a kind whose future is already mapped is awaited and its value returned, without calling the core;
+  - otherwise it calls `GetScanResult.result` and passes `Failure(SCAN_NOT_COMPLETED)` and its message through (nothing is mapped);
+  - on `Success` it creates a future and maps it with `putIfAbsent`. If another caller's future is already there, it awaits that one instead. If its own went in, it runs `build` on its own thread, outside the map (never inside `computeIfAbsent`, which would hold the bin lock for the whole build and throw "Recursive update" when a build asks for another kind), and completes the future;
+  - when `build` throws, the future completes exceptionally and is removed with `remove(kind, future)`, so a failed build is never cached and the next request retries it; the builder and every caller waiting on it get the build's exception, unwrapped from `CompletionException` (a `500`, as any unexpected exception).
+- **Threads:** the build runs on the first requesting Tomcat thread; concurrent requests for the same scan and kind block on its future and get the same instance, so a successful build runs once. No map lock is held during a build. A build may call `completedState` for another kind of the same scan; for its own kind it would wait on itself (a programming error, not guarded). Reads come from any thread. The core never calls back into this state, so nothing has to exist before a core call.
 - **Lifetime:** this server run; there is no eviction (out of scope).
 - **Ordering:** folder lists by `name` case-insensitively, then by path; sets as above.
 
@@ -89,7 +91,7 @@ Streams: none.
 5. **The API records:** see "API records". All components required, none nullable, times as `Instant`. No field changes meaning over time: the endpoints answer only for a COMPLETED scan.
 6. **The spec:** tag `results` and operation IDs `listFolders`/`listSets`. Only `/api/**` (`springdoc.paths-to-match`, unchanged), server URL unchanged. Regenerated in this phase. The spec assertions for AC-9 belong in the story test only next to an endpoint call (open design notes); `OpenApiSpecTest` already compares the whole spec.
 7. **The generated client:** a `ResultsService` with two Promise methods, no stream method, and no existing frontend code affected. `src/app/api/` regeneration is untouched.
-8. **State kept in `server`:** see "State and threads". The per-scan index lives in `ScanRegistry` for this server run, is built thread-safely at most once, and needs nothing created before a core call.
+8. **State kept in `server`:** see "State and threads". The per-scan index lives in `ScanRegistry` for this server run as a memoized future per kind: built thread-safely once, outside the map's lock, with a failed build removed so the next request retries. It needs nothing created before a core call.
 9. **Streams:** not applicable: no stream endpoint.
 10. **Asynchronous states in tests:** a COMPLETED scan comes from a poll with a deadline (`ScanApiTest.awaitTerminal`'s pattern), a QUEUED one from `HoldingExecutorConfiguration`. There are no timing assertions.
 11. **The dev proxy:** not applicable: GET only and no stream, so the proxy needs nothing beyond what `/api/scans` already proves (archetype extra done-item applies only to state-changing methods and streams).
@@ -104,6 +106,7 @@ None.
 - **Advice scope:** the advice uses `basePackages = "us.pochaev.dfs.server"`, the root package, rather than listing `scan` and `result` (decision 7 says "covering both packages"), so DFS-048 and later feature packages need no edit. Only the API controllers throw `ApiException`.
 - **An unparsable path** (`Path.of` throws `InvalidPathException`, for example `C:/a<b` on Windows) answers `403 PATH_OUTSIDE_ROOTS`. Such a string cannot name a path inside a root, and this adds no code beyond decision 5.
 - **A non-integer `page` or `size`** (`?page=x`) gets Spring's own `400` without an `ApiError` body. No criterion covers it, and taking them as `String` would make the spec show strings.
+- **`completedState`'s memoization is not under any criterion.** Decision 6 (thread-safe, built once) and the gate's rule that a failed build is not cached have no `@AC` scenario, so `ResultApiTest` does not test them and no criterion's test needs them to go red. The implementer follows the contract in "State and threads"; review checks it. A test, if one is ever wanted, would call `ScanRegistry.completedState` directly with fake use cases: a `build` that throws once, then succeeds, shows the retry (two calls to `build`, the second result a `Success`); several threads released together by a latch, with a `build` that counts its calls and waits on a second latch, show one call and the same instance for all.
 - **Roots are resolved real paths** (`ScanResult.roots`). Tests should use `T.toRealPath()` for `<T>`, both in queries and in expected paths; on macOS the temp folder is a symlink.
 - **AC-8 and AC-9 cannot fail red by their refusal or spec assertions alone:** the security filter and the regenerated spec both work before any implementation. Each test therefore also makes a request that reaches a stub:
   - AC-8: the same request with C and the right `Host`, answering `200`;
