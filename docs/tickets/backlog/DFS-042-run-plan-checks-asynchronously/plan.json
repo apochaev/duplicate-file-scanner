@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-042-run-plan-checks-asynchronously",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-042-run-plan-checks-asynchronously",
-  "state": "running",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -117,10 +117,25 @@
       "after": [
         "implement"
       ],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 14,
+          "wallClockSeconds": 149,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-042: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/DFS-042-ticket.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/learnings.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/plan.json",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/verification.md"
+      ],
+      "commit": "b0ee44520b0233e60d9239729a7ff6b466786df2"
     }
   ],
   "gates": [
@@ -130,7 +145,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": []
