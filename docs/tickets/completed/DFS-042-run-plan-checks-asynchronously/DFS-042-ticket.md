@@ -1,7 +1,7 @@
 ---
 id: DFS-042
 title: Run plan checks asynchronously with status and cancel
-status: in-review
+status: done
 type: feature
 scope: [file-scanner]
 archetype: use-case
@@ -23,7 +23,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # DFS-042: Run plan checks asynchronously with status and cancel
