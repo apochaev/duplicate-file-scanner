@@ -1,7 +1,7 @@
 ---
 id: CCW-021
 title: Add a coordinator session that is told of every ticket change
-status: ready
+status: draft
 type: docs
 scope: [docs]
 archetype: none
