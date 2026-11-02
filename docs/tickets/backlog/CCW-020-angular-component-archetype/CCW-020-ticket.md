@@ -1,7 +1,7 @@
 ---
 id: CCW-020
 title: Add the Angular component archetype
-status: in-progress
+status: in-review
 type: feature
 scope: [build]
 archetype: none
@@ -261,11 +261,11 @@ Feature: Angular component archetype
 
 ## Definition of done
 
-- [ ] Each scenario checked as the note above the scenarios says, recorded in `verification.md` as mechanical or by reading
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests), and the gate's self-test passes
-- [ ] No files changed outside the paths listed under Touches; AC-10's throwaway branch deleted unmerged
+- [x] Each scenario checked as the note above the scenarios says, recorded in `verification.md` as mechanical or by reading
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests), and the gate's self-test passes
+- [x] No files changed outside the paths listed under Touches; AC-10's throwaway branch deleted unmerged
 - [ ] The CCW-018 harness-merge message sent to every other running session in `lanes.md`
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 
