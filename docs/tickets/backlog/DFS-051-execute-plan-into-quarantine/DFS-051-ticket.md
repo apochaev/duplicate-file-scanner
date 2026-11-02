@@ -1,7 +1,7 @@
 ---
 id: DFS-051
 title: Execute a deletion plan into quarantine
-status: in-progress
+status: in-review
 type: feature
 scope: [file-scanner, build]
 archetype: use-case
