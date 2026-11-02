@@ -160,6 +160,101 @@
         }
       }
     },
+    "/api/scans/{id}/summaries" : {
+      "get" : {
+        "tags" : [ "overlaps" ],
+        "summary" : "A page of a completed scan's folder summaries, ranked by bytes with a copy elsewhere; with under, those strictly inside it, plus under's own summary",
+        "operationId" : "listSummaries",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "under",
+          "in" : "query",
+          "description" : "An absolute folder inside one of the scan's roots; without it, every summary",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "The page, from 0",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Summaries per page, 1 to 500",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The page; past the end it has no items and the same total",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SummaryPage"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The path is not absolute (RELATIVE_PATH); or page below 0 or size outside 1 to 500 (INVALID_PAGE)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "The path lies outside every root of the scan (PATH_OUTSIDE_ROOTS)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such scan in this server run (UNKNOWN_SCAN)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The scan is not COMPLETED (SCAN_NOT_COMPLETED)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/scans/{id}/sets" : {
       "get" : {
         "tags" : [ "results" ],
@@ -214,6 +309,184 @@
           },
           "400" : {
             "description" : "The path is not absolute (RELATIVE_PATH); or page below 0 or size outside 1 to 500 (INVALID_PAGE)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "The path lies outside every root of the scan (PATH_OUTSIDE_ROOTS)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such scan in this server run (UNKNOWN_SCAN)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The scan is not COMPLETED (SCAN_NOT_COMPLETED)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scans/{id}/pairs" : {
+      "get" : {
+        "tags" : [ "overlaps" ],
+        "summary" : "A page of a completed scan's folder pairs, ranked by bytes with a copy; with under, those with at least one side inside it, whatever the other side",
+        "operationId" : "listPairs",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "under",
+          "in" : "query",
+          "description" : "An absolute folder inside one of the scan's roots; without it, every pair",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "The page, from 0",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Pairs per page, 1 to 500",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The page; past the end it has no items and the same total",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PairPage"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The path is not absolute (RELATIVE_PATH); or page below 0 or size outside 1 to 500 (INVALID_PAGE)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "The path lies outside every root of the scan (PATH_OUTSIDE_ROOTS)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such scan in this server run (UNKNOWN_SCAN)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The scan is not COMPLETED (SCAN_NOT_COMPLETED)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scans/{id}/pair" : {
+      "get" : {
+        "tags" : [ "overlaps" ],
+        "summary" : "The overlap of two folders inside a completed scan's roots, each counted recursively, a before b by path whatever order they were given in",
+        "operationId" : "getPair",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "a",
+          "in" : "query",
+          "description" : "An absolute folder inside one of the scan's roots; required, checked by the server (MISSING_FOLDER)",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "b",
+          "in" : "query",
+          "description" : "Another absolute folder inside one of the scan's roots, neither equal to a nor containing or inside it; required, checked by the server (MISSING_FOLDER)",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The pair; a folder the scan holds nothing for is a side of zeros",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FolderPairView"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "a or b absent (MISSING_FOLDER); The path is not absolute (RELATIVE_PATH); or the folders are equal or one contains the other (NESTED_FOLDERS)",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -491,6 +764,79 @@
         },
         "required" : [ "authenticated" ]
       },
+      "FolderSummaryView" : {
+        "type" : "object",
+        "properties" : {
+          "folder" : {
+            "type" : "string",
+            "description" : "The folder's path as the scan holds it (Path.toString(): backslashes on Windows)"
+          },
+          "totalFiles" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Counted files in the whole subtree"
+          },
+          "totalBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Their summed size in bytes"
+          },
+          "filesWithCopyElsewhere" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Files in the subtree with a different physical copy of their content outside the subtree; each file counts once"
+          },
+          "bytesWithCopyElsewhere" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Their summed size in bytes"
+          },
+          "internalDuplicateFiles" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "For each content with k >= 2 physical copies inside the subtree, k - 1"
+          },
+          "internalBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "For each such content, (k - 1) x size"
+          }
+        },
+        "required" : [ "bytesWithCopyElsewhere", "filesWithCopyElsewhere", "folder", "internalBytes", "internalDuplicateFiles", "totalBytes", "totalFiles" ]
+      },
+      "SummaryPage" : {
+        "type" : "object",
+        "properties" : {
+          "folder" : {
+            "type" : "null",
+            "$ref" : "#/components/schemas/FolderSummaryView",
+            "description" : "The summary of the folder given as under; null without under"
+          },
+          "items" : {
+            "type" : "array",
+            "description" : "Ordered by bytesWithCopyElsewhere, then internalBytes, largest first, then folder path",
+            "items" : {
+              "$ref" : "#/components/schemas/FolderSummaryView"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The page asked for, from 0"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The page size asked for, 1 to 500"
+          },
+          "totalItems" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Every matching summary"
+          }
+        },
+        "required" : [ "items", "page", "size", "totalItems" ]
+      },
       "CopyView" : {
         "type" : "object",
         "properties" : {
@@ -578,6 +924,82 @@
           }
         },
         "required" : [ "items", "page", "size", "totalItems", "totalReclaimableBytes" ]
+      },
+      "FolderPairView" : {
+        "type" : "object",
+        "properties" : {
+          "a" : {
+            "$ref" : "#/components/schemas/PairSideView",
+            "description" : "The side whose folder sorts first"
+          },
+          "b" : {
+            "$ref" : "#/components/schemas/PairSideView",
+            "description" : "The side whose folder sorts second"
+          }
+        },
+        "required" : [ "a", "b" ]
+      },
+      "PairPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "description" : "Ordered by the larger bytesWithCopy of the two sides, largest first, then a's folder, then b's folder",
+            "items" : {
+              "$ref" : "#/components/schemas/FolderPairView"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The page asked for, from 0"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The page size asked for, 1 to 500"
+          },
+          "totalItems" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Every matching pair"
+          }
+        },
+        "required" : [ "items", "page", "size", "totalItems" ]
+      },
+      "PairSideView" : {
+        "type" : "object",
+        "properties" : {
+          "folder" : {
+            "type" : "string",
+            "description" : "This side's folder (Path.toString(): backslashes on Windows)"
+          },
+          "filesWithCopy" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Its files with a different physical copy of their content in the other folder; hard links never count"
+          },
+          "totalFiles" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Its counted files"
+          },
+          "bytesWithCopy" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The summed size of filesWithCopy"
+          },
+          "totalBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The summed size of totalFiles"
+          },
+          "full" : {
+            "type" : "boolean",
+            "description" : "True exactly when this side has at least one file and every one of them has a copy in the other folder"
+          }
+        },
+        "required" : [ "bytesWithCopy", "filesWithCopy", "folder", "full", "totalBytes", "totalFiles" ]
       },
       "FolderNode" : {
         "type" : "object",

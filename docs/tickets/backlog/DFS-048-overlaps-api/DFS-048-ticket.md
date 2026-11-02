@@ -1,7 +1,7 @@
 ---
 id: DFS-048
 title: Serve folder summaries and overlap pairs for a finished scan
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: endpoint
@@ -22,7 +22,7 @@ touches:
   - docs/design/ui.md
 blocked_reason:
 created: 2026-11-01
-updated: 2026-11-01
+updated: 2026-11-02
 completed:
 ---
 
