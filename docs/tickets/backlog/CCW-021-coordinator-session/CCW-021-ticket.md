@@ -16,6 +16,7 @@ touches:
   - docs/tickets/lanes.md
   - CLAUDE.md
   - .claude/skills/story/SKILL.md
+  - .claude/settings.json
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-01
@@ -52,6 +53,7 @@ Filed 2026-11-01 at the user's request, from the session `dfs-product`.
 8. **The catch-up script prints the full picture at session start, and nothing at any other time** (2026-11-01, revised the same day by the user). At session start (startup, resume, `/clear`, compact) it prints, in a few lines: every worktree with its ticket ID and branch; each worktree's `plan.json` state and phase; uncommitted ticket and `plan.json` files in `main` and in every worktree. It prints IDs, branches, states and paths, never ticket content, and keeps no state between runs (no cursor). Mid-session the coordinator runs `/tickets list` when it needs fresh state; a gate waiting for the user already reaches them through the `story` skill's push notification. Not changes-only with a commit cursor (a cleared session would get no picture, and one commit cannot mark "seen" across branches) and not the changes on each prompt (first recorded, then dropped: with frequent clears it bought little, and it needed a cursor, a second hook and most of the verification). Can be added later without changing the rest.
 9. **Pending advice is listed at session start only** (2026-11-01, the user's choice). At session start the catch-up also lists every advisory proposal (`advisory/proposals/ADV-NNN-rN.md`; any other file, such as a `*.tmp`, is ignored) that has no response in `advisory/responses/` or a response with status `received`, one line each: ID, revision, title, path. An older revision is flagged `superseded by rM` when `ADV-NNN-rM.md` exists with M greater than N, cross-checked against the newer file's `Supersedes:` line; the coordinator records a `superseded` response for it instead of evaluating it. A response file that is not valid JSON is reported by path. Nothing advisory is printed on a prompt, and the advisory part keeps no cursor: it is read fresh at every start. Enough because sessions clear often (CCW-022 clears the coordinator after every refine), so a proposal waits at most until the next start; this is ADV-001's "next processing point". Not new proposals on each prompt (a cursor for little gain) and not pending proposals on every prompt (a line on every turn while advice waits).
 10. **The session-start hook finds its session by name; lanes stay in `lanes.md`** (2026-11-01). The hook takes the session's name from its own input if Claude Code supplies it there (to check during implementation), otherwise from the environment variable `DFS_SESSION`, set when the session is launched and kept through every `/clear`. It looks the name up in `docs/tickets/lanes.md` and prints the catch-up only when the name maps to `coordinator`; in any other session, or with no name, it prints nothing. With the variable, dfs-product is restarted once after this ticket lands (`$env:DFS_SESSION='dfs-product'; claude -n dfs-product` in PowerShell); the user then keeps sessions running and uses `/clear`, not new launches. The skills keep finding a session's lanes by `ListAgents` and its name. Asked and decided no: carrying each session's lanes in a launch variable (`DFS_LANES`) instead of `lanes.md`. Its premise was that names may be lost on `/clear`, but on 2026-11-01 `ListAgents` still reported "This session is dfs-product" right after a `/clear`; a variable would also make moving a lane a relaunch instead of a one-line edit and make "one owner per lane" uncheckable. Not a rule in the tickets skill to run the script on the first turn after a clear (after a `/clear` the session holds only CLAUDE.md and memory, so nothing would trigger it) and not the hook printing in every session (lane sessions' picture after a clear is CCW-022's to add).
+11. **The coordinator's `/tickets list` runs the same script** (2026-11-01). Besides the session-start hook, the coordinator's `/tickets list` runs the catch-up script and shows its output under the table, so mid-session it sees worktree edits, `plan.json` states and pending advice, which the frontmatter on `main` does not show. The worktree and advisory logic lives only in the script; the skill calls it. No hook on each prompt and no other trigger. Not the session-start hook alone (decision 8 sends the coordinator to `/tickets list` for fresh state, which today shows no worktree edits or `plan.json` states) and not the script in every session's `list` (a lane-session change, CCW-022's open question).
 
 ## Acceptance criteria
 
@@ -69,6 +71,7 @@ The full ID of each criterion is `CCW-021.AC-<n>`.
 - **AC-10 (retired)** On each user prompt in the coordinator, the catch-up prints only the branch commits and uncommitted ticket or `plan.json` changes made since its last print, and prints nothing when nothing changed. Retired 2026-11-01: the catch-up runs only at session start (decision 8, revised).
 - **AC-11** At session start in the coordinator, the catch-up lists each advisory proposal with no response or a `received` one (ID, revision, title, path), flags an older revision `superseded by rM` when a newer revision exists, ignores files not named `ADV-NNN-rN.md`, and reports an invalid response file by path.
 - **AC-12** The session-start hook prints the catch-up only in the session whose name (from the hook's input, or else `DFS_SESSION`) maps to `coordinator` in `lanes.md`, and prints nothing in any other session or when no name is available.
+- **AC-13** In the coordinator, `/tickets list` runs the catch-up script and shows its output (worktrees, `plan.json` states, uncommitted ticket and `plan.json` files, pending advice) under the table; in a lane session `list` is unchanged.
 
 ## Scenarios
 
@@ -135,6 +138,16 @@ Feature: Coordinator session
   Scenario: [run] No name means no output
     Given the hook script is run with no session name in its input and DFS_SESSION unset
     Then it prints nothing and exits with status 0
+
+  @AC-13
+  Scenario: [run] The coordinator's list shows mid-session state
+    Given dfs-product's session started before a lane session ran /tickets start on a ready ticket in a new worktree, leaving the edit uncommitted
+    When /tickets list runs in dfs-product
+    Then the catch-up output under the table names that ticket's worktree and its uncommitted ticket file
+
+  @AC-13
+  Scenario: [read] A lane session's list is unchanged
+    Then the tickets skill runs the catch-up script from list only in the coordinator
 
   @AC-3
   Scenario: [run] A pipeline stop reaches the coordinator
