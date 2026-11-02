@@ -7,3 +7,23 @@ body {
   margin: 0;
   font-family: system-ui, sans-serif;
 }
+
+/* Material's theme names Roboto, which the app never loads (it loads nothing
+   from the internet); use the system font instead (DFS-044). */
+html {
+  --mat-sys-body-large-font: system-ui, sans-serif;
+  --mat-sys-body-medium-font: system-ui, sans-serif;
+  --mat-sys-body-small-font: system-ui, sans-serif;
+  --mat-sys-display-large-font: system-ui, sans-serif;
+  --mat-sys-display-medium-font: system-ui, sans-serif;
+  --mat-sys-display-small-font: system-ui, sans-serif;
+  --mat-sys-headline-large-font: system-ui, sans-serif;
+  --mat-sys-headline-medium-font: system-ui, sans-serif;
+  --mat-sys-headline-small-font: system-ui, sans-serif;
+  --mat-sys-label-large-font: system-ui, sans-serif;
+  --mat-sys-label-medium-font: system-ui, sans-serif;
+  --mat-sys-label-small-font: system-ui, sans-serif;
+  --mat-sys-title-large-font: system-ui, sans-serif;
+  --mat-sys-title-medium-font: system-ui, sans-serif;
+  --mat-sys-title-small-font: system-ui, sans-serif;
+}

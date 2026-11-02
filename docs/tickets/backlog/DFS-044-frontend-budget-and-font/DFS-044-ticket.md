@@ -1,7 +1,7 @@
 ---
 id: DFS-044
 title: Fit the frontend bundle budget and use the system font
-status: ready
+status: in-review
 type: build
 scope: [build]
 archetype: none
@@ -84,10 +84,10 @@ Feature: Frontend build budget and font
 
 ## Definition of done
 
-- [ ] Each scenario checked as the note above the scenarios says, recorded in `verification.md` as mechanical or by hand
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] Each scenario checked as the note above the scenarios says, recorded in `verification.md` as mechanical or by hand
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 
