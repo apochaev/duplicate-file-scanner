@@ -1,7 +1,7 @@
 ---
 id: DFS-041
 title: Add the scan screen to start, follow and cancel scans
-status: in-progress
+status: in-review
 type: feature
 scope: [build]
 archetype: none
@@ -214,11 +214,11 @@ Feature: Scan screen
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests and the Vitest tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] A live run, recorded in `verification.md`: the server on port 8080 with `ng serve` through the proxy, or the built jar: start a scan of a real folder and watch its progress to Completed with its totals; start a larger one and cancel it to Cancelled; a relative path shows its error
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests and the Vitest tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] A live run, recorded in `verification.md`: the server on port 8080 with `ng serve` through the proxy, or the built jar: start a scan of a real folder and watch its progress to Completed with its totals; start a larger one and cancel it to Cancelled; a relative path shows its error
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 
