@@ -354,14 +354,14 @@ Feature: Execute a deletion plan into quarantine
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `design.md` addresses every item of the `use-case` edge-case checklist or marks it not applicable with a one-line reason (decisions 7-11 give the expected dispositions)
-- [ ] No test this ticket adds or changes uses `Thread.sleep`, and no test reads or writes outside a `@TempDir` (the default manifest folder under `${user.home}` is asserted, never written)
-- [ ] The plan verify ports and behavior are unchanged apart from `JobRunner`'s rejection message, and the existing plan verify tests pass (a test asserting the old message is updated by the test-author and named in `design.md`)
-- [ ] `module-info.java` is unchanged and `ModuleExportsTest` stays green
-- [ ] Nothing creates the manifest folder or a `.dfs-quarantine` folder when the CLI or the server starts (decision 13)
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] `design.md` addresses every item of the `use-case` edge-case checklist or marks it not applicable with a one-line reason (decisions 7-11 give the expected dispositions)
+- [x] No test this ticket adds or changes uses `Thread.sleep`, and no test reads or writes outside a `@TempDir` (the default manifest folder under `${user.home}` is asserted, never written)
+- [x] The plan verify ports and behavior are unchanged apart from `JobRunner`'s rejection message, and the existing plan verify tests pass (a test asserting the old message is updated by the test-author and named in `design.md`)
+- [x] `module-info.java` is unchanged and `ModuleExportsTest` stays green
+- [x] Nothing creates the manifest folder or a `.dfs-quarantine` folder when the CLI or the server starts (decision 13)
 
 ## Open questions
 
