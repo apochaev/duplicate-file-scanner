@@ -20,3 +20,15 @@ For the next design attempt. In `ScanRegistry.completedState`, do not build per-
 - `design.md`: the Summary, "State and threads" (Where, How, Threads), checklist item 8, and a new open design note. No criterion covers the memoization, so `ResultApiTest` does not test it; the note says how a direct `ScanRegistry` test could show the retry and the shared build if one is ever wanted.
 - `:server:compileJava` passes. `openapi.json` unchanged (Javadoc only, no rerun of `updateOpenApi` needed).
 - Expected commit: amend-free follow-up, e.g. `docs(server): memoize per-scan state per kind in the DFS-047 design [DFS-047]` (ScanRegistry.java, design.md, progress.md).
+
+## tests (test-author)
+
+- Wrote `server/src/test/java/us/pochaev/dfs/server/ResultApiTest.java` (25 test invocations covering AC-1 to AC-9; AC-10 is by reading) and `test-plan.md`.
+- `./gradlew :server:test --tests "*ResultApiTest"`: all 25 fail with `UnsupportedOperationException: not implemented: DFS-047`, none pass, none skip.
+- Expected commit: `test(server): add result API story tests [DFS-047]` (ResultApiTest.java, test-plan.md, progress.md, learnings.md).
+
+## tests, attempt 2 (test-author)
+
+- The gate failed traceability: no test for AC-10. Added `DFS-047.AC-10 CLAUDE.md's server entry and ui.md U3 and U10 name the two result endpoints` to `ResultApiTest`: calls both endpoints on a completed scan, then checks that CLAUDE.md's `server` entry contains `GET /api/scans/{id}/folders`, `GET /api/scans/{id}/sets` and, after them, `403` and `roots`, and that ui.md's U3 and U10 sections contain both paths. The implementer must write the docs in that form for the test to pass.
+- `./gradlew :server:test --tests "*ResultApiTest"`: all 26 fail with `UnsupportedOperationException: not implemented: DFS-047`. test-plan.md updated.
+- Expected commit unchanged: `test(server): add result API story tests [DFS-047]`.
