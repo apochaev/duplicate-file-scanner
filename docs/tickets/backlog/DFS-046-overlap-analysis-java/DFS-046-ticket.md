@@ -1,7 +1,7 @@
 ---
 id: DFS-046
 title: Compute folder overlaps from a scan result in the server
-status: ready
+status: in-review
 type: feature
 scope: [build]
 archetype: none
@@ -18,7 +18,7 @@ touches:
   - docs/design/folder-overlap-analysis.md
 blocked_reason:
 created: 2026-11-01
-updated: 2026-11-01
+updated: 2026-11-02
 completed:
 ---
 
@@ -234,13 +234,13 @@ Feature: Folder overlap analysis
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes, except AC-12 (read), recorded in `verification.md`
-- [ ] The tests ran red before the implementation; the failing run and the commit it preceded are recorded in `verification.md` (decision 1)
-- [ ] Each test's `@DisplayName` starts with its criterion ID (`DFS-046.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] The measured AC-10 time on the user's machine is recorded in `folder-overlap-analysis.md`
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] Every scenario above is an automated test and passes, except AC-12 (read), recorded in `verification.md` (22 of 22 pass: 17 in `OverlapAnalysisTest`, 1 scale, 4 in `ArchitectureTest`)
+- [x] The tests ran red before the implementation; the failing run and the commit it preceded are recorded in `verification.md` (decision 1) (18 of 22 failed on the stub; tests committed as `c285230`)
+- [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-046.AC-n`) (the parameterized AC-7 cases' names too)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests) (2026-11-02)
+- [x] The measured AC-10 time on the user's machine is recorded in `folder-overlap-analysis.md` (940 ms, 224,349 pairs)
+- [x] No files changed outside the paths listed under Touches (listed in `verification.md`, "Touches")
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 
