@@ -1,6 +1,6 @@
 # Folder overlap analysis
 
-Status: design notes, not scheduled. Settled while refining DFS-030 (2026-10-31), before DFS-030 was re-scoped from "show which folders overlap" to "export a complete scan for analysis". Folder-level analysis moved out of the scanner, to a separate tool or app that reads the scan export. These decisions are kept here for that tool.
+Status: implemented in the `server` subproject by DFS-046 (2026-11-02): the package `us.pochaev.dfs.server.analysis`, entry point `OverlapAnalysis.of(ScanResult)`, with JUnit cases taken from the examples below. The Overlaps API (DFS-048) serves it. These decisions were settled while refining DFS-030 (2026-10-31), before DFS-030 was re-scoped from "show which folders overlap" to "export a complete scan for analysis", and folder-level analysis moved out of the scanner.
 
 ## Why it moved
 
@@ -33,5 +33,5 @@ DFS-030's JSONL export: a `scan` header (roots, settings, start time, schema ver
 
 ## Open
 
-- Scale: pairs grow quadratically with the folders a set spans. Measure on a real export (the 2026-10-31 scan of a 3.1 TB drive: 153,028 files, 8,816 folders).
+- Scale, measured (DFS-046.AC-10, 2026-11-02, the user's Windows machine): pairs grow quadratically with the folders a set spans. A synthetic result the size of the 2026-10-31 scan of a 3.1 TB drive (153,028 files, 8,816 folders), 150,000 files in 9,000 folders with 50,000 sets of two or three copies plus one set of 500 copies in 500 folders, gives 224,349 pairs and 9,091 listed summaries, and `OverlapAnalysis.of` takes 940 ms (budget: 10 s). A real export has not been measured yet.
 - Where the tool lives: settled 2026-10-31, in Java in the planned `server` subproject (`docs/design/ui.md`, U5b). `tools/analysis/overlaps.sql` and `tools/viewer/analysis.js` stay as standalone tools.
