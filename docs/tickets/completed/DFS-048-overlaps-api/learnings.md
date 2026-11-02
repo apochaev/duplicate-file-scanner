@@ -34,11 +34,11 @@
 
 ### DFS-048.L-3: The verifier's "never kill Java processes" leaves no way to stop its own `bootRun`
 
-- Status: proposed
+- Status: applied
 - Impact: shared (touches an agent prompt: `.claude/agents/verifier.md`)
 - Target: `.claude/agents/verifier.md`, line 28
 - Change: reword the rule to "never run `gradlew --stop` or kill a Gradle daemon; to stop a server you started for a by-hand check, kill only the application PID it logged". Alternatively, point to running the built `bootJar` with `java -jar`, whose process is unambiguous (see DFS-047.L-6).
 - Evidence: DFS-048 `learnings.md` "verify / by-hand check": the verifier stopped the server with `taskkill //PID <pid> //F`, which the rule as written (from DFS-031.L-4) forbids.
 - Recurrences: 1 (DFS-048)
 - Recommendation: apply; the rule should keep protecting other sessions' daemons without making a required done-item impossible to clean up.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-047.L-4, DFS-047.L-5 and DFS-048.L-3`

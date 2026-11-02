@@ -56,33 +56,33 @@
 
 ### DFS-047.L-4: verifier.md still caps the verifier at 20 turns
 
-- Status: proposed
+- Status: applied
 - Impact: shared (touches an agent prompt and a skill)
 - Target: `.claude/agents/verifier.md` frontmatter; `.claude/skills/story/SKILL.md`, resume step 6
 - Change: raise `verifier.md`'s `maxTurns` from 20 to 30, matching the endpoint and pipeline-stage archetypes; make step 6 say that an archetype's `maxTurns` cannot be passed at launch (the Agent tool has no turn limit), so the agent's own frontmatter is what binds.
 - Evidence: DFS-047 `plan.json` verify run: stopped at its 20-turn default although `.claude/archetypes/endpoint/archetype.md` says 30, resumed by SendMessage, 24 turns in all. Same cause as DFS-042.L-1, which fixed only `architect.md`; DFS-026.L-7 raised the archetype value, which never applied.
 - Recurrences: 1 (DFS-047)
 - Recommendation: apply.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-047.L-4, DFS-047.L-5 and DFS-048.L-3`
 
 ### DFS-047.L-5: The verifier's launch prompt asked it to write progress.md, which its role forbids
 
-- Status: proposed
+- Status: applied
 - Impact: shared (touches a skill)
 - Target: `.claude/skills/story/SKILL.md`, resume step 6
 - Change: add that a launch prompt asks an agent to write only the files its role allows; the verifier's notes go in `verification.md` and `learnings.md`, never `progress.md`.
 - Evidence: DFS-047 verifier note "The launch prompt and the verifier role disagree about progress.md"; it followed the role. DFS-005.L-5 fixed the same mismatch for `learnings.md`.
 - Recurrences: 1 (DFS-047)
 - Recommendation: apply.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-047.L-4, DFS-047.L-5 and DFS-048.L-3`
 
 ### DFS-047.L-6: Hand runs on Windows: JSON bodies and bootJar
 
-- Status: proposed
+- Status: parked
 - Impact: local
 - Target: `.claude/archetypes/endpoint/archetype.md`, the hand-run done-item
 - Change: show sending a JSON body with `--data-binary @body.json` and forward-slash paths (inline backslash paths produce invalid JSON escapes, a 400 and a WARN), and accept running the built `bootJar` from a scratch folder as well as `bootRun`.
 - Evidence: DFS-047 verifier notes "Hand runs on Windows" and "The hand-run done-item says `bootRun`".
 - Recurrences: 1 (DFS-047)
 - Recommendation: park; minor and seen once.
-- Decision:
+- Decision: parked 2026-11-02 by the user

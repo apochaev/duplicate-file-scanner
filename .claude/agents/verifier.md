@@ -4,7 +4,7 @@ description: Runs after the deterministic gate passes. Reviews the diff against 
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: opus
 effort: medium
-maxTurns: 20
+maxTurns: 30
 ---
 
 # verifier
@@ -25,7 +25,7 @@ Read only:
 4. The diff itself: `git diff` (or `git log -p`) between the stub commit and the current tree, scoped to the ticket's `touches`, the story folder and the test tree.
 5. `progress.md` and `learnings.md` in the story folder.
 
-Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` (which also runs the Vitest tests), `./gradlew test` or `./gradlew :server:npmTest` to re-confirm green, and the `story-gate` checks (for example `java tools/story-gate/StoryGate.java green <TICKET-ID>`) if you want to re-run one. Never use `Bash` to write, move or delete a file inside the repository. To reproduce a real-run done-item, you may create scratch files outside the worktree (a temporary directory) and delete them when done (DFS-026.L-6). Never run `gradlew --stop` or kill Java or Gradle processes: other sessions build in parallel worktrees on the same machine, and stopping the daemons kills their builds. `git worktree remove` works without stopping them (DFS-031.L-4).
+Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` (which also runs the Vitest tests), `./gradlew test` or `./gradlew :server:npmTest` to re-confirm green, and the `story-gate` checks (for example `java tools/story-gate/StoryGate.java green <TICKET-ID>`) if you want to re-run one. Never use `Bash` to write, move or delete a file inside the repository. To reproduce a real-run done-item, you may create scratch files outside the worktree (a temporary directory) and delete them when done (DFS-026.L-6). Never run `gradlew --stop` or kill a Gradle daemon or any process you did not start: other sessions build in parallel worktrees on the same machine, and stopping the daemons kills their builds. `git worktree remove` works without stopping them (DFS-031.L-4). The one exception is a server you started yourself for a by-hand check: stop it by the application PID it logged (on Windows, `taskkill //PID <pid> //F`), or run the built `bootJar` with `java -jar` so its process is unambiguous (DFS-048.L-3).
 
 ## What you may write — and nothing else
 
