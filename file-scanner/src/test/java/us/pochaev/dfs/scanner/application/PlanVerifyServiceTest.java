@@ -581,6 +581,25 @@ class PlanVerifyServiceTest {
         assertTrue(snapshot.failure().contains("pool closed"), snapshot.failure());
     }
 
+    @Test
+    @DisplayName("DFS-051.AC-15 The shared rejection message names no particular use case")
+    void rejectionMessageNamesNoUseCase() {
+        RecordingStore<PlanVerifyId, Job<PlanVerifyProgress, VerifyReport>> store = new RecordingStore<>();
+        FakeReader reader = new FakeReader();
+        PlanVerifyService service = new PlanVerifyService(
+                new VerifyPlanContentService(reader, new FakeComparator(reader)), store, task -> {
+                    throw new RejectedExecutionException("pool closed");
+                });
+
+        Result.Failure<?> failure = failed(service.start(fullPlan()));
+
+        assertEquals(ErrorCode.EXECUTOR_REJECTED, failure.code());
+        String message = failure.message().toLowerCase();
+        assertTrue(message.contains("pool closed"), message);
+        assertTrue(!message.contains("plan verify"), message);
+        assertTrue(!message.contains("plan execution"), message);
+    }
+
     // ---- AC-10 ----
 
     @Test

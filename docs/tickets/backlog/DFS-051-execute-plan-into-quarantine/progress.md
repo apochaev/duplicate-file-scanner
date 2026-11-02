@@ -17,3 +17,10 @@
 - New seam in `JobRunner`: `interface Settled<P, T> { void settled(Job<P, T> job); }` and the stub overload `submit(id, initial, work, settled)` (throws `not implemented: DFS-051`). The three-argument `submit`, `runTask` and plan verify are unchanged.
 - design.md updated: Summary (AC-9 bullet, "Look closely at" item 3), Layer placement, Behavior (start step 6, work steps 1, 6, 7, new settle-hook block), test-author notes, State and transitions, Concurrency, checklist item 4, Stubs.
 - Files: `file-scanner/.../application/JobRunner.java`, `design.md`, this file. `:file-scanner:compileJava` is green. Not committed (orchestrator commits).
+
+## tests (test-author)
+
+- Wrote PlanExecutionServiceTest, PlanExecutionRealThreadTest (application), NioQuarantineDeleterTest, JsonLinesManifestWriterTest (infra.adapter); added the AC-15 test to PlanVerifyServiceTest; added four AC-20 tests and updated the executor-name set in scanner-spring's ScannerAutoConfigurationTest. test-plan.md filled.
+- StoryGate test-phase: PASS (54 story tests red with stubs, 23 criteria traced). The one "other" stub failure is the existing PlanVerifyServiceTest DFS-042.AC-9, which hits the JobRunner.rejectionMessage stub.
+- Both AC-6 symlink tests abort via Assumptions where symlinks cannot be created (likely on this Windows box), so they are skipped, not red, here.
+- Expected commit: `test(file-scanner): add plan execution tests [DFS-051]` (orchestrator commits).
