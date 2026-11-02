@@ -6,3 +6,14 @@
 - Compile is green (file-scanner, scanner-spring, cli, server). cli:test and server:test pass. Current failures: ScannerAutoConfigurationTest.appExecutorReplacesDefault (declared under Expected breakage) and PlanVerifyServiceTest DFS-042.AC-9, which fails directly on the JobRunner stub.
 - Expected commit: `feat(file-scanner): design plan execution into quarantine [DFS-051]` (orchestrator commits).
 
+
+## Design gate feedback (2026-11-01, from the user)
+
+- Write the manifest's `end` line from the job's final recorded status (after `JobRunner` settles COMPLETED or CANCELLED), so the manifest never says COMPLETED for a job that ended CANCELLED (design.md "Look closely at" item 3). Everything else in the design is accepted as is, including the `quarantineAnchors` deviation, the early `moving` line and the `run`-only manifest for a run that never started.
+
+## design rework (architect, after the gate feedback)
+
+- The manifest's `end` line now comes from a settle hook run after `JobRunner` records the terminal status, so it states the recorded status (COMPLETED, CANCELLED or FAILED). The work no longer writes `end` or closes the session; a run-local holder shares the session and counts between work and hook.
+- New seam in `JobRunner`: `interface Settled<P, T> { void settled(Job<P, T> job); }` and the stub overload `submit(id, initial, work, settled)` (throws `not implemented: DFS-051`). The three-argument `submit`, `runTask` and plan verify are unchanged.
+- design.md updated: Summary (AC-9 bullet, "Look closely at" item 3), Layer placement, Behavior (start step 6, work steps 1, 6, 7, new settle-hook block), test-author notes, State and transitions, Concurrency, checklist item 4, Stubs.
+- Files: `file-scanner/.../application/JobRunner.java`, `design.md`, this file. `:file-scanner:compileJava` is green. Not committed (orchestrator commits).

@@ -46,6 +46,23 @@ final class JobRunner<I, P, T> {
         void update(UnaryOperator<P> change);
     }
 
+    /**
+     * Told the job's terminal record once its task has recorded it, so a use case can act on the status that was
+     * actually recorded rather than on its work's own view (DFS-051: the manifest's {@code end} line).
+     */
+    @FunctionalInterface
+    interface Settled<P, T> {
+
+        /**
+         * Runs on the executor's thread, after the task's last {@link JobStore#update} has recorded COMPLETED,
+         * CANCELLED or FAILED, and before the task returns (or rethrows an {@code Error}). Never called for a job whose
+         * work did not run: cancelled while QUEUED, rejected by the executor, or found not QUEUED at pickup.
+         *
+         * @param job the job's terminal record, as stored
+         */
+        void settled(Job<P, T> job);
+    }
+
     /** The two results only the use case knows how to build. */
     interface Outcomes<P, T> {
 
@@ -89,6 +106,19 @@ final class JobRunner<I, P, T> {
             throw e;
         }
         return new Result.Success<>(id);
+    }
+
+    /**
+     * As {@link #submit(Object, Object, Work)}, and once the task has recorded the job's terminal status, calls
+     * {@code settled} with the stored record (see {@link Settled}). The three-argument form becomes this one with a
+     * no-op {@code settled}. An exception from {@code settled} leaves the recorded status as it is: a
+     * {@code RuntimeException} propagates out of the task, and on the {@code Error} path it is added as suppressed to
+     * the {@code Error}, which is still rethrown.
+     *
+     * @throws NullPointerException if {@code settled} is null
+     */
+    Result<I> submit(I id, P initial, Work<P, T> work, Settled<P, T> settled) {
+        throw new UnsupportedOperationException("not implemented: DFS-051");
     }
 
     /**

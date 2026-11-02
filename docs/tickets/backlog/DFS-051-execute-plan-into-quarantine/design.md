@@ -7,7 +7,7 @@ An asynchronous `StartPlanExecution(scan, plan[, listener])` job on DFS-042's sh
 - AC-1, AC-21: the per-link loop in `PlanExecutionService.start` plus `NioQuarantineDeleter.quarantinePath`/`move` and `JsonLinesManifestWriter`.
 - AC-2, AC-3, AC-22, AC-23: caller-thread validation in `start`, in this order: `PLAN_EDITED` (through the stub `PlanIds.of`, shared with the preview), `PLAN_HAS_CONFLICTS`, `PLAN_NOT_FROM_SCAN`, `KEEPER_NOT_SEPARATE_COPY`.
 - AC-4 to AC-8, AC-11: per-link `SkippedFile(path, SkipCause, subject, detail)` inside the `start` work. Hard links are compared once and can end `PartlyMoved`.
-- AC-9, AC-10, AC-19: `ManifestWriter.create` on the caller's thread (`MANIFEST_UNWRITABLE`), then `Session.append` per line, forced to disk.
+- AC-9, AC-10, AC-19: `ManifestWriter.create` on the caller's thread (`MANIFEST_UNWRITABLE`), then `Session.append` per line, forced to disk. The `end` line is written by a settle hook (the stub `JobRunner.submit(id, initial, work, settled)`) from the job's recorded terminal status.
 - AC-12 to AC-14, AC-17, AC-18: `cancel`/`status`/`result` plus `ExecutionOutcomes`, `PlanExecutionSnapshot`, `ExecutionEvent`, `PlanExecutionReport`.
 - AC-15: the stub `JobRunner.rejectionMessage` (generic text, also used by plan verify). AC-16: the existing Error path, tested through `PlanExecutionService`.
 - AC-20: `ScannerFactories.planExecutionUseCases` and the `ScannerAutoConfiguration` beans, both written for real. `ExecutionProperties` binds `dfs.execution.*`.
@@ -15,7 +15,7 @@ An asynchronous `StartPlanExecution(scan, plan[, listener])` job on DFS-042's sh
 **Look closely at:**
 1. **Deviation: `ExecutionConfig` gains `quarantineAnchors`** (property `dfs.execution.quarantine-anchors`, empty by default, so decision 5 is unchanged unless set). Without it, the AC-20 and AC-21 tests would write to `C:\.dfs-quarantine` outside the `@TempDir`, against the DoD. On Linux and macOS, where `/` is not writable, every file would be skipped as quarantine-not-writable.
 2. The `moving` line is written before each link's checks, not only before its rename, so every attempted path has `moving` and then `moved` or `skipped` (the literal reading of AC-9). The one exception: a path whose volume cannot be determined gets only `skipped`.
-3. The `end` line's status is the run's own view. A cancel that lands after the last operation but before `JobRunner` records COMPLETED makes the job CANCELLED while the manifest says COMPLETED.
+3. The `end` line is written after `JobRunner` records the terminal status, from that recorded status (COMPLETED, CANCELLED or FAILED), through a new `JobRunner.Settled` hook (gate feedback). So the manifest never says COMPLETED for a job that ended CANCELLED. Plan verify passes no hook and is unchanged. Consequence: a status query can show the terminal status a moment before the `end` line is on disk; tests read the manifest only after the task has returned.
 4. A run cancelled while QUEUED, or rejected by the executor, leaves a manifest with only its `run` line. The manifest is created before the job is recorded.
 
 Not applicable: none of the 14 checklist items. Expected breakage: `ScannerAutoConfigurationTest` (its executor bean-name set gains `planExecutionExecutor`).
@@ -58,7 +58,7 @@ Record checks for the implementer to add (the data records are written without c
   - `PlanExecutionService`, with a private `ExecutionOutcomes`;
   - `PlanExecutionProgress` (the job's `P`);
   - `PlanIds.of` (the shared plan-ID encoding);
-  - `JobRunner.rejectionMessage` (package-private).
+  - `JobRunner.rejectionMessage` (package-private), and `JobRunner.Settled` with the `submit(id, initial, work, settled)` overload (the settle hook for the `end` line).
 - `infra.port`: `FileDeleter` (with sealed `MoveResult`: `Moved`, `QuarantineNotWritable(detail)`, `Failed(detail)`), `ManifestWriter` (with `Session`), and sealed `ManifestLine` (`Run`, `Moving`, `Moved`, `Skipped`, `End`).
 - `infra.adapter`: `NioQuarantineDeleter(List<Path> anchors)` and `JsonLinesManifestWriter`. Job state uses the existing `InMemoryJobStore`.
 - `scanner-spring`:
@@ -78,10 +78,10 @@ Record checks for the implementer to add (the data records are written without c
 
    The keeper is deliberately not checked under `PLAN_NOT_FROM_SCAN`: AC-23's third example (a keeper in no set) expects `KEEPER_NOT_SEPARATE_COPY`. This differs from `CheckPlanDrift`.
 5. Create `runId = PlanExecutionId.random()`, then call `manifests.create(config.manifestFolder(), new Run(runId, plan.id(), scan.roots(), Instant.now()))`. An `IOException` gives `MANIFEST_UNWRITABLE`: `"manifest folder <f>: <message>"`.
-6. `jobs.submit(runId, new PlanExecutionProgress(runId, manifest, plan, 0, 0, Σsize, 0, 0), work)`. This returns `Success(runId)`, or `Failure(EXECUTOR_REJECTED, JobRunner.rejectionMessage(failure))`, where the message is `"executor rejected the task: <class>: <message>"`.
+6. `jobs.submit(runId, new PlanExecutionProgress(runId, manifest, plan, 0, 0, Σsize, 0, 0), work, settled)`, where `work` and `settled` share one run-local holder (the open session and the moved, skipped and not-attempted counts), created in `start`, never a service field. This returns `Success(runId)`, or `Failure(EXECUTOR_REJECTED, JobRunner.rejectionMessage(failure))`, where the message is `"executor rejected the task: <class>: <message>"`.
 
 **The work, on the executor's thread** (`JobRunner.Work`):
-1. `manifests.open(manifest)`.
+1. `manifests.open(manifest)`, kept in the run-local holder.
 2. For each operation: if `stop` is true, every remaining operation becomes `NotAttempted`, `cancelled = true`, and the loop ends. Cancel is checked only here, between operations (7a, 8).
 3. For each link `L` of the operation, in link order:
    1. `target = deleter.quarantinePath(L, runId)`. If this throws `IOException`, `L` is skipped as `QUARANTINE_NOT_WRITABLE` (subject `L`), gets a `Skipped` line only, and the loop goes to the next link.
@@ -104,8 +104,14 @@ Record checks for the implementer to add (the data records are written without c
    6. Append `Moved(L, target)` or `Skipped(L, cause, subject, detail)`.
 4. The operation's outcome is `Moved` if all links moved, `Skipped` if none did, and `PartlyMoved` otherwise.
 5. Events, in order: `BytesCompared` from the compare (`base + min(n, size)`); one closing `BytesCompared(base + size)` if that value was not the last one sent; then `OperationDone(outcome, i, total)`. The snapshot progress is updated from the same events. `OperationDone` adds the outcome's moved file count, and its size when `Moved`.
-6. After the loop: append `End(cancelled ? CANCELLED : COMPLETED, moved, skipped, notAttempted, Instant.now())`, close the session, and return the report. Its totals follow `PlanExecutionReport`'s javadoc, and its `listenerFailure` comes from the detach.
-7. A manifest `IOException` (from open or append) is rethrown as `UncheckedIOException(message, e)`, so no further rename happens and `JobRunner` records FAILED `"java.io.UncheckedIOException: <message>"` (AC-10). On any `RuntimeException` or `Error` leaving the loop, the work tries once to append `End(FAILED, ...)` (a failure of that attempt is added as suppressed), closes the session, and rethrows. `JobRunner` then records FAILED and rethrows an `Error` (AC-16).
+6. After the loop: return the report, leaving the session open and writing no `end` line. Its totals follow `PlanExecutionReport`'s javadoc, and its `listenerFailure` comes from the detach.
+7. A manifest `IOException` (from open or append) is rethrown as `UncheckedIOException(message, e)`, so no further rename happens and `JobRunner` records FAILED `"java.io.UncheckedIOException: <message>"` (AC-10). Any `RuntimeException` or `Error` leaving the loop is rethrown as is, with the session left open. `JobRunner` records FAILED and rethrows an `Error` after the hook (AC-16).
+
+**The settle hook, on the executor's thread** (`JobRunner.Settled`, called after `JobRunner` records the terminal status):
+1. If the holder has no session (`open` failed), it does nothing.
+2. Otherwise it appends `End(job.status(), moved, skipped, notAttempted, Instant.now())`, with the status as recorded (COMPLETED, CANCELLED or FAILED) and the holder's counts, then closes the session. So a cancel recorded after the work's last `stop` read gives `end` CANCELLED (AC-12, AC-13), and a failed run gives `end` FAILED.
+3. This is one attempt: an `IOException` from the append or the close is swallowed (the status is already recorded and cannot change), and the manifest then has no `end` line. After a manifest failure (AC-10) this usually happens, and every moved file still has its own lines.
+4. It is not called for a run cancelled while QUEUED or rejected; their manifest keeps only its `run` line (Open design note 6).
 
 **Listener**: wrapped as in `PlanVerifyService.begin`. The progress update runs first, then the listener. The listener is detached on its first `RuntimeException`, and the message (or its `toString()` when blank) becomes `listenerFailure`.
 
@@ -147,7 +153,8 @@ Record checks for the implementer to add (the data records are written without c
   - a `ManifestWriter` fake failing on a chosen `ManifestLine` (AC-10).
 
   Real `NioFileAttributesReader`, `JsonLinesManifestWriter` and `NioQuarantineDeleter(List.of(tmp))` over `@TempDir` files are fine. **Always pass the `@TempDir` as an anchor** so nothing lands under a real volume root. The scenarios' `<volume root>` is then `tmp`.
-- AC-13 in both orders: an executor that captures the task, then cancel and run, or run and then cancel. For "cancel recorded before completion", block the comparator, cancel, release.
+- AC-13 in both orders: an executor that captures the task, then cancel and run, or run and then cancel. For "cancel recorded before completion", block the comparator, cancel, release. Assert the manifest's `end` line matches the recorded status in both orders.
+- Read the manifest only after the task has returned (join the thread or `Future` that ran it), never on seeing a terminal status: the `end` line is written just after the status is recorded.
 - AC-15 for plan verify: add to `PlanVerifyServiceTest` (or a new class) a rejecting executor and assert the message contains neither `"plan verify"` nor `"plan execution"`. The existing `PlanVerifyServiceTest` rejection test reaches the stub directly; leave its assertions as they are (they assert only the code).
 - AC-16 must go through `PlanExecutionService` (a direct `JobRunner` test would be green at the red gate). This pins decision 7c's `Error` path.
 - AC-6: create the symlink with `Files.createSymbolicLink`, and skip with `Assumptions` on `IOException` or `UnsupportedOperationException`. Keep the size and mtime equal by copying the keeper's attributes to the link target.
@@ -178,21 +185,22 @@ Record checks for the implementer to add (the data records are written without c
 - `cancel`: QUEUED becomes CANCELLED and RUNNING becomes CANCELLING. CANCELLING and the terminal states are unchanged. It returns the snapshot after the request.
 - `status`: returns the snapshot in every state.
 - `result`: returns the report in COMPLETED and CANCELLED, and `PLAN_EXECUTION_NOT_FINISHED` otherwise.
+- After every transition into COMPLETED, CANCELLED or FAILED made by the task (not by `cancel` from QUEUED or by a rejection), the settle hook writes the manifest's `end` line with that status.
 
 ## Concurrency and atomicity
 
-- Threads: the caller's thread runs validation, manifest creation (with its `run` line), recording and submission. The executor's thread runs the loop, the manifest appends and the listener events.
-- State: one immutable `Job<PlanExecutionProgress, PlanExecutionReport>` per run in `JobStore`. Every transition and progress change is one `JobStore.update` that checks the status (`JobRunner`, unchanged except for its message).
+- Threads: the caller's thread runs validation, manifest creation (with its `run` line), recording and submission. The executor's thread runs the loop, the manifest appends, the listener events and then the settle hook.
+- State: one immutable `Job<PlanExecutionProgress, PlanExecutionReport>` per run in `JobStore`. Every transition and progress change is one `JobStore.update` that checks the status (`JobRunner`, changed only by its message and the `Settled` hook overload).
 - Completion against cancel: whichever `update` lands first wins (AC-13). The work reads `stop` only between operations, so the operation in progress always finishes, links and lines included.
-- Known window: if the cancel lands after the work's last `stop` read and before `JobRunner` records COMPLETED, the job is CANCELLED (`markCancelled`: `cancelled = true`, no `NotAttempted`) while the manifest's `end` line says COMPLETED. Every file is still accounted for by its own lines.
-- No per-run state in service fields. The detach flag and counters are local to each run's work.
+- The manifest follows the winner: the `end` line is written by the settle hook after the terminal `update`, from the status it recorded. A cancel that lands after the work's last `stop` read and before `JobRunner` records completion makes the job CANCELLED (`markCancelled`: `cancelled = true`, no `NotAttempted`) and the `end` line says CANCELLED too. The hook runs after the record, so a concurrent status query can see the terminal status shortly before the `end` line is on disk.
+- No per-run state in service fields. The detach flag, the open session and the counters live in a holder local to each `start` call, shared by its work and hook on the executor's thread (the hook runs after the work on the same thread, so no extra synchronization).
 
 ## Checklist disposition
 
 1. Unknown or stale IDs: `Failure(UNKNOWN_PLAN_EXECUTION)` naming the UUID, for cancel, status and result alike (AC-14).
 2. Results as values, bugs as exceptions: the six new codes are `Failure`s, and `EXECUTOR_REJECTED` is reused. A null argument is an NPE, and the listener comes through an overload (AC-19).
 3. Status model: `JobStatus`, as in the table above. Terminal states are COMPLETED, CANCELLED and FAILED.
-4. Races and who wins: completion against cancel is settled by the first `JobStore.update`. Cancel during pickup: `runTask` starts only from QUEUED. One known manifest-status window, stated above.
+4. Races and who wins: completion against cancel is settled by the first `JobStore.update`. Cancel during pickup: `runTask` starts only from QUEUED. The manifest's `end` line follows the recorded winner through the settle hook.
 5. Validation before side effects: plan ID, conflicts, from-scan, separate copy, then the manifest file. Nothing is recorded until all pass. The executor's per-file drift and content re-check deliberately repeats DFS-033 and DFS-034 just before each move (decision 3). Whatever changes in between becomes a per-file skip.
 6. State placement: one immutable `Job` record per run behind `JobStore`. The cancel request is the CANCELLING status. The service's fields are its ports, the config and the runner.
 7. Progress and observation: both pushed (`ExecutionListener`) and pulled (`PlanExecutionSnapshot`, zeros before the first event), kept from the same events.
@@ -233,6 +241,7 @@ Record checks for the implementer to add (the data records are written without c
   - `PlanExecutionService` (`start` ×2, `cancel`, `status`, `result`, `ExecutionOutcomes` ×2);
   - `PlanIds.of`;
   - `JobRunner.rejectionMessage`;
+  - `JobRunner.submit(id, initial, work, settled)` (the settle-hook overload; the three-argument `submit` and `runTask` stay real and unchanged until the implementer threads `settled` through them, with the three-argument form passing a no-op);
   - `PlanExecutionId.random`;
   - `NioQuarantineDeleter.quarantinePath`/`move`;
   - `JsonLinesManifestWriter.create`/`open`.
