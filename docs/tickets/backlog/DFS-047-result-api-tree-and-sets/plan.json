@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-047-result-api-tree-and-sets",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-047-result-api-tree-and-sets",
-  "state": "awaiting-approval",
+  "state": "running",
   "phases": [
     {
       "id": "design",
@@ -60,10 +60,34 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 16,
+          "wallClockSeconds": 193,
+          "outcome": "failed-gate",
+          "note": "red passed (25 story tests fail with not implemented: DFS-047); FAIL traceability: AC-10 has no test (ticket says AC-10 is read; the gate has no exemption, cf. DFS-003.L defect 1)"
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 14,
+          "wallClockSeconds": 193,
+          "outcome": "passed",
+          "note": "escalated to opus (effort high requested in the prompt, not set on the launch); PASS test-phase DFS-047: red and traceability pass; - red: 26 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 577 other tests pass (3 skipped); - traceability: 10 criteria traced through 12 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/progress.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/test-plan.md",
+        "server/src/test/java/us/pochaev/dfs/server/ResultApiTest.java"
+      ],
+      "commit": "ca0649f2552a5080b9a978888b11118917272eb6"
     },
     {
       "id": "implement",
@@ -71,7 +95,7 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
@@ -91,12 +115,20 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
       "status": "pending"
     }
   ],
-  "defects": []
+  "defects": [
+    {
+      "id": 1,
+      "phase": "tests",
+      "route": "test-author",
+      "summary": "traceability: AC-10: no test display name starts with DFS-047.AC-10",
+      "status": "closed"
+    }
+  ]
 }
