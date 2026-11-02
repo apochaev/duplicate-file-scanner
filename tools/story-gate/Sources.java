@@ -12,14 +12,19 @@ import java.util.function.Predicate;
 
 /**
  * Finds the project's Java and Kotlin sources: {@code <module>/src/main/**} is production, {@code src/test/**} is test.
+ * Also the Angular frontend's TypeScript and templates (CCW-020): {@code .ts} and {@code .html} files under a
+ * {@code src} folder outside {@code src/main} and {@code src/test}, where {@code *.spec.ts} is test and the rest
+ * production, except the generated client under {@code src/app/api}.
  * Tooling and generated folders are skipped, so the fixtures under {@code tools/} never look like production code.
  * Nothing is skipped below a {@code src} folder: a package may be called {@code tools} or {@code build}.
  */
 final class Sources {
 
-    /** Skipped wherever they occur above {@code src}. */
+    /** Skipped wherever they occur above {@code src}. {@code .angular} is the Angular CLI's cache. */
     private static final Set<String> SKIPPED_ANYWHERE = Set.of(".git", ".gradle", ".claude", ".idea", "build",
-            "node_modules");
+            "node_modules", ".angular");
+    /** The client {@code ng-openapi-gen} writes into the frontend's sources: generated, never edited (DFS-038). */
+    private static final String GENERATED_CLIENT = "src/app/api/";
     /** Skipped only at the top of the repository, where a module of that name is not expected. */
     private static final Set<String> SKIPPED_AT_TOP = Set.of("docs", "gradle", "tools");
 
@@ -38,15 +43,34 @@ final class Sources {
     }
 
     static Map<String, String> production(Path root) {
-        return scan(root, "src/main/");
+        return scan(root, rel -> (isJvmSource(rel) && under(rel, "src/main/")) || (isFrontend(rel) && !isSpec(rel)));
     }
 
     static Map<String, String> test(Path root) {
-        return scan(root, "src/test/");
+        return scan(root, rel -> (isJvmSource(rel) && under(rel, "src/test/")) || (isFrontend(rel) && isSpec(rel)));
     }
 
     static boolean isTestPath(String path) {
-        return path.startsWith("src/test/") || path.contains("/src/test/");
+        return under(path, "src/test/") || (isFrontend(path) && isSpec(path));
+    }
+
+    private static boolean isJvmSource(String rel) {
+        return rel.endsWith(".java") || rel.endsWith(".kt");
+    }
+
+    /** A frontend source: TypeScript or a template under a {@code src} folder of no JVM module, not generated. */
+    private static boolean isFrontend(String rel) {
+        return (rel.endsWith(".ts") || rel.endsWith(".html")) && under(rel, "src/")
+                && !under(rel, "src/main/") && !under(rel, "src/test/") && !under(rel, GENERATED_CLIENT);
+    }
+
+    private static boolean isSpec(String rel) {
+        return rel.endsWith(".spec.ts");
+    }
+
+    /** Whether {@code rel} lies under a folder path {@code segment} (ending in a slash), at the top or deeper. */
+    private static boolean under(String rel, String segment) {
+        return rel.startsWith(segment) || rel.contains("/" + segment);
     }
 
     /** The 1-based number of the first line of {@code text} that satisfies {@code test}, or 0 when none does. */
@@ -58,8 +82,8 @@ final class Sources {
         return 0;
     }
 
-    /** Relative path (forward slashes) to file text, for every source file under a folder with the given segment. */
-    private static Map<String, String> scan(Path root, String segment) {
+    /** Relative path (forward slashes) to file text, for every file whose relative path {@code wanted} accepts. */
+    private static Map<String, String> scan(Path root, Predicate<String> wanted) {
         Map<String, String> found = new TreeMap<>();
         try {
             Files.walkFileTree(root, new SimpleFileVisitor<>() {
@@ -71,8 +95,7 @@ final class Sources {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     String rel = root.relativize(file).toString().replace('\\', '/');
-                    boolean source = rel.endsWith(".java") || rel.endsWith(".kt");
-                    if (source && (rel.startsWith(segment) || rel.contains("/" + segment))) {
+                    if (wanted.test(rel)) {
                         // Lenient: one source file in another encoding must not make the whole scan unrunnable.
                         found.put(rel, new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
                     }

@@ -16,10 +16,15 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-/** Reads the JUnit XML reports Gradle writes to {@code <module>/build/test-results/test/TEST-*.xml}. */
+/**
+ * Reads the JUnit XML reports Gradle writes to {@code <module>/build/test-results/test/TEST-*.xml}, and the one Vitest
+ * writes to {@code <module>/build/test-results/vitest/TEST-*.xml} (CCW-020).
+ */
 final class Junit {
 
     private static final String CAUSED_BY = "Caused by: ";
+    /** The report folders under a module's {@code build/test-results}: Gradle's {@code Test} task's, and Vitest's. */
+    private static final List<String> RESULT_FOLDERS = List.of("test", "vitest");
 
     private Junit() {}
 
@@ -47,8 +52,9 @@ final class Junit {
                     if (dir.equals(root)) return FileVisitResult.CONTINUE;
                     if (name.equals("src")) return FileVisitResult.SKIP_SUBTREE; // reports are never inside sources
                     if (name.equals("build")) {
-                        Path results = dir.resolve("test-results").resolve("test");
-                        if (Files.isDirectory(results)) {
+                        for (String folder : RESULT_FOLDERS) {
+                            Path results = dir.resolve("test-results").resolve(folder);
+                            if (!Files.isDirectory(results)) continue;
                             try (var files = Files.list(results)) {
                                 files.filter(f -> f.getFileName().toString().startsWith("TEST-")
                                         && f.getFileName().toString().endsWith(".xml")).forEach(reports::add);

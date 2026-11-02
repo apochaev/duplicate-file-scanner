@@ -39,7 +39,9 @@ record Build(int exit, List<String> problems, String wentWrong) {
         Matcher t = FAILED_TASK.matcher(output);
         while (t.find()) {
             String task = t.group(1);
-            boolean testTask = task.equals("test") || task.endsWith(":test");
+            // npmTest runs the Vitest tests (CCW-020): its failures are judged from the reports, like test's
+            boolean testTask = task.equals("test") || task.endsWith(":test") || task.equals("npmTest")
+                    || task.endsWith(":npmTest");
             boolean explainedByErrors = task.contains("compile") && !errors.isEmpty();
             if (!testTask && !explainedByErrors) problems.add("task " + task + " failed");
         }

@@ -20,9 +20,12 @@ final class RedCheck {
 
     private RedCheck() {}
 
-    /** Runs the whole suite from a clean slate (so stale reports cannot be mistaken for fresh ones) and judges it. */
+    /**
+     * Runs the whole suite from a clean slate (so stale reports cannot be mistaken for fresh ones) and judges it.
+     * {@code npmTest} runs the Vitest tests, which {@code test} does not (CCW-020); it deletes its own report first.
+     */
     static Verdict run(Path root, String id) {
-        Build build = Build.gradle(root, "cleanTest", "test", "--continue");
+        Build build = Build.gradle(root, "cleanTest", "test", "npmTest", "--continue");
         return evaluate(id, Junit.readAll(root), build, declaredClasses(designText(root, id)));
     }
 
@@ -41,7 +44,7 @@ final class RedCheck {
         String storyPrefix = id + ".AC-";
         int story = 0, ownStub = 0, inDeclared = 0, other = 0, skipped = 0;
         for (TestResult r : results) {
-            if (r.name().startsWith(storyPrefix)) {
+            if (r.tracedName().startsWith(storyPrefix)) {
                 story++;
                 storyProblem(r).ifPresent(problems::add);
             } else if (r.outcome() == TestResult.Outcome.FAILED) {
@@ -97,7 +100,7 @@ final class RedCheck {
             case SKIPPED -> Optional.of(r.label() + ": skipped; a story test must fail against stubs");
             case FAILED -> {
                 if (r.failedWithStub()) yield Optional.empty();
-                if (TestResult.STUB_EXCEPTION.equals(r.failureType())) {
+                if (TestResult.isStubType(r.failureType())) {
                     yield Optional.of(r.label() + ": did not fail from a stub (" + r.reason() + ")");
                 }
                 yield Optional.of(r.label() + ": failed with " + r.reason());
