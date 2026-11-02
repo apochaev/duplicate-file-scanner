@@ -6,6 +6,7 @@ import us.pochaev.dfs.scanner.domain.model.ScanConfig;
 import us.pochaev.dfs.scanner.domain.model.ScanEvent;
 import us.pochaev.dfs.scanner.domain.model.ScanId;
 import us.pochaev.dfs.scanner.domain.model.ScanListener;
+import us.pochaev.dfs.scanner.domain.model.ScanResult;
 import us.pochaev.dfs.scanner.domain.model.ScanSnapshot;
 import us.pochaev.dfs.scanner.domain.model.ScanStatus;
 import us.pochaev.dfs.scanner.domain.usecases.command.CancelScan;
@@ -20,16 +21,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 /**
  * The scans this server run started (DFS-040 decision 2), each with the counts its listener folds from the core's
  * events (decision 3). The listener runs on the scanning thread and only writes memory, so a slow client can never
  * hold up a scan; it never throws, since the core detaches a listener that does.
+ * <p>
+ * Public since DFS-047 for {@link #completedState}: other feature packages keep per-scan state beside a scan's entry
+ * here (decision 6). Everything else stays package-private.
  */
 @Component
-class ScanRegistry {
+public class ScanRegistry {
 
     private final StartScan startScan;
     private final CancelScan cancelScan;
@@ -85,6 +92,76 @@ class ScanRegistry {
         return tracked(id).map(this::progress);
     }
 
+    /**
+     * The per-scan state of one {@code kind}, built by {@code build} from the scan's {@link ScanResult} the first time
+     * it is asked for and kept beside the scan's entry for this server run (DFS-047 decision 6). DFS-048 adds the
+     * overlap analysis as a second kind.
+     * <p>
+     * Thread-safe, without holding any map lock during a build: each scan keeps one memoized
+     * {@code CompletableFuture} per kind, created once with {@code putIfAbsent}. The caller whose future went in runs
+     * {@code build} on its own thread, outside the map; concurrent callers for the same scan and kind wait on that
+     * future and get the same instance, so a successful build runs once. A build may itself call
+     * {@code completedState} for <em>another</em> kind of the same scan; asking for its own kind would wait on itself.
+     * When {@code build} throws, the future completes exceptionally and is removed (only if it is still the mapped
+     * one), so a failed build is never cached and the next request retries it; the builder and every caller waiting
+     * on that build get the build's exception, unwrapped.
+     *
+     * @param id    the scan ID as the client sent it, possibly malformed
+     * @param kind  the state's type, the key it is kept under
+     * @param build makes the state from a COMPLETED scan's whole result
+     * @return {@code Success} with the state; {@code Failure(UNKNOWN_SCAN)} for an unknown or malformed ID;
+     *         {@code Failure(SCAN_NOT_COMPLETED)} with the core's message (naming the status) for a scan that is not
+     *         COMPLETED, in which case nothing is built or kept
+     * @throws RuntimeException the exception {@code build} threw (to the builder and to every caller waiting on it)
+     */
+    public <T> Result<T> completedState(String id, Class<T> kind, Function<ScanResult, ? extends T> build) {
+        Optional<Tracked> found = tracked(id);
+        if (found.isEmpty()) {
+            return new Result.Failure<>(us.pochaev.dfs.scanner.domain.model.ErrorCode.UNKNOWN_SCAN,
+                    "No scan with ID " + id + " in this server run");
+        }
+        Tracked t = found.get();
+        CompletableFuture<?> existing = t.state().get(kind);
+        if (existing != null) {
+            return new Result.Success<>(kind.cast(await(existing)));
+        }
+        ScanResult scanResult;
+        switch (getScanResult.result(t.id())) {
+            case Result.Failure<ScanResult> f -> {
+                return new Result.Failure<>(f.code(), f.message());
+            }
+            case Result.Success<ScanResult> ok -> scanResult = ok.value();
+        }
+        CompletableFuture<Object> mine = new CompletableFuture<>();
+        CompletableFuture<?> other = t.state().putIfAbsent(kind, mine);
+        if (other != null) {
+            return new Result.Success<>(kind.cast(await(other)));
+        }
+        try {
+            mine.complete(build.apply(scanResult));
+        } catch (RuntimeException | Error e) {
+            mine.completeExceptionally(e);
+            t.state().remove(kind, mine);
+            throw e;
+        }
+        return new Result.Success<>(kind.cast(mine.join()));
+    }
+
+    private static Object await(CompletableFuture<?> future) {
+        try {
+            return future.join();
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause() == null ? e : e.getCause();
+            if (cause instanceof RuntimeException re) {
+                throw re;
+            }
+            if (cause instanceof Error err) {
+                throw err;
+            }
+            throw e;
+        }
+    }
+
     static boolean terminal(ScanProgress p) {
         return p.status().equals("COMPLETED") || p.status().equals("CANCELLED") || p.status().equals("FAILED");
     }
@@ -117,7 +194,12 @@ class ScanRegistry {
                 groupsDone, groupsTotal, s.failureMessage());
     }
 
-    private record Tracked(ScanId id, List<String> locations, Instant startedAt, long sequence, Counters counters) {
+    private record Tracked(ScanId id, List<String> locations, Instant startedAt, long sequence, Counters counters,
+                           Map<Class<?>, CompletableFuture<?>> state) {
+
+        Tracked(ScanId id, List<String> locations, Instant startedAt, long sequence, Counters counters) {
+            this(id, locations, startedAt, sequence, counters, new ConcurrentHashMap<>());
+        }
 
         int setCount(GetScanResult results) {
             if (counters.sets < 0) {

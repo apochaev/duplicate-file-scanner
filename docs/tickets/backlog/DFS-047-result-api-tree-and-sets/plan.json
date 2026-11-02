@@ -1,0 +1,165 @@
+{
+  "ticket": "DFS-047",
+  "archetype": {
+    "name": "endpoint",
+    "version": 2
+  },
+  "branch": "tickets/DFS-047-result-api-tree-and-sets",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-047-result-api-tree-and-sets",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 57,
+          "wallClockSeconds": 571,
+          "outcome": "passed",
+          "note": "PASS touches DFS-047: 21 changed files, all inside touches; turns counted as tool uses"
+        },
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 20,
+          "wallClockSeconds": 125,
+          "outcome": "passed",
+          "note": "rework after design-gate feedback (memoized future per kind in completedState); PASS touches DFS-047: 21 changed files, all inside touches; turns counted as tool uses"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/design.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/plan.json",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/progress.md",
+        "server/frontend/openapi.json",
+        "server/src/main/java/us/pochaev/dfs/server/api/ApiError.java",
+        "server/src/main/java/us/pochaev/dfs/server/api/ApiException.java",
+        "server/src/main/java/us/pochaev/dfs/server/api/ApiExceptionHandler.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/CopyView.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/DuplicateSetView.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/FolderNode.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/LinkView.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/ResultController.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/ResultIndex.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/SetPage.java",
+        "server/src/main/java/us/pochaev/dfs/server/scan/ScanController.java",
+        "server/src/main/java/us/pochaev/dfs/server/scan/ScanRegistry.java"
+      ],
+      "commit": "5cd39f74d0cfbd3bc0982b07e17bff5e0b92baa9"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 16,
+          "wallClockSeconds": 193,
+          "outcome": "failed-gate",
+          "note": "red passed (25 story tests fail with not implemented: DFS-047); FAIL traceability: AC-10 has no test (ticket says AC-10 is read; the gate has no exemption, cf. DFS-003.L defect 1)"
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 14,
+          "wallClockSeconds": 193,
+          "outcome": "passed",
+          "note": "escalated to opus (effort high requested in the prompt, not set on the launch); PASS test-phase DFS-047: red and traceability pass; - red: 26 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 577 other tests pass (3 skipped); - traceability: 10 criteria traced through 12 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/progress.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/test-plan.md",
+        "server/src/test/java/us/pochaev/dfs/server/ResultApiTest.java"
+      ],
+      "commit": "ca0649f2552a5080b9a978888b11118917272eb6"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 12,
+          "wallClockSeconds": 150,
+          "outcome": "passed",
+          "note": "PASS green DFS-047: build and tests green: 600 passed, 3 skipped; PASS disabled; PASS freeze (1 test file unchanged since ca0649f2); PASS touches: 25 changed files, all inside touches; PASS stubs: no stub markers in 150 production files; PASS traceability: 10 criteria traced through 12 scenarios; PASS consistency"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/progress.md",
+        "server/src/main/java/us/pochaev/dfs/server/result/ResultController.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/ResultIndex.java",
+        "server/src/main/java/us/pochaev/dfs/server/scan/ScanRegistry.java"
+      ],
+      "commit": "756e0421fc68ecf30abc7c2ccf70d1d69c14f8f8"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 24,
+          "wallClockSeconds": 489,
+          "outcome": "passed",
+          "note": "stopped at its 20-turn agent default (the archetype's maxTurns 30 was not passed at launch) with verification.md and the ticket ticks on disk; resumed by SendMessage to wrap up, combined turns/time of both invocations; PASS consistency DFS-047: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/DFS-047-ticket.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/verification.md"
+      ],
+      "commit": "48cdac19e72fca0c8b7a4d4405ec9507b2b2d24c"
+    }
+  ],
+  "gates": [
+    {
+      "after": "design",
+      "status": "approved"
+    },
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": [
+    {
+      "id": 1,
+      "phase": "tests",
+      "route": "test-author",
+      "summary": "traceability: AC-10: no test display name starts with DFS-047.AC-10",
+      "status": "closed"
+    }
+  ]
+}

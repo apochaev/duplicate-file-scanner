@@ -21,10 +21,10 @@ A start screen takes folders and settings, shows live progress from the scanner'
 
 ### U3. Navigation: a folder tree plus Overlaps and Sets tabs
 
-- Left: a lazily loaded folder tree of the scanned roots.
+- Left: a lazily loaded folder tree of the scanned roots, one level per call to `GET /api/scans/{id}/folders?parent=` (DFS-047).
 - Right: tabs, both filtered to the folder selected in the tree:
   - **Overlaps** (landing tab): folder summaries and folder pairs ranked by reclaimable bytes.
-  - **Sets**: duplicate sets, largest reclaimable first (catches big single files between unrelated folders).
+  - **Sets**: duplicate sets, largest reclaimable first (catches big single files between unrelated folders), paged from `GET /api/scans/{id}/sets?under=` (DFS-047).
 - Charts (overlap matrix, treemap) are a later addition to the Overlaps tab, not part of the first version.
 
 ### U4. Folder detail view: listed live from disk
@@ -85,7 +85,7 @@ A server on localhost is reachable from any page in the user's browser (cross-si
 - At startup, generate a random token, print `http://127.0.0.1:<port>/?token=…` and open it in the browser. The server exchanges the token for an `HttpOnly`, `SameSite=Strict` session cookie and redirects to `/`, so the token leaves the URL before any script runs; the token stays valid for the server run. Every API request (`/api/**`) needs the cookie; the page itself is public, since it carries no data (DFS-036).
 - Reject requests whose `Host` is not `127.0.0.1:<port>` or `localhost:<port>` (blocks DNS rebinding).
 - State-changing requests need a matching `Origin`. No CORS.
-- Folder listings, previews, file contents and plan entries are accepted only for paths inside the scan's roots. Built with the first endpoint that takes a path, which carries the criterion "a path outside the scan's roots → 403" (DFS-036 decision 1).
+- Folder listings, previews, file contents and plan entries are accepted only for paths inside the scan's roots. Built with the first endpoint that takes a path, which carries the criterion "a path outside the scan's roots → 403" (DFS-036 decision 1). First applied by `GET /api/scans/{id}/folders` and `GET /api/scans/{id}/sets` (DFS-047): `403` `PATH_OUTSIDE_ROOTS`, `..` resolved first.
 
 Built with Spring Security as the **first server ticket**, before any endpoint that reads the disk, so no endpoint ever exists unprotected.
 

@@ -160,6 +160,179 @@
         }
       }
     },
+    "/api/scans/{id}/sets" : {
+      "get" : {
+        "tags" : [ "results" ],
+        "summary" : "A page of a completed scan's duplicate sets with a path under the folder, largest reclaimable first, each with every copy",
+        "operationId" : "listSets",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "under",
+          "in" : "query",
+          "description" : "An absolute folder inside one of the scan's roots; without it, every set",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "The page, from 0",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Sets per page, 1 to 500",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The page; past the end it has no items and the same totals",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SetPage"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The path is not absolute (RELATIVE_PATH); or page below 0 or size outside 1 to 500 (INVALID_PAGE)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "The path lies outside every root of the scan (PATH_OUTSIDE_ROOTS)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such scan in this server run (UNKNOWN_SCAN)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The scan is not COMPLETED (SCAN_NOT_COMPLETED)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scans/{id}/folders" : {
+      "get" : {
+        "tags" : [ "results" ],
+        "summary" : "A completed scan's roots, or the immediate subfolders of parent that hold counted files, ordered by name, with subtree and direct totals",
+        "operationId" : "listFolders",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "parent",
+          "in" : "query",
+          "description" : "An absolute folder inside one of the scan's roots; without it, the roots",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "One level of the tree; empty when the scan holds nothing there",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/FolderNode"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The path is not absolute (RELATIVE_PATH)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "The path lies outside every root of the scan (PATH_OUTSIDE_ROOTS)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such scan in this server run (UNKNOWN_SCAN)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The scan is not COMPLETED (SCAN_NOT_COMPLETED)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/scans/{id}/events" : {
       "get" : {
         "tags" : [ "scans" ],
@@ -317,6 +490,132 @@
           }
         },
         "required" : [ "authenticated" ]
+      },
+      "CopyView" : {
+        "type" : "object",
+        "properties" : {
+          "links" : {
+            "type" : "array",
+            "description" : "At least one; ordered by path",
+            "items" : {
+              "$ref" : "#/components/schemas/LinkView"
+            }
+          }
+        },
+        "required" : [ "links" ]
+      },
+      "DuplicateSetView" : {
+        "type" : "object",
+        "properties" : {
+          "digest" : {
+            "type" : "string",
+            "description" : "Lowercase hexadecimal SHA-256 of the content; identifies the set"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Size of each file in bytes"
+          },
+          "reclaimableBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "size * (physical copies - 1): hard links are not reclaimable copies"
+          },
+          "copies" : {
+            "type" : "array",
+            "description" : "At least two; ordered by first link path",
+            "items" : {
+              "$ref" : "#/components/schemas/CopyView"
+            }
+          }
+        },
+        "required" : [ "copies", "digest", "reclaimableBytes", "size" ]
+      },
+      "LinkView" : {
+        "type" : "object",
+        "properties" : {
+          "path" : {
+            "type" : "string",
+            "description" : "The path as the scan holds it (Path.toString(): backslashes on Windows)"
+          },
+          "modified" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The file's modified time at scan time"
+          }
+        },
+        "required" : [ "modified", "path" ]
+      },
+      "SetPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "description" : "Ordered by reclaimableBytes, then size, largest first, then digest",
+            "items" : {
+              "$ref" : "#/components/schemas/DuplicateSetView"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The page asked for, from 0"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The page size asked for, 1 to 500"
+          },
+          "totalItems" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Every matching set"
+          },
+          "totalReclaimableBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The reclaimable bytes of every matching set"
+          }
+        },
+        "required" : [ "items", "page", "size", "totalItems", "totalReclaimableBytes" ]
+      },
+      "FolderNode" : {
+        "type" : "object",
+        "properties" : {
+          "path" : {
+            "type" : "string",
+            "description" : "The folder's path as the scan holds it (Path.toString(): backslashes on Windows)"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The last name element; for a filesystem root such as C:\\ the whole path"
+          },
+          "files" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Counted files in the whole subtree"
+          },
+          "bytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Their summed size in bytes"
+          },
+          "directFiles" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Counted files directly in this folder"
+          },
+          "directBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Their summed size in bytes"
+          },
+          "hasChildren" : {
+            "type" : "boolean",
+            "description" : "Whether listFolders with this folder as parent answers at least one folder"
+          }
+        },
+        "required" : [ "bytes", "directBytes", "directFiles", "files", "hasChildren", "name", "path" ]
       }
     }
   }

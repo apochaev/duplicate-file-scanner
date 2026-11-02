@@ -1,14 +1,17 @@
-package us.pochaev.dfs.server.scan;
+package us.pochaev.dfs.server.api;
 
 import org.springframework.http.HttpStatus;
 
-/** Ends a request with an {@link ApiError} body and the given status; mapped by {@link ApiExceptionHandler}. */
-class ApiException extends RuntimeException {
+/**
+ * Ends a request with an {@link ApiError} body and the given status; mapped by {@link ApiExceptionHandler}. Public
+ * since DFS-047 (decision 7), so every feature package's controller can raise it.
+ */
+public class ApiException extends RuntimeException {
 
     private final HttpStatus status;
     private final String code;
 
-    ApiException(HttpStatus status, String code, String message) {
+    public ApiException(HttpStatus status, String code, String message) {
         super(message);
         this.status = status;
         this.code = code;
@@ -22,7 +25,7 @@ class ApiException extends RuntimeException {
         return new ApiError(code, getMessage());
     }
 
-    static ApiException unknownScan(String id) {
+    public static ApiException unknownScan(String id) {
         return new ApiException(HttpStatus.NOT_FOUND, "UNKNOWN_SCAN", "No scan with ID " + id + " in this server run");
     }
 }

@@ -1,7 +1,7 @@
 ---
 id: DFS-047
 title: Serve a finished scan's folder tree and duplicate sets
-status: ready
+status: in-review
 type: feature
 scope: [build]
 archetype: endpoint
@@ -22,7 +22,7 @@ touches:
   - docs/design/ui.md
 blocked_reason:
 created: 2026-11-01
-updated: 2026-11-01
+updated: 2026-11-02
 completed:
 ---
 
@@ -221,12 +221,12 @@ Feature: Scan result API: folder tree and duplicate sets
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes, except AC-10 (read), recorded in `verification.md`
-- [ ] Each test's `@DisplayName` starts with its criterion ID (`DFS-047.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
-- [ ] Every endpoint-archetype checklist item is addressed in `design.md` or marked not applicable with a reason
-- [ ] Started by hand once on Windows: a real folder scanned, then both endpoints exercised with `curl` (the roots, two levels down, a page of sets, a path outside the roots), the server log free of warnings and errors
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above is an automated test and passes, except AC-10 (read), recorded in `verification.md` (ResultApiTest 26/26, 0 skipped; AC-10 also read)
+- [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-047.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
+- [x] Every endpoint-archetype checklist item is addressed in `design.md` or marked not applicable with a reason
+- [x] Started by hand once on Windows: a real folder scanned, then both endpoints exercised with `curl` (the roots, two levels down, a page of sets, a path outside the roots), the server log free of warnings and errors (2026-11-02, bootJar, fixtures folder: 23 files, 2 sets, 45 bytes reclaimable; 403 for C:/Windows; no result-endpoint warnings)
+- [x] No files changed outside the paths listed under Touches
 
 ## Open questions
 
