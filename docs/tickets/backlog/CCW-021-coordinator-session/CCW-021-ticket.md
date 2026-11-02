@@ -15,7 +15,6 @@ touches:
   - .claude/skills/tickets/SKILL.md
   - docs/tickets/lanes.md
   - CLAUDE.md
-  - .claude/skills/story/SKILL.md
   - .claude/settings.json
 blocked_reason:
 created: 2026-11-01
@@ -54,6 +53,7 @@ Filed 2026-11-01 at the user's request, from the session `dfs-product`.
 9. **Pending advice is listed at session start only** (2026-11-01, the user's choice). At session start the catch-up also lists every advisory proposal (`advisory/proposals/ADV-NNN-rN.md`; any other file, such as a `*.tmp`, is ignored) that has no response in `advisory/responses/` or a response with status `received`, one line each: ID, revision, title, path. An older revision is flagged `superseded by rM` when `ADV-NNN-rM.md` exists with M greater than N, cross-checked against the newer file's `Supersedes:` line; the coordinator records a `superseded` response for it instead of evaluating it. A response file that is not valid JSON is reported by path. Nothing advisory is printed on a prompt, and the advisory part keeps no cursor: it is read fresh at every start. Enough because sessions clear often (CCW-022 clears the coordinator after every refine), so a proposal waits at most until the next start; this is ADV-001's "next processing point". Not new proposals on each prompt (a cursor for little gain) and not pending proposals on every prompt (a line on every turn while advice waits).
 10. **The session-start hook finds its session by name; lanes stay in `lanes.md`** (2026-11-01). The hook takes the session's name from its own input if Claude Code supplies it there (to check during implementation), otherwise from the environment variable `DFS_SESSION`, set when the session is launched and kept through every `/clear`. It looks the name up in `docs/tickets/lanes.md` and prints the catch-up only when the name maps to `coordinator`; in any other session, or with no name, it prints nothing. With the variable, dfs-product is restarted once after this ticket lands (`$env:DFS_SESSION='dfs-product'; claude -n dfs-product` in PowerShell); the user then keeps sessions running and uses `/clear`, not new launches. The skills keep finding a session's lanes by `ListAgents` and its name. Asked and decided no: carrying each session's lanes in a launch variable (`DFS_LANES`) instead of `lanes.md`. Its premise was that names may be lost on `/clear`, but on 2026-11-01 `ListAgents` still reported "This session is dfs-product" right after a `/clear`; a variable would also make moving a lane a relaunch instead of a one-line edit and make "one owner per lane" uncheckable. Not a rule in the tickets skill to run the script on the first turn after a clear (after a `/clear` the session holds only CLAUDE.md and memory, so nothing would trigger it) and not the hook printing in every session (lane sessions' picture after a clear is CCW-022's to add).
 11. **The coordinator's `/tickets list` runs the same script** (2026-11-01). Besides the session-start hook, the coordinator's `/tickets list` runs the catch-up script and shows its output under the table, so mid-session it sees worktree edits, `plan.json` states and pending advice, which the frontmatter on `main` does not show. The worktree and advisory logic lives only in the script; the skill calls it. No hook on each prompt and no other trigger. Not the session-start hook alone (decision 8 sends the coordinator to `/tickets list` for fresh state, which today shows no worktree edits or `plan.json` states) and not the script in every session's `list` (a lane-session change, CCW-022's open question).
+12. **Pipeline stops are seen by pull; the `story` skill is not changed** (2026-11-01). Message 4 was never built (no mention of the coordinator under `.claude/`, `CLAUDE.md` or `docs/design/` on 2026-11-01), so nothing is removed. A human gate shows as `plan.json` state `awaiting-approval` and a blocked phase as `blocked`, both in the catch-up's per-worktree line with the gate or phase; a refused autonomous launch, which happens before any `plan.json` exists, shows in the coordinator's `list` as a `ready` `autorun` ticket with every dependency `done` and no branch, under "Dispatchable now". The user hears of every stop at once through the `story` skill's push notification; the coordinator sees it at its next `/clear` or `list`. The `story` skill leaves `touches` (CCW-022 edits it for its stop lines). Not a message for stops only (wakes the coordinator for a full turn at its context size, the cost decision 7 removed, while the stop is the user's to act on).
 
 ## Acceptance criteria
 
@@ -61,7 +61,7 @@ The full ID of each criterion is `CCW-021.AC-<n>`.
 
 - **AC-1** `docs/tickets/lanes.md` lists `dfs-product: coordinator`, and `/tickets validate` accepts it, while it reports a second line holding `coordinator` and a line mixing `coordinator` with lanes, naming the line.
 - **AC-2 (retired)** The `tickets` skill defines message 4: every session other than the coordinator sends it, once per turn, as one line `<ID> <what changed> in <sha or "uncommitted">[; <ID> ...]` without ticket content, for every ticket it created, every status change, and every change to criteria, scenarios, `touches`, `depends_on` or decisions, on `main` or on a ticket branch, also when the same change sends an owner message 1, 2 or 3. Retired 2026-11-01: pull replaces push (decision 7).
-- **AC-3** The `story` skill's notifications also send the coordinator message 4 at each stop that needs the user: a human gate, a phase `blocked`, a refused autonomous launch.
+- **AC-3 (retired)** The `story` skill's notifications also send the coordinator message 4 at each stop that needs the user: a human gate, a phase `blocked`, a refused autonomous launch. Retired 2026-11-01: pipeline stops are seen by pull (decision 12), see AC-14.
 - **AC-4 (retired)** When `ListAgents` shows no peer with the coordinator's name, no message 4 is sent or queued; the coordinator never sends message 4; a coordinator that starts or is resumed catches up from `git log` on `main`, `git status` and `git worktree list` before its first `list`. Retired 2026-11-01: pull replaces push (decision 7); the catch-up is AC-9 and AC-10.
 - **AC-5** The coordinator may `new` and `refine` tickets in every lane, including the `ready` confirmation and its commit, and may commit another session's uncommitted draft on `main` only after telling that session in the same turn; it commits its own edits to shared files on `main` in the turn it makes them; it never runs `start`, `/story run`, an autonomous launch, `done` or `cancel`.
 - **AC-6** After its `ready` commit of a ticket in another lane, the coordinator messages the owner: message 2's form for an `autorun` ticket whose dependencies are all `done`, which the owner handles under "Receiving an unblock"; message 1's form otherwise.
@@ -72,6 +72,7 @@ The full ID of each criterion is `CCW-021.AC-<n>`.
 - **AC-11** At session start in the coordinator, the catch-up lists each advisory proposal with no response or a `received` one (ID, revision, title, path), flags an older revision `superseded by rM` when a newer revision exists, ignores files not named `ADV-NNN-rN.md`, and reports an invalid response file by path.
 - **AC-12** The session-start hook prints the catch-up only in the session whose name (from the hook's input, or else `DFS_SESSION`) maps to `coordinator` in `lanes.md`, and prints nothing in any other session or when no name is available.
 - **AC-13** In the coordinator, `/tickets list` runs the catch-up script and shows its output (worktrees, `plan.json` states, uncommitted ticket and `plan.json` files, pending advice) under the table; in a lane session `list` is unchanged.
+- **AC-14** The catch-up shows a worktree whose `plan.json` state is `awaiting-approval` with its pending gate and one whose state is `blocked` with its blocked phase; the `story` skill sends the coordinator no message.
 
 ## Scenarios
 
@@ -149,11 +150,16 @@ Feature: Coordinator session
   Scenario: [read] A lane session's list is unchanged
     Then the tickets skill runs the catch-up script from list only in the coordinator
 
-  @AC-3
-  Scenario: [run] A pipeline stop reaches the coordinator
-    Given a /story run in dfs-frontend or dfs-backend reaches a human gate
-    When the story skill sends its push notification
-    Then dfs-product receives a message 4 naming the ticket and the gate
+  @AC-14
+  Scenario: [run] A pipeline stop shows in the catch-up
+    Given a /story run in dfs-frontend or dfs-backend has stopped at a human gate, with plan.json state awaiting-approval
+    When the user runs /clear in dfs-product
+    Then the catch-up line for that worktree shows awaiting-approval and the pending gate
+    And dfs-product received no message from the story run
+
+  @AC-14
+  Scenario: [read] A blocked phase shows in the catch-up
+    Then the catch-up script prints state blocked and the blocked phase for a worktree whose plan.json is blocked
 
   @AC-5
   Scenario: [read] The coordinator writes tickets but never starts, launches or closes
