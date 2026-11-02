@@ -21,36 +21,36 @@
 
 ### DFS-051.L-1: Filesystem-placement decisions must say how tests reach them inside a `@TempDir`
 
-- Status: proposed
+- Status: applied
 - Impact: shared
 - Target: the `tickets` skill's refine checklist
 - Change: add a refinement question: any decision that places files outside a test-controlled directory (a volume root, a home folder) states the seam tests use instead.
 - Evidence: DFS-051.L-design-1: decision 5 put the quarantine at each volume root; the architect added an `ExecutionConfig.quarantineAnchors` deviation at the design gate.
 - Recurrences: 1 (DFS-051)
 - Recommendation: apply.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-051.L-1, L-2, L-3`
 
 ### DFS-051.L-2: Split oversized tickets before launch
 
-- Status: proposed
+- Status: applied
 - Impact: shared
 - Target: the `tickets` skill's refine
 - Change: when a ticket has more than about 8 decisions or 15 criteria, refine proposes a split at a natural seam (for example the core use case versus the job wrapper and wiring) before the ready commit.
 - Evidence: orchestrator notes (design phase): 14 decisions, 23 criteria, 30 scenarios; design took 45 turns, about 179k subagent tokens and a 429 stop; the user's own direction to split tickets of this size.
 - Recurrences: 1 (DFS-051)
 - Recommendation: apply; settle the threshold at decide.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-051.L-1, L-2, L-3`
 
 ### DFS-051.L-3: Get the product review in before the ready commit
 
-- Status: proposed
+- Status: applied
 - Impact: shared
 - Target: the `tickets` skill's refine (ready step)
 - Change: a review the session is still waiting for blocks `ready`, so no amendment lands while the architect is running.
 - Evidence: DFS-051.L-design-3 and the orchestrator note: amendment c54c837 (decision 14, AC-22, AC-23) landed mid-design and the architect was told by message.
 - Recurrences: 1 (DFS-051)
 - Recommendation: apply.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-051.L-1, L-2, L-3`
 
 ### DFS-051.L-4: Raise the verifier's frontmatter `maxTurns` (DFS-026.L-7 never took effect)
 
