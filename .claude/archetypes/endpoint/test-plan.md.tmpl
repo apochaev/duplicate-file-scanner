@@ -8,7 +8,7 @@ Filled in by the test-author during the `test` phase, before writing any test. `
 |---|---|---|---|---|
 | `<TICKET-ID>.AC-1` | `<scenario title from the ticket>` | `<TICKET-ID>.AC-1 <short readable title>` | `<real server over HTTP / raw socket / by hand / read>` | `<no, or: what is timed, the margin, how it was measured>` |
 
-One row per scenario; a scenario outline gets one row naming its parameterized test. A criterion about the spec is proven by `OpenApiSpecTest` (not a story test) plus the verifier's reading of `openapi.json`; name it here with Level `spec (OpenApiSpecTest)`.
+One row per scenario; a scenario outline gets one row naming its parameterized test. A criterion about the spec gets a story test that calls the endpoint first, then checks the response against `openapi.json`; `OpenApiSpecTest` covers the controllers-versus-spec match on its own.
 
 ## Fixtures and test configurations
 

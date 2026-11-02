@@ -23,36 +23,36 @@
 
 ### DFS-047.L-1: A "checked by reading" criterion fails the traceability gate
 
-- Status: proposed
+- Status: applied
 - Impact: shared (touches a skill)
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode ("Acceptance criteria"); alternatively `tools/story-gate` (traceability)
 - Change: in a pipeline ticket, refinement turns a criterion that can only be checked by reading (documentation wording) into a done-item rather than a live acceptance criterion; the alternative is for traceability to accept a criterion that `test-plan.md` marks `verified-by: read`, left to the verifier.
 - Evidence: DFS-047 `plan.json` defect 1: tests attempt 1 failed-gate with "AC-10: no test display name starts with DFS-047.AC-10", though the ticket and `design.md` said AC-10 (docs) is read; attempt 2, escalated to opus, added a test pinned to exact wording in `CLAUDE.md` and `docs/design/ui.md`, which the verifier calls brittle (test-author and verifier notes above). Related: DFS-003.L-3 (same gate, an absence criterion), CCW-001.L-6 (where "checked by reading" scenarios come from).
 - Recurrences: 2 (DFS-047: see Evidence; DFS-048: plan.json defect 1, tests attempt 1 failed-gate with no test for AC-10 (marked covered by OpenApiSpecTest) and AC-11 (marked read); attempt 2, escalated to opus, added them; the test-author note also suggests the test-author-side fix, saying in test-author.md that spec and docs criteria still get a named story test (2026-11-02))
 - Recommendation: apply the refine-side fix: no gate code change and no wording-pinned tests. Seen twice now, both times costing an escalated retry.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-047.L-1, DFS-047.L-2, DFS-047.L-3, DFS-048.L-1 and DFS-048.L-2`
 
 ### DFS-047.L-2: The endpoint archetype contradicts itself on refusal and spec story tests
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/endpoint/test-guide.md` (line 39) and `.claude/archetypes/endpoint/test-plan.md.tmpl` (line 11)
 - Change: say that a refusal criterion (403 without the cookie or with a foreign `Host`) pairs the refusal with the same request carrying the cookie, so the test reaches a stub, and that a spec criterion calls the endpoints and checks the responses against the committed schema; replace "do not write a story test that reads `openapi.json`" with "read it only alongside a stub-reaching call".
 - Evidence: DFS-047 architect note "Security and spec criteria cannot fail red alone" (AC-8 and AC-9 would pass against the stubs, while the ticket's scenarios made them JUnit story tests) and the test-author note that the guides forbid reading `openapi.json` while `design.md` asked for it.
 - Recurrences: 1 (DFS-047)
 - Recommendation: apply; this is the third archetype needing the "every story test reaches a stub" rule (DFS-022.L-1 use-case, DFS-026.L-3 pipeline-stage), so consider one shared line in `.claude/agents/test-author.md` instead of per-archetype copies.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-047.L-1, DFS-047.L-2, DFS-047.L-3, DFS-048.L-1 and DFS-048.L-2`
 
 ### DFS-047.L-3: A second feature package leaves the advice scope and shared state open
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/endpoint/archetype.md` (the error-move rule and "classes are package-private except the records")
 - Change: say the moved `ApiExceptionHandler` uses `basePackages = "us.pochaev.dfs.server"` so later packages need no edit, and that state one feature package needs from another may be a public class exposing the narrowest public method (as `ScanRegistry.completedState`).
 - Evidence: DFS-047 architect notes "The archetype's error-move rule left the advice scope open" and "`ScanRegistry` had to become public" (design commit `5cd39f7`).
 - Recurrences: 1 (DFS-047)
 - Recommendation: apply; a small clarification of rules the architect had to guess.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-047.L-1, DFS-047.L-2, DFS-047.L-3, DFS-048.L-1 and DFS-048.L-2`
 
 ### DFS-047.L-4: verifier.md still caps the verifier at 20 turns
 

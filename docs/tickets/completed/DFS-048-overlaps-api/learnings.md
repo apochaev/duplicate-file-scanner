@@ -12,25 +12,25 @@
 
 ### DFS-048.L-1: A reused predecessor mechanism can leave a criterion unable to fail red
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/endpoint/archetype.md`, edge-case checklist
 - Change: add an item: when a ticket reuses a predecessor's state mechanism (for example `ScanRegistry.completedState`), confirm which package it lives in and whether a criterion on it can fail red from the test location the ticket names. If it cannot, decide in refinement where the test goes, rather than leaving the architect to add a layer only so the test can go red.
 - Evidence: DFS-048 `learnings.md` "design / AC-8 seam": the memo lives in package `scan`, already built; the design added an `OverlapState` holder (design commit `62afd5d`) as a second memo layer so AC-8 could go red from `result`.
 - Recurrences: 1 (DFS-048)
 - Recommendation: apply; one checklist line, and it saves code made only for the red gate.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-047.L-1, DFS-047.L-2, DFS-047.L-3, DFS-048.L-1 and DFS-048.L-2`
 
 ### DFS-048.L-2: A nullable nested record is generated without `| null`
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/endpoint/archetype.md`, checklist item 5
 - Change: note that `@Schema(nullable = true)` on a record-typed component comes out as `"type": "null"` beside the `$ref`, which `ng-openapi-gen` turns into an optional field without `| null` while Jackson sends `null`. Screens reading such a field use `?.`.
 - Evidence: DFS-048 `learnings.md` "design / spec" (`folder?: FolderSummaryView` in the generated client).
 - Recurrences: 1 (DFS-048)
 - Recommendation: apply; a one-line note.
-- Decision:
+- Decision: applied 2026-11-02 by the user; commit `docs: apply DFS-047.L-1, DFS-047.L-2, DFS-047.L-3, DFS-048.L-1 and DFS-048.L-2`
 
 ### DFS-048.L-3: The verifier's "never kill Java processes" leaves no way to stop its own `bootRun`
 

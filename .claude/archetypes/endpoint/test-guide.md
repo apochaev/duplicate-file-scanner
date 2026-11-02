@@ -36,7 +36,7 @@ Every test's `@DisplayName` starts with the full ID(s) of the criteria it proves
 
 ## The spec
 
-Do not write a story test that reads `server/frontend/openapi.json`: the architect regenerated it in the design phase, so such a test passes against stubs and the red gate fails it. `OpenApiSpecTest` (existing) proves the committed spec matches the controllers; spec criteria are listed in the test plan with Level `spec (OpenApiSpecTest)` and checked by the verifier by reading.
+A story test never reads `server/frontend/openapi.json` on its own: the architect regenerated it in the design phase, so a test that only reads it passes against stubs and the red gate fails it. A spec criterion gets a story test that first calls the endpoint (which reaches the stub, so the test is red) and then checks the response against the committed schema; `OpenApiSpecTest` (existing) still proves the committed spec matches the controllers (DFS-047).
 
 ## Cover, per scenario in the ticket
 
