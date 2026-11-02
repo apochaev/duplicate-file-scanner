@@ -156,13 +156,17 @@ final class SelfTestCase {
         return TouchesCheck.evaluate(id, touches, exists, changes).render();
     }
 
-    /** One line per file under the repository root: {@code ok}, or the first phrase it lacks. */
+    /**
+     * One line per file under the repository root: {@code ok}, or the first phrase it lacks. A path starting
+     * {@code docs/tickets/*}{@code /} names a file in a ticket's folder wherever the ticket is, {@code backlog} or
+     * {@code completed}, so the case survives the ticket's close (CCW-020).
+     */
     private String contains() {
         StringBuilder out = new StringBuilder();
         Map<String, Object> wanted = Json.asObject(spec.get("contains"));
         if (wanted == null) throw new GateError("a contains case needs a contains object");
         for (var e : new TreeMap<>(wanted).entrySet()) {
-            Path file = root.resolve(e.getKey());
+            Path file = ticketFile(e.getKey());
             String text;
             try {
                 text = Files.readString(file).replace("\r\n", "\n");
@@ -180,6 +184,17 @@ final class SelfTestCase {
             out.append(e.getKey()).append(missing == null ? ": ok" : ": missing \"" + missing + "\"").append('\n');
         }
         return out.toString();
+    }
+
+    private Path ticketFile(String path) {
+        String anyState = "docs/tickets/*/";
+        if (!path.startsWith(anyState)) return root.resolve(path);
+        String rest = path.substring(anyState.length());
+        for (String state : List.of("backlog", "completed")) {
+            Path candidate = root.resolve("docs/tickets/" + state + "/" + rest);
+            if (Files.isRegularFile(candidate)) return candidate;
+        }
+        return root.resolve("docs/tickets/backlog/" + rest); // reported as unreadable
     }
 
     private String freeze(String id) {

@@ -1,0 +1,13 @@
+{
+  "check": "contains",
+  "scenarios": ["The gate's self-test covers the TypeScript cases"],
+  "contains": {
+    "tools/story-gate/selftest/cases/CCW-020.AC-6-vitest-test-phase/case.json": ["\"check\": \"test-phase\"", "\"reports\": \"reports\""],
+    "tools/story-gate/selftest/cases/CCW-020.AC-6-vitest-test-phase/reports/TEST-vitest.xml": ["name=\"Thing &gt; when empty &gt; DFS-001.AC-2, DFS-001.AC-3 shows nothing\"", "type=\"Error\""],
+    "tools/story-gate/selftest/cases/CCW-020.AC-7-stubs-frontend/case.json": ["\"check\": \"stubs-run\""],
+    "tools/story-gate/selftest/cases/CCW-020.AC-7-disabled-frontend/case.json": ["\"args\": [\"disabled\", \"DFS-902\"]"],
+    "tools/story-gate/selftest/cases/CCW-020.AC-7-freeze-frontend/case.json": ["\"check\": \"freeze\""],
+    "tools/story-gate/selftest/cases/CCW-020.AC-8-red-run-npmtest/case.json": ["\"check\": \"red-run\""],
+    "tools/story-gate/selftest/cases/CCW-020.AC-8-npmtest-failed-build/case.json": ["\"output\": \"npmtest-failed.out\""]
+  }
+}

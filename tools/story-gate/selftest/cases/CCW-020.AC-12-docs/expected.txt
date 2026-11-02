@@ -1,0 +1,4 @@
+.claude/archetypes/endpoint/archetype.md: ok
+.claude/skills/tickets/SKILL.md: ok
+docs/design/story-orchestration.md: ok
+docs/design/ui.md: ok

@@ -1,0 +1,7 @@
+tools/story-gate/selftest/cases/CCW-020.AC-6-vitest-test-phase/case.json: ok
+tools/story-gate/selftest/cases/CCW-020.AC-6-vitest-test-phase/reports/TEST-vitest.xml: ok
+tools/story-gate/selftest/cases/CCW-020.AC-7-disabled-frontend/case.json: ok
+tools/story-gate/selftest/cases/CCW-020.AC-7-freeze-frontend/case.json: ok
+tools/story-gate/selftest/cases/CCW-020.AC-7-stubs-frontend/case.json: ok
+tools/story-gate/selftest/cases/CCW-020.AC-8-npmtest-failed-build/case.json: ok
+tools/story-gate/selftest/cases/CCW-020.AC-8-red-run-npmtest/case.json: ok

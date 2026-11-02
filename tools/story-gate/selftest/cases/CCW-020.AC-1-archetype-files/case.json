@@ -1,0 +1,14 @@
+{
+  "check": "contains",
+  "scenarios": ["The archetype's files exist"],
+  "contains": {
+    ".claude/archetypes/component/archetype.md": ["---\nname: component\nversion: 1\nphases: [design, test, implement, verify]\ngates: [design, done]\nmodels:\n"],
+    ".claude/archetypes/component/design.md.tmpl": ["## Summary", "## Page states", "## Checklist disposition", "## Expected breakage", "## Stubs (as of the design phase)"],
+    ".claude/archetypes/component/test-plan.md.tmpl": ["## Criterion → scenario → test", "provideStubSurfacing()"],
+    ".claude/archetypes/component/impl-guide.md": ["# component — implementer guide"],
+    ".claude/archetypes/component/test-guide.md": ["# component — test-author guide"],
+    ".claude/archetypes/component/skeletons/feature.ts.tmpl": ["throw new Error('not implemented: <TICKET-ID>');"],
+    ".claude/archetypes/component/skeletons/feature.html.tmpl": ["@empty"],
+    ".claude/archetypes/component/skeletons/feature.spec.ts.tmpl": ["provideStubSurfacing()", "await settle(fixture);", "it('<TICKET-ID>.AC-1"]
+  }
+}
