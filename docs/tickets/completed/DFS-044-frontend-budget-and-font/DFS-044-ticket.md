@@ -1,7 +1,7 @@
 ---
 id: DFS-044
 title: Fit the frontend bundle budget and use the system font
-status: in-review
+status: done
 type: build
 scope: [build]
 archetype: none
@@ -14,7 +14,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # DFS-044: Fit the frontend bundle budget and use the system font
