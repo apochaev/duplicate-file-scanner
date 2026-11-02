@@ -1,7 +1,7 @@
 ---
 id: DFS-047
 title: Serve a finished scan's folder tree and duplicate sets
-status: in-progress
+status: in-review
 type: feature
 scope: [build]
 archetype: endpoint
@@ -22,7 +22,7 @@ touches:
   - docs/design/ui.md
 blocked_reason:
 created: 2026-11-01
-updated: 2026-11-01
+updated: 2026-11-02
 completed:
 ---
 
