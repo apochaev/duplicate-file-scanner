@@ -7,3 +7,38 @@
 - **tests / tooling:** a Python script passed through a Bash heredoc turned the Java escape `'\n'` into a real newline in the written file (caught by reading it back); the Edit tool fixed it.
 - **verify / by-hand check:** stopping a `bootRun` server started for a done-item needs killing the app's own JVM by the PID it logs (`taskkill //PID <pid> //F`), which sits awkwardly with the verifier rule "never kill Java processes" (meant for Gradle daemons). The verifier definition could say: kill only the forked application PID from the server log, never a daemon; or the endpoint archetype could offer a `bootJar` + `java -jar` recipe whose process is unambiguous.
 - **verify / AC-9 scope:** the foreign-`Host` refusal is tested on one of three new endpoints, as the ticket asked; fine because one filter covers all of `/api`, but the endpoint test guide could state that one Host row per controller suffices.
+
+## Entries
+
+### DFS-048.L-1: A reused predecessor mechanism can leave a criterion unable to fail red
+
+- Status: proposed
+- Impact: local
+- Target: `.claude/archetypes/endpoint/archetype.md`, edge-case checklist
+- Change: add an item: when a ticket reuses a predecessor's state mechanism (for example `ScanRegistry.completedState`), confirm which package it lives in and whether a criterion on it can fail red from the test location the ticket names. If it cannot, decide in refinement where the test goes, rather than leaving the architect to add a layer only so the test can go red.
+- Evidence: DFS-048 `learnings.md` "design / AC-8 seam": the memo lives in package `scan`, already built; the design added an `OverlapState` holder (design commit `62afd5d`) as a second memo layer so AC-8 could go red from `result`.
+- Recurrences: 1 (DFS-048)
+- Recommendation: apply; one checklist line, and it saves code made only for the red gate.
+- Decision:
+
+### DFS-048.L-2: A nullable nested record is generated without `| null`
+
+- Status: proposed
+- Impact: local
+- Target: `.claude/archetypes/endpoint/archetype.md`, checklist item 5
+- Change: note that `@Schema(nullable = true)` on a record-typed component comes out as `"type": "null"` beside the `$ref`, which `ng-openapi-gen` turns into an optional field without `| null` while Jackson sends `null`. Screens reading such a field use `?.`.
+- Evidence: DFS-048 `learnings.md` "design / spec" (`folder?: FolderSummaryView` in the generated client).
+- Recurrences: 1 (DFS-048)
+- Recommendation: apply; a one-line note.
+- Decision:
+
+### DFS-048.L-3: The verifier's "never kill Java processes" leaves no way to stop its own `bootRun`
+
+- Status: proposed
+- Impact: shared (touches an agent prompt: `.claude/agents/verifier.md`)
+- Target: `.claude/agents/verifier.md`, line 28
+- Change: reword the rule to "never run `gradlew --stop` or kill a Gradle daemon; to stop a server you started for a by-hand check, kill only the application PID it logged". Alternatively, point to running the built `bootJar` with `java -jar`, whose process is unambiguous (see DFS-047.L-6).
+- Evidence: DFS-048 `learnings.md` "verify / by-hand check": the verifier stopped the server with `taskkill //PID <pid> //F`, which the rule as written (from DFS-031.L-4) forbids.
+- Recurrences: 1 (DFS-048)
+- Recommendation: apply; the rule should keep protecting other sessions' daemons without making a required done-item impossible to clean up.
+- Decision:

@@ -28,8 +28,8 @@
 - Target: `.claude/skills/tickets/SKILL.md`, `refine` mode ("Acceptance criteria"); alternatively `tools/story-gate` (traceability)
 - Change: in a pipeline ticket, refinement turns a criterion that can only be checked by reading (documentation wording) into a done-item rather than a live acceptance criterion; the alternative is for traceability to accept a criterion that `test-plan.md` marks `verified-by: read`, left to the verifier.
 - Evidence: DFS-047 `plan.json` defect 1: tests attempt 1 failed-gate with "AC-10: no test display name starts with DFS-047.AC-10", though the ticket and `design.md` said AC-10 (docs) is read; attempt 2, escalated to opus, added a test pinned to exact wording in `CLAUDE.md` and `docs/design/ui.md`, which the verifier calls brittle (test-author and verifier notes above). Related: DFS-003.L-3 (same gate, an absence criterion), CCW-001.L-6 (where "checked by reading" scenarios come from).
-- Recurrences: 1 (DFS-047)
-- Recommendation: apply the refine-side fix: no gate code change and no wording-pinned tests.
+- Recurrences: 2 (DFS-047: see Evidence; DFS-048: plan.json defect 1, tests attempt 1 failed-gate with no test for AC-10 (marked covered by OpenApiSpecTest) and AC-11 (marked read); attempt 2, escalated to opus, added them; the test-author note also suggests the test-author-side fix, saying in test-author.md that spec and docs criteria still get a named story test (2026-11-02))
+- Recommendation: apply the refine-side fix: no gate code change and no wording-pinned tests. Seen twice now, both times costing an escalated retry.
 - Decision:
 
 ### DFS-047.L-2: The endpoint archetype contradicts itself on refusal and spec story tests
