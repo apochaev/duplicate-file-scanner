@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-047-result-api-tree-and-sets",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-047-result-api-tree-and-sets",
-  "state": "running",
+  "state": "awaiting-approval",
   "phases": [
     {
       "id": "design",
@@ -123,10 +123,24 @@
       "after": [
         "implement"
       ],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 24,
+          "wallClockSeconds": 489,
+          "outcome": "passed",
+          "note": "stopped at its 20-turn agent default (the archetype's maxTurns 30 was not passed at launch) with verification.md and the ticket ticks on disk; resumed by SendMessage to wrap up, combined turns/time of both invocations; PASS consistency DFS-047: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/DFS-047-ticket.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/verification.md"
+      ],
+      "commit": "48cdac19e72fca0c8b7a4d4405ec9507b2b2d24c"
     }
   ],
   "gates": [
