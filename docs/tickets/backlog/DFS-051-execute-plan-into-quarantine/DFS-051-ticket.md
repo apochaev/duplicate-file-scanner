@@ -1,7 +1,7 @@
 ---
 id: DFS-051
 title: Execute a deletion plan into quarantine
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner, build]
 archetype: use-case
@@ -63,6 +63,8 @@ Settled design (CLAUDE.md): decision 2 (files move to an app-managed quarantine 
 12. **Gates `[design, done]`.** This ticket moves the user's files; the deletion path's design (the `FileDeleter` port, the manifest writer, the order of checks per file, where cancel and failures are handled) is reviewed before tests and code (tickets skill: keep the design gate for any ticket that plans or executes deletion).
 13. **Small rules that follow from the decisions above.** An empty plan (no operations) is accepted: its run completes with an empty report and a manifest holding only the `run` and `end` lines (as DFS-042 decision 5 accepts an empty plan). A manifest folder that cannot be created or written refuses the run with a new `ErrorCode.MANIFEST_UNWRITABLE` before anything is recorded (decision 6). The manifest folder and each volume's `.dfs-quarantine/<run ID>` folder are created on first use, never at application startup, so a context that never executes writes nothing.
 
+14. **The plan is re-checked against itself and the scan before anything is recorded** (added 2026-11-01 after a review by dfs-product, confirmed by the user). (a) Execution recomputes the plan's ID from its operations and conflicts with DFS-022's canonical encoding (the one `PreviewDeletionPlanService` computes; DFS-022 decision 1 made the ID content-derived for exactly this) and refuses a mismatch with a new `ErrorCode.PLAN_EDITED` (`ui.md` U7: executing refuses a plan edited since its preview). This catches accidental and stale edits, such as a plan whose `conflicts` were emptied; the ID is an unkeyed hash, so it is not proof against a deliberate forgery. (b) That is what the second check is for: for every operation, the scan must hold a duplicate set with the operation's digest in which the operation's `links` are exactly one physical copy's links and its `keeper` is a link of a **different** physical copy; otherwise the run is refused with a new `ErrorCode.KEEPER_NOT_SEPARATE_COPY` naming the operation. So "never the last copy" holds at execution without trusting the plan's own `conflicts` list. Both checks refuse the **whole run** (a plan that fails them is edited or broken, so none of it is trusted), on the caller's thread with the other validation (decision 7), before a job, manifest or quarantine folder exists. A keeper missing on disk is still decision 4's per-file skip, which also catches an A-keeps-B, B-keeps-A chain once the first move has happened.
+
 ## Acceptance criteria
 
 The full ID of each criterion is `DFS-051.AC-<n>`.
@@ -88,6 +90,8 @@ The full ID of each criterion is `DFS-051.AC-<n>`.
 - **AC-19** An empty plan is accepted: its run completes with an empty report and a manifest holding only the `run` and `end` lines; a `null` scan, plan or listener throws `NullPointerException`.
 - **AC-20** `ScannerFactories.planExecutionUseCases(executor, config)` and the autoconfigured beans run a plan through the same ports; the manifest folder comes from `dfs.execution.manifest-folder` (default `${user.home}/.dfs/manifests`), and an app's own `planExecutionExecutor` or port bean replaces the default.
 - **AC-21** On a real virtual-thread executor with the NIO adapters, a plan over two identical files in a `@TempDir` executes end to end: one file is in quarantine, its keeper in place, and the manifest records the move.
+- **AC-22** A plan whose ID does not match the ID recomputed from its operations and conflicts is refused with `Failure(PLAN_EDITED)`: no job is recorded, no manifest is created and no file moves.
+- **AC-23** A plan with an operation whose keeper is not, according to the scan, a link of a different physical copy in the same duplicate set as the operation's links is refused with `Failure(KEEPER_NOT_SEPARATE_COPY)` naming the operation, leaving no trace.
 
 ## Scenarios
 
@@ -305,6 +309,25 @@ Feature: Execute a deletion plan into quarantine
     When I execute the plan and wait on the task's completion with a 10-second bound
     Then "B/photo.jpg" is in that volume's quarantine folder, "A/photo.jpg" is in place
     And the manifest records the move
+  @AC-22
+  Scenario: A plan edited after its preview is refused
+    Given the previewed plan with a conflict, rebuilt with the same ID but its conflicts list emptied
+    When I execute it
+    Then the answer is Failure(PLAN_EDITED)
+    And no run is recorded, "manifests" holds no file and both photos are in place
+
+  @AC-23
+  Scenario Outline: An operation whose keeper is not a separate copy is refused
+    Given the plan's operation rebuilt with keeper <keeper> and the plan's ID recomputed to match
+    When I execute it
+    Then the answer is Failure(KEEPER_NOT_SEPARATE_COPY) naming that operation
+    And no run is recorded, "manifests" holds no file and both photos are in place
+
+    Examples:
+      | keeper                                                                |
+      | "lib/B/photo.jpg", its own link                                       |
+      | "lib/B/old/photo.jpg", a hard link of the same physical file          |
+      | "lib/C/other.jpg", a path in no duplicate set of the scan             |
 ```
 
 ## Scope
@@ -312,8 +335,8 @@ Feature: Execute a deletion plan into quarantine
 **Touches:**
 - `us.pochaev.dfs.scanner.domain.usecases.command`: `StartPlanExecution`, `CancelPlanExecution`
 - `us.pochaev.dfs.scanner.domain.usecases.query`: `GetPlanExecutionStatus`, `GetPlanExecutionResult`
-- `us.pochaev.dfs.scanner.domain.model`: `PlanExecutionId`, `PlanExecutionSnapshot`, `PlanExecutionReport` and its outcome types, `ExecutionEvent`, `ExecutionListener`, `ExecutionConfig`, four new `ErrorCode` values (`PLAN_HAS_CONFLICTS`, `UNKNOWN_PLAN_EXECUTION`, `PLAN_EXECUTION_NOT_FINISHED`, `MANIFEST_UNWRITABLE`)
-- `us.pochaev.dfs.scanner.application`: the plan execution service, `JobRunner`'s generic rejection message and its `Error`-path test, their tests
+- `us.pochaev.dfs.scanner.domain.model`: `PlanExecutionId`, `PlanExecutionSnapshot`, `PlanExecutionReport` and its outcome types, `ExecutionEvent`, `ExecutionListener`, `ExecutionConfig`, six new `ErrorCode` values (`PLAN_HAS_CONFLICTS`, `UNKNOWN_PLAN_EXECUTION`, `PLAN_EXECUTION_NOT_FINISHED`, `MANIFEST_UNWRITABLE`, `PLAN_EDITED`, `KEEPER_NOT_SEPARATE_COPY`)
+- `us.pochaev.dfs.scanner.application`: the plan execution service, the plan ID computation shared with `PreviewDeletionPlanService` (its existing tests pass unchanged), `JobRunner`'s generic rejection message and its `Error`-path test, their tests
 - `us.pochaev.dfs.scanner.domain.factory`: `PlanExecutionUseCases`, `ScannerFactories.planExecutionUseCases`
 - `us.pochaev.dfs.scanner.infra.port`: `FileDeleter` (the quarantine move) and the manifest writer port
 - `us.pochaev.dfs.scanner.infra.adapter`: the NIO quarantine adapter, the JSON Lines manifest adapter, the end-to-end test
