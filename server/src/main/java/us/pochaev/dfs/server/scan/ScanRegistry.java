@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -113,7 +115,51 @@ public class ScanRegistry {
      * @throws RuntimeException the exception {@code build} threw (to the builder and to every caller waiting on it)
      */
     public <T> Result<T> completedState(String id, Class<T> kind, Function<ScanResult, ? extends T> build) {
-        throw new UnsupportedOperationException("not implemented: DFS-047");
+        Optional<Tracked> found = tracked(id);
+        if (found.isEmpty()) {
+            return new Result.Failure<>(us.pochaev.dfs.scanner.domain.model.ErrorCode.UNKNOWN_SCAN,
+                    "No scan with ID " + id + " in this server run");
+        }
+        Tracked t = found.get();
+        CompletableFuture<?> existing = t.state().get(kind);
+        if (existing != null) {
+            return new Result.Success<>(kind.cast(await(existing)));
+        }
+        ScanResult scanResult;
+        switch (getScanResult.result(t.id())) {
+            case Result.Failure<ScanResult> f -> {
+                return new Result.Failure<>(f.code(), f.message());
+            }
+            case Result.Success<ScanResult> ok -> scanResult = ok.value();
+        }
+        CompletableFuture<Object> mine = new CompletableFuture<>();
+        CompletableFuture<?> other = t.state().putIfAbsent(kind, mine);
+        if (other != null) {
+            return new Result.Success<>(kind.cast(await(other)));
+        }
+        try {
+            mine.complete(build.apply(scanResult));
+        } catch (RuntimeException | Error e) {
+            mine.completeExceptionally(e);
+            t.state().remove(kind, mine);
+            throw e;
+        }
+        return new Result.Success<>(kind.cast(mine.join()));
+    }
+
+    private static Object await(CompletableFuture<?> future) {
+        try {
+            return future.join();
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause() == null ? e : e.getCause();
+            if (cause instanceof RuntimeException re) {
+                throw re;
+            }
+            if (cause instanceof Error err) {
+                throw err;
+            }
+            throw e;
+        }
     }
 
     static boolean terminal(ScanProgress p) {
@@ -148,7 +194,12 @@ public class ScanRegistry {
                 groupsDone, groupsTotal, s.failureMessage());
     }
 
-    private record Tracked(ScanId id, List<String> locations, Instant startedAt, long sequence, Counters counters) {
+    private record Tracked(ScanId id, List<String> locations, Instant startedAt, long sequence, Counters counters,
+                           Map<Class<?>, CompletableFuture<?>> state) {
+
+        Tracked(ScanId id, List<String> locations, Instant startedAt, long sequence, Counters counters) {
+            this(id, locations, startedAt, sequence, counters, new ConcurrentHashMap<>());
+        }
 
         int setCount(GetScanResult results) {
             if (counters.sets < 0) {

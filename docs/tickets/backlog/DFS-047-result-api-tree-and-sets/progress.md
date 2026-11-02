@@ -32,3 +32,9 @@ For the next design attempt. In `ScanRegistry.completedState`, do not build per-
 - The gate failed traceability: no test for AC-10. Added `DFS-047.AC-10 CLAUDE.md's server entry and ui.md U3 and U10 name the two result endpoints` to `ResultApiTest`: calls both endpoints on a completed scan, then checks that CLAUDE.md's `server` entry contains `GET /api/scans/{id}/folders`, `GET /api/scans/{id}/sets` and, after them, `403` and `roots`, and that ui.md's U3 and U10 sections contain both paths. The implementer must write the docs in that form for the test to pass.
 - `./gradlew :server:test --tests "*ResultApiTest"`: all 26 fail with `UnsupportedOperationException: not implemented: DFS-047`. test-plan.md updated.
 - Expected commit unchanged: `test(server): add result API story tests [DFS-047]`.
+
+## implement (implementer)
+
+- Implemented `ResultIndex` (tree with rolled-up totals, sets sorted once), `ResultController` (check order: ID, completion, path, page) and `ScanRegistry.completedState` (memoized future per kind via `putIfAbsent`, build outside the map, failed build removed, exception unwrapped). Wrote the docs for AC-10 in CLAUDE.md's `server` entry and ui.md U3 and U10.
+- `./gradlew build` green; no stub markers left; no test file touched; no deviation from design.md.
+- Expected commit: `feat(server): serve a completed scan's folder tree and duplicate sets [DFS-047]`.

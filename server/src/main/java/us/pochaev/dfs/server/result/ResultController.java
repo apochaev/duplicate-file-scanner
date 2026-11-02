@@ -7,15 +7,21 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import us.pochaev.dfs.scanner.domain.model.ErrorCode;
+import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.server.api.ApiError;
+import us.pochaev.dfs.server.api.ApiException;
 import us.pochaev.dfs.server.scan.ScanRegistry;
 
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -29,8 +35,7 @@ import java.util.List;
  * ({@code 409 SCAN_NOT_COMPLETED} with the core's message), the path ({@code 400 RELATIVE_PATH}, then
  * {@code 403 PATH_OUTSIDE_ROOTS}), then paging ({@code 400 INVALID_PAGE}).
  * <p>
- * Stubs (design phase): every method body throws; the mappings, signatures and annotations are final, since
- * {@code ./gradlew :server:updateOpenApi} builds the committed spec from them.
+ * The mappings, signatures and annotations shape the committed spec ({@code ./gradlew :server:updateOpenApi}).
  */
 @RestController
 @RequestMapping(path = "/api/scans", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -66,7 +71,9 @@ class ResultController {
             @Parameter(description = "An absolute folder inside one of the scan's roots; without it, the roots")
             @RequestParam(required = false) String parent) {
         // Take the ID as a String: a malformed one must be the same 404 as an unknown one (checklist item 4).
-        throw new UnsupportedOperationException("not implemented: DFS-047");
+        ResultIndex index = index(id);
+        Path path = path(index, parent);
+        return path == null ? index.roots() : index.children(path);
     }
 
     @GetMapping("/{id}/sets")
@@ -90,6 +97,42 @@ class ResultController {
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Sets per page, 1 to 500")
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("not implemented: DFS-047");
+        ResultIndex index = index(id);
+        Path path = path(index, under);
+        if (page < 0 || size < 1 || size > 500) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_PAGE",
+                    "page must be 0 or more and size 1 to 500");
+        }
+        return index.sets(path, page, size);
+    }
+
+    private ResultIndex index(String id) {
+        return switch (registry.completedState(id, ResultIndex.class, ResultIndex::of)) {
+            case Result.Success<ResultIndex> ok -> ok.value();
+            case Result.Failure<ResultIndex> f -> throw new ApiException(
+                    f.code() == ErrorCode.UNKNOWN_SCAN ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT,
+                    f.code().name(), f.message());
+        };
+    }
+
+    /** The requested path, normalized; null when none was given. */
+    private static Path path(ResultIndex index, String value) {
+        if (value == null) {
+            return null;
+        }
+        Path path;
+        try {
+            path = Path.of(value).normalize();
+        } catch (InvalidPathException e) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "PATH_OUTSIDE_ROOTS", "The path lies outside every root");
+        }
+        if (value.isBlank() || !path.isAbsolute()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "RELATIVE_PATH", "The path is not absolute: " + value);
+        }
+        if (!index.insideRoots(path)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "PATH_OUTSIDE_ROOTS",
+                    "The path lies outside every root of the scan: " + value);
+        }
+        return path;
     }
 }
