@@ -17,5 +17,14 @@ public record PlanVerifySnapshot(JobStatus status, String planId, int entriesDon
                                  long bytesTotal, String failure) {
 
     public PlanVerifySnapshot {
+        java.util.Objects.requireNonNull(status, "status");
+        java.util.Objects.requireNonNull(planId, "planId");
+        java.util.Objects.requireNonNull(failure, "failure");
+        if (entriesDone < 0 || entriesDone > entriesTotal) {
+            throw new IllegalArgumentException("need 0 <= entriesDone <= entriesTotal");
+        }
+        if (bytesDone < 0 || bytesDone > bytesTotal) {
+            throw new IllegalArgumentException("need 0 <= bytesDone <= bytesTotal");
+        }
     }
 }

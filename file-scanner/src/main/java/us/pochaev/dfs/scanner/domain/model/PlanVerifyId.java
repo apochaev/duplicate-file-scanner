@@ -11,6 +11,7 @@ import java.util.UUID;
 public record PlanVerifyId(UUID value) {
 
     public PlanVerifyId {
+        java.util.Objects.requireNonNull(value, "value");
     }
 
     /** A new ID with a random UUID. */

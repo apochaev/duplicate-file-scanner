@@ -20,16 +20,24 @@ public final class InMemoryJobStore<I, R> implements JobStore<I, R> {
 
     @Override
     public void create(I id, R record) {
-        throw new UnsupportedOperationException("not implemented: DFS-042");
+        java.util.Objects.requireNonNull(id, "id");
+        java.util.Objects.requireNonNull(record, "record");
+        if (records.putIfAbsent(id, record) != null) {
+            throw new IllegalStateException("job already exists: " + id);
+        }
     }
 
     @Override
     public Optional<R> find(I id) {
-        throw new UnsupportedOperationException("not implemented: DFS-042");
+        java.util.Objects.requireNonNull(id, "id");
+        return Optional.ofNullable(records.get(id));
     }
 
     @Override
     public Optional<R> update(I id, UnaryOperator<R> change) {
-        throw new UnsupportedOperationException("not implemented: DFS-042");
+        java.util.Objects.requireNonNull(id, "id");
+        java.util.Objects.requireNonNull(change, "change");
+        return Optional.ofNullable(records.computeIfPresent(id, (k, current) ->
+                java.util.Objects.requireNonNull(change.apply(current), "change returned null")));
     }
 }

@@ -11,3 +11,6 @@
 - Wrote PlanVerifyServiceTest, PlanVerifyRealThreadTest (application), InMemoryJobStoreTest (infra.adapter), three DFS-042.AC-13 tests in ScannerAutoConfigurationTest, plus the one-line edit of appExecutorReplacesDefault; test-plan.md filled in.
 - All 28 new tests fail only with `UnsupportedOperationException: not implemented: DFS-042`; no Thread.sleep.
 - Expected commit: `test(file-scanner): add plan verify job tests [DFS-042]`.
+
+## Implement (attempt 1)
+Implemented InMemoryJobStore, JobRunner, PlanVerifyService, VerifyOutcomes and the record compact-constructor checks per design.md. Build green. No deviations.

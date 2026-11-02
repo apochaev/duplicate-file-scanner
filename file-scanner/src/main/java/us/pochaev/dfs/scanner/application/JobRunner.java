@@ -1,11 +1,14 @@
 package us.pochaev.dfs.scanner.application;
 
+import us.pochaev.dfs.scanner.domain.model.ErrorCode;
+import us.pochaev.dfs.scanner.domain.model.JobStatus;
 import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.scanner.infra.port.JobStore;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.function.BooleanSupplier;
 import java.util.function.UnaryOperator;
 
@@ -74,7 +77,54 @@ final class JobRunner<I, P, T> {
      * @throws RuntimeException any other exception from the executor, rethrown after marking the job FAILED
      */
     Result<I> submit(I id, P initial, Work<P, T> work) {
-        throw new UnsupportedOperationException("not implemented: DFS-042");
+        store.create(id, new Job<>(JobStatus.QUEUED, initial, null, ""));
+        try {
+            executor.execute(() -> runTask(id, work));
+        } catch (RejectedExecutionException e) {
+            String failure = e.getClass().getName() + ": " + e.getMessage();
+            markFailed(id, failure, true);
+            return new Result.Failure<>(ErrorCode.EXECUTOR_REJECTED, "executor rejected the plan verify: " + failure);
+        } catch (RuntimeException e) {
+            markFailed(id, e.getClass().getName() + ": " + e.getMessage(), true);
+            throw e;
+        }
+        return new Result.Success<>(id);
+    }
+
+    private void markFailed(I id, String failure, boolean queuedToo) {
+        store.update(id, job -> {
+            boolean live = job.status() == JobStatus.RUNNING || job.status() == JobStatus.CANCELLING
+                    || (queuedToo && job.status() == JobStatus.QUEUED);
+            return live ? new Job<>(JobStatus.FAILED, job.progress(), null, failure) : job;
+        });
+    }
+
+    private void runTask(I id, Work<P, T> work) {
+        Optional<Job<P, T>> started = store.update(id, job -> job.status() == JobStatus.QUEUED
+                ? new Job<>(JobStatus.RUNNING, job.progress(), null, "") : job);
+        if (started.isEmpty() || started.get().status() != JobStatus.RUNNING) {
+            return;
+        }
+        Progress<P> progress = change -> store.update(id, job ->
+                job.status() == JobStatus.RUNNING || job.status() == JobStatus.CANCELLING
+                        ? new Job<>(job.status(), change.apply(job.progress()), job.result(), job.failure())
+                        : job);
+        BooleanSupplier stop = () -> store.find(id).map(j -> j.status() != JobStatus.RUNNING).orElse(true);
+        T t;
+        try {
+            t = work.run(progress, stop);
+        } catch (RuntimeException e) {
+            markFailed(id, e.getClass().getName() + ": " + e.getMessage(), false);
+            return;
+        } catch (Error e) {
+            markFailed(id, e.getClass().getName() + ": " + e.getMessage(), false);
+            throw e;
+        }
+        store.update(id, job -> switch (job.status()) {
+            case RUNNING -> new Job<>(JobStatus.COMPLETED, job.progress(), t, "");
+            case CANCELLING -> new Job<>(JobStatus.CANCELLED, job.progress(), outcomes.markCancelled(t), "");
+            default -> job;
+        });
     }
 
     /**
@@ -84,13 +134,20 @@ final class JobRunner<I, P, T> {
      * @return the job after the request, or empty for an unknown ID
      */
     Optional<Job<P, T>> cancel(I id) {
-        throw new UnsupportedOperationException("not implemented: DFS-042");
+        Objects.requireNonNull(id, "id");
+        return store.update(id, job -> switch (job.status()) {
+            case QUEUED -> new Job<>(JobStatus.CANCELLED, job.progress(),
+                    outcomes.cancelledBeforeStart(job.progress()), "");
+            case RUNNING -> new Job<>(JobStatus.CANCELLING, job.progress(), null, "");
+            default -> job;
+        });
     }
 
     /**
      * @return the job's current record, or empty for an unknown ID
      */
     Optional<Job<P, T>> find(I id) {
-        throw new UnsupportedOperationException("not implemented: DFS-042");
+        Objects.requireNonNull(id, "id");
+        return store.find(id);
     }
 }

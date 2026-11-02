@@ -13,5 +13,12 @@ package us.pochaev.dfs.scanner.application;
 public record PlanVerifyProgress(String planId, int entriesDone, int entriesTotal, long bytesDone, long bytesTotal) {
 
     public PlanVerifyProgress {
+        java.util.Objects.requireNonNull(planId, "planId");
+        if (entriesDone < 0 || entriesDone > entriesTotal) {
+            throw new IllegalArgumentException("need 0 <= entriesDone <= entriesTotal");
+        }
+        if (bytesDone < 0 || bytesDone > bytesTotal) {
+            throw new IllegalArgumentException("need 0 <= bytesDone <= bytesTotal");
+        }
     }
 }

@@ -18,5 +18,8 @@ import us.pochaev.dfs.scanner.domain.model.JobStatus;
 public record Job<P, T>(JobStatus status, P progress, T result, String failure) {
 
     public Job {
+        java.util.Objects.requireNonNull(status, "status");
+        java.util.Objects.requireNonNull(progress, "progress");
+        java.util.Objects.requireNonNull(failure, "failure");
     }
 }

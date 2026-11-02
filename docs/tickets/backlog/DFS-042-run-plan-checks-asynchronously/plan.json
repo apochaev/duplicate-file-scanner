@@ -56,10 +56,28 @@
       "after": [
         "design"
       ],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 20,
+          "wallClockSeconds": 249,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-042: red and traceability pass; - red: 30 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 524 other tests pass (3 skipped); - traceability: 14 criteria traced through 15 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/plan.json",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/progress.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PlanVerifyRealThreadTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PlanVerifyServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/InMemoryJobStoreTest.java",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java"
+      ],
+      "commit": "c56a501c28069e0c144e5fc67a358ebf00fac8e5"
     },
     {
       "id": "implement",
@@ -67,7 +85,7 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null

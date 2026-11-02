@@ -19,5 +19,9 @@ public record PlanVerifyUseCases(StartPlanVerify start, CancelPlanVerify cancel,
                                  GetPlanVerifyResult result) {
 
     public PlanVerifyUseCases {
+        java.util.Objects.requireNonNull(start, "start");
+        java.util.Objects.requireNonNull(cancel, "cancel");
+        java.util.Objects.requireNonNull(status, "status");
+        java.util.Objects.requireNonNull(result, "result");
     }
 }
