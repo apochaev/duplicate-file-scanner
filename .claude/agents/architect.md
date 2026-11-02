@@ -4,7 +4,7 @@ description: Domain design, ports, package placement, and compilable stub files 
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: opus
 effort: high
-maxTurns: 25
+maxTurns: 35
 ---
 
 # architect

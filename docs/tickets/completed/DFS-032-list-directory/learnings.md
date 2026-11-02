@@ -17,7 +17,7 @@
 - Target: `.claude/archetypes/use-case/archetype.md` (`models:` architect `maxTurns`)
 - Change: raise the architect's `maxTurns` from 25 to 35 for use-case, and add one line to the design guidance: write design.md's Summary early and batch stub writes, so a cap stop leaves a usable design.
 - Evidence: DFS-032 plan.json design run note "resumed once via SendMessage after hitting the 25-turn cap with stubs written but no design.md" (40 turns in all); architect note "Turn budget". Same shape as DFS-026.L-7 (verifier cap, pipeline-stage).
-- Recurrences: 1 (DFS-032)
+- Recurrences: 2 (DFS-032: see Evidence; DFS-042: stopped at 25 again and needed a resume; the archetype's 35 never reached the agent (2026-11-01))
 - Recommendation: apply, the cap stopped the phase before its main artifact existed.
 - Decision: applied 2026-11-01 by the user; commit `docs: apply DFS-022.L-1, L-2, L-3, DFS-032.L-1, L-2, L-3, L-4`
 
