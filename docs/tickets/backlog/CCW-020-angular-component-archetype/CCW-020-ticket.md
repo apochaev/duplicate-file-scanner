@@ -1,7 +1,7 @@
 ---
 id: CCW-020
 title: Add the Angular component archetype
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: none
