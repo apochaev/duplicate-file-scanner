@@ -22,6 +22,15 @@
           "wallClockSeconds": 663,
           "outcome": "passed",
           "note": "PASS touches DFS-051: 33 changed files, all inside touches; two invocations as one run: the first stopped with API 429 (5-hour usage limit) before writing anything, its turns not reported; resumed after the reset with SendMessage (45 tool uses, 663 s, about 179k subagent tokens); ticket amended mid-run in c54c837 (decision 14, AC-22, AC-23) and the agent told by message"
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "high",
+          "turns": 26,
+          "wallClockSeconds": 195,
+          "outcome": "passed",
+          "note": "PASS touches DFS-051: 33 changed files, all inside touches; rework after design-gate feedback (manifest end line from the recorded job status), attempt counter reset per approve-with-feedback; 26 tool uses, 195 s, about 63k subagent tokens"
         }
       ],
       "artifacts": [
@@ -58,7 +67,7 @@
         "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ExecutionProperties.java",
         "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
       ],
-      "commit": "32939e26df22a5b05c7249c95d973681506a995a"
+      "commit": "0d3fe588eccd6abe721627db858a685c149d360b"
     },
     {
       "id": "tests",
