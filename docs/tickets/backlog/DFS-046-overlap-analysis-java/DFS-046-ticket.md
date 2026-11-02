@@ -49,7 +49,7 @@ Milestone M-1 ("see the results of a scan"), step 1 of 5 (`docs/design/ui.md`, "
    - `Optional<FolderSummary> summary(Path folder)`: the summary of any folder from a root down, also one not listed by `summaries()` (zeros for its copy figures); empty for a folder outside every root.
    - `List<FolderPair> pairs()`: every listed pair between immediate folders, in the fixed order (AC-9).
    - `FolderPair pair(Path x, Path y)`: one pair for any two folders, each counted recursively; `x` and `y` may come in either order.
-   - Records: `FolderSummary(folder, totalFiles, totalBytes, filesWithCopyElsewhere, bytesWithCopyElsewhere, internalDuplicateFiles, internalBytes)`; `PairSide(folder, filesWithCopy, totalFiles, bytesWithCopy, totalBytes)` with `boolean full()` (`filesWithCopy == totalFiles`); `FolderPair(a, b)` with `a.folder() < b.folder()`.
+   - Records: `FolderSummary(folder, totalFiles, totalBytes, filesWithCopyElsewhere, bytesWithCopyElsewhere, internalDuplicateFiles, internalBytes)`; `PairSide(folder, filesWithCopy, totalFiles, bytesWithCopy, totalBytes)` with `boolean full()` (`totalFiles > 0 && filesWithCopy == totalFiles`: a side with no files is never full); `FolderPair(a, b)` with `a.folder() < b.folder()`.
    - Paths are compared with `Path.compareTo` and matched with `Path.startsWith` after `normalize()`, so the platform's rules apply (case-insensitive on Windows).
 3. **Counting units** (2026-11-01). A file is a path (a `FileEntry`), as `FolderTotal.files` counts it. Totals come from `ScanResult.folders`, summed up the tree. A file "with a copy elsewhere" counts once however many copies it has.
 4. **Refused queries are exceptions** (2026-11-01). `pair(x, y)` throws `IllegalArgumentException` when `x` equals `y`, one contains the other, or either lies outside every root; DFS-048 checks these first and maps them to HTTP errors, so reaching the exception is a caller bug.
@@ -60,7 +60,7 @@ Milestone M-1 ("see the results of a scan"), step 1 of 5 (`docs/design/ui.md`, "
 The full ID of each criterion is `DFS-046.AC-<n>`.
 
 - **AC-1** Each folder's summary counts how many of its files have a copy in any other folder, so coverage spread over several folders shows: a folder of 1,000 files, 600 with a copy in folder X and 400 with a copy in folder Y, shows 1,000 of 1,000 with a copy elsewhere, while no pair with it shows more than 600.
-- **AC-2** A pair between two folders is listed once, with `a` before `b` by path, and carries both directions: each side has that folder's files with a copy in the other folder, its total files, and their bytes; `full()` is true exactly when every file of that side has a copy.
+- **AC-2** A pair between two folders is listed once, with `a` before `b` by path, and carries both directions: each side has that folder's files with a copy in the other folder, its total files, and their bytes; `full()` is true exactly when that side has at least one file and every one of them has a copy.
 - **AC-3** A file with copies in n folders counts in each of the n(n−1)/2 pairs those folders form, and once in each of those folders' summaries.
 - **AC-4** A path in another folder that is a hard link of the same physical copy never counts: not as a copy elsewhere in a summary, not on a pair side, and a set whose copies differ only by hard links adds nothing.
 - **AC-5** For a folder's summary, a copy elsewhere means a copy outside its subtree: two identical files in sibling folders A/x and A/y each have a copy elsewhere in the summaries of A/x and A/y, and none in the summary of A.
@@ -101,6 +101,14 @@ Feature: Folder overlap analysis
     Then pairs() holds exactly one pair of these folders, with a = /r/Backup/2019 and b = /r/Photos/2019
     And side a shows 340 of 340 files with a copy, 340 MB, and full() is true
     And side b shows 340 of 400 files with a copy, 340 MB of 400 MB, and full() is false
+
+  @AC-2
+  Scenario: A side with no files is never full
+    Given /r/Photos/2019 holds 3 files
+    And /r/Nothing lies inside /r and the result holds no file under it
+    When pair(/r/Nothing, /r/Photos/2019) is called
+    Then side a is /r/Nothing with 0 of 0 files with a copy, and full() is false
+    And side b shows 0 of 3 files with a copy
 
   @AC-3
   Scenario: A file with copies in three folders
