@@ -24,3 +24,9 @@
 - StoryGate test-phase: PASS (54 story tests red with stubs, 23 criteria traced). The one "other" stub failure is the existing PlanVerifyServiceTest DFS-042.AC-9, which hits the JobRunner.rejectionMessage stub.
 - Both AC-6 symlink tests abort via Assumptions where symlinks cannot be created (likely on this Windows box), so they are skipped, not red, here.
 - Expected commit: `test(file-scanner): add plan execution tests [DFS-051]` (orchestrator commits).
+
+## implement (implementer)
+
+- Implemented all 14 stubs: PlanExecutionService (validation, per-link check-compare-move loop, manifest lines, settle hook for the `end` line, listener detach, snapshot/report), PlanIds.of (encoding moved from PreviewDeletionPlanService, which now calls it), JobRunner (settled overload threaded through runTask, rejectionMessage), PlanExecutionId.random, NioQuarantineDeleter, JsonLinesManifestWriter. Added the record checks design.md lists.
+- `./gradlew build` green. No test file changed.
+- Expected commit: `feat(file-scanner): execute deletion plans into quarantine [DFS-051]` (orchestrator commits).

@@ -19,6 +19,11 @@ public sealed interface ManifestLine {
     record Run(PlanExecutionId runId, String planId, List<Path> roots, Instant started) implements ManifestLine {
 
         public Run {
+            java.util.Objects.requireNonNull(runId, "runId");
+            java.util.Objects.requireNonNull(planId, "planId");
+            java.util.Objects.requireNonNull(roots, "roots");
+            java.util.Objects.requireNonNull(started, "started");
+            roots = List.copyOf(roots);
         }
     }
 
@@ -30,6 +35,11 @@ public sealed interface ManifestLine {
             implements ManifestLine {
 
         public Moving {
+            java.util.Objects.requireNonNull(path, "path");
+            java.util.Objects.requireNonNull(quarantine, "quarantine");
+            java.util.Objects.requireNonNull(keeper, "keeper");
+            java.util.Objects.requireNonNull(digest, "digest");
+            java.util.Objects.requireNonNull(modified, "modified");
         }
     }
 
@@ -37,6 +47,8 @@ public sealed interface ManifestLine {
     record Moved(Path path, Path quarantine) implements ManifestLine {
 
         public Moved {
+            java.util.Objects.requireNonNull(path, "path");
+            java.util.Objects.requireNonNull(quarantine, "quarantine");
         }
     }
 
@@ -44,6 +56,10 @@ public sealed interface ManifestLine {
     record Skipped(Path path, SkipCause cause, Path subject, String detail) implements ManifestLine {
 
         public Skipped {
+            java.util.Objects.requireNonNull(path, "path");
+            java.util.Objects.requireNonNull(cause, "cause");
+            java.util.Objects.requireNonNull(subject, "subject");
+            java.util.Objects.requireNonNull(detail, "detail");
         }
     }
 
@@ -54,6 +70,8 @@ public sealed interface ManifestLine {
     record End(JobStatus status, int moved, int skipped, int notAttempted, Instant finished) implements ManifestLine {
 
         public End {
+            java.util.Objects.requireNonNull(status, "status");
+            java.util.Objects.requireNonNull(finished, "finished");
         }
     }
 }

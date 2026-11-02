@@ -13,10 +13,11 @@ import java.util.UUID;
 public record PlanExecutionId(UUID value) {
 
     public PlanExecutionId {
+        java.util.Objects.requireNonNull(value, "value");
     }
 
     /** A new ID with a random UUID. */
     public static PlanExecutionId random() {
-        throw new UnsupportedOperationException("not implemented: DFS-051");
+        return new PlanExecutionId(UUID.randomUUID());
     }
 }

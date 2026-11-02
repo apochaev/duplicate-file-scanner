@@ -17,5 +17,9 @@ import java.nio.file.Path;
 public record SkippedFile(Path path, SkipCause cause, Path subject, String detail) {
 
     public SkippedFile {
+        java.util.Objects.requireNonNull(path, "path");
+        java.util.Objects.requireNonNull(cause, "cause");
+        java.util.Objects.requireNonNull(subject, "subject");
+        java.util.Objects.requireNonNull(detail, "detail");
     }
 }

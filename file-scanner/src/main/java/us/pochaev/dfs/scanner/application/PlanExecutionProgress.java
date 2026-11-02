@@ -23,5 +23,17 @@ public record PlanExecutionProgress(PlanExecutionId runId, Path manifest, Deleti
                                     long bytesDone, long bytesTotal, int filesMoved, long bytesMoved) {
 
     public PlanExecutionProgress {
+        java.util.Objects.requireNonNull(runId, "runId");
+        java.util.Objects.requireNonNull(manifest, "manifest");
+        java.util.Objects.requireNonNull(plan, "plan");
+        if (operationsDone < 0 || operationsDone > plan.operations().size()) {
+            throw new IllegalArgumentException("operationsDone out of range: " + operationsDone);
+        }
+        if (bytesDone < 0 || bytesDone > bytesTotal) {
+            throw new IllegalArgumentException("bytesDone out of range: " + bytesDone);
+        }
+        if (filesMoved < 0 || bytesMoved < 0) {
+            throw new IllegalArgumentException("moved totals must not be negative");
+        }
     }
 }

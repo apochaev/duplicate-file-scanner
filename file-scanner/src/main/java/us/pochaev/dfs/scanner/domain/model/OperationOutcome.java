@@ -22,6 +22,13 @@ public sealed interface OperationOutcome {
     record Moved(String digest, long size, Path keeper, List<MovedFile> moved) implements OperationOutcome {
 
         public Moved {
+            java.util.Objects.requireNonNull(digest, "digest");
+            java.util.Objects.requireNonNull(keeper, "keeper");
+            java.util.Objects.requireNonNull(moved, "moved");
+            moved = List.copyOf(moved);
+            if (moved.isEmpty()) {
+                throw new IllegalArgumentException("moved must not be empty");
+            }
         }
     }
 
@@ -30,6 +37,18 @@ public sealed interface OperationOutcome {
             implements OperationOutcome {
 
         public PartlyMoved {
+            java.util.Objects.requireNonNull(digest, "digest");
+            java.util.Objects.requireNonNull(keeper, "keeper");
+            java.util.Objects.requireNonNull(moved, "moved");
+            java.util.Objects.requireNonNull(skipped, "skipped");
+            moved = List.copyOf(moved);
+            skipped = List.copyOf(skipped);
+            if (moved.isEmpty()) {
+                throw new IllegalArgumentException("moved must not be empty");
+            }
+            if (skipped.isEmpty()) {
+                throw new IllegalArgumentException("skipped must not be empty");
+            }
         }
     }
 
@@ -37,6 +56,13 @@ public sealed interface OperationOutcome {
     record Skipped(String digest, long size, Path keeper, List<SkippedFile> skipped) implements OperationOutcome {
 
         public Skipped {
+            java.util.Objects.requireNonNull(digest, "digest");
+            java.util.Objects.requireNonNull(keeper, "keeper");
+            java.util.Objects.requireNonNull(skipped, "skipped");
+            skipped = List.copyOf(skipped);
+            if (skipped.isEmpty()) {
+                throw new IllegalArgumentException("skipped must not be empty");
+            }
         }
     }
 
@@ -44,6 +70,13 @@ public sealed interface OperationOutcome {
     record NotAttempted(String digest, long size, Path keeper, List<Path> links) implements OperationOutcome {
 
         public NotAttempted {
+            java.util.Objects.requireNonNull(digest, "digest");
+            java.util.Objects.requireNonNull(keeper, "keeper");
+            java.util.Objects.requireNonNull(links, "links");
+            links = List.copyOf(links);
+            if (links.isEmpty()) {
+                throw new IllegalArgumentException("links must not be empty");
+            }
         }
     }
 }

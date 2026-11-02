@@ -30,5 +30,14 @@ public record PlanExecutionReport(PlanExecutionId runId, String planId, Path man
                                   long bytesSkipped, String listenerFailure) {
 
     public PlanExecutionReport {
+        java.util.Objects.requireNonNull(runId, "runId");
+        java.util.Objects.requireNonNull(planId, "planId");
+        java.util.Objects.requireNonNull(manifest, "manifest");
+        java.util.Objects.requireNonNull(outcomes, "outcomes");
+        java.util.Objects.requireNonNull(listenerFailure, "listenerFailure");
+        outcomes = List.copyOf(outcomes);
+        if (filesMoved < 0 || bytesMoved < 0 || filesSkipped < 0 || bytesSkipped < 0) {
+            throw new IllegalArgumentException("totals must not be negative");
+        }
     }
 }

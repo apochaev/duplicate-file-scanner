@@ -11,5 +11,7 @@ import java.nio.file.Path;
 public record MovedFile(Path original, Path quarantine) {
 
     public MovedFile {
+        java.util.Objects.requireNonNull(original, "original");
+        java.util.Objects.requireNonNull(quarantine, "quarantine");
     }
 }

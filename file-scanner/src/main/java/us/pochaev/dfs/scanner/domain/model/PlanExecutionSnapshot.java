@@ -20,5 +20,17 @@ public record PlanExecutionSnapshot(JobStatus status, String planId, int operati
                                     String failure) {
 
     public PlanExecutionSnapshot {
+        java.util.Objects.requireNonNull(status, "status");
+        java.util.Objects.requireNonNull(planId, "planId");
+        java.util.Objects.requireNonNull(failure, "failure");
+        if (operationsDone < 0 || operationsDone > operationsTotal) {
+            throw new IllegalArgumentException("operationsDone out of range: " + operationsDone);
+        }
+        if (bytesDone < 0 || bytesDone > bytesTotal) {
+            throw new IllegalArgumentException("bytesDone out of range: " + bytesDone);
+        }
+        if (filesMoved < 0 || bytesMoved < 0) {
+            throw new IllegalArgumentException("moved totals must not be negative");
+        }
     }
 }

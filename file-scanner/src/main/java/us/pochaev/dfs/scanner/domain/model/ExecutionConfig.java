@@ -16,6 +16,17 @@ import java.util.List;
 public record ExecutionConfig(Path manifestFolder, List<Path> quarantineAnchors) {
 
     public ExecutionConfig {
+        java.util.Objects.requireNonNull(manifestFolder, "manifestFolder");
+        java.util.Objects.requireNonNull(quarantineAnchors, "quarantineAnchors");
+        quarantineAnchors = List.copyOf(quarantineAnchors);
+        if (!manifestFolder.isAbsolute()) {
+            throw new IllegalArgumentException("manifestFolder must be absolute: " + manifestFolder);
+        }
+        for (Path anchor : quarantineAnchors) {
+            if (!anchor.isAbsolute()) {
+                throw new IllegalArgumentException("quarantine anchor must be absolute: " + anchor);
+            }
+        }
     }
 
     /** No anchors: every file is quarantined under its own volume root (decision 5). */

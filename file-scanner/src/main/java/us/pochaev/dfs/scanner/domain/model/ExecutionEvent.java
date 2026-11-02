@@ -12,6 +12,9 @@ public sealed interface ExecutionEvent {
     record BytesCompared(long bytesDone, long bytesTotal) implements ExecutionEvent {
 
         public BytesCompared {
+            if (bytesDone < 0 || bytesDone > bytesTotal) {
+                throw new IllegalArgumentException("bytesDone out of range: " + bytesDone);
+            }
         }
     }
 
@@ -19,6 +22,10 @@ public sealed interface ExecutionEvent {
     record OperationDone(OperationOutcome outcome, int done, int total) implements ExecutionEvent {
 
         public OperationDone {
+            java.util.Objects.requireNonNull(outcome, "outcome");
+            if (done < 1 || done > total) {
+                throw new IllegalArgumentException("done out of range: " + done);
+            }
         }
     }
 }
