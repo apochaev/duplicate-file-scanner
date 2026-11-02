@@ -105,10 +105,38 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 32,
+          "wallClockSeconds": 459,
+          "outcome": "passed",
+          "note": "PASS green DFS-051: build and tests green: 607 passed, 3 skipped; PASS disabled DFS-051: no @Disabled tests in the 6 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-051: none of the 6 test files of the tests phase changed since 962c5f98; PASS touches DFS-051: 25 changed files, all inside touches; PASS stubs DFS-051: no stub markers in 167 production files; PASS traceability DFS-051: 23 criteria traced through 30 scenarios to tests and test-plan.md; PASS consistency DFS-051: plan.json parses; state running agrees with ticket status in-progress; about 118k subagent tokens"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/JobRunner.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanExecutionProgress.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanExecutionService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanIds.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PreviewDeletionPlanService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ExecutionConfig.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ExecutionEvent.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/MovedFile.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/OperationOutcome.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanExecutionId.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanExecutionReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanExecutionSnapshot.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/SkippedFile.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/JsonLinesManifestWriter.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioQuarantineDeleter.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ManifestLine.java"
+      ],
+      "commit": "c7c737bff8833b620c93d3efcca3b81276f98d8a"
     },
     {
       "id": "verify",
