@@ -1,7 +1,7 @@
 ---
 id: DFS-046
 title: Compute folder overlaps from a scan result in the server
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -19,7 +19,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-02
-completed:
+completed: 2026-11-02
 ---
 
 # DFS-046: Compute folder overlaps from a scan result in the server
