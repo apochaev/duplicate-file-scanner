@@ -1,0 +1,2 @@
+server/build.gradle.kts: ok
+server/frontend/angular.json: ok

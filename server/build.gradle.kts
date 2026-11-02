@@ -47,6 +47,11 @@ val npmTest by tasks.registering(NpmTask::class) {
     inputs.files(frontendSources).withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName("frontendSources")
     val passed = layout.buildDirectory.file("frontend-test/passed")
     outputs.file(passed).withPropertyName("passedMarker")
+    // The JUnit report angular.json's junit reporter writes, read by tools/story-gate (CCW-020). Deleted first, so a
+    // run that dies before Vitest writes it leaves no stale report to be read as this run's result.
+    val report = layout.buildDirectory.file("test-results/vitest/TEST-vitest.xml")
+    outputs.file(report).withPropertyName("junitReport")
+    doFirst { report.get().asFile.delete() }
     doLast { passed.get().asFile.writeText("ok\n") }
 }
 tasks.check { dependsOn(npmTest) }

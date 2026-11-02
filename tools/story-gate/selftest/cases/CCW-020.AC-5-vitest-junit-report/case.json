@@ -1,0 +1,16 @@
+{
+  "check": "contains",
+  "scenarios": ["Vitest writes a fresh JUnit report"],
+  "contains": {
+    "server/frontend/angular.json": [
+      "\"reporters\": [",
+      "\"default\",",
+      "[\"junit\", { \"outputFile\": \"../build/test-results/vitest/TEST-vitest.xml\" }]"
+    ],
+    "server/build.gradle.kts": [
+      "val report = layout.buildDirectory.file(\"test-results/vitest/TEST-vitest.xml\")",
+      "outputs.file(report).withPropertyName(\"junitReport\")",
+      "doFirst { report.get().asFile.delete() }"
+    ]
+  }
+}
