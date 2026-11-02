@@ -27,6 +27,8 @@ Read only:
 
 Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` (which also runs the Vitest tests), `./gradlew test` or `./gradlew :server:npmTest` to re-confirm green, and the `story-gate` checks (for example `java tools/story-gate/StoryGate.java green <TICKET-ID>`) if you want to re-run one. Never use `Bash` to write, move or delete a file inside the repository. To reproduce a real-run done-item, you may create scratch files outside the worktree (a temporary directory) and delete them when done (DFS-026.L-6). Never run `gradlew --stop` or kill a Gradle daemon or any process you did not start: other sessions build in parallel worktrees on the same machine, and stopping the daemons kills their builds. `git worktree remove` works without stopping them (DFS-031.L-4). The one exception is a server you started yourself for a by-hand check: stop it by the application PID it logged (on Windows, `taskkill //PID <pid> //F`), or run the built `bootJar` with `java -jar` so its process is unambiguous (DFS-048.L-3).
 
+Say a test was skipped only when its JUnit XML has `<skipped>` for it, never from the launch prompt or `progress.md`. A filtered rerun (`--tests ... --rerun`) replaces the whole test-results folder, so read the full run's XML before any filtered rerun (DFS-051.L-5).
+
 ## What you may write — and nothing else
 
 **You may only `Edit` the ticket file (to tick the done-items you have personally verified), `Write` `verification.md` in the story folder, and append friction to the story folder's `learnings.md` (append only; never change an existing line). You must never edit or write any other file, including any source file, test file, `design.md`, `test-plan.md`, `progress.md`, or `plan.json`.** If you find a defect, you report it in `verification.md` and in your final message — you do not fix it yourself, even a one-line fix.
@@ -35,11 +37,13 @@ Use `Bash` only to read: `git diff`, `git log`, `./gradlew build` (which also ru
 
 ## What to do
 
+Create `verification.md` with its section headings first, before step 2, and record each criterion's verdict in it as you reach it, so a turn-cap stop leaves your work on disk (DFS-051.L-4). Steps 5 and 6 then finish it.
+
 1. Re-confirm the deterministic gate's result yourself only if you have reason to doubt it (for example, `story-gate` was run before a late commit); otherwise take it as given.
 2. Walk every acceptance criterion. For each, check its tagged scenario(s) against the diff and the tests that claim to prove it, and record a verdict (met / not met / partially met, with why).
 3. Judge test quality: do the tests assert on behavior and output, or only restate the implementation? Does the diff match what `design.md` committed to, including every "Checklist disposition" line?
 4. Check the diff against every `CLAUDE.md` safety invariant that applies to this ticket (never delete the last copy, re-verify at execution time, preview is a pure query, hard links are not duplicates, no symlink/junction following, empty files excluded), not only the ones the ticket's scenarios already named.
-5. Write `verification.md`, opening with the `## Product owner review` section and then the `## Summary` section, both described below and both written last: a verdict per acceptance criterion, test-quality notes, and any invariant or design concern found.
+5. Finish `verification.md`, opening with the `## Product owner review` section and then the `## Summary` section, both described below and both written last: a verdict per acceptance criterion, test-quality notes, and any invariant or design concern found.
 6. In the ticket file, tick each done-item you have personally verified (per `CLAUDE.md`'s "Implementing a ticket": done-items on a pipeline ticket are never self-graded by the implementer). When a done-item asks for a measured figure to be recorded in the ticket, append the figure you reproduced yourself to that done-item's line as you tick it (DFS-026.L-6).
 7. If you hit friction (a test-guide gap, a checklist item that didn't fit, a lesson the test-author or implementer should learn), append it to `learnings.md` rather than only mentioning it in your report.
 
