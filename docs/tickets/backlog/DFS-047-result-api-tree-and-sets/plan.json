@@ -6,13 +6,13 @@
   },
   "branch": "tickets/DFS-047-result-api-tree-and-sets",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-047-result-api-tree-and-sets",
-  "state": "running",
+  "state": "awaiting-approval",
   "phases": [
     {
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -22,6 +22,15 @@
           "wallClockSeconds": 571,
           "outcome": "passed",
           "note": "PASS touches DFS-047: 21 changed files, all inside touches; turns counted as tool uses"
+        },
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 20,
+          "wallClockSeconds": 125,
+          "outcome": "passed",
+          "note": "rework after design-gate feedback (memoized future per kind in completedState); PASS touches DFS-047: 21 changed files, all inside touches; turns counted as tool uses"
         }
       ],
       "artifacts": [
@@ -43,7 +52,7 @@
         "server/src/main/java/us/pochaev/dfs/server/scan/ScanController.java",
         "server/src/main/java/us/pochaev/dfs/server/scan/ScanRegistry.java"
       ],
-      "commit": "22e1b75c87347c98ebbe2e46ccd4d8b2fe2121be"
+      "commit": "5cd39f74d0cfbd3bc0982b07e17bff5e0b92baa9"
     },
     {
       "id": "tests",
