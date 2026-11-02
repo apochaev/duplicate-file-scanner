@@ -1,0 +1,39 @@
+{
+  "check": "red",
+  "scenarios": [
+    "The gate reads a Vitest report and its stub"
+  ],
+  "results": [
+    {
+      "class": "src/app/thing.spec.ts",
+      "name": "Thing > DFS-001.AC-1 shows the thing",
+      "outcome": "failed",
+      "type": "Error",
+      "message": "not implemented: DFS-001"
+    },
+    {
+      "class": "src/app/thing.spec.ts",
+      "name": "Thing > DFS-001.AC-2 shows nothing",
+      "outcome": "failed",
+      "type": "TypeError",
+      "message": "Cannot read properties of undefined (reading 'length')"
+    },
+    {
+      "class": "src/app/thing.spec.ts",
+      "name": "Thing > DFS-001.AC-3 counts",
+      "outcome": "failed",
+      "type": "Error",
+      "message": "something else went wrong"
+    },
+    {
+      "class": "src/app/other.spec.ts",
+      "name": "Other > keeps working",
+      "outcome": "failed",
+      "type": "AssertionError",
+      "message": "expected 1 to be 2"
+    }
+  ],
+  "build": {
+    "exit": 1
+  }
+}

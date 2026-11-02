@@ -1,0 +1,3 @@
+{"ticket": "DFS-902", "state": "running",
+ "phases": [{"id": "tests", "agent": "test-author", "after": [], "status": "done", "commit": "${tests}",
+             "artifacts": ["server/frontend/src/app/thing.spec.ts"]}]}

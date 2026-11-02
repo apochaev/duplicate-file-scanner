@@ -1,0 +1,5 @@
+{
+  "check": "red-run",
+  "scenarios": ["Failing Vitest tests are judged, not reported as a broken build"],
+  "tree": "tree"
+}

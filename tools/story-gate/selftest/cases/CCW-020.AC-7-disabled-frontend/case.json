@@ -1,0 +1,16 @@
+{
+  "check": "cli",
+  "scenarios": ["The source checks see TypeScript"],
+  "args": ["disabled", "DFS-902"],
+  "repo": [
+    {"write": {"docs/tickets/backlog/DFS-902-second/DFS-902-ticket.md": "---\nid: DFS-902\nstatus: in-progress\n---\n\n# DFS-902\n",
+               "server/frontend/src/app/a.spec.ts": "describe('A', () => {\n  it.skip('later', () => {});\n});\n",
+               "server/frontend/src/app/b.spec.ts": "describe('B', () => {\n  xit('later', () => {});\n});\n",
+               "server/frontend/src/app/c.spec.ts": "describe.skip('C', () => {\n  it('works', () => {});\n});\n",
+               "server/frontend/src/app/d.spec.ts": "// xdescribe would skip it; this line is a comment\nxdescribe('D', () => {\n  it('works', () => {});\n});\n",
+               "server/frontend/src/app/e.spec.ts": "// it.skip in a comment does not count\ndescribe('E', () => {\n  it.skipIf(isWindows)('posix only', () => {});\n});\n",
+               "server/frontend/src/app/f.ts": "export const skip = { it: { skip: 1 } }; // it.skip in production code is not a test\nexport const y = skip.it.skip;\n",
+               "server/frontend/src/app/api/g.spec.ts": "it.skip('generated', () => {});\n"},
+     "commit": "base"}
+  ]
+}

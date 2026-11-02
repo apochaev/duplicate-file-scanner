@@ -1,0 +1,6 @@
+FAIL disabled DFS-902: 4 problems
+- server/frontend/src/app/a.spec.ts:2: it.skip
+- server/frontend/src/app/b.spec.ts:2: xit
+- server/frontend/src/app/c.spec.ts:1: describe.skip
+- server/frontend/src/app/d.spec.ts:2: xdescribe
+exit=1

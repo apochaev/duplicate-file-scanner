@@ -1,0 +1,8 @@
+{
+  "check": "stubs-run",
+  "ticket": "CCW-020",
+  "scenarios": [
+    "The source checks see TypeScript"
+  ],
+  "tree": "tree"
+}
