@@ -18,6 +18,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import us.pochaev.dfs.scanner.domain.model.ErrorCode;
 import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.scanner.domain.model.ScanConfig;
+import us.pochaev.dfs.server.api.ApiError;
+import us.pochaev.dfs.server.api.ApiException;
 
 import java.net.URI;
 import java.nio.file.InvalidPathException;

@@ -6,6 +6,7 @@ import us.pochaev.dfs.scanner.domain.model.ScanConfig;
 import us.pochaev.dfs.scanner.domain.model.ScanEvent;
 import us.pochaev.dfs.scanner.domain.model.ScanId;
 import us.pochaev.dfs.scanner.domain.model.ScanListener;
+import us.pochaev.dfs.scanner.domain.model.ScanResult;
 import us.pochaev.dfs.scanner.domain.model.ScanSnapshot;
 import us.pochaev.dfs.scanner.domain.model.ScanStatus;
 import us.pochaev.dfs.scanner.domain.usecases.command.CancelScan;
@@ -22,14 +23,18 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 /**
  * The scans this server run started (DFS-040 decision 2), each with the counts its listener folds from the core's
  * events (decision 3). The listener runs on the scanning thread and only writes memory, so a slow client can never
  * hold up a scan; it never throws, since the core detaches a listener that does.
+ * <p>
+ * Public since DFS-047 for {@link #completedState}: other feature packages keep per-scan state beside a scan's entry
+ * here (decision 6). Everything else stays package-private.
  */
 @Component
-class ScanRegistry {
+public class ScanRegistry {
 
     private final StartScan startScan;
     private final CancelScan cancelScan;
@@ -83,6 +88,23 @@ class ScanRegistry {
     /** The current progress of a known scan, for the event stream. */
     Optional<ScanProgress> progress(String id) {
         return tracked(id).map(this::progress);
+    }
+
+    /**
+     * The per-scan state of one {@code kind}, built by {@code build} from the scan's {@link ScanResult} the first time
+     * it is asked for and kept beside the scan's entry for this server run (DFS-047 decision 6). Thread-safe: for one
+     * scan and kind, {@code build} runs at most once, and concurrent callers get the same instance. DFS-048 adds the
+     * overlap analysis as a second kind.
+     *
+     * @param id    the scan ID as the client sent it, possibly malformed
+     * @param kind  the state's type, the key it is kept under
+     * @param build makes the state from a COMPLETED scan's whole result
+     * @return {@code Success} with the state; {@code Failure(UNKNOWN_SCAN)} for an unknown or malformed ID;
+     *         {@code Failure(SCAN_NOT_COMPLETED)} with the core's message (naming the status) for a scan that is not
+     *         COMPLETED, in which case nothing is built or kept
+     */
+    public <T> Result<T> completedState(String id, Class<T> kind, Function<ScanResult, ? extends T> build) {
+        throw new UnsupportedOperationException("not implemented: DFS-047");
     }
 
     static boolean terminal(ScanProgress p) {
