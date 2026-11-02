@@ -121,3 +121,4 @@ Feature: Context hygiene
 
 - Confirm decisions 1 to 5 (and the two answers folded into decisions 1 and 2) in refine.
 - Re-check the scenarios against CCW-021's final catch-up design once it is ready.
+- Should CCW-021's session-start hook also print a lane session's own worktrees and `plan.json` states after a `/clear` (CCW-021 decision 10 left this here)?
