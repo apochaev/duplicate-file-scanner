@@ -1,7 +1,7 @@
 ---
 id: DFS-047
 title: Serve a finished scan's folder tree and duplicate sets
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: endpoint
