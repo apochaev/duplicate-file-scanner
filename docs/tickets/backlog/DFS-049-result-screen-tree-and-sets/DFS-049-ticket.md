@@ -51,6 +51,7 @@ Milestone M-1 ("see the results of a scan"), step 4 of 5 (`docs/design/ui.md`, "
 6. **Archetype `component`, gates `[design, done]`** (2026-11-02). An Angular screen with its services and Vitest tests and no endpoint change: the `component` archetype, in its first live use. The pipeline pauses after the architect, then runs unattended to the product-owner review: this ticket brings in the router and the app's first nested-data feature, so the stubs, routes and component split are checked before tests and code are written against them. Not `[done]` (a disliked component split or routing found only after tests depend on it) and not a third gate after the tests (the gate's checks already trace every criterion by ID). No deletion is involved, so the design gate is a choice, not a safety requirement.
 7. **DFS-049 adds `@angular/router` itself** (2026-11-02). Not installed today (absent from `server/frontend/package.json`, `package-lock.json` and `node_modules/@angular/` on 2026-11-02). The architect adds `@angular/router` pinned to `22.2.4`, the version of the other `@angular/*` runtime packages, with `npm install --save-exact` so `package.json` and `package-lock.json` change together, and confirms `./gradlew :server:ngBuild`. A deliberate, single exception to the `component` archetype's exclusion of `package.json` ("the frontend build itself"): that exclusion is about build configuration (`angular.json`, budgets, Gradle tasks), and one runtime package of the same framework release changes none of it; the budget check (checklist item 10) covers the router's size. Flag for `/story learn` as a possible archetype clarification, together with `archetype.md`'s "routing does not exist yet (DFS-041 decision 2)", which this ticket makes stale (`.claude/archetypes/` is outside `touches`). Not a separate hand-built ticket first (a ticket and a close before the pipeline can start) and not dropping the router (decision 1).
 8. **No Playwright here; a separate draft after DFS-050** (2026-11-02). Playwright (a dev dependency, a browser download, a Gradle task, a server per run) is build work the `component` archetype excludes. DFS-049 relies on its Vitest tests and the archetype's manual check on the built jar, read from the DOM (checklist item 11). A frontend-lane draft for the first end-to-end flow (scan a fixture folder, open the result, tree, Sets and Overlaps; `ui.md` D6), `depends_on: [DFS-050]`, is filed right after this ticket's `ready` commit. Not a first flow here (outside the archetype, the slowest route to the screen).
+9. **The result screen loads `getScan` first, then the result** (2026-11-02). Opening `#/scans/<id>` calls `ScansService` `GET /api/scans/{id}` first: its `locations` fill the header (AC-3); a `404` shows the "not in this server run" alert; a `progress.status` other than COMPLETED shows the "has not finished yet" alert, and the screen stops there without calling `listFolders` or `listSets`. Only for a COMPLETED scan does it call `listFolders(id)` and `listSets(id)`; a `409 SCAN_NOT_COMPLETED` from either still maps to the "has not finished yet" alert as a fallback. One predictable order, the header shows the folders the user chose, and each alert traces to one call. Not the three calls in parallel (three requests racing to report the same failure, tests pinning which wins, and the header waits for `getScan` anyway) and not the header from the roots `listFolders` returns (a root given as a link is resolved, so it may not read as the user typed it, and `404`/`409` would come only from `/folders`).
 
 ## Acceptance criteria
 
@@ -59,7 +60,7 @@ The full ID of each criterion is `DFS-049.AC-<n>`.
 - **AC-1** The app routes with hash URLs: `#/` shows the scan screen and `#/scans/<id>` shows the result screen for scan `<id>`; loading the page at `#/scans/<id>` directly (a reload) shows that result, and the browser's back from a result returns to the scan screen.
 - **AC-2** On the scan screen, every COMPLETED scan's row (including one with 0 duplicate sets) shows an "Open results" link to `#/scans/<id>`; a QUEUED, RUNNING, CANCELLING, CANCELLED or FAILED row shows none.
 - **AC-3** The result screen's header shows the scan's folders and a "Back to scans" link to `#/`.
-- **AC-4** When loading the result answers `404 UNKNOWN_SCAN`, the result screen shows "This scan is not in this server run (the server may have restarted)", and for `409 SCAN_NOT_COMPLETED` "This scan has not finished yet", each with `role="alert"` and the "Back to scans" link, and no tree or Sets tab.
+- **AC-4** The result screen calls `getScan(id)` before any result call: when it answers `404 UNKNOWN_SCAN` the screen shows "This scan is not in this server run (the server may have restarted)"; when the scan's status is not COMPLETED it shows "This scan has not finished yet" and calls neither `listFolders` nor `listSets`; a `409 SCAN_NOT_COMPLETED` from `listFolders` or `listSets` also shows "This scan has not finished yet"; each message has `role="alert"` and the "Back to scans" link, and no tree or Sets tab is shown.
 - **AC-5** The result screen shows the scan's roots from `listFolders(id)` as tree nodes reading "<name> · <subtree size> · <n> files", in the order the API returns; a node expands only when `hasChildren` is true, and its children are requested with `parent=<its path>` only when it is first expanded.
 - **AC-6** On opening, "All folders" is selected and the Sets tab requests sets without `under`; selecting a folder requests the Sets tab's first page with `under=<its path>`, and selecting "All folders" again requests it without `under`.
 - **AC-7** Each set is a card, in the API's order, headed "<n> copies · <size> each · <reclaimable> reclaimable" with n the number of physical copies; each physical copy is one line with its first link's path and modified date, and its other links are indented beneath it and marked "hard link (same file)"; the digest is not shown.
@@ -99,16 +100,26 @@ Feature: Result screen: folder tree and Sets tab
 
   @AC-4
   Scenario: A result URL from an earlier server run
-    Given the server answers 404 UNKNOWN_SCAN for scan "0bad…"
+    Given getScan answers 404 UNKNOWN_SCAN for scan "0bad…"
     When the page is loaded at "/#/scans/0bad…"
     Then an alert says "This scan is not in this server run (the server may have restarted)"
     And the "Back to scans" link is shown and no folder tree or Sets tab is
+    And neither listFolders nor listSets was called
 
   @AC-4
   Scenario: A result URL for a scan still running
-    Given the server answers 409 SCAN_NOT_COMPLETED for scan "7f3c…"
+    Given getScan answers scan "7f3c…" with status RUNNING
     When the page is loaded at "/#/scans/7f3c…"
     Then an alert says "This scan has not finished yet" with the "Back to scans" link
+    And neither listFolders nor listSets was called
+
+  @AC-4
+  Scenario: A result call answers 409
+    Given getScan answers scan "7f3c…" with status COMPLETED
+    And listFolders answers 409 SCAN_NOT_COMPLETED
+    When the page is loaded at "/#/scans/7f3c…"
+    Then an alert says "This scan has not finished yet" with the "Back to scans" link
+    And no folder tree or Sets tab is shown
 
   @AC-5
   Scenario: Roots and lazily loaded children
