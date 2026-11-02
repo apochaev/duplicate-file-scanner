@@ -1,7 +1,7 @@
 ---
 id: CCW-020
 title: Add the Angular component archetype
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -29,7 +29,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # CCW-020: Add the Angular component archetype
