@@ -23,7 +23,7 @@ A start screen takes folders and settings, shows live progress from the scanner'
 
 - Left: a lazily loaded folder tree of the scanned roots, one level per call to `GET /api/scans/{id}/folders?parent=` (DFS-047).
 - Right: tabs, both filtered to the folder selected in the tree:
-  - **Overlaps** (landing tab): folder summaries and folder pairs ranked by reclaimable bytes.
+  - **Overlaps** (landing tab): folder summaries and folder pairs ranked by reclaimable bytes, paged from `GET /api/scans/{id}/summaries?under=`, `GET /api/scans/{id}/pairs?under=` and, for two chosen folders, `GET /api/scans/{id}/pair?a=&b=` (DFS-048).
   - **Sets**: duplicate sets, largest reclaimable first (catches big single files between unrelated folders), paged from `GET /api/scans/{id}/sets?under=` (DFS-047).
 - Charts (overlap matrix, treemap) are a later addition to the Overlaps tab, not part of the first version.
 
@@ -48,7 +48,7 @@ A plan is a list of typed operations; the first version has only `Quarantine`. `
 
 ### U5b. Overlap analysis runs in the `server` subproject, in Java
 
-The scanner does not compute folder overlaps (CLAUDE.md decision 1). The server does, in its own analysis package, implementing `docs/design/folder-overlap-analysis.md` (folder summaries rolled up to the roots, pairs between immediate folders, a query for any two folders, hard links never count). Inputs: `ScanResult` sets, roots and per-folder totals. JUnit cases are taken from that document's examples so the Java, SQL (`tools/analysis/overlaps.sql`) and JavaScript (`tools/viewer/analysis.js`) implementations stay in agreement. The server answers small paged queries (summary for a folder, pairs under a folder, pair for two chosen folders) rather than sending the whole result. The SQL and the standalone viewer remain as standalone tools.
+The scanner does not compute folder overlaps (CLAUDE.md decision 1). The server does, in its own analysis package `us.pochaev.dfs.server.analysis` (entry point `OverlapAnalysis.of(ScanResult)`, DFS-046), implementing `docs/design/folder-overlap-analysis.md` (folder summaries rolled up to the roots, pairs between immediate folders, a query for any two folders, hard links never count). Inputs: `ScanResult` sets, roots and per-folder totals. JUnit cases are taken from that document's examples so the Java, SQL (`tools/analysis/overlaps.sql`) and JavaScript (`tools/viewer/analysis.js`) implementations stay in agreement. The server answers small paged queries (summary for a folder, pairs under a folder, pair for two chosen folders) rather than sending the whole result. The SQL and the standalone viewer remain as standalone tools.
 
 ### U6. Building a plan: rules, exceptions, single-set picks
 

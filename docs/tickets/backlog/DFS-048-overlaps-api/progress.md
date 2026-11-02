@@ -18,3 +18,7 @@
 - Added `DFS-048.AC-10` (spec: operations `listSummaries`, `listPairs`, `getPair` tagged `overlaps`, the five schemas, required properties on real responses, generated `OverlapsService`) and `DFS-048.AC-11` (CLAUDE.md `server` entry and ui.md U3 name the three endpoints, U5b names `us.pochaev.dfs.server.analysis` and `OverlapAnalysis.of`) to `OverlapApiTest.java`, following DFS-047.AC-9/AC-10; both first call the endpoints on a completed scan. `test-plan.md` rows updated.
 - Ran `./gradlew :server:test --tests "*OverlapApiTest" --tests "*OverlapStateTest"`: 37 of 37 fail with `UnsupportedOperationException: not implemented: DFS-048`, none for another reason.
 - Expected commit: `test(server): add overlaps API tests [DFS-048]`.
+
+## Implement
+
+Implemented OverlapController, OverlapState (CompletableFuture in AtomicReference, retry on failure), OverlapIndex; updated CLAUDE.md server entry and ui.md U3/U5b. Path/page helpers duplicated in the controller (ResultController untouched). Build green. Commit expected: feat(server): serve folder summaries and overlap pairs [DFS-048].

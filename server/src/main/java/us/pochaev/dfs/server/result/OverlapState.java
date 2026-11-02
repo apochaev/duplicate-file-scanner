@@ -5,6 +5,9 @@ import us.pochaev.dfs.server.analysis.OverlapAnalysis;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
@@ -19,13 +22,12 @@ import java.util.function.Function;
  * longer than the computation itself.
  * <p>
  * {@link #insideRoots} needs no analysis, so a refused path never starts the computation.
- * <p>
- * Stubs (design phase): every method body throws.
  */
 final class OverlapState {
 
     private final ScanResult result;
     private final Function<ScanResult, OverlapAnalysis> analyse;
+    private final AtomicReference<CompletableFuture<OverlapIndex>> future = new AtomicReference<>();
 
     /**
      * @param result  the COMPLETED scan's whole result
@@ -39,7 +41,35 @@ final class OverlapState {
 
     /** The scan's overlap index, computed at most once (see the class comment). */
     OverlapIndex index() {
-        throw new UnsupportedOperationException("not implemented: DFS-048");
+        while (true) {
+            CompletableFuture<OverlapIndex> mine = new CompletableFuture<>();
+            if (future.compareAndSet(null, mine)) {
+                try {
+                    OverlapIndex built = new OverlapIndex(analyse.apply(result));
+                    mine.complete(built);
+                    return built;
+                } catch (Throwable t) {
+                    future.compareAndSet(mine, null);
+                    mine.completeExceptionally(t);
+                    throw t;
+                }
+            }
+            CompletableFuture<OverlapIndex> other = future.get();
+            if (other == null) {
+                continue;
+            }
+            try {
+                return other.join();
+            } catch (CompletionException e) {
+                if (e.getCause() instanceof RuntimeException re) {
+                    throw re;
+                }
+                if (e.getCause() instanceof Error err) {
+                    throw err;
+                }
+                throw e;
+            }
+        }
     }
 
     /**
@@ -47,6 +77,11 @@ final class OverlapState {
      * {@link Path#startsWith} (the platform's rules: case-insensitive on Windows), as {@code ResultIndex.insideRoots}.
      */
     boolean insideRoots(Path path) {
-        throw new UnsupportedOperationException("not implemented: DFS-048");
+        for (Path root : result.roots()) {
+            if (path.startsWith(root)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

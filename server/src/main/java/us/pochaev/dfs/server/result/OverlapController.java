@@ -12,8 +12,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import us.pochaev.dfs.scanner.domain.model.ErrorCode;
+import us.pochaev.dfs.scanner.domain.model.Result;
+import us.pochaev.dfs.server.analysis.OverlapAnalysis;
 import us.pochaev.dfs.server.api.ApiError;
+import us.pochaev.dfs.server.api.ApiException;
 import us.pochaev.dfs.server.scan.ScanRegistry;
+
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 
 /**
  * The overlaps API (DFS-048): a COMPLETED scan's folder summaries and folder pairs, ranked by DFS-046's overlap
@@ -30,8 +38,7 @@ import us.pochaev.dfs.server.scan.ScanRegistry;
  * {@code pair}, nesting ({@code 400 NESTED_FOLDERS}). Only then is {@link OverlapState#index()} asked, so a refused
  * request never starts the analysis.
  * <p>
- * Stubs (design phase): every method body throws; the mappings, signatures and annotations are final, since
- * {@code ./gradlew :server:updateOpenApi} builds the committed spec from them.
+ * The mappings, signatures and annotations shape the committed spec ({@code ./gradlew :server:updateOpenApi}).
  */
 @RestController
 @RequestMapping(path = "/api/scans", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -72,7 +79,10 @@ class OverlapController {
             @Parameter(description = "Summaries per page, 1 to 500")
             @RequestParam(defaultValue = "50") int size) {
         // Take the ID as a String: a malformed one must be the same 404 as an unknown one (checklist item 4).
-        throw new UnsupportedOperationException("not implemented: DFS-048");
+        OverlapState state = state(id);
+        Path path = path(state, under);
+        checkPage(page, size);
+        return state.index().summaries(path, page, size);
     }
 
     @GetMapping("/{id}/pairs")
@@ -96,7 +106,10 @@ class OverlapController {
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Pairs per page, 1 to 500")
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("not implemented: DFS-048");
+        OverlapState state = state(id);
+        Path path = path(state, under);
+        checkPage(page, size);
+        return state.index().pairs(path, page, size);
     }
 
     @GetMapping("/{id}/pair")
@@ -121,6 +134,49 @@ class OverlapController {
             @Parameter(description = "Another absolute folder inside one of the scan's roots, neither equal to a nor"
                     + " containing or inside it; required, checked by the server (MISSING_FOLDER)")
             @RequestParam(required = false) String b) {
-        throw new UnsupportedOperationException("not implemented: DFS-048");
+        OverlapState state = state(id);
+        if (a == null || b == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "MISSING_FOLDER", "Both a and b are required");
+        }
+        Path pa = path(state, a);
+        Path pb = path(state, b);
+        return state.index().pair(pa, pb);
+    }
+
+    private OverlapState state(String id) {
+        return switch (registry.completedState(id, OverlapState.class, r -> new OverlapState(r, OverlapAnalysis::of))) {
+            case Result.Success<OverlapState> ok -> ok.value();
+            case Result.Failure<OverlapState> f -> throw new ApiException(
+                    f.code() == ErrorCode.UNKNOWN_SCAN ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT,
+                    f.code().name(), f.message());
+        };
+    }
+
+    private static void checkPage(int page, int size) {
+        if (page < 0 || size < 1 || size > 500) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_PAGE",
+                    "page must be 0 or more and size 1 to 500");
+        }
+    }
+
+    /** The requested path, normalized; null when none was given. */
+    private static Path path(OverlapState state, String value) {
+        if (value == null) {
+            return null;
+        }
+        Path path;
+        try {
+            path = Path.of(value).normalize();
+        } catch (InvalidPathException e) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "PATH_OUTSIDE_ROOTS", "The path lies outside every root");
+        }
+        if (value.isBlank() || !path.isAbsolute()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "RELATIVE_PATH", "The path is not absolute: " + value);
+        }
+        if (!state.insideRoots(path)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "PATH_OUTSIDE_ROOTS",
+                    "The path lies outside every root of the scan: " + value);
+        }
+        return path;
     }
 }

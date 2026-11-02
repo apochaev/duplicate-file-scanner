@@ -48,7 +48,7 @@
       "after": [
         "design"
       ],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -58,10 +58,26 @@
           "wallClockSeconds": 263,
           "outcome": "failed-gate",
           "note": "red passed (35 of 35 fail with the stub's exception); FAIL traceability DFS-048: 2 problems; - AC-10: no test display name starts with DFS-048.AC-10; - AC-11: no test display name starts with DFS-048.AC-11"
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "high",
+          "turns": 19,
+          "wallClockSeconds": 183,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-048: red and traceability pass; - red: 37 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 623 other tests pass (3 skipped); - traceability: 11 criteria traced through 15 scenarios to tests and test-plan.md"
         }
       ],
-      "artifacts": [],
-      "commit": null
+      "artifacts": [
+        "docs/tickets/backlog/DFS-048-overlaps-api/learnings.md",
+        "docs/tickets/backlog/DFS-048-overlaps-api/plan.json",
+        "docs/tickets/backlog/DFS-048-overlaps-api/progress.md",
+        "docs/tickets/backlog/DFS-048-overlaps-api/test-plan.md",
+        "server/src/test/java/us/pochaev/dfs/server/OverlapApiTest.java",
+        "server/src/test/java/us/pochaev/dfs/server/result/OverlapStateTest.java"
+      ],
+      "commit": "9b2e64762bcae69dba3011e870380ac82fd4bc07"
     },
     {
       "id": "implement",
@@ -98,7 +114,7 @@
       "phase": "tests",
       "route": "test-author",
       "summary": "traceability: no test for AC-10 (the ticket names it a JUnit test in OverlapApiTest) or AC-11 (DFS-047 tested its docs criterion the same way)",
-      "status": "open"
+      "status": "closed"
     }
   ]
 }
