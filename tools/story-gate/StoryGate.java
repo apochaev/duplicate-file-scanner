@@ -15,6 +15,7 @@ import java.util.List;
  * story-gate red|green|disabled|freeze|touches|traceability|stubs|consistency &lt;ID&gt; [--base &lt;ref&gt;] [--root &lt;dir&gt;]
  * story-gate test-phase &lt;ID&gt;   red, then traceability off the same reports: the end-of-test-author gate
  * story-gate selftest [--root &lt;dir&gt;] [--bless]
+ * story-gate catch-up --hook | --session &lt;name&gt; [--root &lt;dir&gt;]   the coordinator's picture (CCW-021, {@link CatchUp})
  * </pre>
  *
  * Run it through the {@code story-gate} launcher (which finds a JDK 22 or later), or directly with
@@ -46,18 +47,21 @@ public class StoryGate {
 
     private static int run(String[] args, PrintStream out) {
         List<String> positional = new ArrayList<>();
-        String base = null, rootArg = null;
-        boolean bless = false;
+        String base = null, rootArg = null, session = null;
+        boolean bless = false, hook = false;
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
                 case "--base" -> base = value(args, ++i, "--base");
                 case "--root" -> rootArg = value(args, ++i, "--root");
+                case "--session" -> session = value(args, ++i, "--session");
                 case "--bless" -> bless = true;
+                case "--hook" -> hook = true;
                 default -> positional.add(args[i]);
             }
         }
         if (positional.isEmpty()) throw new GateError(usage());
         String check = positional.get(0);
+        if (check.equals("catch-up")) return catchUp(rootArg, session, hook, out);
         Path root = rootArg != null ? Path.of(rootArg).toAbsolutePath().normalize()
                 : Git.topLevel(Path.of("").toAbsolutePath());
         if (!Files.isDirectory(root)) throw new GateError("root " + root + " is not a directory");
@@ -86,6 +90,32 @@ public class StoryGate {
         return verdict.exitCode();
     }
 
+    /**
+     * Not a verdict: plain lines, or nothing at all outside the coordinator. In hook mode nothing may go wrong
+     * loudly (a lane session must never see the hook), so even a bad --root prints nothing there.
+     */
+    private static int catchUp(String rootArg, String session, boolean hook, PrintStream out) {
+        String input = null;
+        if (hook) {
+            try {
+                input = new String(System.in.readAllBytes(), StandardCharsets.UTF_8);
+            } catch (java.io.IOException e) {
+                input = null;
+            }
+        }
+        Path root;
+        try {
+            root = rootArg != null ? Path.of(rootArg).toAbsolutePath().normalize()
+                    : Git.topLevel(Path.of("").toAbsolutePath());
+        } catch (RuntimeException e) {
+            if (hook) return 0;
+            throw e;
+        }
+        CatchUp.Outcome outcome = CatchUp.run(root, session, hook, input, System.getenv("DFS_SESSION"));
+        out.print(outcome.text());
+        return outcome.exit();
+    }
+
     private static String value(String[] args, int i, String flag) {
         if (i >= args.length) throw new GateError(flag + " needs a value");
         return args[i];
@@ -97,6 +127,6 @@ public class StoryGate {
 
     private static String usage() {
         return "usage: story-gate <check> <ID> [--base <ref>] [--root <dir>]\nchecks: " + String.join(", ", CHECKS)
-                + "\nor: story-gate selftest [--bless]";
+                + "\nor: story-gate selftest [--bless]\nor: story-gate catch-up --hook | --session <name>";
     }
 }

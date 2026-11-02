@@ -19,5 +19,18 @@
       "Bash(./tools/story-gate/story-gate:*)",
       "Bash(tools/story-gate/story-gate.cmd:*)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/tools/story-gate/story-gate\" catch-up --hook",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
   }
 }
