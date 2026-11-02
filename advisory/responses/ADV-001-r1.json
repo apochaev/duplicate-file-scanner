@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "proposal_id": "ADV-001",
+  "revision": 1,
+  "status": "received",
+  "disposition": "pending",
+  "updated_at": "2026-11-02T06:32:55Z",
+  "summary": "Received by dfs-product (coordinator). Overlaps CCW-021 (ready, in progress in dfs-harness, implementation paused pending this evaluation); to be evaluated together with dfs-harness's proposed push-to-pull change and taken to the user.",
+  "ticket_ids": ["CCW-021"],
+  "evidence": ["advisory/proposals/ADV-001-r1.md", "docs/tickets/backlog/CCW-021-coordinator-session/CCW-021-ticket.md"],
+  "implementation_authorized": false
+}

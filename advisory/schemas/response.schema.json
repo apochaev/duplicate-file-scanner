@@ -1,0 +1,24 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Coordinator advisory response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "proposal_id", "revision", "status", "disposition", "updated_at", "summary", "ticket_ids", "evidence", "implementation_authorized"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "proposal_id": {"type": "string", "pattern": "^ADV-[0-9]{3}$"},
+    "revision": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["received", "evaluated"]},
+    "disposition": {"enum": ["pending", "propose-ticket", "decline", "needs-user", "superseded"]},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "summary": {"type": "string", "minLength": 1},
+    "ticket_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(DFS|CCW)-[0-9]{3}$"}},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "implementation_authorized": {"const": false}
+  },
+  "allOf": [{
+    "if": {"properties": {"status": {"const": "received"}}},
+    "then": {"properties": {"disposition": {"const": "pending"}}},
+    "else": {"properties": {"disposition": {"enum": ["propose-ticket", "decline", "needs-user", "superseded"]}}}
+  }]
+}

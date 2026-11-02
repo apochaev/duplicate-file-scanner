@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "proposal_id": "ADV-002",
+  "revision": 1,
+  "status": "received",
+  "disposition": "pending",
+  "updated_at": "2026-11-02T06:32:55Z",
+  "summary": "Received by dfs-product (coordinator). dfs-harness is running the read-only contextual consultation at the user's request; evaluation follows once its result is under advisory/consultations/.",
+  "ticket_ids": [],
+  "evidence": ["advisory/proposals/ADV-002-r1.md", "advisory/CLAUDE-HANDOFF.md"],
+  "implementation_authorized": false
+}
