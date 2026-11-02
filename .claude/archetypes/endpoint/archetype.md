@@ -1,6 +1,6 @@
 ---
 name: endpoint
-version: 1
+version: 2
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
@@ -18,7 +18,7 @@ Applies to a ticket that adds or changes HTTP endpoints under `/api` in the `ser
 It does not apply to:
 - a new core use case or its service (`use-case`); a ticket that needs one *and* exposes it is two tickets, the `use-case` one first, or a request to the backend lane;
 - Spring wiring or a composition root (`wiring`);
-- an Angular screen (a component archetype is planned after DFS-041); a ticket that only regenerates the client for a screen is part of that screen's ticket;
+- an Angular screen (`component`, CCW-020); a ticket that only regenerates the client for a screen is part of that screen's ticket;
 - the security rules themselves (DFS-036 built them by hand; changing them is its own ticket).
 
 Written from DFS-036 (security), DFS-038 (the spec chain) and DFS-040 (a data endpoint family with errors, a registry and a stream), all built by hand because no archetype fit; proven by a dry run against DFS-040 (CCW-019 `dry-run.md`). Its first live use is the next endpoint ticket.

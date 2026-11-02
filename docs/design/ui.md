@@ -124,7 +124,7 @@ Draft (editable) → previewed (frozen, has an ID; U7) → editing creates a new
 
 ### D7. Ticket namespaces
 
-Product UI work goes under `DFS`. Harness work goes under `CCW`: archetypes for Angular components and API endpoints, and Node/npm steps in the pipeline gates. The endpoint archetype exists (`.claude/archetypes/endpoint/`, CCW-019, written from DFS-036, DFS-038 and DFS-040); the pipeline gates needed no Node/npm change, since the green gate already runs the frontend build and its tests. The Angular component archetype follows DFS-041, written from that screen.
+Product UI work goes under `DFS`. Harness work goes under `CCW`: archetypes for Angular components and API endpoints, and Node/npm steps in the pipeline gates. The endpoint archetype exists (`.claude/archetypes/endpoint/`, CCW-019, written from DFS-036, DFS-038 and DFS-040); the pipeline gates needed no Node/npm change for it, since the green gate already runs the frontend build and its tests. The component archetype exists too (`.claude/archetypes/component/`, CCW-020, written from DFS-037, DFS-038, DFS-041 and DFS-044): for it the gates now run the Vitest tests at the red step as well (`npmTest`), read Vitest's JUnit report (`server/build/test-results/vitest/`), accept a TypeScript stub (`new Error('not implemented: <ID>')`) and check the frontend's `.ts` and `.html` sources; a story spec surfaces a stub's error through `server/frontend/src/testing/stub-surfacing.ts`.
 
 ## What the UI needs from the core (`file-scanner`)
 
