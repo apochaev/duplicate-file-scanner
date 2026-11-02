@@ -1,7 +1,7 @@
 ---
 id: DFS-043
 title: Name the CLI start script dfs and document installing outside the repo
-status: in-review
+status: done
 type: build
 scope: [cli, docs]
 archetype: none
@@ -16,7 +16,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-01
-completed:
+completed: 2026-11-01
 ---
 
 # DFS-043: Name the CLI start script dfs and document installing outside the repo
