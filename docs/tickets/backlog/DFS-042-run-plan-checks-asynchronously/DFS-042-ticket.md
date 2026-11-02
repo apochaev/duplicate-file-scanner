@@ -1,7 +1,7 @@
 ---
 id: DFS-042
 title: Run plan checks asynchronously with status and cancel
-status: ready
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: use-case
@@ -239,13 +239,13 @@ Feature: Asynchronous plan checks
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `design.md` addresses every item of the `use-case` edge-case checklist or marks it not applicable with a one-line reason (decision 7 lists the expected dispositions)
-- [ ] The scan's ports, `ScanStatus` and `ScanRepository` are unchanged, and the existing scan tests pass untouched
-- [ ] No test this ticket adds or changes uses `Thread.sleep`, and no test reads or writes outside a `@TempDir`
-- [ ] `module-info.java` is unchanged and `ModuleExportsTest` stays green
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] `design.md` addresses every item of the `use-case` edge-case checklist or marks it not applicable with a one-line reason (decision 7 lists the expected dispositions)
+- [x] The scan's ports, `ScanStatus` and `ScanRepository` are unchanged, and the existing scan tests pass untouched
+- [x] No test this ticket adds or changes uses `Thread.sleep`, and no test reads or writes outside a `@TempDir`
+- [x] `module-info.java` is unchanged and `ModuleExportsTest` stays green
 
 ## Open questions
 

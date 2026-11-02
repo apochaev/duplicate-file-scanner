@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.context.annotation.ImportCandidates;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import us.pochaev.dfs.scanner.domain.factory.PlanVerifyUseCases;
 import us.pochaev.dfs.scanner.domain.factory.ScanUseCases;
 import us.pochaev.dfs.scanner.domain.factory.ScannerFactories;
 import us.pochaev.dfs.scanner.domain.model.ErrorCode;
@@ -140,7 +141,8 @@ class ScannerAutoConfigurationTest {
             runner().withBean("scanExecutor", ExecutorService.class, () -> mine).run(context -> {
                 StartScan start = context.getBean(StartScan.class);
                 assertEquals(ScanStatus.COMPLETED, emptyScan(start, context.getBean(GetScanStatus.class)));
-                assertEquals(1, context.getBeansOfType(ExecutorService.class).size());
+                assertEquals(java.util.Set.of("scanExecutor", "planVerifyExecutor"),
+                        context.getBeansOfType(ExecutorService.class).keySet());
                 assertSame(mine, context.getBean("scanExecutor"));
                 assertTrue(mine.count.get() >= 1, "tasks counted: " + mine.count.get());
             });
@@ -322,6 +324,93 @@ class ScannerAutoConfigurationTest {
         runner().withBean("myVerifyPlanContent", us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent.class, () -> mine).run(context -> {
             assertSame(mine, context.getBean(us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent.class));
             assertEquals(1, context.getBeansOfType(us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent.class).size());
+        });
+    }
+
+    // ---- DFS-042: plan verify jobs ----
+
+    private static DeletionPlan emptyPlan() {
+        return new DeletionPlan("d".repeat(64), List.of(), List.of(),
+                new us.pochaev.dfs.scanner.domain.model.PlanTotals(0, 0, 0), List.of());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static us.pochaev.dfs.scanner.domain.model.JobStatus awaitJob(
+            us.pochaev.dfs.scanner.domain.usecases.query.GetPlanVerifyStatus status,
+            us.pochaev.dfs.scanner.domain.model.PlanVerifyId id) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+        us.pochaev.dfs.scanner.domain.model.JobStatus current;
+        do {
+            Thread.onSpinWait();
+            current = ((Result.Success<us.pochaev.dfs.scanner.domain.model.PlanVerifySnapshot>) assertInstanceOf(
+                    Result.Success.class, status.status(id))).value().status();
+        } while (current != us.pochaev.dfs.scanner.domain.model.JobStatus.COMPLETED
+                && current != us.pochaev.dfs.scanner.domain.model.JobStatus.FAILED && System.nanoTime() < deadline);
+        return current;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static us.pochaev.dfs.scanner.domain.model.PlanVerifyId startOn(
+            us.pochaev.dfs.scanner.domain.usecases.command.StartPlanVerify start) {
+        return ((Result.Success<us.pochaev.dfs.scanner.domain.model.PlanVerifyId>) assertInstanceOf(
+                Result.Success.class, start.start(emptyPlan()))).value();
+    }
+
+    @Test
+    @DisplayName("DFS-042.AC-13 The autoconfiguration provides the plan verify beans, sharing one job store")
+    void providesPlanVerifyBeans() {
+        runner().run(context -> {
+            // start through the bean first: on a failed context getBean throws with the startup failure as its cause
+            us.pochaev.dfs.scanner.domain.usecases.command.StartPlanVerify start =
+                    context.getBean(us.pochaev.dfs.scanner.domain.usecases.command.StartPlanVerify.class);
+            us.pochaev.dfs.scanner.domain.model.PlanVerifyId id = startOn(start);
+
+            assertEquals(us.pochaev.dfs.scanner.domain.model.JobStatus.COMPLETED,
+                    awaitJob(context.getBean(us.pochaev.dfs.scanner.domain.usecases.query.GetPlanVerifyStatus.class), id));
+            assertInstanceOf(Result.Success.class,
+                    context.getBean(us.pochaev.dfs.scanner.domain.usecases.query.GetPlanVerifyResult.class).result(id));
+            assertInstanceOf(Result.Success.class,
+                    context.getBean(us.pochaev.dfs.scanner.domain.usecases.command.CancelPlanVerify.class).cancel(id));
+            assertEquals(1, context.getBeansOfType(PlanVerifyUseCases.class).size());
+            assertEquals(1, context.getBeansOfType(us.pochaev.dfs.scanner.domain.usecases.command.StartPlanVerify.class).size());
+            assertEquals(1, context.getBeansOfType(us.pochaev.dfs.scanner.domain.usecases.command.CancelPlanVerify.class).size());
+            assertEquals(1, context.getBeansOfType(us.pochaev.dfs.scanner.domain.usecases.query.GetPlanVerifyStatus.class).size());
+            assertEquals(1, context.getBeansOfType(us.pochaev.dfs.scanner.domain.usecases.query.GetPlanVerifyResult.class).size());
+            assertTrue(context.containsBean("planVerifyExecutor"));
+        });
+    }
+
+    @Test
+    @DisplayName("DFS-042.AC-13 An app's own planVerifyExecutor replaces the default")
+    void appPlanVerifyExecutorReplacesDefault() {
+        CountingExecutor mine = new CountingExecutor();
+        try {
+            runner().withBean("planVerifyExecutor", ExecutorService.class, () -> mine).run(context -> {
+                us.pochaev.dfs.scanner.domain.model.PlanVerifyId id =
+                        startOn(context.getBean(us.pochaev.dfs.scanner.domain.usecases.command.StartPlanVerify.class));
+                assertEquals(us.pochaev.dfs.scanner.domain.model.JobStatus.COMPLETED,
+                        awaitJob(context.getBean(us.pochaev.dfs.scanner.domain.usecases.query.GetPlanVerifyStatus.class), id));
+                assertSame(mine, context.getBean("planVerifyExecutor"));
+                assertTrue(mine.count.get() >= 1, "tasks counted: " + mine.count.get());
+            });
+        } finally {
+            mine.shutdownNow();
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-042.AC-13 An app's own PlanVerifyUseCases replaces the default")
+    void appPlanVerifyUseCasesReplacesDefault() {
+        PlanVerifyUseCases mine = ScannerFactories.planVerifyUseCases(Runnable::run);
+        // exercise the factory first: it is the default the bean backs off from
+        us.pochaev.dfs.scanner.domain.model.PlanVerifyId own = startOn(mine.start());
+        assertEquals(us.pochaev.dfs.scanner.domain.model.JobStatus.COMPLETED, awaitJob(mine.status(), own));
+        runner().withBean("myPlanVerify", PlanVerifyUseCases.class, () -> mine).run(context -> {
+            assertSame(mine, context.getBean(PlanVerifyUseCases.class));
+            assertEquals(1, context.getBeansOfType(PlanVerifyUseCases.class).size());
+            us.pochaev.dfs.scanner.domain.model.PlanVerifyId id =
+                    startOn(context.getBean(us.pochaev.dfs.scanner.domain.usecases.command.StartPlanVerify.class));
+            assertInstanceOf(Result.Success.class, mine.status().status(id));
         });
     }
 }

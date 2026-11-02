@@ -2,6 +2,7 @@ package us.pochaev.dfs.scanner.domain.factory;
 
 import us.pochaev.dfs.scanner.application.CheckPlanDriftService;
 import us.pochaev.dfs.scanner.application.ListDirectoryService;
+import us.pochaev.dfs.scanner.application.PlanVerifyService;
 import us.pochaev.dfs.scanner.application.PreviewDeletionPlanService;
 import us.pochaev.dfs.scanner.application.ScanPipeline;
 import us.pochaev.dfs.scanner.application.ScanService;
@@ -10,6 +11,7 @@ import us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift;
 import us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory;
 import us.pochaev.dfs.scanner.domain.usecases.query.PreviewDeletionPlan;
 import us.pochaev.dfs.scanner.domain.usecases.query.VerifyPlanContent;
+import us.pochaev.dfs.scanner.infra.adapter.InMemoryJobStore;
 import us.pochaev.dfs.scanner.infra.adapter.InMemoryScanRepository;
 import us.pochaev.dfs.scanner.infra.adapter.NioContentComparator;
 import us.pochaev.dfs.scanner.infra.adapter.NioContentHasher;
@@ -92,5 +94,23 @@ public final class ScannerFactories {
      */
     public static VerifyPlanContent verifyPlanContent() {
         return new VerifyPlanContentService(new NioFileAttributesReader(), new NioContentComparator());
+    }
+
+    /**
+     * Builds a fresh, independent set of the plan verify job use cases (DFS-042 decision 6), all four backed by one
+     * service and one in-memory job store, running DFS-034's verify on the NIO attributes reader and the NIO content
+     * comparator (1 MiB chunks). Jobs run on {@code executor}, used as given: this method creates no thread or executor
+     * of its own, so the executor's lifecycle stays with the caller.
+     *
+     * @param executor runs every job started through the returned {@link PlanVerifyUseCases#start}
+     * @return a new set whose ports share job state with each other and with no other set
+     * @throws NullPointerException if {@code executor} is null
+     */
+    public static PlanVerifyUseCases planVerifyUseCases(Executor executor) {
+        Objects.requireNonNull(executor, "executor");
+        PlanVerifyService service = new PlanVerifyService(
+                new VerifyPlanContentService(new NioFileAttributesReader(), new NioContentComparator()),
+                new InMemoryJobStore<>(), executor);
+        return new PlanVerifyUseCases(service, service, service, service);
     }
 }

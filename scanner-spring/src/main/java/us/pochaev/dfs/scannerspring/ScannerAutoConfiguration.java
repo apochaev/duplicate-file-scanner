@@ -4,15 +4,23 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+import us.pochaev.dfs.scanner.domain.factory.PlanVerifyUseCases;
 import us.pochaev.dfs.scanner.domain.factory.ScanUseCases;
 import us.pochaev.dfs.scanner.domain.factory.ScannerFactories;
+import us.pochaev.dfs.scanner.domain.model.DeletionPlan;
+import us.pochaev.dfs.scanner.domain.model.PlanVerifyId;
 import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.scanner.domain.model.ScanConfig;
 import us.pochaev.dfs.scanner.domain.model.ScanId;
 import us.pochaev.dfs.scanner.domain.model.ScanListener;
+import us.pochaev.dfs.scanner.domain.model.VerifyListener;
+import us.pochaev.dfs.scanner.domain.usecases.command.CancelPlanVerify;
 import us.pochaev.dfs.scanner.domain.usecases.command.CancelScan;
+import us.pochaev.dfs.scanner.domain.usecases.command.StartPlanVerify;
 import us.pochaev.dfs.scanner.domain.usecases.command.StartScan;
 import us.pochaev.dfs.scanner.domain.usecases.query.CheckPlanDrift;
+import us.pochaev.dfs.scanner.domain.usecases.query.GetPlanVerifyResult;
+import us.pochaev.dfs.scanner.domain.usecases.query.GetPlanVerifyStatus;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
 import us.pochaev.dfs.scanner.domain.usecases.query.ListDirectory;
@@ -141,5 +149,65 @@ public class ScannerAutoConfiguration {
     @ConditionalOnMissingBean
     public VerifyPlanContent verifyPlanContent() {
         return ScannerFactories.verifyPlanContent();
+    }
+
+    /**
+     * Virtual threads, one per plan verify job (DFS-042 decision 6), separate from {@code scanExecutor} so an app sizes
+     * or replaces verify work without touching scans. Closed with {@code shutdownNow} for the same reason as the scan
+     * executor. An app supplies its own by declaring a bean named {@code planVerifyExecutor}.
+     */
+    @Bean(destroyMethod = "shutdownNow")
+    @ConditionalOnMissingBean(name = "planVerifyExecutor")
+    public ExecutorService planVerifyExecutor() {
+        return Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    /**
+     * Takes the executor by the name {@code planVerifyExecutor}, never by type, like {@link #scanUseCases}. All four
+     * plan verify ports come from this one set, so they share one job store.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public PlanVerifyUseCases planVerifyUseCases(@Qualifier("planVerifyExecutor") Executor planVerifyExecutor) {
+        return ScannerFactories.planVerifyUseCases(planVerifyExecutor);
+    }
+
+    /** {@code StartPlanVerify} has two methods, so an anonymous class delegating both, as for {@link StartScan}. */
+    @Bean
+    @ConditionalOnMissingBean
+    public StartPlanVerify startPlanVerify(PlanVerifyUseCases useCases) {
+        StartPlanVerify start = useCases.start();
+        return new StartPlanVerify() {
+            @Override
+            public Result<PlanVerifyId> start(DeletionPlan plan) {
+                return start.start(plan);
+            }
+
+            @Override
+            public Result<PlanVerifyId> start(DeletionPlan plan, VerifyListener listener) {
+                return start.start(plan, listener);
+            }
+        };
+    }
+
+    /** A method reference, an instance of {@code CancelPlanVerify} alone. */
+    @Bean
+    @ConditionalOnMissingBean
+    public CancelPlanVerify cancelPlanVerify(PlanVerifyUseCases useCases) {
+        return useCases.cancel()::cancel;
+    }
+
+    /** A method reference, an instance of {@code GetPlanVerifyStatus} alone. */
+    @Bean
+    @ConditionalOnMissingBean
+    public GetPlanVerifyStatus getPlanVerifyStatus(PlanVerifyUseCases useCases) {
+        return useCases.status()::status;
+    }
+
+    /** A method reference, an instance of {@code GetPlanVerifyResult} alone. */
+    @Bean
+    @ConditionalOnMissingBean
+    public GetPlanVerifyResult getPlanVerifyResult(PlanVerifyUseCases useCases) {
+        return useCases.result()::result;
     }
 }

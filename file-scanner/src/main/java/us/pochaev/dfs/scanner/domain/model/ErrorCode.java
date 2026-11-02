@@ -28,7 +28,7 @@ public enum ErrorCode {
      * follows (DFS-032 decision 4). A scan's start location is resolved instead.
      */
     LOCATION_IS_LINK,
-    /** The caller-supplied executor rejected the scan's task. */
+    /** The caller-supplied executor rejected the scan's or the plan verify's task (DFS-018, DFS-042 decision 5). */
     EXECUTOR_REJECTED,
     /** {@code GetScanResult} on a scan whose status is not COMPLETED; the message names the status. */
     SCAN_NOT_COMPLETED,
@@ -44,5 +44,15 @@ public enum ErrorCode {
      * {@code CheckPlanDrift} was given a plan whose operation digest is not a set of the scan, or whose link or keeper
      * is not a path of that set's copies (DFS-033 decision 4); the message names the first such digest or path.
      */
-    PLAN_NOT_FROM_SCAN
+    PLAN_NOT_FROM_SCAN,
+    /**
+     * The {@link PlanVerifyId} was never returned by {@code StartPlanVerify} of the same use-case set in this process
+     * (DFS-042 decision 5); the message names the ID.
+     */
+    UNKNOWN_PLAN_VERIFY,
+    /**
+     * {@code GetPlanVerifyResult} on a job whose status is QUEUED, RUNNING, CANCELLING or FAILED (DFS-042 decision 3);
+     * the message names the status.
+     */
+    PLAN_VERIFY_NOT_FINISHED
 }

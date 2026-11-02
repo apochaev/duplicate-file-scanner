@@ -1,0 +1,152 @@
+{
+  "ticket": "DFS-042",
+  "archetype": {
+    "name": "use-case",
+    "version": 8
+  },
+  "branch": "tickets/DFS-042-run-plan-checks-asynchronously",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-042-run-plan-checks-asynchronously",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 37,
+          "wallClockSeconds": 493,
+          "outcome": "passed",
+          "note": "PASS touches DFS-042: 22 changed files, all inside touches; resumed once: the first invocation stopped at the architect's 25-turn cap (the archetype's maxTurns 35 cannot be passed through the Agent tool) with stubs on disk and no design.md; turns and seconds cover both invocations"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/DFS-042-ticket.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/design.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/learnings.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/plan.json",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/Job.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/JobRunner.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanVerifyProgress.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanVerifyService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/PlanVerifyUseCases.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/JobStatus.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanVerifyId.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanVerifySnapshot.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/command/CancelPlanVerify.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/command/StartPlanVerify.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/GetPlanVerifyResult.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/GetPlanVerifyStatus.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/InMemoryJobStore.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/JobStore.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "fdea28ad7081240aca1e07ea55cb0c414a6e5f0d"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 20,
+          "wallClockSeconds": 249,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-042: red and traceability pass; - red: 30 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 524 other tests pass (3 skipped); - traceability: 14 criteria traced through 15 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/plan.json",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/progress.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PlanVerifyRealThreadTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PlanVerifyServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/InMemoryJobStoreTest.java",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java"
+      ],
+      "commit": "c56a501c28069e0c144e5fc67a358ebf00fac8e5"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 20,
+          "wallClockSeconds": 224,
+          "outcome": "passed",
+          "note": "PASS green DFS-042: build and tests green: 551 passed, 3 skipped; PASS disabled DFS-042: no @Disabled tests in the 4 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-042: none of the 4 test files of the tests phase changed since c56a501c; PASS touches DFS-042: 27 changed files, all inside touches; PASS stubs DFS-042: no stub markers in 130 production files; PASS traceability DFS-042: 14 criteria traced through 15 scenarios to tests and test-plan.md; PASS consistency DFS-042: plan.json parses; state running agrees with ticket status in-progress; resumed once after a usage-limit cutoff (API 429); turns and seconds cover both invocations, excluding the wait"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/plan.json",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/Job.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/JobRunner.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanVerifyProgress.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanVerifyService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/PlanVerifyUseCases.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanVerifyId.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanVerifySnapshot.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/InMemoryJobStore.java"
+      ],
+      "commit": "7f68296f55a262c6b5ebc2227aad83e0edc9338e"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 14,
+          "wallClockSeconds": 149,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-042: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/DFS-042-ticket.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/learnings.md",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/plan.json",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/verification.md"
+      ],
+      "commit": "b0ee44520b0233e60d9239729a7ff6b466786df2"
+    }
+  ],
+  "gates": [
+    {
+      "after": "design",
+      "status": "approved"
+    },
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": []
+}
