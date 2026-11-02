@@ -1,7 +1,7 @@
 ---
 id: DFS-047
 title: Serve a finished scan's folder tree and duplicate sets
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: endpoint
@@ -23,7 +23,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-02
-completed:
+completed: 2026-11-02
 ---
 
 # DFS-047: Serve a finished scan's folder tree and duplicate sets
