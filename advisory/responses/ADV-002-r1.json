@@ -2,11 +2,18 @@
   "schema_version": 1,
   "proposal_id": "ADV-002",
   "revision": 1,
-  "status": "received",
-  "disposition": "pending",
-  "updated_at": "2026-11-02T06:32:55Z",
-  "summary": "Received by dfs-product (coordinator). dfs-harness is running the read-only contextual consultation at the user's request; evaluation follows once its result is under advisory/consultations/.",
-  "ticket_ids": [],
-  "evidence": ["advisory/proposals/ADV-002-r1.md", "advisory/CLAUDE-HANDOFF.md"],
+  "status": "evaluated",
+  "disposition": "propose-ticket",
+  "updated_at": "2026-11-02T14:42:30Z",
+  "summary": "Accepted in revised form as draft CCW-023 (ae3f1cb), depending on CCW-021. consult-001 showed the project-local fork procedure in CLAUDE-HANDOFF.md works (read-only, exit 0, answer captured, parent not written to); the plugin's codex-consult launcher is not used, since its fresh npx exec cannot carry the advisor's context, and the plugin cache is not edited. Findings 1 and 2 no longer block that launcher; 4 is moot without the plugin's tmp/; 3 (deterministic capture, failure or timeout recorded as no review), 5 (budget timeout, stop only the launched process, no automatic paid retry) and 6 (unique request IDs) become CCW-023's requirements. Cost is the main constraint: consult-001 used 543,536 Codex tokens, so consultations stay selective and each paid run needs the user's say-so. Untested: failure on an invalid session ID. The stale wording on inherited memory (consult-001 finding 4) is the advisor's to revise in a superseding revision. This response grants no implementation authority.",
+  "ticket_ids": ["CCW-023"],
+  "evidence": [
+    "advisory/proposals/ADV-002-r1.md",
+    "advisory/CLAUDE-HANDOFF.md",
+    "advisory/consultations/consult-001-question.md",
+    "advisory/consultations/consult-001-answer.md",
+    "advisory/consultations/consult-001-outcome.md",
+    "docs/tickets/backlog/CCW-023-contextual-consult-wrapper/CCW-023-ticket.md"
+  ],
   "implementation_authorized": false
 }

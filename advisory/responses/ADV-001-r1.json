@@ -2,11 +2,17 @@
   "schema_version": 1,
   "proposal_id": "ADV-001",
   "revision": 1,
-  "status": "received",
-  "disposition": "pending",
-  "updated_at": "2026-11-02T06:32:55Z",
-  "summary": "Received by dfs-product (coordinator). Overlaps CCW-021 (ready, in progress in dfs-harness, implementation paused pending this evaluation); to be evaluated together with dfs-harness's proposed push-to-pull change and taken to the user.",
-  "ticket_ids": ["CCW-021"],
-  "evidence": ["advisory/proposals/ADV-001-r1.md", "docs/tickets/backlog/CCW-021-coordinator-session/CCW-021-ticket.md"],
+  "status": "evaluated",
+  "disposition": "propose-ticket",
+  "updated_at": "2026-11-02T14:42:30Z",
+  "summary": "Accepted with revisions and folded into CCW-021 (ready in ba09b6a), which the user re-refined from push messages to pull. Smallest integration: a story-gate catch-up subcommand run by a SessionStart hook (startup, resume, /clear, compact) and by the coordinator's /tickets list, printing only in the session whose name (hook input, or DFS_SESSION set at launch) maps to coordinator in lanes.md. At session start it lists every ADV-NNN-rN.md with no response or a received one (ID, revision, title, path), flags older revisions 'superseded by rM', ignores *.tmp and other names, reports invalid response files; no pending advice and no state change means no output. Revisions to the proposal: discovery is at session start only, not each turn (the user chose this because sessions now /clear often, CCW-022), so no cursor and no advisory/.runtime/ are needed; consumption stays with the coordinator. Missing capability: hooks do not fire on message-started turns, which session-start-only discovery makes irrelevant; whether hook input carries the session name is checked during implementation. The pilot metrics (turns to surface, duplicates, added context, intake tool calls) are to be recorded against this proposal and one later revision once CCW-021 lands. This response grants no implementation authority; CCW-021 follows the ticket workflow.",
+  "ticket_ids": ["CCW-021", "CCW-022"],
+  "evidence": [
+    "advisory/proposals/ADV-001-r1.md",
+    "advisory/consultations/consult-001-answer.md",
+    "advisory/consultations/consult-001-outcome.md",
+    "docs/tickets/backlog/CCW-021-coordinator-session/CCW-021-ticket.md",
+    "docs/tickets/backlog/CCW-022-context-hygiene-rules/CCW-022-ticket.md"
+  ],
   "implementation_authorized": false
 }
