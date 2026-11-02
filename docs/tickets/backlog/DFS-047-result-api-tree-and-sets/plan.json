@@ -95,10 +95,27 @@
       "after": [
         "tests"
       ],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 12,
+          "wallClockSeconds": 150,
+          "outcome": "passed",
+          "note": "PASS green DFS-047: build and tests green: 600 passed, 3 skipped; PASS disabled; PASS freeze (1 test file unchanged since ca0649f2); PASS touches: 25 changed files, all inside touches; PASS stubs: no stub markers in 150 production files; PASS traceability: 10 criteria traced through 12 scenarios; PASS consistency"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-047-result-api-tree-and-sets/progress.md",
+        "server/src/main/java/us/pochaev/dfs/server/result/ResultController.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/ResultIndex.java",
+        "server/src/main/java/us/pochaev/dfs/server/scan/ScanRegistry.java"
+      ],
+      "commit": "756e0421fc68ecf30abc7c2ccf70d1d69c14f8f8"
     },
     {
       "id": "verify",
@@ -106,7 +123,7 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
