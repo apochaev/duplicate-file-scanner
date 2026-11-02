@@ -1,0 +1,77 @@
+# <TICKET-ID>: <ticket title> — design
+
+Filled in by the architect during the `design` phase. This is the artifact the design gate summarizes for the human, so keep it short: it is a contract, not an essay. Delete this instruction paragraph and every `<...>` placeholder when filling it in.
+
+## Summary
+
+About 20 lines, written last: which screen or components this ticket adds or changes, where they sit on the page, which API calls they make, any browser API behind a wrapper, and anything the human should look at closely (a new Material module and its bundle cost, a new wrapper, a state that is hard to reach in a test).
+
+## Components and files
+
+One row per file this ticket adds or changes.
+
+| File | Kind | Inputs / outputs | Injects | Purpose |
+|---|---|---|---|---|
+| `src/app/<feature>/<name>.ts` | `<component / service / helper>` | `<input() and output() names and types, or none>` | `<services, tokens>` | `<one line>` |
+
+## Page states
+
+What the user sees in each state, with the text a test checks (checklist items 5 to 8). One line each; "not applicable: <reason>" where a state cannot occur.
+
+- Not connected: <...>
+- Loading: <...>
+- Empty: <...>
+- Loaded: <...>
+- Input refused by the form: <field: message>
+- Server refusal (`400`, `{code, message}`): <where the message shows>
+- Server busy (`503`): <...>
+- Load failed: <...>
+- Live updates and their end (stream lost, terminal state): <...>
+
+## API calls
+
+Each call through the generated client (checklist item 1): service and method, when it is made, its body, and what the screen does with each answer. For a stream: the wrapper, its token, the event name and data type.
+
+- `<ScansService.startScan>`: on <...>; body `<...>`; `201` → <...>; `400` → <...>; `503` → <...>
+
+## Browser APIs behind wrappers
+
+Each browser API jsdom lacks (checklist item 4): the wrapper, its `InjectionToken`, the default factory, and the fake the spec provides. "None." if the screen uses none.
+
+## Material components
+
+Each Material component and its module, per component (checklist item 9), and whether the initial bundle grows (checklist item 10: the size before this ticket, from the last build's "Initial total" line).
+
+## Checklist disposition
+
+One line per item of `archetype.md`'s edge-case checklist: how this ticket addresses it, or "not applicable: <reason>".
+
+1. The generated client: <...>
+2. Promise timing in tests: <...>
+3. Stubs reachable and surfaced: <...>
+4. Browser APIs jsdom lacks: <...>
+5. Where the screen sits and when it shows: <...>
+6. Input and validation: <...>
+7. Loading, empty and error states: <...>
+8. Live updates: <...>
+9. Material components and their harnesses: <...>
+10. The bundle budget and the system font: <...>
+11. The live check reads the DOM: <...>
+12. The dev server and its proxy: <...>
+13. Docs: <...>
+
+## Expected breakage
+
+Existing test files (not this ticket's story tests) that the stubs will make fail without the stub's error, one bullet each, by the spec's file name: `` - `<name>.spec.ts`: <reason> ``. The red gate (`RedCheck`) tolerates failures only in files listed here (for example `app.spec.ts` when the shell now shows a stubbed screen). "None." if there is none.
+
+## Open design notes (as of the design phase)
+
+Anything the architect deviated from in the ticket, or a decision made while designing that the ticket left open. "None." if there is nothing to add.
+
+## Stubs (as of the design phase)
+
+- Files stubbed: `<list>`
+- Each method a criterion goes through throws `new Error('not implemented: <TICKET-ID>')`; which stub each criterion reaches: `<AC-n: method>`
+- The template's structure and CSS classes are final; tests find elements by them and by Material harnesses.
+- Compiled with `./gradlew :server:ngBuild`.
+- Commit: `<hash, filled in after the design commit>`

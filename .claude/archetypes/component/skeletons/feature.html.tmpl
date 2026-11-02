@@ -1,0 +1,12 @@
+<section class="<feature-name>" aria-label="<Region name>">
+  <h2><Heading></h2>
+  @if (loadError()) {
+    <p class="load-error" role="alert"><The text design.md gives for a failed load></p>
+  }
+  @for (item of <stateName>(); track item.id) {
+    <p class="<item-class>">{{ <label>(item) }}</p>
+  } @empty {
+    <p class="<empty-class>"><The text design.md gives for the empty state></p>
+  }
+  <button mat-flat-button type="button" (click)="<action>()"><Button text></button>
+</section>
