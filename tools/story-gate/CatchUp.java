@@ -107,7 +107,7 @@ final class CatchUp {
 
         List<String> treeLines = new ArrayList<>();
         List<String> dirtyLines = new ArrayList<>();
-        dirtyLines.addAll(dirtyLines("main", dirty(Git.run(main, "status", "--porcelain", "-z",
+        dirtyLines.addAll(dirtyLines("main checkout", dirty(Git.run(main, "status", "--porcelain", "-z",
                 "--untracked-files=all", "--", "docs/tickets"))));
         for (Worktree t : trees) {
             Path path = Path.of(t.path());
@@ -115,7 +115,7 @@ final class CatchUp {
             String id = ticketOf(t.branch());
             treeLines.add(worktreeLine(id, t.branch(), relative(main, path), id == null ? null : planOf(path, id)));
             if (Files.isDirectory(path)) {
-                dirtyLines.addAll(dirtyLines(id != null ? id : relative(main, path), dirty(Git.run(path, "status",
+                dirtyLines.addAll(dirtyLines((id != null ? id : relative(main, path)) + " worktree", dirty(Git.run(path, "status",
                         "--porcelain", "-z", "--untracked-files=all", "--", "docs/tickets"))));
             }
         }
