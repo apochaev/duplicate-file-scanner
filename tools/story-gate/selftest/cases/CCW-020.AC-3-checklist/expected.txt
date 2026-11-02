@@ -1,0 +1,1 @@
+.claude/archetypes/component/archetype.md: ok

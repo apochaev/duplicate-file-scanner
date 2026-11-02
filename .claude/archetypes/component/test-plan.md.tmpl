@@ -1,0 +1,22 @@
+# <TICKET-ID>: <ticket title> — test plan
+
+Filled in by the test-author during the `test` phase, before writing any test. `tools/story-gate`'s `TraceabilityCheck` reads this file and requires every live criterion's full ID (`<TICKET-ID>.AC-<n>`) to appear in it, so list every criterion, including any checked only by hand or by reading (say so in the Level column). Delete this paragraph and every `<...>` when filling it in.
+
+## Criterion → scenario → test
+
+| Criterion | Scenario | Test (`it` name, inside its `describe`) | Spec file | Stub it reaches | Level |
+|---|---|---|---|---|---|
+| `<TICKET-ID>.AC-1` | `<scenario title from the ticket>` | `<TICKET-ID>.AC-1 <short readable title>` | `src/app/<feature>/<name>.spec.ts` | `<Component.method>` | `<component (TestBed) / pure function / by hand on the built jar / read>` |
+
+One row per scenario. A criterion checked by hand (a look, a computed style) is listed with Level `by hand on the built jar` and has no test.
+
+## Fixtures and fakes
+
+- HTTP: `provideHttpClient()`, `provideHttpClientTesting()`; each request answered with `HttpTestingController.expectOne(<url>)` and `flush(<body>, {status, statusText})`; `http.verify()` after each test.
+- Stub surfacing: `provideStubSurfacing()` in the providers and `await settle(fixture)` after each step (`src/testing/stub-surfacing.ts`).
+- Fakes behind tokens: `<FakeEventSource through EVENT_SOURCE, or none>`
+- Data builders: `<functions building API models with defaults, like entry() and progress() in scan-screen.spec.ts>`
+
+## Notes for the implementer
+
+Anything a test relies on that is not obvious from its name: an exact message text, a CSS class, the order of requests, the moment a stream must close. "None." if there is nothing to add.

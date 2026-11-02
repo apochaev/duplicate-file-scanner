@@ -1,0 +1,1 @@
+docs/tickets/*/CCW-020-angular-component-archetype/dry-run.md: ok

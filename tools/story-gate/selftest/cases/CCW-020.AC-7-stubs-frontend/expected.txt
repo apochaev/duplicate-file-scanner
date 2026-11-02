@@ -1,0 +1,3 @@
+FAIL stubs CCW-020: 2 problems
+- server/frontend/src/app/things/thing.html:2: stub marker remains
+- server/frontend/src/app/things/thing.ts:2: stub marker remains

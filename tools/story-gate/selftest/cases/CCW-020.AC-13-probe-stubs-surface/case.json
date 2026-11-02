@@ -1,0 +1,7 @@
+{
+  "check": "red",
+  "ticket": "PROBE-001",
+  "scenarios": ["A stub's error fails its test, however the test reaches it"],
+  "reports": "reports",
+  "build": {"exit": 1}
+}

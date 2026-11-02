@@ -1,0 +1,65 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HarnessLoader } from '@angular/cdk/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatButtonHarness } from '@angular/material/button/testing';
+import { <Model> } from '../api/models';
+import { provideStubSurfacing, settle } from '../../testing/stub-surfacing';
+import { <FeatureName> } from './<feature-name>';
+
+/** Builds a <Model> with defaults, so a test states only what it is about. */
+function <model>(update: Partial<<Model>> = {}): <Model> {
+  return { <defaults>, ...update };
+}
+
+describe('<FeatureName>', () => {
+  let http: HttpTestingController;
+  let fixture: ComponentFixture<<FeatureName>>;
+  let loader: HarnessLoader;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [<FeatureName>],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideStubSurfacing()],
+    }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  /** Renders the component and answers the request it makes on creation. */
+  async function render(items: <Model>[] = []): Promise<void> {
+    fixture = TestBed.createComponent(<FeatureName>);
+    loader = TestbedHarnessEnvironment.loader(fixture);
+    fixture.detectChanges();
+    const load = http.expectOne('/api/<path>');
+    expect(load.request.method).toBe('GET');
+    load.flush(items);
+    await settle(fixture);
+  }
+
+  function page(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('<TICKET-ID>.AC-1 <shows what the scenario says>', async () => {
+    await render([<model>({ <field>: <value> })]);
+
+    expect(page().querySelector('.<item-class>')?.textContent).toBe('<expected text>');
+  });
+
+  it('<TICKET-ID>.AC-2 <does what the scenario says when the user acts>', async () => {
+    await render();
+
+    await (await loader.getHarness(MatButtonHarness.with({ text: '<Button text>' }))).click();
+    await settle(fixture);
+    const request = http.expectOne('/api/<path>');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ <body> });
+    request.flush(<model>(), { status: 201, statusText: 'Created' });
+    await settle(fixture);
+
+    expect(page().querySelector('.<item-class>')?.textContent).toBe('<expected text>');
+  });
+});

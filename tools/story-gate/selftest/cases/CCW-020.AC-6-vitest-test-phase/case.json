@@ -1,0 +1,10 @@
+{
+  "check": "test-phase",
+  "scenarios": [
+    "The gate reads a Vitest report and its stub"
+  ],
+  "reports": "reports",
+  "build": {
+    "exit": 1
+  }
+}

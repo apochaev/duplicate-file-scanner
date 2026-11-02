@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="3">
+    <testsuite name="src/app/probe/probe.spec.ts" timestamp="2026-11-02T00:00:00.000Z" hostname="host" tests="3" failures="0" errors="0" skipped="0" time="0.2803434">
+        <testcase classname="src/app/probe/probe.spec.ts" name="Probe &gt; PROBE-001.AC-1 renders the label from the template" time="0.1636626">
+        </testcase>
+        <testcase classname="src/app/probe/probe.spec.ts" name="Probe &gt; PROBE-001.AC-2 shows pressed after a click through the harness" time="0.0676966">
+        </testcase>
+        <testcase classname="src/app/probe/probe.spec.ts" name="Probe &gt; PROBE-001.AC-3 shows loaded after the generated client&apos;s Promise" time="0.0467931">
+        </testcase>
+    </testsuite>
+</testsuites>

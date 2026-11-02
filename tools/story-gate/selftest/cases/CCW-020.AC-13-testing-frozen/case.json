@@ -1,0 +1,13 @@
+{
+  "check": "freeze",
+  "ticket": "DFS-902",
+  "scenarios": ["A stub's error fails its test, however the test reaches it"],
+  "repo": [
+    {"write": {"server/frontend/src/testing/stub-surfacing.ts": "export function settle(): void { /* rethrows */ }\n",
+               "server/frontend/src/app/thing.ts": "export const thing = 1;\n"},
+     "commit": "tests"},
+    {"write": {"server/frontend/src/testing/stub-surfacing.ts": "export function settle(): void { /* swallows */ }\n",
+               "server/frontend/src/app/thing.ts": "export const thing = 2;\n"},
+     "commit": "impl"}
+  ]
+}

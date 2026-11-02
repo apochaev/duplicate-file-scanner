@@ -11,7 +11,11 @@ record TestResult(String className, String name, Outcome outcome, String failure
     enum Outcome { PASSED, FAILED, SKIPPED }
 
     static final String STUB_EXCEPTION = "java.lang.UnsupportedOperationException";
+    /** A TypeScript stub's failure type in a Vitest report: {@code throw new Error('not implemented: <ID>')} (CCW-020). */
+    static final String TS_STUB_ERROR = "Error";
     static final String STUB_PREFIX = "not implemented:";
+    /** How a Vitest JUnit report joins the {@code describe} names and the test's own name (CCW-020). */
+    private static final String VITEST_SEPARATOR = " > ";
 
     static TestResult passed(String className, String name) {
         return new TestResult(className, name, Outcome.PASSED, "", "", "", "", "");
@@ -30,20 +34,65 @@ record TestResult(String className, String name, Outcome outcome, String failure
         return new TestResult(className, name, Outcome.SKIPPED, "", "", "", "", skipType);
     }
 
-    /** The class without its package, and without any outer class ({@code a.b.Outer$Inner} gives {@code Outer}). */
+    /**
+     * A test case from a Vitest report: its {@code classname} is the spec file's path relative to the frontend
+     * project ({@code src/app/app.spec.ts}), not a Java class (CCW-020).
+     */
+    boolean isVitest() {
+        return className.endsWith(".ts");
+    }
+
+    /**
+     * The class without its package, and without any outer class ({@code a.b.Outer$Inner} gives {@code Outer}). For
+     * a Vitest test case, the spec file's name ({@code app.spec.ts}).
+     */
     String outerClass() {
+        if (isVitest()) return fileName();
         String simple = className.substring(className.lastIndexOf('.') + 1);
         int dollar = simple.indexOf('$');
         return dollar < 0 ? simple : simple.substring(0, dollar);
     }
 
+    /**
+     * The name the criterion IDs are read from. A Vitest report prefixes the test's own name with its
+     * {@code describe} names ({@code App > DFS-041.AC-10 shows ...}); the part after the last separator is the
+     * test's own name (CCW-020 decision 6). A Java display name is used as it is.
+     */
+    String tracedName() {
+        if (!isVitest()) return name;
+        int last = name.lastIndexOf(VITEST_SEPARATOR);
+        return last < 0 ? name : name.substring(last + VITEST_SEPARATOR.length());
+    }
+
+    /**
+     * Whether this test case comes from the test file at repository-relative {@code path}: for Vitest, the path ends
+     * with the report's project-relative one; for Java, the file's simple name is the outer class.
+     */
+    boolean fromFile(String path) {
+        if (isVitest()) return path.equals(className) || path.endsWith("/" + className);
+        String file = path.substring(path.lastIndexOf('/') + 1);
+        int dot = file.lastIndexOf('.');
+        return (dot < 0 ? file : file.substring(0, dot)).equals(outerClass());
+    }
+
     String label() {
+        if (isVitest()) return fileName() + " > " + name;
         return className.substring(className.lastIndexOf('.') + 1) + " > " + name;
+    }
+
+    private String fileName() {
+        return className.substring(className.lastIndexOf('/') + 1);
+    }
+
+    /** Whether {@code type} is a stub's failure type: the Java exception, or a TypeScript {@code Error} (CCW-020). */
+    static boolean isStubType(String type) {
+        return STUB_EXCEPTION.equals(type) || TS_STUB_ERROR.equals(type);
     }
 
     /**
      * A failure raised by an architect's stub: exactly {@code UnsupportedOperationException("not implemented: ...")},
-     * either as the failure itself or as its root cause, when a framework wrapped it (CCW-014).
+     * or a TypeScript {@code Error} with that message (CCW-020), either as the failure itself or as its root cause,
+     * when a framework wrapped it (CCW-014).
      */
     boolean failedWithStub() {
         return outcome == Outcome.FAILED && (isStub(failureType, failureMessage) || isStub(rootType, rootMessage));
@@ -59,12 +108,12 @@ record TestResult(String className, String name, Outcome outcome, String failure
     }
 
     private static boolean isStub(String type, String message) {
-        return STUB_EXCEPTION.equals(type) && message.startsWith(STUB_PREFIX);
+        return isStubType(type) && message.startsWith(STUB_PREFIX);
     }
 
     private static boolean isStubOf(String type, String message, String id) {
         String own = STUB_PREFIX + " " + id;
-        if (!STUB_EXCEPTION.equals(type) || !message.startsWith(own)) return false;
+        if (!isStubType(type) || !message.startsWith(own)) return false;
         return message.length() == own.length() || !Character.isLetterOrDigit(message.charAt(own.length()));
     }
 

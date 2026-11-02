@@ -1,0 +1,13 @@
+{
+  "check": "freeze",
+  "ticket": "DFS-902",
+  "scenarios": ["The source checks see TypeScript"],
+  "repo": [
+    {"write": {"server/frontend/src/app/thing.spec.ts": "it('DFS-902.AC-1 shows', () => expect(thing()).toBe('x'));\n",
+               "server/frontend/src/app/thing.ts": "export function thing(): string { throw new Error('not implemented: DFS-902'); }\n"},
+     "commit": "tests"},
+    {"write": {"server/frontend/src/app/thing.spec.ts": "it.skip('DFS-902.AC-1 shows', () => expect(thing()).toBe('x'));\n",
+               "server/frontend/src/app/thing.ts": "export function thing(): string { return 'x'; }\n"},
+     "commit": "impl"}
+  ]
+}

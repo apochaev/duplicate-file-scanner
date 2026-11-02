@@ -1,0 +1,4 @@
+FAIL red DFS-001: 3 problems
+- regression: other.spec.ts > Other > keeps working failed (AssertionError: expected 1 to be 2)
+- thing.spec.ts > Thing > DFS-001.AC-2 shows nothing: failed with TypeError: Cannot read properties of undefined (reading 'length')
+- thing.spec.ts > Thing > DFS-001.AC-3 counts: did not fail from a stub (Error: something else went wrong)

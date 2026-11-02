@@ -1,0 +1,7 @@
+{
+  "check": "test-phase",
+  "ticket": "PROBE-001",
+  "scenarios": ["A stubbed component goes red then green through the real gate"],
+  "reports": "reports",
+  "build": {"exit": 1}
+}

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="4">
+    <testsuite name="src/app/probe/probe.spec.ts" timestamp="2026-11-02T00:00:00.000Z" hostname="host" tests="3" failures="3" errors="0" skipped="0" time="0.261715">
+        <testcase classname="src/app/probe/probe.spec.ts" name="Probe &gt; PROBE-001.AC-1 renders the label from the template" time="0.1791039">
+            <failure message="not implemented: PROBE-001" type="Error">
+Error: not implemented: PROBE-001
+ ❯ _Probe.label src/app/probe/probe.ts:23:11
+ ❯ Probe_Conditional_0_Template src/app/probe/probe.ts:11:24
+ ❯ executeTemplate ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/shared.ts:108:5
+ ❯ refreshView ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:242:7
+ ❯ detectChangesInView ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:555:5
+ ❯ detectChangesInViewIfAttached ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:503:3
+ ❯ detectChangesInEmbeddedViews ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:445:7
+ ❯ refreshView ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:274:5
+ ❯ detectChangesInView ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:555:5
+ ❯ detectChangesInViewIfAttached ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:503:3
+            </failure>
+        </testcase>
+        <testcase classname="src/app/probe/probe.spec.ts" name="Probe &gt; PROBE-001.AC-2 shows pressed after a click through the harness" time="0.0492">
+            <failure message="not implemented: PROBE-001" type="Error">
+Error: not implemented: PROBE-001
+ ❯ _Probe.pressed src/app/probe/probe.ts:27:11
+ ❯ Probe_Template_button_click_1_listener src/app/probe/probe.ts:13:38
+ ❯ executeListenerWithErrorHandling ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/view/listeners.ts:92:12
+ ❯ wrapListenerIn_markDirtyAndPreventDefault ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/view/listeners.ts:68:18
+ ❯ HTMLButtonElement.&lt;anonymous&gt; ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/platform-browser/src/dom/dom_renderer.ts:532:13
+ ❯ HTMLButtonElement.callTheUserObjectsOperation node_modules/jsdom/lib/generated/idl/EventListener.js:26:30
+ ❯ innerInvokeEventListeners node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:378:16
+ ❯ invokeEventListeners node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:320:3
+ ❯ HTMLButtonElementImpl._dispatch node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:269:9
+ ❯ HTMLButtonElementImpl.dispatchEvent node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:137:17
+            </failure>
+        </testcase>
+        <testcase classname="src/app/probe/probe.spec.ts" name="Probe &gt; PROBE-001.AC-3 shows loaded after the generated client&apos;s Promise" time="0.0312428">
+            <failure message="not implemented: PROBE-001" type="Error">
+Error: not implemented: PROBE-001
+ ❯ _Probe.loaded src/app/probe/probe.ts:35:11
+ ❯ src/app/probe/probe.ts:31:47
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="vitest unhandled errors" timestamp="2026-11-02T00:00:00.000Z" hostname="host" tests="1" failures="0" errors="1" skipped="0" time="0">
+        <testcase classname="vitest unhandled errors" name="Uncaught Exception: not implemented: PROBE-001" time="0">
+            <error message="not implemented: PROBE-001" type="Error">
+Error: not implemented: PROBE-001
+ ❯ _Probe.label src/app/probe/probe.ts:23:11
+ ❯ Probe_Conditional_0_Template src/app/probe/probe.ts:11:24
+ ❯ executeTemplate node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:5498:5
+ ❯ refreshView node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:6204:7
+ ❯ detectChangesInView node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:6386:5
+ ❯ detectChangesInViewIfAttached node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:6369:3
+ ❯ detectChangesInEmbeddedViews node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:6340:7
+ ❯ refreshView node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:6225:5
+ ❯ detectChangesInView node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:6386:5
+ ❯ detectChangesInViewIfAttached node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:6369:3
+
+This error originated in &quot;src/app/probe/probe.spec.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
+The last test to run before this error was &quot;PROBE-001.AC-1 renders the label from the template&quot;. This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
+            </error>
+        </testcase>
+    </testsuite>
+</testsuites>

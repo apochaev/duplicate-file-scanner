@@ -1,0 +1,6 @@
+{
+  "check": "stubs-run",
+  "ticket": "CCW-020",
+  "scenarios": ["A stub's error fails its test, however the test reaches it"],
+  "tree": "tree"
+}

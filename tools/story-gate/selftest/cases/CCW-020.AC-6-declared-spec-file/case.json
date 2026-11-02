@@ -1,0 +1,34 @@
+{
+  "check": "red",
+  "ticket": "DFS-041",
+  "scenarios": [
+    "The gate reads a Vitest report and its stub"
+  ],
+  "design": "design.md",
+  "results": [
+    {
+      "class": "src/app/scans/scan-screen.spec.ts",
+      "name": "ScanScreen > DFS-041.AC-1 shows the form",
+      "outcome": "failed",
+      "type": "Error",
+      "message": "not implemented: DFS-041"
+    },
+    {
+      "class": "src/app/app.spec.ts",
+      "name": "App > DFS-037.AC-3 shows the heading and Connected",
+      "outcome": "failed",
+      "type": "AssertionError",
+      "message": "expected null not to be null"
+    },
+    {
+      "class": "src/app/other.spec.ts",
+      "name": "Other > still works",
+      "outcome": "failed",
+      "type": "AssertionError",
+      "message": "expected 1 to be 2"
+    }
+  ],
+  "build": {
+    "exit": 1
+  }
+}

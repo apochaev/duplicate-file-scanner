@@ -1,0 +1,13 @@
+{
+  "check": "cli",
+  "scenarios": ["The source checks see TypeScript"],
+  "args": ["disabled", "DFS-902"],
+  "repo": [
+    {"write": {"docs/tickets/backlog/DFS-902-second/DFS-902-ticket.md": "---\nid: DFS-902\nstatus: in-progress\n---\n\n# DFS-902\n",
+               "docs/tickets/backlog/DFS-902-second/plan.json": "{\"ticket\": \"DFS-902\", \"phases\": [{\"id\": \"tests\", \"commit\": \"abc\", \"artifacts\": [\"server/frontend/src/app/own.spec.ts\"]}]}\n",
+               "server/frontend/src/app/old.spec.ts": "describe('Old', () => {\n  it.skip('later', () => {});\n});\n",
+               "server/frontend/src/app/own.spec.ts": "describe('Own', () => {\n  it('DFS-902.AC-1 works', () => {});\n  xit('later', () => {});\n});\n",
+               "server/build/test-results/vitest/TEST-vitest.xml": "@TEST-vitest.xml"},
+     "commit": "base"}
+  ]
+}

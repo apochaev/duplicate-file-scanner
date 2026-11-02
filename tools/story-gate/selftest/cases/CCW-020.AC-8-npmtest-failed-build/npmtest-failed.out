@@ -1,0 +1,11 @@
+> Task :server:compileJava UP-TO-DATE
+> Task :server:test
+> Task :server:npmTest FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':server:npmTest'.
+> Process 'command 'npm'' finished with non-zero exit value 1
+
+BUILD FAILED in 21s

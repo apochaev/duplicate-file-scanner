@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="3" failures="0" errors="0" time="0.01">
+    <testsuite name="src/app/old.spec.ts" timestamp="2026-11-02T00:00:00.000Z" hostname="host" tests="1" failures="0" errors="0" skipped="1" time="0">
+        <testcase classname="src/app/old.spec.ts" name="Old &gt; later" time="0">
+            <skipped/>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/app/own.spec.ts" timestamp="2026-11-02T00:00:00.000Z" hostname="host" tests="2" failures="0" errors="0" skipped="1" time="0.01">
+        <testcase classname="src/app/own.spec.ts" name="Own &gt; DFS-902.AC-1 works" time="0.01">
+        </testcase>
+        <testcase classname="src/app/own.spec.ts" name="Own &gt; later" time="0">
+            <skipped/>
+        </testcase>
+    </testsuite>
+</testsuites>

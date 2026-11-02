@@ -39,7 +39,7 @@ final class TraceabilityCheck {
 
         Set<Integer> tested = new LinkedHashSet<>();
         for (TestResult r : results) {
-            for (int n : criteriaNamed(id, r.name())) {
+            for (int n : criteriaNamed(id, r.tracedName())) {
                 Ticket.Criterion c = ticket.criterion(n);
                 if (c == null) problems.add("test \"" + r.name() + "\": names " + id + ".AC-" + n + ", which does not exist");
                 else if (c.retired()) problems.add("test \"" + r.name() + "\": names retired " + id + ".AC-" + n);

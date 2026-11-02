@@ -1,0 +1,45 @@
+import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { <Model> } from '../api/models';
+import { <Feature>Service } from '../api/services';
+
+/**
+ * <What this component shows and does> (<TICKET-ID>, `ui.md` <U-section>).
+ *
+ * Stubs (design phase): every method a criterion goes through throws the not-implemented error below; signatures,
+ * inputs, outputs, injected services, the template's structure and its CSS classes are final.
+ */
+@Component({
+  selector: 'app-<feature-name>',
+  imports: [<Material modules and child components>],
+  templateUrl: './<feature-name>.html',
+  styleUrl: './<feature-name>.css',
+})
+export class <FeatureName> {
+  readonly <inputName> = input.required<<Model>>();
+  readonly <outputName> = output<<Model>>();
+
+  protected readonly <stateName> = signal<<Model>[]>([]);
+  protected readonly <derivedName> = computed(() => this.<stateName>().length);
+  protected readonly loadError = signal(false);
+
+  private readonly <service> = inject(<Feature>Service);
+
+  constructor() {
+    this.load();
+  }
+
+  /** Loads <what> through the generated client (<TICKET-ID>.AC-<n>). */
+  protected load(): void {
+    throw new Error('not implemented: <TICKET-ID>');
+  }
+
+  /** <What the user's action does> (<TICKET-ID>.AC-<n>). */
+  protected <action>(): void {
+    throw new Error('not implemented: <TICKET-ID>');
+  }
+
+  /** <What the template shows for a value> (<TICKET-ID>.AC-<n>). */
+  protected <label>(value: <Model>): string {
+    throw new Error('not implemented: <TICKET-ID>');
+  }
+}

@@ -1,0 +1,1 @@
+PASS red PROBE-001: 3 story tests fail with stubs, 1 other tests fail on the ticket's stub, 0 fail in declared classes, 0 other tests pass

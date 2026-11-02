@@ -1,0 +1,20 @@
+{
+  "check": "contains",
+  "scenarios": ["The checklist asks what DFS-037, DFS-038, DFS-041 and DFS-044 met"],
+  "contains": {
+    ".claude/archetypes/component/archetype.md": [
+      "1. **The generated client** (DFS-038",
+      "2. **Promise timing in tests** (DFS-038)",
+      "3. **Stubs reachable and surfaced** (CCW-020 decision 7",
+      "4. **Browser APIs jsdom lacks** (DFS-041 decision 5)",
+      "7. **Loading, empty and error states** (DFS-041",
+      "`{code, message}`",
+      "`503`",
+      "9. **Material components and their harnesses** (DFS-041)",
+      "10. **The bundle budget and the system font** (DFS-041, DFS-044)",
+      "11. **The live check reads the DOM** (DFS-041)",
+      "12. **The dev server and its proxy** (DFS-037 decision 4, DFS-040 decision 5)",
+      "13. **Docs** (DFS-041)"
+    ]
+  }
+}

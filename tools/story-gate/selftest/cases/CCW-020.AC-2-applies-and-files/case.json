@@ -1,0 +1,18 @@
+{
+  "check": "contains",
+  "scenarios": ["The archetype says where it applies and where files go"],
+  "contains": {
+    ".claude/archetypes/component/archetype.md": [
+      "Applies to a ticket that adds or changes an Angular screen or component in `server/frontend`",
+      "an HTTP endpoint or a change to the API's records (`endpoint`)",
+      "a core use case (`use-case`)",
+      "the security rules (DFS-036",
+      "**One folder per feature** under `server/frontend/src/app/`",
+      "**Standalone components with signals.**",
+      "**The API only through the generated client** (DFS-038)",
+      "never edited by hand",
+      "**Anything the browser has and jsdom lacks goes behind an injectable wrapper with an `InjectionToken`**",
+      "throws `new Error('not implemented: <TICKET-ID>')`"
+    ]
+  }
+}

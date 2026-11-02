@@ -1,0 +1,13 @@
+{
+  "check": "contains",
+  "scenarios": ["The dry run traces every decision and surprise"],
+  "contains": {
+    "docs/tickets/*/CCW-020-angular-component-archetype/dry-run.md": [
+      "## Decisions and surprises traced",
+      "| D1 | DFS-041 decision 1:", "| D6 | DFS-041 decision 6:",
+      "| S1 | DFS-038:", "| S11 | CCW-020 decision 7:",
+      "## Checklist items and the rows they trace to",
+      "| item 13 (docs) |"
+    ]
+  }
+}

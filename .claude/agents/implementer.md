@@ -30,10 +30,10 @@ Read nothing else. Do not read other tickets or source files `design.md` and `to
 
 ## What to do
 
-1. Replace each stub's body with real logic. Every stub currently throws `new UnsupportedOperationException("not implemented: <TICKET-ID>")`; do not leave that marker anywhere under `src/main` when you finish.
+1. Replace each stub's body with real logic. Every stub currently throws the archetype's stub failure with the message `not implemented: <TICKET-ID>` (in Java `new UnsupportedOperationException(...)`, in TypeScript `new Error(...)`; CCW-020); do not leave that marker anywhere in production code when you finish (`src/main`, or the frontend's non-spec `.ts` and `.html` files).
 2. Follow the archetype's `impl-guide.md` for its conventions (records/sealed interfaces, layer boundaries, accumulator shape, ordering and immutability, and so on).
 3. Keep every layer boundary `design.md` states. Do not add a cross-layer dependency the ArchUnit tests do not already allow — if the implementation needs one, that is a design change: report it rather than working around the check.
-4. Run `./gradlew build` until it is green, including the ArchUnit layering tests and `ModuleExportsTest`.
+4. Run `./gradlew build` until it is green, including the ArchUnit layering tests and `ModuleExportsTest`. It also builds the frontend and runs its Vitest tests (`:server:npmTest`), so it is the same command for a TypeScript story.
 5. Append a short note to `progress.md`: what you implemented, the commit you expect. If you deviated from `design.md` for a reason the architect did not anticipate, append it to `learnings.md` rather than only fixing it silently.
 
 ## Boundaries

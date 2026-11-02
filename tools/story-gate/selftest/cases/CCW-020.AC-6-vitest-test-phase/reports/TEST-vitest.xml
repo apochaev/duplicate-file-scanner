@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="3" failures="2" errors="0" time="0.0110883">
+    <testsuite name="src/app/thing.spec.ts" timestamp="2026-11-02T00:00:00.000Z" hostname="host" tests="3" failures="2" errors="0" skipped="1" time="0.0110883">
+        <testcase classname="src/app/thing.spec.ts" name="Thing &gt; DFS-001.AC-1 shows the thing" time="0.0080495">
+            <failure message="not implemented: DFS-001" type="Error">
+Error: not implemented: DFS-001
+ ❯ thing src/app/thing.spec.ts:4:9
+ ❯ src/app/thing.spec.ts:9:12
+            </failure>
+        </testcase>
+        <testcase classname="src/app/thing.spec.ts" name="Thing &gt; when empty &gt; DFS-001.AC-2, DFS-001.AC-3 shows nothing" time="0.0008669">
+            <failure message="not implemented: DFS-001" type="Error">
+Error: not implemented: DFS-001
+ ❯ thing src/app/thing.spec.ts:4:9
+ ❯ src/app/thing.spec.ts:14:14
+            </failure>
+        </testcase>
+        <testcase classname="src/app/thing.spec.ts" name="Thing &gt; skipped one" time="0">
+            <skipped/>
+        </testcase>
+    </testsuite>
+</testsuites>

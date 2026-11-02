@@ -30,15 +30,6 @@
       "simple class name only",
       "Write \"None.\" when there is none",
       "every class declared under `## Expected breakage`, by name"
-    ],
-    ".claude/archetypes/pipeline-stage/archetype.md": [
-      "\nversion: 15\n"
-    ],
-    ".claude/archetypes/use-case/archetype.md": [
-      "\nversion: 4\n"
-    ],
-    ".claude/archetypes/wiring/archetype.md": [
-      "\nversion: 2\n"
     ]
   }
 }

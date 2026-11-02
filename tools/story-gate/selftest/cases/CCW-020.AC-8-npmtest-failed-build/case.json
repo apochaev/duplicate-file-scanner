@@ -1,0 +1,9 @@
+{
+  "check": "red",
+  "scenarios": ["Failing Vitest tests are judged, not reported as a broken build"],
+  "reports": "reports",
+  "build": {
+    "exit": 1,
+    "output": "npmtest-failed.out"
+  }
+}

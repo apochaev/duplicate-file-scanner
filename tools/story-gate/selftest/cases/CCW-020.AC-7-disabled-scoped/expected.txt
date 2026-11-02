@@ -1,0 +1,3 @@
+FAIL disabled DFS-902: 1 problem
+- server/frontend/src/app/own.spec.ts:3: xit
+exit=1

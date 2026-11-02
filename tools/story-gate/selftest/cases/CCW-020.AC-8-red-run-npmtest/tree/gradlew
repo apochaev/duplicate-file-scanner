@@ -1,0 +1,10 @@
+#!/bin/sh
+# A stand-in for the Gradle wrapper: the Vitest report appears only when the run asks for npmTest after cleanTest.
+case "$*" in *cleanTest*npmTest*) ;; *) echo "> Task :server:test"; exit 0 ;; esac
+mkdir -p server/build/test-results/vitest
+rm -f server/build/test-results/vitest/*.xml
+cp fresh/*.xml server/build/test-results/vitest/
+echo "> Task :server:npmTest FAILED"
+echo "* What went wrong:"
+echo "Execution failed for task ':server:npmTest'."
+exit 1

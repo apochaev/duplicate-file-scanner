@@ -1,0 +1,8 @@
+.claude/archetypes/component/archetype.md: ok
+.claude/archetypes/component/design.md.tmpl: ok
+.claude/archetypes/component/impl-guide.md: ok
+.claude/archetypes/component/skeletons/feature.html.tmpl: ok
+.claude/archetypes/component/skeletons/feature.spec.ts.tmpl: ok
+.claude/archetypes/component/skeletons/feature.ts.tmpl: ok
+.claude/archetypes/component/test-guide.md: ok
+.claude/archetypes/component/test-plan.md.tmpl: ok
