@@ -128,8 +128,8 @@ final class CatchUpSelfTest {
                     "worktrees:",
                     "- DFS-051 tickets/DFS-051-x ../repo-DFS-051-x: plan awaiting-approval at the gate after design",
                     "uncommitted ticket and plan.json files:",
-                    "- DFS-051: docs/tickets/backlog/DFS-051-x/DFS-051-ticket.md (M)",
-                    "- DFS-051: docs/tickets/backlog/DFS-051-x/plan.json (??)", "") + "/0",
+                    "- DFS-051 worktree: docs/tickets/backlog/DFS-051-x/DFS-051-ticket.md (M)",
+                    "- DFS-051 worktree: docs/tickets/backlog/DFS-051-x/plan.json (??)", "") + "/0",
                     text + "/" + out.exit());
             if (text.contains("Secret")) problems.add("AC-9 the catch-up printed ticket content");
         } catch (IOException | RuntimeException e) {
