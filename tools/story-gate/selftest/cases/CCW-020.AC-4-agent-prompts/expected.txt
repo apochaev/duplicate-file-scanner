@@ -1,0 +1,4 @@
+.claude/agents/architect.md: ok
+.claude/agents/implementer.md: ok
+.claude/agents/test-author.md: ok
+.claude/agents/verifier.md: ok

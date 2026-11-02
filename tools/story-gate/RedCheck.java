@@ -16,7 +16,8 @@ import java.util.regex.Pattern;
 final class RedCheck {
 
     static final String BREAKAGE_HEADING = "## Expected breakage";
-    private static final Pattern DECLARATION = Pattern.compile("^- `([A-Za-z_$][A-Za-z0-9_$]*)`");
+    /** A simple class name, or a Vitest spec's file name ({@code scan-screen.spec.ts}, CCW-020). */
+    private static final Pattern DECLARATION = Pattern.compile("^- `([A-Za-z_$][A-Za-z0-9_$.-]*)`");
 
     private RedCheck() {}
 

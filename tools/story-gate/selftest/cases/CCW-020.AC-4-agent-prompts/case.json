@@ -1,0 +1,27 @@
+{
+  "check": "contains",
+  "scenarios": ["The agent prompts no longer assume Java"],
+  "contains": {
+    ".claude/agents/architect.md": [
+      "every method body throws the stub failure the archetype's `impl-guide.md` names",
+      "`throw new Error('not implemented: <TICKET-ID>')`",
+      "for a Vitest spec, its file name",
+      "or `./gradlew :server:ngBuild` for TypeScript"
+    ],
+    ".claude/agents/test-author.md": [
+      "the it() name in Vitest",
+      "as the archetype's guides define it (in Java an `UnsupportedOperationException`, in TypeScript an `Error`; CCW-020)",
+      "In Vitest it is the name given to `it`",
+      "after the last ` > ` in the report",
+      "`./gradlew :server:npmTest`"
+    ],
+    ".claude/agents/implementer.md": [
+      "in TypeScript `new Error(...)`",
+      "the frontend's non-spec `.ts` and `.html` files",
+      "it is the same command for a TypeScript story"
+    ],
+    ".claude/agents/verifier.md": [
+      "`./gradlew build` (which also runs the Vitest tests)"
+    ]
+  }
+}
