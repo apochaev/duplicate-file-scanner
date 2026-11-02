@@ -85,10 +85,31 @@
       "after": [
         "tests"
       ],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 20,
+          "wallClockSeconds": 224,
+          "outcome": "passed",
+          "note": "PASS green DFS-042: build and tests green: 551 passed, 3 skipped; PASS disabled DFS-042: no @Disabled tests in the 4 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-042: none of the 4 test files of the tests phase changed since c56a501c; PASS touches DFS-042: 27 changed files, all inside touches; PASS stubs DFS-042: no stub markers in 130 production files; PASS traceability DFS-042: 14 criteria traced through 15 scenarios to tests and test-plan.md; PASS consistency DFS-042: plan.json parses; state running agrees with ticket status in-progress; resumed once after a usage-limit cutoff (API 429); turns and seconds cover both invocations, excluding the wait"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/plan.json",
+        "docs/tickets/backlog/DFS-042-run-plan-checks-asynchronously/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/Job.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/JobRunner.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanVerifyProgress.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanVerifyService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/PlanVerifyUseCases.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanVerifyId.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanVerifySnapshot.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/InMemoryJobStore.java"
+      ],
+      "commit": "7f68296f55a262c6b5ebc2227aad83e0edc9338e"
     },
     {
       "id": "verify",
@@ -96,7 +117,7 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
