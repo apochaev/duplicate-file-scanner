@@ -1,7 +1,7 @@
 ---
 id: DFS-044
 title: Fit the frontend bundle budget and use the system font
-status: ready
+status: in-progress
 type: build
 scope: [build]
 archetype: none
