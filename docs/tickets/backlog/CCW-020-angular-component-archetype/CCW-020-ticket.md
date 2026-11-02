@@ -22,6 +22,7 @@ touches:
   - tools/story-gate
   - server/frontend/angular.json
   - server/build.gradle.kts
+  - server/frontend/src/testing
   - docs/design/story-orchestration.md
   - docs/design/ui.md
   - docs/tickets/backlog/CCW-020-angular-component-archetype/dry-run.md
@@ -110,6 +111,19 @@ What DFS-037, DFS-038 and DFS-041 met, for the checklist:
    - Tests keep their `describe` blocks; DFS-041's tests trace as they are.
    - Not chosen: a test guide that bans `describe` or wants the ID first in it (against normal Angular tests, and a wrapped test silently breaks traceability); a reporter setting (Vitest's JUnit reporter has templates for `classname` and the suite name, not for the test name).
 
+7. **A shared test helper surfaces a stub's error as the test's failure** (2026-11-01, found while implementing).
+   - **Found by a probe** (a throwaway stubbed component, not committed). A stub was reached three ways:
+     - from the template
+     - from a click handler through a Material harness
+     - in a generated-client Promise callback
+
+     Each time, the test failed with an `AssertionError`, and the stub's `Error` showed only as a separate "vitest unhandled errors" entry. Angular's `rethrowApplicationErrors` changed nothing. The red gate would reject every such test.
+   - **What worked for all three:** an `ErrorHandler` that records errors, with Node's `unhandledRejection` recorded too, and a `settle(fixture)` that rethrows the first recorded error.
+   - **The helper:** `server/frontend/src/testing/stub-surfacing.ts` provides `provideStubSurfacing()` and `settle(fixture)`. It is the frontend counterpart of CCW-019's `StubSurfacingConfiguration`.
+   - **The gate counts `src/testing/` as test code,** so the freeze check guards it and the stubs check skips it. The test guide requires every story spec to use it.
+   - DFS-041's specs are not changed.
+   - Not chosen: a recorder copied into each spec (it drifts); the gate accepting an `AssertionError` when an unhandled error carries the stub (the gate cannot tell which test caused it, so a vacuous test would pass red).
+
 ## Acceptance criteria
 
 The full ID of each criterion is `CCW-020.AC-<n>`.
@@ -126,11 +140,12 @@ The full ID of each criterion is `CCW-020.AC-<n>`.
 - **AC-10** A throwaway component with a stub, and a spec whose test is named `CCW-020.AC-1 ...` inside a `describe`, passes the gate end to end on an unmerged branch: `red` sees the story test failing with its stub, then, once implemented, `green`, `stubs` and `traceability` pass.
 - **AC-11** `dry-run.md` traces each of DFS-041's decisions and each surprise met building DFS-037, DFS-038 and DFS-041 (listed in Context) to the checklist item or guide section that would have raised it, with none left untraced and no checklist item unused.
 - **AC-12** `docs/design/ui.md` D7 says the component archetype exists (CCW-020) and that the gates now run the Vitest tests; `docs/design/story-orchestration.md` and the `tickets` skill give the TypeScript stub and test-name forms beside the Java ones; the `endpoint` archetype's "does not apply" points to `component`.
+- **AC-13** With `server/frontend/src/testing/stub-surfacing.ts` (`provideStubSurfacing()`, `settle(fixture)`), a stub reached from a template, from a click handler through a Material harness, or in a generated-client Promise callback makes its test fail with the stub's `Error` itself; the gate counts files under a frontend's `src/testing/` as test code.
 
 ## Scenarios
 
 How each scenario is checked:
-- **Mechanically:** AC-1 (a listing and the frontmatter read by a script); AC-5 (a run of `npmTest`, the report inspected); AC-6 to AC-9 (the gate's self-test, its report cases fed real Vitest XML); AC-10 (the gate run on a throwaway branch, its output recorded in `verification.md`); AC-11 (a script counts the dry run's rows and the untraced or unused entries); AC-4 partly (a search of the four prompts for an unqualified Java-only rule).
+- **Mechanically:** AC-1 (a listing and the frontmatter read by a script); AC-5 (a run of `npmTest`, the report inspected); AC-6 to AC-9 (the gate's self-test, its report cases fed real Vitest XML); AC-10 and AC-13 (the gate run on a throwaway branch, with one story test per way of reaching a stub, its output recorded in `verification.md`; plus a self-test case for `src/testing/`); AC-11 (a script counts the dry run's rows and the untraced or unused entries); AC-4 partly (a search of the four prompts for an unqualified Java-only rule).
 - **By reading:** AC-2, AC-3, AC-12, and the wording behind AC-4 and AC-11.
 
 ```gherkin
@@ -213,6 +228,14 @@ Feature: Angular component archetype
     Then D7 names the component archetype (CCW-020) and says the gates run the Vitest tests
     And the orchestration design and the tickets skill give the TypeScript stub and test name beside the Java ones
     And the endpoint archetype refers screens to component
+
+  @AC-13
+  Scenario: A stub's error fails its test, however the test reaches it
+    Given a stubbed component whose stubs are reached from its template, from a click handler and in a generated-client Promise callback
+    And a spec with one story test per way, using provideStubSurfacing() and settle(fixture)
+    When the tests run
+    Then each story test fails with type Error and message "not implemented: CCW-020"
+    And the gate counts server/frontend/src/testing/stub-surfacing.ts as a test file
 ```
 
 ## Scope
@@ -225,6 +248,7 @@ Feature: Angular component archetype
 - `tools/story-gate`: the report path, the TypeScript stub, the traced name, the source checks, `RedCheck`, `Build`, and self-test cases (decisions 1 and 6).
 - `server/frontend/angular.json`: the `junit` reporter.
 - `server/build.gradle.kts`: `npmTest` deletes and declares its report.
+- `server/frontend/src/testing`: the stub-surfacing helper (decision 7).
 - `docs/design/story-orchestration.md`: the stub and test-name rules name the TypeScript forms.
 - `docs/design/ui.md`: D7.
 - `docs/tickets/backlog/CCW-020-angular-component-archetype/dry-run.md`: the dry run (decision 3).
