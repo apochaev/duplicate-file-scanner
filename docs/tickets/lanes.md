@@ -6,5 +6,6 @@ Name a session at launch with `claude -n <name>`, or rename a running one with `
 
 ```
 dfs-backend: backend
-dfs-frontend: frontend, harness
+dfs-frontend: frontend
+dfs-harness: harness
 ```
