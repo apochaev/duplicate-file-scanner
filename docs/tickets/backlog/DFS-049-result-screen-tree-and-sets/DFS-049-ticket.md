@@ -1,13 +1,13 @@
 ---
 id: DFS-049
 title: Show a finished scan as a folder tree with a Sets tab
-status: draft
+status: ready
 type: feature
 scope: [build, docs]
 archetype: component
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 gates: [design, done]
-# autorun: false       # pipeline tickets: true lets Claude start /story run itself
+autorun: true
 priority: high
 lane: frontend
 depends_on: [DFS-047, CCW-020]
@@ -29,7 +29,7 @@ completed:
 
 As the user of the local DFS server
 I want to open a finished scan and browse its folders in a tree, seeing the duplicate sets under the folder I select, largest reclaimable first
-So that I can find where my duplicates are in the browser instead of reading the CLI report
+So that I can see duplicate groups in the browser and copy the paths of their containing directories
 
 ## Context
 
@@ -53,6 +53,7 @@ Milestone M-1 ("see the results of a scan"), step 4 of 5 (`docs/design/ui.md`, "
 8. **No Playwright here; a separate draft after DFS-050** (2026-11-02). Playwright (a dev dependency, a browser download, a Gradle task, a server per run) is build work the `component` archetype excludes. DFS-049 relies on its Vitest tests and the archetype's manual check on the built jar, read from the DOM (checklist item 11). A frontend-lane draft for the first end-to-end flow (scan a fixture folder, open the result, tree, Sets and Overlaps; `ui.md` D6), `depends_on: [DFS-050]`, is filed right after this ticket's `ready` commit. Not a first flow here (outside the archetype, the slowest route to the screen).
 9. **The result screen loads `getScan` first, then the result** (2026-11-02). Opening `#/scans/<id>` calls `ScansService` `GET /api/scans/{id}` first: its `locations` fill the header (AC-3); a `404` shows the "not in this server run" alert; a `progress.status` other than COMPLETED shows the "has not finished yet" alert, and the screen stops there without calling `listFolders` or `listSets`. Only for a COMPLETED scan does it call `listFolders(id)` and `listSets(id)`; a `409 SCAN_NOT_COMPLETED` from either still maps to the "has not finished yet" alert as a fallback. One predictable order, the header shows the folders the user chose, and each alert traces to one call. Not the three calls in parallel (three requests racing to report the same failure, tests pinning which wins, and the header waits for `getScan` anyway) and not the header from the roots `listFolders` returns (a root given as a link is resolved, so it may not read as the user typed it, and `404`/`409` would come only from `/folders`).
 
+10. **Copy the containing directory from each duplicate path** (2026-11-02, user priority). Every displayed file link, including a hard-link alias, has a "Copy folder path" action. It copies that link's immediate parent directory as plain text, without the filename or added quotes; preserve drive roots, UNC share roots, POSIX roots, spaces and Unicode. Show "Folder path copied" only after success. If clipboard access fails or is unavailable, show a clear error and the selectable directory path for manual copying. Put the browser clipboard behind an injectable wrapper so tests can fake success and failure. Copying changes no scan or disk state. This is part of the first useful result screen; opening Explorer and deletion remain out of scope.
 ## Acceptance criteria
 
 The full ID of each criterion is `DFS-049.AC-<n>`.
@@ -68,6 +69,7 @@ The full ID of each criterion is `DFS-049.AC-<n>`.
 - **AC-9** The Sets tab shows "<totalItems> duplicate sets · <totalReclaimableBytes> reclaimable" for the current filter and a paginator of page size 50 (choices 25, 50, 100); choosing another page or size requests it with that `page` and `size`, and changing the folder requests page 0.
 - **AC-10** With no sets, the Sets tab shows "This scan found no duplicates" under "All folders" and "No duplicates under this folder" for a folder, without a paginator; while a page of sets or a tree level loads a progress bar is shown; a failed load shows the server's message with `role="alert"`.
 
+- **AC-11** Every file link shown in a duplicate set has a "Copy folder path" action that copies its immediate parent directory as plain text, preserving Windows drive/UNC roots and POSIX roots, spaces and Unicode; success is announced only after the write succeeds, while rejection or an unavailable clipboard shows an error and a selectable parent path for manual copy, without changing the scan.
 ## Scenarios
 
 ```gherkin
@@ -186,6 +188,38 @@ Feature: Result screen: folder tree and Sets tab
     Then a progress bar is shown on the Sets tab
     When listSets fails with 400 and message "The path is not absolute"
     Then an alert shows "The path is not absolute"
+
+  @AC-11
+  Scenario Outline: Copy the directory containing a duplicate
+    Given a duplicate link with path "<file>"
+    When the user chooses its "Copy folder path" action and the clipboard accepts the write
+    Then the clipboard contains exactly "<folder>"
+    And "Folder path copied" is announced
+    Examples:
+      | file                         | folder                |
+      | C:\Photos\a.jpg              | C:\Photos             |
+      | C:\a.jpg                     | C:\                   |
+      | \\nas\share\a.jpg            | \\nas\share\          |
+      | /photos/a.jpg                | /photos               |
+      | /a.jpg                       | /                     |
+      | C:\Family Photos\été\a.jpg   | C:\Family Photos\été  |
+
+  @AC-11
+  Scenario: A hard-link alias has its own containing directory
+    Given a physical copy has links "C:\Photos\a.jpg" and "D:\Aliases\a.jpg"
+    When the user copies the folder path for "D:\Aliases\a.jpg"
+    Then the clipboard receives "D:\Aliases", not "C:\Photos"
+
+  @AC-11
+  Scenario Outline: Clipboard failure retains a manual copy option
+    Given a duplicate link "C:\Photos\a.jpg" and clipboard access is "<state>"
+    When the user chooses "Copy folder path"
+    Then an alert explains the failure and "C:\Photos" is visible and selectable
+    And no success message is shown and the scan is unchanged
+    Examples:
+      | state       |
+      | unavailable |
+      | rejected    |
 ```
 
 ## Scope
