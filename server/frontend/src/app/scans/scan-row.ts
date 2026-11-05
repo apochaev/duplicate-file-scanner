@@ -83,6 +83,6 @@ export class ScanRow implements OnInit {
    * `#/scans/<id>`; read only by a COMPLETED row's "Open results" link (DFS-049.AC-2).
    */
   protected resultLink(): string[] {
-    throw new Error('not implemented: DFS-049');
+    return ['/scans', this.entry().id];
   }
 }

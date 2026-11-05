@@ -19,5 +19,6 @@ export const CLIPBOARD = new InjectionToken<ClipboardWriter | null>('CLIPBOARD',
  * `http://127.0.0.1`), otherwise null.
  */
 export function browserClipboard(): ClipboardWriter | null {
-  throw new Error('not implemented: DFS-049');
+  const clipboard = typeof navigator === 'undefined' ? undefined : navigator.clipboard;
+  return clipboard && typeof clipboard.writeText === 'function' ? clipboard : null;
 }

@@ -63,7 +63,7 @@
     },
     {
       "id": "tests",
-      "commit": "8a603e1893b8735d311efeff437e37123f5177a9",
+      "commit": "29d24ff3191f40fff85913fe9cb5bbf5e22ee36c",
       "agent": "test-author",
       "artifacts": [
         "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/learnings.md",
@@ -120,12 +120,21 @@
           "wallClockSeconds": 618,
           "outcome": "failed-gate",
           "note": "FAIL green DFS-049: 1 problem; - app.routes.spec.ts > DFS-049.AC-1 shows the scan screen at #/ and goes back to it from a result: expected '/scans/s-1' to be '/'; traced to the test (no router.initialNavigation(), so Location.back() on the mock location never navigates), confirmed by the orchestrator reading the spec; routed to test-author; one run across a rate-limit stop, resumed by SendMessage, turns and seconds are the two invocations combined (32+27 tool uses, 353+265 s)"
+        },
+        {
+          "attempt": 2,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "reconciled after defect 1 (test fix 29d24ff), no agent relaunched; same model as attempt 1 since its failure was a test defect, not the implementation's; PASS green DFS-049: build and tests green: 718 passed, 3 skipped; PASS disabled DFS-049: no @Disabled tests in the 9 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-049: none of the 9 test files of the tests phase changed since 29d24ff3; PASS touches DFS-049: 43 changed files, all inside touches; PASS stubs DFS-049: no stub markers in 176 production files; PASS traceability DFS-049: 11 criteria traced through 18 scenarios to tests and test-plan.md; PASS consistency DFS-049: plan.json parses; state running agrees with ticket status in-progress"
         }
       ],
       "after": [
         "tests"
       ],
-      "status": "in-progress"
+      "status": "done"
     },
     {
       "id": "verify",

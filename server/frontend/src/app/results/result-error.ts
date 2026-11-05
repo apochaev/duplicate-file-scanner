@@ -1,3 +1,5 @@
+import { HttpErrorResponse } from '@angular/common/http';
+
 /** A result URL kept across a server restart: `404 UNKNOWN_SCAN` from `getScan` (DFS-049 decision 2, AC-4). */
 export const SCAN_NOT_IN_THIS_RUN = 'This scan is not in this server run (the server may have restarted)';
 
@@ -13,7 +15,17 @@ export const LOAD_FAILED = 'The results could not be loaded; reload the page';
  * null.
  */
 export function unavailableMessage(failure: unknown): string | null {
-  throw new Error('not implemented: DFS-049');
+  if (!(failure instanceof HttpErrorResponse)) {
+    return null;
+  }
+  const code = failure.error?.code;
+  if (failure.status === 404 && code === 'UNKNOWN_SCAN') {
+    return SCAN_NOT_IN_THIS_RUN;
+  }
+  if (failure.status === 409 && code === 'SCAN_NOT_COMPLETED') {
+    return SCAN_NOT_FINISHED;
+  }
+  return null;
 }
 
 /**
@@ -21,5 +33,11 @@ export function unavailableMessage(failure: unknown): string | null {
  * an `HttpErrorResponse` carrying one, otherwise `LOAD_FAILED`.
  */
 export function failureMessage(failure: unknown): string {
-  throw new Error('not implemented: DFS-049');
+  if (failure instanceof HttpErrorResponse) {
+    const message = failure.error?.message;
+    if (typeof message === 'string' && message.length > 0) {
+      return message;
+    }
+  }
+  return LOAD_FAILED;
 }

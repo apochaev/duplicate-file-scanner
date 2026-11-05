@@ -1,5 +1,7 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { SCAN_NOT_FINISHED, failureMessage, unavailableMessage } from './result-error';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -50,10 +52,17 @@ export class ResultScreen implements OnInit {
   private readonly scans = inject(ScansService);
   private readonly results = inject(ResultsService);
   private readonly destroyRef = inject(DestroyRef);
+  private scanId = '';
+  /** Counts `loadScan` calls, so an answer for a replaced scan is ignored. */
+  private generation = 0;
+  /** Counts `loadSets` calls, so an answer to a superseded request is ignored. */
+  private setsRequest = 0;
 
   /** Follows the route's `id` parameter, calling `loadScan` for each (AC-1). */
   ngOnInit(): void {
-    throw new Error('not implemented: DFS-049');
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      void this.loadScan(params.get('id') ?? '');
+    });
   }
 
   /**
@@ -62,7 +71,39 @@ export class ResultScreen implements OnInit {
    * `failureMessage`, into `fatalError`.
    */
   protected async loadScan(id: string): Promise<void> {
-    throw new Error('not implemented: DFS-049');
+    const generation = ++this.generation;
+    this.scan.set(null);
+    this.roots.set(null);
+    this.fatalError.set(null);
+    this.selectedFolder.set(null);
+    this.page.set(null);
+    this.pageIndex.set(0);
+    this.pageSize.set(DEFAULT_PAGE_SIZE);
+    this.setsLoading.set(false);
+    this.setsError.set(null);
+    this.scanId = id;
+    try {
+      const entry = await this.scans.getScan({ id });
+      if (generation !== this.generation) {
+        return;
+      }
+      this.scan.set(entry);
+      if (entry.progress.status !== 'COMPLETED') {
+        this.fatalError.set(SCAN_NOT_FINISHED);
+        return;
+      }
+      const sets = this.loadSets();
+      const roots = await this.results.listFolders({ id });
+      if (generation !== this.generation) {
+        return;
+      }
+      this.roots.set(roots);
+      await sets;
+    } catch (failure) {
+      if (generation === this.generation) {
+        this.fatalError.set(unavailableMessage(failure) ?? failureMessage(failure));
+      }
+    }
   }
 
   /**
@@ -71,16 +112,47 @@ export class ResultScreen implements OnInit {
    * (AC-10). An answer to a request that a later one superseded is ignored.
    */
   protected async loadSets(): Promise<void> {
-    throw new Error('not implemented: DFS-049');
+    const generation = this.generation;
+    const request = ++this.setsRequest;
+    const under = this.selectedFolder();
+    this.setsLoading.set(true);
+    this.setsError.set(null);
+    try {
+      const page = await this.results.listSets({
+        id: this.scanId,
+        ...(under === null ? {} : { under }),
+        page: this.pageIndex(),
+        size: this.pageSize(),
+      });
+      if (request === this.setsRequest && generation === this.generation) {
+        this.page.set(page);
+        this.setsLoading.set(false);
+      }
+    } catch (failure) {
+      if (request !== this.setsRequest || generation !== this.generation) {
+        return;
+      }
+      this.setsLoading.set(false);
+      const unavailable = unavailableMessage(failure);
+      if (unavailable === SCAN_NOT_FINISHED) {
+        this.fatalError.set(unavailable);
+      } else {
+        this.setsError.set(unavailable ?? failureMessage(failure));
+      }
+    }
   }
 
   /** Selects a folder (null for "All folders"), returns to page 0 and loads it (AC-6, AC-9). */
   protected selectFolder(path: string | null): void {
-    throw new Error('not implemented: DFS-049');
+    this.selectedFolder.set(path);
+    this.pageIndex.set(0);
+    void this.loadSets();
   }
 
   /** Takes the paginator's page index and size and loads that page (AC-9). */
   protected changePage(event: PageEvent): void {
-    throw new Error('not implemented: DFS-049');
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    void this.loadSets();
   }
 }

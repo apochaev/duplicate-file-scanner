@@ -5,6 +5,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { SetPage } from '../api/models';
 import { PathCopy } from './path-copy';
+import { isPathUnderFolder } from './result-path';
 import { setHeading, setsSummary } from './result-format';
 
 /** Under "All folders", a scan with no sets (AC-10). */
@@ -51,16 +52,17 @@ export class SetsTab {
 
   /** Whether the link's path is under the selected folder; always false with "All folders" (AC-8). */
   protected inSelectedFolder(path: string): boolean {
-    throw new Error('not implemented: DFS-049');
+    const folder = this.folder();
+    return folder !== null && isPathUnderFolder(path, folder);
   }
 
   /** `NO_DUPLICATES` with "All folders", `NO_DUPLICATES_UNDER_FOLDER` with a folder selected (AC-10). */
   protected emptyMessage(): string {
-    throw new Error('not implemented: DFS-049');
+    return this.folder() === null ? NO_DUPLICATES : NO_DUPLICATES_UNDER_FOLDER;
   }
 
   /** Emits the paginator's event as `pageChanged` (AC-9). */
   protected changePage(event: PageEvent): void {
-    throw new Error('not implemented: DFS-049');
+    this.pageChanged.emit(event);
   }
 }

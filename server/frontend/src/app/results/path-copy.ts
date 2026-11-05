@@ -39,6 +39,19 @@ export class PathCopy {
    * write clears `copied` and sets `failure` to `CLIPBOARD_UNAVAILABLE` or `CLIPBOARD_REJECTED` (AC-11).
    */
   protected async copy(): Promise<void> {
-    throw new Error('not implemented: DFS-049');
+    if (this.clipboard === null) {
+      this.copied.set(false);
+      this.failure.set(CLIPBOARD_UNAVAILABLE);
+      return;
+    }
+    try {
+      await this.clipboard.writeText(this.folder());
+    } catch {
+      this.copied.set(false);
+      this.failure.set(CLIPBOARD_REJECTED);
+      return;
+    }
+    this.failure.set(null);
+    this.copied.set(true);
   }
 }

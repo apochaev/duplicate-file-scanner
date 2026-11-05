@@ -4,6 +4,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTreeModule } from '@angular/material/tree';
 import { FolderNode } from '../api/models';
 import { ResultsService } from '../api/services';
+import { failureMessage } from './result-error';
 import { folderLabel } from './result-format';
 
 /** One visible row of the flat tree: a folder at a depth, with the state of its children's load. */
@@ -56,10 +57,17 @@ export class FolderTree {
   private readonly results = inject(ResultsService);
   /** Each loaded folder's children, by its path; a folder is requested at most once. */
   private readonly loadedChildren = new Map<string, FolderNode[]>();
+  private readonly expandedPaths = new Set<string>();
+  private readonly loadingPaths = new Set<string>();
+  private readonly errors = new Map<string, string>();
 
   /** The roots as level-0 rows, collapsed, in the given order (AC-5). */
   protected rootRows(roots: FolderNode[]): FolderTreeRow[] {
-    throw new Error('not implemented: DFS-049');
+    this.loadedChildren.clear();
+    this.expandedPaths.clear();
+    this.loadingPaths.clear();
+    this.errors.clear();
+    return this.visibleRows(roots, 0);
   }
 
   /**
@@ -68,11 +76,52 @@ export class FolderTree {
    * in `error` on failure. Collapsing: removes its descendants from `rows`, keeping what was loaded.
    */
   protected async expandedChange(row: FolderTreeRow, expanded: boolean): Promise<void> {
-    throw new Error('not implemented: DFS-049');
+    const path = row.folder.path;
+    if (!expanded) {
+      this.expandedPaths.delete(path);
+      this.refresh();
+      return;
+    }
+    this.expandedPaths.add(path);
+    if (this.loadedChildren.has(path) || this.loadingPaths.has(path)) {
+      this.refresh();
+      return;
+    }
+    this.loadingPaths.add(path);
+    this.errors.delete(path);
+    this.refresh();
+    try {
+      this.loadedChildren.set(path, await this.results.listFolders({ id: this.scanId(), parent: path }));
+    } catch (failure) {
+      this.errors.set(path, failureMessage(failure));
+    }
+    this.loadingPaths.delete(path);
+    this.refresh();
   }
 
   /** Emits `folderSelected` with the folder's path, or null for "All folders" (AC-6). */
   protected select(path: string | null): void {
-    throw new Error('not implemented: DFS-049');
+    this.folderSelected.emit(path);
+  }
+
+  private refresh(): void {
+    this.rows.set(this.visibleRows(this.roots(), 0));
+  }
+
+  /** The folders at one level, each followed by its children when it is expanded and they are loaded. */
+  private visibleRows(folders: FolderNode[], level: number): FolderTreeRow[] {
+    return folders.flatMap((folder) => {
+      const path = folder.path;
+      const expanded = this.expandedPaths.has(path);
+      const row: FolderTreeRow = {
+        folder,
+        level,
+        expanded,
+        loading: this.loadingPaths.has(path),
+        error: this.errors.get(path) ?? null,
+      };
+      const children = expanded ? this.loadedChildren.get(path) : undefined;
+      return children ? [row, ...this.visibleRows(children, level + 1)] : [row];
+    });
   }
 }
