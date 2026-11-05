@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter, Router, withHashLocation } from '@angular/router';
+import { provideLocationMocks } from '@angular/common/testing';
 import { App } from './app';
+import { routes } from './app.routes';
 
 describe('App', () => {
   let http: HttpTestingController;
@@ -9,9 +12,16 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter(routes, withHashLocation()),
+        provideLocationMocks(),
+      ],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
+    // The shell hosts the routed screen (DFS-049): start the router at "#/", as a bootstrapped app does.
+    await TestBed.inject(Router).navigateByUrl('/');
   });
 
   afterEach(() => http.verify());

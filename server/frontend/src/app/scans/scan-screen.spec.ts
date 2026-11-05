@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter, withHashLocation } from '@angular/router';
 import { HarnessLoader, TestKey } from '@angular/cdk/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { MatButtonHarness } from '@angular/material/button/testing';
@@ -93,6 +94,8 @@ describe('ScanScreen', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        // A COMPLETED row holds an "Open results" link (DFS-049): it needs a router.
+        provideRouter([], withHashLocation()),
         { provide: EVENT_SOURCE, useValue: (url: string) => new FakeEventSource(url) as unknown as EventSource },
       ],
     }).compileComponents();

@@ -11,3 +11,10 @@
 - Ran `./gradlew :server:npmTest` to pin the expected breakage: `app.spec.ts` (2 tests, no router in its TestBed) and `scan-screen.spec.ts` (3 tests, `No provider found for ActivatedRoute`); declared in `design.md`.
 - Files touched: `server/frontend/package.json`, `server/frontend/package-lock.json`, `server/frontend/src/app/app.config.ts`, `app.routes.ts`, `app.ts`, `app.html`, `scans/scan-row.ts`, `scans/scan-row.html`, `scans/scan-row.css`, `results/*` (16 files), this folder's `design.md`, `progress.md`, `learnings.md`.
 - Expected commit: `feat(server): design result screen stubs and hash routes [DFS-049]` (by the orchestrator).
+
+## Tests (test-author, attempt 1)
+
+- Wrote 84 story tests (Vitest) in `server/frontend/src/app/`: `app.routes.spec.ts` (AC-1), `scans/scan-row.spec.ts` (AC-2), `results/result-screen.spec.ts` (AC-3, 4, 5, 6, 8, 9, 10), `results/folder-tree.spec.ts` (AC-5, 6, 10), `results/sets-tab.spec.ts` (AC-7 to AC-11), `results/path-copy.spec.ts` (AC-11), `results/result-path.spec.ts` (AC-8, 11); shared builders and request helpers in `results/result-test-data.ts`.
+- Gave `app.spec.ts` (router providers, mock location, initial navigation) and `scans/scan-screen.spec.ts` (`provideRouter([], withHashLocation())`) the providers the router needs. `app.spec.ts` passes; in `scan-screen.spec.ts` the tests that render a COMPLETED row now fail at `ScanRow.resultLink` (the stub), the rest pass.
+- `:server:npmTest`: every DFS-049 test fails with `not implemented: DFS-049`; the 21 uncaught exceptions Vitest lists are the same stub error.
+- `test-plan.md` written. Expected commit: `test(server): add result screen tests [DFS-049]`.
