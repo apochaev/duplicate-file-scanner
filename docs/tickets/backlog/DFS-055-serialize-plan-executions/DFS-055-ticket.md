@@ -1,13 +1,13 @@
 ---
 id: DFS-055
 title: Run plan executions one at a time
-status: draft
+status: ready
 type: fix
 scope: [file-scanner, build, docs]
 archetype: use-case
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 gates: [design, done]
-# autorun: false       # pipeline tickets: true lets Claude start /story run itself
+autorun: true
 priority: high
 lane: backend
 depends_on: [DFS-051]
