@@ -41,6 +41,7 @@ Raised by DFS-051's product-owner review (its `verification.md`, "Known limits",
 2. **A second start is refused, not queued** (2026-11-05). While an execution is unfinished, `StartPlanExecution.start` returns `Failure` with a new `ErrorCode` `EXECUTION_ALREADY_RUNNING`, whose message names the unfinished execution's ID; no job is created and nothing is checked or moved. The slot is free again as soon as that execution is recorded COMPLETED, CANCELLED or FAILED, including a job cancelled while QUEUED or rejected by the executor (DFS-042), so a start right after succeeds. Nothing moves that the user did not start at that moment, the user sees the first run's outcome before the second, and the new code is one check at start. Not a queue (files move later than asked, against a disk the first run just changed: safe, since DFS-051 re-checks each keeper before each move, but a run partly refused for reasons the user did not see coming, and a job hand-off in a safety path with its own cancel and failure cases). The future Execute button shows the refusal (M-5).
 3. **Across processes: an OS file lock in the manifest folder** (2026-11-05). An execution holds an exclusive lock on `<manifest folder>/execution.lock` (`FileChannel.tryLock`; the folder is `ExecutionConfig`'s manifest folder, `dfs.execution.manifest-folder`) from its start, before its job is created, until it is recorded COMPLETED, CANCELLED or FAILED. A start in another process while the lock is held returns decision 2's `EXECUTION_ALREADY_RUNNING`, with the message "another process is executing a plan". The OS releases the lock when a process ends, so a crash leaves no stale lock; the lock file itself stays and is reused. Failing to create or lock the file for any other reason refuses the start with DFS-051's `MANIFEST_UNWRITABLE`. The in-process check of decision 2 stays (a JVM cannot `tryLock` a region it already holds). The lock is file I/O, so it sits behind a new secondary port in `infra.port` with a `FileChannel` adapter in `infra.adapter`, wired by `ScannerFactories.planExecutionUseCases` and overridable as a `scanner-spring` bean like DFS-051's ports. Tests stay inside a `@TempDir`: the manifest folder is configured (DFS-051.L-1's seam); the cross-process case spawns a second Java process that holds the lock. Known limit: processes configured with different manifest folders are not coordinated. Not a lock per quarantine anchor (several locks per plan in a fixed order, files created on volumes before anything moves) and not a documented rule only (the invariant would rest on the user's memory, and M-5 would reopen this).
 4. **DFS-051 decision 8's hard-link gap goes to its own ticket, DFS-056** (2026-11-05). Later links of a copy stay checked by size and modified time only in this ticket; DFS-056 adds a file-identity check against the compared first link. The race breaks "never delete the last copy"; the hard-link gap can only quarantine a non-duplicate, which can be undone. Keeping this ticket to the race gets it to M-5 sooner. DFS-056 depends on this ticket, since both change the same check-then-move step. Not folded in here (a criterion, tests and Windows and POSIX identity cases added to a ticket that must land before M-5) and not only recorded (the gap would stay).
+5. **The slot is claimed in the job store, after the plan checks and the file lock, in one atomic step** (2026-11-05). A start runs, in this order: (a) DFS-051's existing checks (plan from this scan, not edited, no conflicts), refusing with their codes; (b) take the file lock (decision 3); (c) one atomic `JobStore` update that creates the QUEUED record only if no plan-execution record is unfinished, else releases the lock and refuses with `EXECUTION_ALREADY_RUNNING`. The lock is released when the job is recorded COMPLETED, CANCELLED or FAILED (DFS-051's `Settled` hook), and also when it is cancelled while QUEUED or rejected by the executor, where `Settled` is not called. Every refusal leaves no record, no ID and no lock held (archetype checklist items 4, 5, 6). `JobStore` gains one conditional-create operation. Not an `AtomicBoolean` or lock field in `PlanExecutionService` (breaks CLAUDE.md's "no state in singleton fields" and the archetype's done-item; two service instances would not see each other) and not a separate in-memory slot port (two stores to keep consistent, for no gain).
 
 ## Acceptance criteria
 
@@ -49,6 +50,7 @@ The full ID of each criterion is `DFS-055.AC-<n>`.
 - **AC-1** While one plan execution of a `PlanExecutionService` is unfinished (QUEUED, RUNNING or CANCELLING), no second execution of that service moves any file; in particular two executions with crosswise plans (run 1 keeps Y and quarantines X, run 2 keeps X and quarantines Y) never leave the set without a copy outside quarantine.
 - **AC-2** A start while an execution is unfinished returns `Failure` with `EXECUTION_ALREADY_RUNNING` and a message naming the unfinished execution's ID, creates no execution and moves nothing; once that execution is COMPLETED, CANCELLED or FAILED (also when cancelled while QUEUED or rejected by the executor), the next start succeeds.
 - **AC-3** While another process holds the lock on `<manifest folder>/execution.lock`, a start returns `Failure` with `EXECUTION_ALREADY_RUNNING` and the message "another process is executing a plan" and moves nothing; once that process releases the lock (or ends), a start succeeds; and an execution holds the lock from its start until it is recorded COMPLETED, CANCELLED or FAILED.
+- **AC-4** A start checks the plan before the lock and the lock before claiming the slot: a plan with conflicts, an edited plan or one from another scan is refused with its DFS-051 code even while another execution is unfinished; every refused start leaves no execution record, no ID and the lock not held; of two starts issued at the same moment with nothing unfinished, exactly one succeeds and the other fails with `EXECUTION_ALREADY_RUNNING`; and a job cancelled while QUEUED or rejected by the executor releases the lock.
 
 ## Scenarios
 
@@ -99,6 +101,28 @@ Feature: Plan executions do not overlap
     Then a second Java process cannot lock "<tmp>/m/execution.lock"
     When the execution is recorded COMPLETED
     Then the second Java process can lock "<tmp>/m/execution.lock"
+
+  @AC-4
+  Scenario: The plan's own problems are reported first
+    Given execution "e1" of plan 1 is RUNNING
+    When a plan with a conflict is started
+    Then the start fails with PLAN_HAS_CONFLICTS, not EXECUTION_ALREADY_RUNNING
+    And no execution record for that plan exists
+
+  @AC-4
+  Scenario: Two simultaneous starts, one winner
+    Given no execution is unfinished
+    When two threads start plan 1 and plan 2 at the same moment, released by one latch
+    Then exactly one start succeeds and the other fails with EXECUTION_ALREADY_RUNNING
+    And exactly one execution record exists
+
+  @AC-4
+  Scenario: A refused or never-run start leaves the lock free
+    Given execution "e1" of plan 1 is RUNNING
+    When plan 2 is started and refused with EXECUTION_ALREADY_RUNNING
+    Then the lock is still held only on behalf of "e1"
+    When "e1" is recorded COMPLETED and an execution "e2" is started on a manual executor and cancelled while QUEUED
+    Then a second Java process can lock "<manifest folder>/execution.lock"
 ```
 
 ## Scope
