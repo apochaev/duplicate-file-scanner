@@ -9,6 +9,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { FolderNode, ScanEntry, SetPage } from '../api/models';
 import { ResultsService, ScansService } from '../api/services';
 import { FolderTree } from './folder-tree';
+import { OverlapsTab } from './overlaps-tab';
 import { SetsTab } from './sets-tab';
 
 /** The Sets tab's first page size, the API's default (DFS-049 decision 5). */
@@ -28,7 +29,7 @@ export const DEFAULT_PAGE_SIZE = 50;
  */
 @Component({
   selector: 'app-result-screen',
-  imports: [RouterLink, MatButtonModule, MatProgressBarModule, MatTabsModule, FolderTree, SetsTab],
+  imports: [RouterLink, MatButtonModule, MatProgressBarModule, MatTabsModule, FolderTree, OverlapsTab, SetsTab],
   templateUrl: './result-screen.html',
   styleUrl: './result-screen.css',
 })
@@ -47,6 +48,11 @@ export class ResultScreen implements OnInit {
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   protected readonly setsLoading = signal(false);
   protected readonly setsError = signal<string | null>(null);
+  /**
+   * The folder pinned for comparison, null when none (DFS-050 decision 3, AC-5): shared by the tree (which pins) and
+   * the Overlaps tab (which shows and unpins it). Lasts while the screen shows this scan; not in the URL.
+   */
+  protected readonly pinnedFolder = signal<string | null>(null);
 
   private readonly route = inject(ActivatedRoute);
   private readonly scans = inject(ScansService);
@@ -154,5 +160,15 @@ export class ResultScreen implements OnInit {
     this.pageIndex.set(event.pageIndex);
     this.pageSize.set(event.pageSize);
     void this.loadSets();
+  }
+
+  /** Pins a folder for comparison, replacing any pinned one; the selection is unchanged (DFS-050 AC-5). */
+  protected pinFolder(path: string): void {
+    throw new Error('not implemented: DFS-050');
+  }
+
+  /** Removes the pin, so the Overlaps tab drops its "Pinned:" label and Comparison block (DFS-050 AC-5). */
+  protected unpin(): void {
+    throw new Error('not implemented: DFS-050');
   }
 }

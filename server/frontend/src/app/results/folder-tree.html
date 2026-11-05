@@ -33,6 +33,15 @@
         >
           {{ folderLabel(row.folder) }}
         </button>
+        <button
+          mat-button
+          type="button"
+          class="folder-pin"
+          [attr.aria-label]="'Pin for comparison: ' + row.folder.name"
+          (click)="pin(row.folder.path)"
+        >
+          Pin for comparison
+        </button>
       </div>
       @if (row.loading) {
         <mat-progress-bar mode="indeterminate" aria-label="Loading subfolders" />

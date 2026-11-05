@@ -1,0 +1,148 @@
+<section class="overlaps-tab" aria-label="Folder overlaps">
+  @if (pinned(); as pinnedPath) {
+    <div class="pinned-bar">
+      <span class="pinned-folder">Pinned: {{ pinnedPath }}</span>
+      <button mat-button type="button" class="unpin" (click)="unpin()">Unpin</button>
+    </div>
+    @if (comparison(); as state) {
+      <section class="comparison" aria-label="Comparison">
+        <h3>Comparison</h3>
+        @if (state.kind === 'hint') {
+          <p class="comparison-hint">{{ compareHint }}</p>
+        } @else if (state.kind === 'loading') {
+          <mat-progress-bar mode="indeterminate" aria-label="Loading the comparison" />
+        } @else if (state.kind === 'failed') {
+          <p class="comparison-error" role="alert">{{ state.message }}</p>
+        } @else {
+          <div class="pair-row comparison-pair">
+            <div class="pair-side side-a">
+              <span class="side-text">{{ pairSideText(state.pair.a) }}</span>
+              <span class="side-coverage" [class.side-full]="state.pair.a.full">{{ pairCoverageText(state.pair.a) }}</span>
+            </div>
+            <div class="pair-side side-b">
+              <span class="side-text">{{ pairSideText(state.pair.b) }}</span>
+              <span class="side-coverage" [class.side-full]="state.pair.b.full">{{ pairCoverageText(state.pair.b) }}</span>
+            </div>
+          </div>
+        }
+      </section>
+    }
+  }
+
+  <p class="overlap-note">{{ note }}</p>
+
+  @if (header(); as own) {
+    <section class="folder-header" aria-label="Selected folder">
+      <span class="summary-folder">{{ own.folder }}</span>
+      <span class="summary-field summary-copied"><span class="summary-label">Copied elsewhere</span> {{ copiedElsewhereText(own) }}</span>
+      <span class="summary-field summary-inside"><span class="summary-label">Duplicates inside</span> {{ duplicatesInsideText(own) }}</span>
+      <span class="summary-field summary-total"><span class="summary-label">Total</span> {{ summaryTotalText(own) }}</span>
+      @if (isAllCopiedElsewhere(own)) {
+        <mat-chip-set aria-label="Selected folder coverage">
+          <mat-chip class="all-copied">all copied elsewhere</mat-chip>
+        </mat-chip-set>
+      }
+    </section>
+  }
+
+  <section class="summaries" aria-label="Folders" [attr.aria-busy]="summariesLoading()">
+    <h3>Folders</h3>
+    @if (summariesLoading()) {
+      <mat-progress-bar mode="indeterminate" aria-label="Loading folders" />
+    }
+    @if (summariesError(); as message) {
+      <p class="summaries-error" role="alert">{{ message }}</p>
+    } @else if (summaries(); as result) {
+      @if (result.totalItems > 0) {
+        <p class="summaries-count">{{ plural(result.totalItems, 'folder') }}</p>
+        <table mat-table class="summaries-table" [dataSource]="result.items" aria-label="Folder summaries">
+          <ng-container matColumnDef="folder">
+            <th mat-header-cell *matHeaderCellDef>Folder</th>
+            <td mat-cell *matCellDef="let summary">
+              <span class="summary-folder">{{ summary.folder }}</span>
+              @if (isAllCopiedElsewhere(summary)) {
+                <mat-chip-set aria-label="Folder coverage">
+                  <mat-chip class="all-copied">all copied elsewhere</mat-chip>
+                </mat-chip-set>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="copied">
+            <th mat-header-cell *matHeaderCellDef>Copied elsewhere</th>
+            <td mat-cell *matCellDef="let summary">{{ copiedElsewhereText(summary) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="inside">
+            <th mat-header-cell *matHeaderCellDef>Duplicates inside</th>
+            <td mat-cell *matCellDef="let summary">{{ duplicatesInsideText(summary) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total</th>
+            <td mat-cell *matCellDef="let summary">{{ summaryTotalText(summary) }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="summaryColumns"></tr>
+          <tr mat-row class="summary-row" *matRowDef="let summary; columns: summaryColumns"></tr>
+        </table>
+        <mat-paginator
+          class="summaries-paginator"
+          [length]="result.totalItems"
+          [pageIndex]="summariesIndex()"
+          [pageSize]="summariesSize()"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="summariesLoading()"
+          (page)="changeSummariesPage($event)"
+          aria-label="Folder pages"
+        />
+      } @else {
+        <p class="summaries-empty">{{ noFolders }}</p>
+      }
+    }
+  </section>
+
+  <section class="pairs" aria-label="Folder pairs" [attr.aria-busy]="pairsLoading()">
+    <h3>Folder pairs</h3>
+    @if (pairsLoading()) {
+      <mat-progress-bar mode="indeterminate" aria-label="Loading folder pairs" />
+    }
+    @if (pairsError(); as message) {
+      <p class="pairs-error" role="alert">{{ message }}</p>
+    } @else if (pairs(); as result) {
+      @if (result.totalItems > 0) {
+        <p class="pairs-count">{{ plural(result.totalItems, 'folder pair') }}</p>
+        <table mat-table class="pairs-table" [dataSource]="result.items" aria-label="Folder pairs">
+          <ng-container matColumnDef="a">
+            <th mat-header-cell *matHeaderCellDef>Folder A</th>
+            <td mat-cell *matCellDef="let pair">
+              <div class="pair-side side-a">
+                <span class="side-text">{{ pairSideText(pair.a) }}</span>
+                <span class="side-coverage" [class.side-full]="pair.a.full">{{ pairCoverageText(pair.a) }}</span>
+              </div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="b">
+            <th mat-header-cell *matHeaderCellDef>Folder B</th>
+            <td mat-cell *matCellDef="let pair">
+              <div class="pair-side side-b">
+                <span class="side-text">{{ pairSideText(pair.b) }}</span>
+                <span class="side-coverage" [class.side-full]="pair.b.full">{{ pairCoverageText(pair.b) }}</span>
+              </div>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="pairColumns"></tr>
+          <tr mat-row class="pair-row" *matRowDef="let pair; columns: pairColumns"></tr>
+        </table>
+        <mat-paginator
+          class="pairs-paginator"
+          [length]="result.totalItems"
+          [pageIndex]="pairsIndex()"
+          [pageSize]="pairsSize()"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="pairsLoading()"
+          (page)="changePairsPage($event)"
+          aria-label="Folder pair pages"
+        />
+      } @else {
+        <p class="pairs-empty">{{ noPairs }}</p>
+      }
+    }
+  </section>
+</section>

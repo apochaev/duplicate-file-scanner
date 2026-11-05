@@ -1,4 +1,4 @@
-import { DuplicateSetView, FolderNode, SetPage } from '../api/models';
+import { DuplicateSetView, FolderNode, FolderSummaryView, PairSideView, SetPage } from '../api/models';
 import { formatBytes, plural } from '../scans/scan-format';
 
 /**
@@ -23,4 +23,49 @@ export function setHeading(set: DuplicateSetView): string {
 /** The Sets tab's summary line: "<totalItems> duplicate sets · <totalReclaimableBytes> reclaimable" (AC-9). */
 export function setsSummary(page: SetPage): string {
   return `${plural(page.totalItems, 'duplicate set')} · ${formatBytes(page.totalReclaimableBytes)} reclaimable`;
+}
+
+/** A pair side whose `full` is true (DFS-050 decision 2, AC-3). */
+export const SIDE_FULL = 'all have a copy in the other';
+
+/** A pair side whose `full` is false (DFS-050 decision 2, AC-3). */
+export const SIDE_PARTIAL = 'partial';
+
+/**
+ * A folder summary's "Copied elsewhere" value: "<filesWithCopyElsewhere> / <totalFiles> files · <bytesWithCopyElsewhere>",
+ * e.g. "340 / 400 files · 1.2 GB" (DFS-050 AC-2); `plural` on `totalFiles`.
+ */
+export function copiedElsewhereText(summary: FolderSummaryView): string {
+  throw new Error('not implemented: DFS-050');
+}
+
+/** A folder summary's "Duplicates inside" value: "<internalDuplicateFiles> files · <internalBytes>", e.g. "12 files · 80.0 MB" (AC-2). */
+export function duplicatesInsideText(summary: FolderSummaryView): string {
+  throw new Error('not implemented: DFS-050');
+}
+
+/** A folder summary's "Total" value: "<totalFiles> files · <totalBytes>", e.g. "400 files · 1.4 GB" (AC-2). */
+export function summaryTotalText(summary: FolderSummaryView): string {
+  throw new Error('not implemented: DFS-050');
+}
+
+/**
+ * Whether the summary carries the chip "all copied elsewhere": exactly when `totalFiles` > 0 and
+ * `filesWithCopyElsewhere` equals `totalFiles`; an empty folder never does (AC-2).
+ */
+export function isAllCopiedElsewhere(summary: FolderSummaryView): boolean {
+  throw new Error('not implemented: DFS-050');
+}
+
+/**
+ * One side of a folder pair: "<folder>: <filesWithCopy> / <totalFiles> files · <bytesWithCopy>", e.g.
+ * "C:\Photos\2019: 340 / 400 files · 1.2 GB" (AC-3); `plural` on `totalFiles`.
+ */
+export function pairSideText(side: PairSideView): string {
+  throw new Error('not implemented: DFS-050');
+}
+
+/** `SIDE_FULL` when the side's `full` is true, `SIDE_PARTIAL` otherwise; never a verdict (AC-3, AC-4). */
+export function pairCoverageText(side: PairSideView): string {
+  throw new Error('not implemented: DFS-050');
 }

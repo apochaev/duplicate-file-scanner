@@ -1,0 +1,76 @@
+.pinned-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.pinned-folder,
+.summary-folder,
+.side-text {
+  font-family: monospace;
+  overflow-wrap: anywhere;
+}
+
+.comparison {
+  margin: 8px 0 16px;
+  padding: 8px 12px;
+  border: 1px solid var(--mat-sys-outline-variant, #ccc);
+  border-radius: 8px;
+}
+
+.comparison h3,
+.summaries h3,
+.pairs h3 {
+  margin: 8px 0 4px;
+}
+
+.overlap-note,
+.summary-label,
+.side-coverage {
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.side-coverage.side-full {
+  color: var(--mat-sys-on-surface, inherit);
+  font-weight: 500;
+}
+
+.folder-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin: 8px 0 16px;
+}
+
+.pair-row.comparison-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.pair-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summaries-table,
+.pairs-table {
+  width: 100%;
+}
+
+.summaries,
+.pairs {
+  margin: 16px 0;
+  overflow-x: auto;
+}
+
+.summaries-error,
+.pairs-error,
+.comparison-error {
+  color: var(--mat-sys-error, #b3261e);
+  overflow-wrap: anywhere;
+}

@@ -19,8 +19,17 @@
         [roots]="folders"
         [selected]="selectedFolder()"
         (folderSelected)="selectFolder($event)"
+        (folderPinned)="pinFolder($event)"
       />
       <mat-tab-group class="result-tabs" aria-label="Result views">
+        <mat-tab label="Overlaps">
+          <app-overlaps-tab
+            [scanId]="scan()!.id"
+            [folder]="selectedFolder()"
+            [pinned]="pinnedFolder()"
+            (unpinned)="unpin()"
+          />
+        </mat-tab>
         <mat-tab label="Sets">
           <app-sets-tab
             [page]="page()"

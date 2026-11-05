@@ -1,7 +1,7 @@
 ---
 id: DFS-050
 title: Add the Overlaps tab to the result screen
-status: ready
+status: in-progress
 type: feature
 scope: [build, docs]
 archetype: component
