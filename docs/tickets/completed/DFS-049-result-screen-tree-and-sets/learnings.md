@@ -16,3 +16,71 @@
 - **L-11 (verifier): the implementer replaced every stub but left the design phase's "Stubs (design phase): ... throw" class comments** in `results/result-screen.ts`, `folder-tree.ts`, `sets-tab.ts` and `path-copy.ts`. The `stubs` gate looks for markers such as `not implemented`, not for this prose, so it passed. Suggest: the architect writes the stub note in a form the gate can find (for example a fixed `STUB-NOTE` token), or the implementer's checklist says "remove the design phase's stub notes from doc comments".
 - **L-12 (verifier): the checklist item 11 by-hand check can be done without a person, by driving a headless Chrome over the DevTools protocol.** Use the project's Node under `server/.gradle/nodejs` (it has a global `WebSocket` and `fetch`), `chrome --headless=new --remote-debugging-port=<p> --user-data-dir=<scratch>`, and `Runtime.evaluate` to click and read `textContent`. There are two caveats. A scan started through `fetch('/api/scans')` does not appear in an already-loaded list, so reload the page first. And `navigator.clipboard.writeText` rejects in an unfocused headless page ("Document is not focused"), which usefully exercises the rejection path. `Emulation.setFocusEmulationEnabled` plus `Browser.grantPermissions(clipboardReadWrite)` makes the write succeed and lets `readText()` confirm the copied text. Worth a paragraph in the component archetype's test guide.
 - **L-13 (verifier): an "loaded directly at the URL (a reload)" criterion is hard to test in TestBed.** `app.routes.spec.ts` navigates in-app after the shell starts, which does not exercise a cold start at `#/scans/<id>`. Setting the mock location's URL before `router.initialNavigation()` (for example `TestBed.inject(Location).go('/scans/s-1')` or `MockPlatformLocation`) would test the cold start; the by-hand reload covered it this time.
+
+## Entries
+
+### DFS-049.L-14: The component archetype says routing does not exist and forbids any `package.json` change
+
+- Status: proposed
+- Impact: local
+- Target: `.claude/archetypes/component/archetype.md`, "Where files go" (page-shell bullet), the exclusions list and checklist item 5
+- Change: state that routing exists since DFS-049 (hash URLs with `withHashLocation()` and no server fallback, routes in `app.routes.ts`, screens as routes, lazy `loadComponent` for a heavy screen); allow a component ticket to add a runtime package of the same framework release (for example `@angular/router`), while build configuration (`angular.json`, the Gradle tasks) stays out.
+- Evidence: DFS-049 note L-1 and `progress.md` (design): the archetype still reads "routing does not exist yet (DFS-041 decision 2)", while decisions 1 and 7 added hash routing and `@angular/router` 22.2.4.
+- Recurrences: 1 (DFS-049)
+- Recommendation: apply; DFS-050, the next component ticket, would meet the same contradiction.
+- Decision:
+
+### DFS-049.L-15: The component design checklist misses breakage from new providers and the bundle size after stubs
+
+- Status: proposed
+- Impact: local
+- Target: `.claude/archetypes/component/archetype.md` checklist; `.claude/archetypes/component/design.md.tmpl`, "Material components" and "Expected breakage"
+- Change: add two items: (a) when a directive or injected service is added to an existing component, list under Expected breakage every existing spec that renders it without its providers (run `:server:npmTest` once after writing the stubs to get the exact list); (b) record the initial bundle size after the stubs compile, since they already import every module, and consider lazy `loadComponent` for a heavy screen.
+- Evidence: DFS-049 notes L-2 and L-3: adding `RouterLink` broke `app.spec.ts` and `scan-screen.spec.ts` with "No provider found for ActivatedRoute"; an eager result screen took the initial bundle from about 563 kB to 896 kB, lazy loading brought it to 697 kB.
+- Recurrences: 1 (DFS-049)
+- Recommendation: apply; both are cheap and both paid off in this run.
+- Decision:
+
+### DFS-049.L-16: The component test guide misses router and harness patterns, including the one behind defect 1
+
+- Status: proposed
+- Impact: local
+- Target: `.claude/archetypes/component/test-guide.md`
+- Change: add short notes: (1) a "nothing is shown" criterion cannot go red alone, so fold its negative assertion into a test that first renders the positive case; (2) builders shared by specs go in a non-spec file, which `tsconfig.app.json` compiles, so it must not use Vitest globals; (3) `RouterTestingHarness` needs the route in the spec's own `provideRouter` (an empty list gives NG04002); (4) call `router.initialNavigation()` in `beforeEach`, or `Location.back()` does not navigate; (5) a cold-start-at-URL criterion sets the location (`Location.go(...)`) before `initialNavigation()`.
+- Evidence: DFS-049 notes L-6, L-7, L-9, L-10 and L-13; defect 1 (implement green failure routed to test-author, fixed in 29d24ff) was exactly item 4.
+- Recurrences: 1 (DFS-049)
+- Recommendation: apply; item 4 would have prevented the only defect.
+- Decision:
+
+### DFS-049.L-17: The implementer leaves the architect's stub notes in doc comments, and the stubs gate misses them
+
+- Status: proposed
+- Impact: shared
+- Target: `.claude/agents/implementer.md`, its checklist
+- Change: add "remove the design phase's stub notes from doc comments (for example 'Stubs (design phase): ... throw')". Parked part: the architect could write those notes with a fixed token the `stubs` gate finds (changes `tools/story-gate`).
+- Evidence: DFS-049 note L-11: stale comments in `results/result-screen.ts`, `folder-tree.ts`, `sets-tab.ts` and `path-copy.ts`; the `stubs` check still passed ("no stub markers in 176 production files").
+- Recurrences: 1 (DFS-049)
+- Recommendation: apply the checklist line; park the gate token.
+- Decision:
+
+### DFS-049.L-18: The by-hand check on a component ticket can run in headless Chrome
+
+- Status: proposed
+- Impact: local
+- Target: `.claude/archetypes/component/test-guide.md`, by-hand verification
+- Change: add a paragraph: the project's Node under `server/.gradle/nodejs`, `chrome --headless=new --remote-debugging-port=<p> --user-data-dir=<scratch>`, and `Runtime.evaluate` to click and read `textContent`; caveats: reload before reading a scan list started through `fetch`, `clipboard.writeText` rejects in an unfocused page, and `Emulation.setFocusEmulationEnabled` plus `Browser.grantPermissions(clipboardReadWrite)` makes it succeed.
+- Evidence: DFS-049 note L-12: the verifier ran the jar check this way, with no person involved.
+- Recurrences: 1 (DFS-049)
+- Recommendation: apply.
+- Decision:
+
+### DFS-049.L-19: Older specs keep a local `settle` and no `provideStubSurfacing()`
+
+- Status: proposed
+- Impact: local
+- Target: `.claude/archetypes/component/test-guide.md`, or a cleanup ticket
+- Change: either migrate `scan-screen.spec.ts` and `app.spec.ts` to the shared helpers, or tell test authors to leave them as they are.
+- Evidence: DFS-049 note L-8.
+- Recurrences: 1 (DFS-049)
+- Recommendation: park; it caused no failure.
+- Decision:
