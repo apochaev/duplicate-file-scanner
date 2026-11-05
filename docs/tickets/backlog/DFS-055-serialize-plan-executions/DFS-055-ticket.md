@@ -37,13 +37,15 @@ Raised by DFS-051's product-owner review (its `verification.md`, "Known limits",
 
 ## Decisions
 
-1. **One plan execution at a time per process** (2026-11-05). `PlanExecutionService` lets at most one of its executions be RUNNING or CANCELLING at a time; what a second start does is decision 2. This closes the race inside a process with one rule that is simple to test, and a local single-user app has no use for two bulk moves at once. Not a lock per duplicate set (parallel runs for unrelated plans, but a digest-keyed lock table with deadlock ordering in a safety path, for parallelism nobody uses) and not a lock per path (two locks per move, mandatory ordering, the most code for no gain over a set lock). A set lock can replace this later behind the same ports. A second process sharing the quarantine (the CLI and the server) is decision 3.
+1. **One plan execution at a time per process** (2026-11-05). `PlanExecutionService` lets at most one of its executions be unfinished (QUEUED, RUNNING or CANCELLING) at a time; what a second start does is decision 2. This closes the race inside a process with one rule that is simple to test, and a local single-user app has no use for two bulk moves at once. Not a lock per duplicate set (parallel runs for unrelated plans, but a digest-keyed lock table with deadlock ordering in a safety path, for parallelism nobody uses) and not a lock per path (two locks per move, mandatory ordering, the most code for no gain over a set lock). A set lock can replace this later behind the same ports. A second process sharing the quarantine (the CLI and the server) is decision 3.
+2. **A second start is refused, not queued** (2026-11-05). While an execution is unfinished, `StartPlanExecution.start` returns `Failure` with a new `ErrorCode` `EXECUTION_ALREADY_RUNNING`, whose message names the unfinished execution's ID; no job is created and nothing is checked or moved. The slot is free again as soon as that execution is recorded COMPLETED, CANCELLED or FAILED, including a job cancelled while QUEUED or rejected by the executor (DFS-042), so a start right after succeeds. Nothing moves that the user did not start at that moment, the user sees the first run's outcome before the second, and the new code is one check at start. Not a queue (files move later than asked, against a disk the first run just changed: safe, since DFS-051 re-checks each keeper before each move, but a run partly refused for reasons the user did not see coming, and a job hand-off in a safety path with its own cancel and failure cases). The future Execute button shows the refusal (M-5).
 
 ## Acceptance criteria
 
 The full ID of each criterion is `DFS-055.AC-<n>`.
 
-- **AC-1** While one plan execution of a `PlanExecutionService` is RUNNING or CANCELLING, no second execution of that service moves any file; in particular two executions with crosswise plans (run 1 keeps Y and quarantines X, run 2 keeps X and quarantines Y) never leave the set without a copy outside quarantine.
+- **AC-1** While one plan execution of a `PlanExecutionService` is unfinished (QUEUED, RUNNING or CANCELLING), no second execution of that service moves any file; in particular two executions with crosswise plans (run 1 keeps Y and quarantines X, run 2 keeps X and quarantines Y) never leave the set without a copy outside quarantine.
+- **AC-2** A start while an execution is unfinished returns `Failure` with `EXECUTION_ALREADY_RUNNING` and a message naming the unfinished execution's ID, creates no execution and moves nothing; once that execution is COMPLETED, CANCELLED or FAILED (also when cancelled while QUEUED or rejected by the executor), the next start succeeds.
 
 ## Scenarios
 
@@ -56,8 +58,28 @@ Feature: Plan executions do not overlap
     And plan 1 keeps "a/x.jpg" and quarantines "b/x.jpg", and plan 2 keeps "b/x.jpg" and quarantines "a/x.jpg"
     And the executor runs both executions on separate threads, with plan 1's execution held just after its checks
     When both executions are started
-    Then plan 2's execution moves no file while plan 1's is RUNNING
+    Then plan 2's start is refused and moves no file while plan 1's execution is RUNNING
     And afterwards at least one of "a/x.jpg" and "b/x.jpg" is still in place
+
+  @AC-2
+  Scenario: A second start is refused while the first is unfinished
+    Given execution "e1" of plan 1 is RUNNING
+    When plan 2's execution is started
+    Then the start fails with EXECUTION_ALREADY_RUNNING and a message containing "e1"
+    And no execution for plan 2 exists and no file of plan 2 was moved
+
+  @AC-2
+  Scenario: A start right after the first finishes succeeds
+    Given execution "e1" of plan 1 was RUNNING and is now recorded COMPLETED
+    When plan 2's execution is started
+    Then the start succeeds with a new execution ID
+
+  @AC-2
+  Scenario: A first execution that never ran frees the slot
+    Given execution "e1" of plan 1 was cancelled while QUEUED
+    When plan 2's execution is started
+    Then the start succeeds
+    And given instead that the executor rejected "e1", a start of plan 2 also succeeds
 ```
 
 ## Scope
@@ -78,7 +100,6 @@ Feature: Plan executions do not overlap
 
 ## Open questions
 
-- A second start while one runs: queue it, or refuse it with an error code?
 - Two processes sharing a quarantine (the CLI and the server): in scope (a lock file beside the manifests?) or documented as unsupported?
 - Revisit DFS-051 decision 8 (later hard links checked by size and time only) or leave it?
 - Archetype (`use-case` likely), gates (a deletion ticket: the design gate is recommended) and autorun.
