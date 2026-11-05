@@ -3,15 +3,23 @@ id: DFS-055
 title: Run plan executions one at a time
 status: draft
 type: fix
-scope: [file-scanner]
-archetype:
+scope: [file-scanner, build, docs]
+archetype: use-case
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
-# gates: [done]        # pipeline tickets: decided in refine, required from ready on
+gates: [design, done]
 # autorun: false       # pipeline tickets: true lets Claude start /story run itself
 priority: high
 lane: backend
 depends_on: [DFS-051]
-touches: []
+touches:
+  - us.pochaev.dfs.scanner.application
+  - us.pochaev.dfs.scanner.domain.model
+  - us.pochaev.dfs.scanner.infra.port
+  - us.pochaev.dfs.scanner.infra.adapter
+  - us.pochaev.dfs.scanner.domain.factory
+  - scanner-spring/src/main/java/us/pochaev/dfs/scannerspring
+  - scanner-spring/src/test/java/us/pochaev/dfs/scannerspring
+  - CLAUDE.md
 blocked_reason:
 created: 2026-11-05
 updated: 2026-11-05
@@ -41,7 +49,8 @@ Raised by DFS-051's product-owner review (its `verification.md`, "Known limits",
 2. **A second start is refused, not queued** (2026-11-05). While an execution is unfinished, `StartPlanExecution.start` returns `Failure` with a new `ErrorCode` `EXECUTION_ALREADY_RUNNING`, whose message names the unfinished execution's ID; no job is created and nothing is checked or moved. The slot is free again as soon as that execution is recorded COMPLETED, CANCELLED or FAILED, including a job cancelled while QUEUED or rejected by the executor (DFS-042), so a start right after succeeds. Nothing moves that the user did not start at that moment, the user sees the first run's outcome before the second, and the new code is one check at start. Not a queue (files move later than asked, against a disk the first run just changed: safe, since DFS-051 re-checks each keeper before each move, but a run partly refused for reasons the user did not see coming, and a job hand-off in a safety path with its own cancel and failure cases). The future Execute button shows the refusal (M-5).
 3. **Across processes: an OS file lock in the manifest folder** (2026-11-05). An execution holds an exclusive lock on `<manifest folder>/execution.lock` (`FileChannel.tryLock`; the folder is `ExecutionConfig`'s manifest folder, `dfs.execution.manifest-folder`) from its start, before its job is created, until it is recorded COMPLETED, CANCELLED or FAILED. A start in another process while the lock is held returns decision 2's `EXECUTION_ALREADY_RUNNING`, with the message "another process is executing a plan". The OS releases the lock when a process ends, so a crash leaves no stale lock; the lock file itself stays and is reused. Failing to create or lock the file for any other reason refuses the start with DFS-051's `MANIFEST_UNWRITABLE`. The in-process check of decision 2 stays (a JVM cannot `tryLock` a region it already holds). The lock is file I/O, so it sits behind a new secondary port in `infra.port` with a `FileChannel` adapter in `infra.adapter`, wired by `ScannerFactories.planExecutionUseCases` and overridable as a `scanner-spring` bean like DFS-051's ports. Tests stay inside a `@TempDir`: the manifest folder is configured (DFS-051.L-1's seam); the cross-process case spawns a second Java process that holds the lock. Known limit: processes configured with different manifest folders are not coordinated. Not a lock per quarantine anchor (several locks per plan in a fixed order, files created on volumes before anything moves) and not a documented rule only (the invariant would rest on the user's memory, and M-5 would reopen this).
 4. **DFS-051 decision 8's hard-link gap goes to its own ticket, DFS-056** (2026-11-05). Later links of a copy stay checked by size and modified time only in this ticket; DFS-056 adds a file-identity check against the compared first link. The race breaks "never delete the last copy"; the hard-link gap can only quarantine a non-duplicate, which can be undone. Keeping this ticket to the race gets it to M-5 sooner. DFS-056 depends on this ticket, since both change the same check-then-move step. Not folded in here (a criterion, tests and Windows and POSIX identity cases added to a ticket that must land before M-5) and not only recorded (the gap would stay).
-5. **The slot is claimed in the job store, after the plan checks and the file lock, in one atomic step** (2026-11-05). A start runs, in this order: (a) DFS-051's existing checks (plan from this scan, not edited, no conflicts), refusing with their codes; (b) take the file lock (decision 3); (c) one atomic `JobStore` update that creates the QUEUED record only if no plan-execution record is unfinished, else releases the lock and refuses with `EXECUTION_ALREADY_RUNNING`. The lock is released when the job is recorded COMPLETED, CANCELLED or FAILED (DFS-051's `Settled` hook), and also when it is cancelled while QUEUED or rejected by the executor, where `Settled` is not called. Every refusal leaves no record, no ID and no lock held (archetype checklist items 4, 5, 6). `JobStore` gains one conditional-create operation. Not an `AtomicBoolean` or lock field in `PlanExecutionService` (breaks CLAUDE.md's "no state in singleton fields" and the archetype's done-item; two service instances would not see each other) and not a separate in-memory slot port (two stores to keep consistent, for no gain).
+5. **The slot is claimed in the job store, after the plan checks and the file lock, in one atomic step** (2026-11-05). A start runs, in this order: (a) DFS-051's existing checks (plan from this scan, not edited, no conflicts), refusing with their codes; (b) take the file lock (decision 3); (c) one atomic `JobStore` update that creates the QUEUED record only if no plan-execution record is unfinished, else releases the lock and refuses with `EXECUTION_ALREADY_RUNNING`. The lock is released when the job is recorded COMPLETED, CANCELLED or FAILED (DFS-051's `Settled` hook), and also when it is cancelled while QUEUED or rejected by the executor, where `Settled` is not called. Every refusal leaves no record, no ID and no lock held (archetype checklist items 4, 5, 6). `JobStore` (`infra.port`, implemented by `InMemoryJobStore` in `infra.adapter`) gains one conditional-create operation. Not an `AtomicBoolean` or lock field in `PlanExecutionService` (breaks CLAUDE.md's "no state in singleton fields" and the archetype's done-item; two service instances would not see each other) and not a separate in-memory slot port (two stores to keep consistent, for no gain).
+6. **Archetype `use-case`, gates `[design, done]`** (2026-11-05). A change to a core use case's behaviour with a new secondary port and adapter, its wiring and tests against fakes and a `@TempDir`: the `use-case` archetype. The pipeline pauses after the architect: this ticket guards "never delete the last copy", and the lock port, the conditional create and the release paths are checked before tests depend on them (a lock freed too early is the riskiest defect). Not `[done]` (a wrong release path found only at the end).
 
 ## Acceptance criteria
 
@@ -128,7 +137,13 @@ Feature: Plan executions do not overlap
 ## Scope
 
 **Touches:**
-- <to be refined; likely `us.pochaev.dfs.scanner.application` (`PlanExecutionService`, `JobRunner`), possibly `scanner-spring`>
+- `us.pochaev.dfs.scanner.application`: `PlanExecutionService` (the start order of decision 5, the lock release paths) and `JobRunner` if the release needs a hook for cancelled-while-QUEUED and rejected jobs; their tests.
+- `us.pochaev.dfs.scanner.domain.model`: `ErrorCode.EXECUTION_ALREADY_RUNNING`.
+- `us.pochaev.dfs.scanner.infra.port`: the execution-lock port, and `JobStore`'s conditional create.
+- `us.pochaev.dfs.scanner.infra.adapter`: the `FileChannel` lock adapter and `InMemoryJobStore`'s conditional create; their tests, including the cross-process one.
+- `us.pochaev.dfs.scanner.domain.factory`: `ScannerFactories.planExecutionUseCases` wires the lock adapter.
+- `scanner-spring/src/main/java/us/pochaev/dfs/scannerspring`, `scanner-spring/src/test/java/us/pochaev/dfs/scannerspring`: the lock as a `@ConditionalOnMissingBean` port bean, like DFS-051's ports; `ScannerAutoConfigurationTest`.
+- `CLAUDE.md`: one line in the safety invariants or current state: one plan execution at a time, per process and per manifest folder.
 
 **Out of scope:**
 - The Execute button and any UI or CLI entry point (M-5).
@@ -140,8 +155,13 @@ Feature: Plan executions do not overlap
 - [ ] Every scenario above is an automated test and passes
 - [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
 - [ ] No files changed outside the paths listed under Touches
-- [ ] <ticket-specific check>
+- [ ] Every item of the `use-case` archetype's checklist is addressed in `design.md` or marked not applicable with a one-line reason
+- [ ] No test this ticket adds or changes uses `Thread.sleep`; waiting is on a latch, a future or a bounded poll
+- [ ] `PlanExecutionService` has no field other than its ports, its seams and the executor
+- [ ] `ModuleExportsTest` stays green, and no new package is exported
+- [ ] The cross-process tests start their child Java process and stop it within the test, bounded by a timeout, and leave no process running
+- [ ] `CLAUDE.md` states that one plan execution runs at a time, per process and per manifest folder
 
 ## Open questions
 
-- Archetype (`use-case` likely), gates (a deletion ticket: the design gate is recommended) and autorun.
+None.
