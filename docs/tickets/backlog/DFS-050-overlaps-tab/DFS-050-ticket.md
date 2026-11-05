@@ -3,15 +3,18 @@ id: DFS-050
 title: Add the Overlaps tab to the result screen
 status: draft
 type: feature
-scope: [build]
-archetype:
+scope: [build, docs]
+archetype: component
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
-# gates: [done]        # pipeline tickets: decided in refine, required from ready on
+gates: [design, done]
 # autorun: false       # pipeline tickets: true lets Claude start /story run itself
 priority: high
 lane: frontend
 depends_on: [DFS-048, DFS-049]
-touches: []
+touches:
+  - server/frontend/src/app
+  - CLAUDE.md
+  - docs/design/ui.md
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-05
@@ -42,6 +45,7 @@ Milestone M-1 ("see the results of a scan"), step 5 of 5 (`docs/design/ui.md`, "
 3. **Two folders are compared by pinning one in the tree and selecting the other** (2026-11-05). Every folder node of the tree (not "All folders") has a "Pin for comparison" action; at most one folder is pinned, and pinning another replaces it. While a folder is pinned, the Overlaps tab shows "Pinned: <path>" with an "Unpin" link at its top. With a folder pinned and a different folder selected, a "Comparison" block above the note (decision 2) shows `/pair?a=<pinned>&b=<selected>` as one row in decision 2's side format (sides in the API's order). Selecting the pinned folder itself, or "All folders", sends no `/pair` request and the block reads "Select another folder to compare with the pinned one". Two nested folders are sent, and the block shows the server's `NESTED_FOLDERS` message (for example "C:\Photos contains C:\Photos\2019"). The pin lasts while the result screen is open and is not part of the URL. Not two path fields (more controls, typed paths bring `RELATIVE_PATH` and `PATH_OUTSIDE_ROOTS` to the UI, slower) and not a later ticket (the Story names it, and `/pairs` covers only immediate folders: two ancestors such as `C:\Photos` and `D:\Backup`, CLAUDE.md's folder1/folder2 case, only `/pair` answers). The "Pin for comparison" action is added to DFS-049's `results/folder-tree.*`.
 4. **Overlaps is the first tab and selected on open; Sets is second** (2026-11-05). As U3 says: the result screen opens on the folder-level answer. Angular Material creates every tab's content on open and attaches only the active one, so the Sets tab still requests its first page on open (DFS-049 AC-6 holds), but DFS-049's `results/result-screen.spec.ts` tests that read the Sets cards must select the Sets tab first; the test-author updates them in the test phase (`sets-tab.spec.ts` mounts the tab alone and is unaffected). Not Sets first (contradicts U3, and the folder answer sits behind a click on every open) and not remembering the last tab (hidden state, a criterion more, little value).
 5. **Each table pages on its own with page size 10, and has its own loading, empty and error states, as the Sets tab** (2026-11-05). The generated client's `OverlapsService` (`listSummaries`, `listPairs`, `getPair`; DFS-048 decision 6). Each table has a `mat-paginator`, page size 10, choices 10, 25 and 50, and a count line "<totalItems> folders" or "<totalItems> folder pairs"; selecting another folder requests page 0 of both. With no items, Folders reads "No folders with copies here" and Folder pairs "No folder pairs share copies here", without a paginator. While a table or the Comparison block loads, it shows its own indeterminate progress bar; a failed load shows the server's message with `role="alert"` in that table's (or block's) place and leaves the other table as it is. Same patterns as DFS-049's `sets-tab.html`. Not page size 25 (two stacked 25-row tables push the pairs far down) and not "Show more" (grows without bound; DFS-049 decision 5).
+6. **Archetype `component`, gates `[design, done]`** (2026-11-05). An Angular tab with its service calls and Vitest tests, on DFS-048's endpoints as they are: the `component` archetype. The pipeline pauses after the architect, then runs unattended to the product-owner review: the ticket changes components DFS-049 built (the tree's pin action, the result screen's tabs and `result-screen.spec.ts`) and adds pin state shared between the tree and the Overlaps tab, so where that state lives and how the components split is checked before tests lock it in. Not `[done]` (a disliked split found only after tests depend on it). No deletion is involved, so the design gate is a choice, not a safety requirement.
 
 ## Acceptance criteria
 
@@ -173,19 +177,28 @@ Feature: Overlaps tab
 ## Scope
 
 **Touches:**
-- <to be refined; likely `server/frontend/src/app`, `docs/design/ui.md`>
+- `server/frontend/src/app`: a new Overlaps tab in `results/` (its component, template, styles and spec), the "Pin for comparison" action in DFS-049's `results/folder-tree.*`, the pin state and the tab order in `results/result-screen.*`. DFS-049's `results/result-screen.spec.ts` tests that read the Sets cards select the Sets tab first (decision 4), updated by the test-author in the test phase.
+- `CLAUDE.md`: the `server` entry says what the result screen shows (the Overlaps tab first, the pin comparison).
+- `docs/design/ui.md`: U3 describes the Overlaps tab as built; the milestone table marks M-1.5 and M-1 done.
 
 **Out of scope:**
 - Charts: overlap matrix, treemap (U3, later; see also DFS-045).
 - Building a rule from a pair ("keep A, quarantine in B"): milestone M-3 (U6).
+- Any endpoint or API record change: DFS-048's endpoints are used as they are.
+- Keeping the pin or the selected tab in the URL or across visits (decisions 3 and 4).
+- Browser end-to-end flows (DFS-053).
 
 ## Definition of done
 
 - [ ] Every scenario above is an automated test and passes
 - [ ] `./gradlew build` is green (includes the Vitest tests)
 - [ ] No files changed outside the paths listed under Touches
-- [ ] <ticket-specific check>
+- [ ] Every checklist item of the `component` archetype is addressed in `design.md` or marked not applicable with a one-line reason
+- [ ] Every story spec uses `provideStubSurfacing()` and `settle(fixture)`
+- [ ] The production build prints no budget warning, with the Material table module included
+- [ ] Checked by hand once on the built jar: a real scan of two overlapping folders (one a full copy of part of the other), the Overlaps tab read on open, a folder selected, one folder pinned and another compared, a nested pair tried, the text read from the DOM and recorded in `verification.md`
+- [ ] `CLAUDE.md`'s `server` entry and `docs/design/ui.md` (U3, M-1.5, M-1) describe the Overlaps tab
 
 ## Open questions
 
-- Archetype, gates and autorun.
+None.
