@@ -39,6 +39,7 @@ Milestone M-1 ("see the results of a scan"), step 5 of 5 (`docs/design/ui.md`, "
 
 1. **One Overlaps tab, stacked: the selected folder's summary, a Folders table, a Folder pairs table** (2026-11-05). With a folder selected in the tree, a header line shows that folder's own summary (`SummaryPage.folder` from `/summaries?under=<path>`); under "All folders" there is no header. Below it a "Folders" table of summaries (`/summaries?under=`), then a "Folder pairs" table (`/pairs?under=`), each with its own paginator, both filtered to the selection. Both questions, "can this folder go?" and "where are the copies?", are on screen at once. Not a "Folders | Pairs" toggle (a click to see the other half) and not the pairs table alone (it loses the ranking of the most redundant folders, and coverage spread over several folders shows in no single pair: `folder-overlap-analysis.md` decision 1).
 2. **Rows show exact fractions; "full" is a marker, never a verdict; one fixed note above the tables** (2026-11-05). Sizes and counts use the shared helpers (`formatBytes`, `plural` in `scans/scan-format.ts`, as DFS-049). The Folders table has the columns Folder (its path), "Copied elsewhere" (`<filesWithCopyElsewhere> / <totalFiles> files · <bytesWithCopyElsewhere>`), "Duplicates inside" (`<internalDuplicateFiles> files · <internalBytes>`) and "Total" (`<totalFiles> files · <totalBytes>`); a row with `totalFiles` > 0 and `filesWithCopyElsewhere` = `totalFiles` carries the chip "all copied elsewhere". The header for the selected folder (decision 1) reads the same way. The Folder pairs table has one row per pair with two side columns, A and B in the API's order, each reading `<folder>: <filesWithCopy> / <totalFiles> files · <bytesWithCopy>` followed by "all have a copy in the other" when the side's `full` is true and "partial" otherwise. Above the tables a fixed note reads "A copy elsewhere may itself be deleted by another choice; checking what is safe comes with the deletion plan." No row, chip or note uses "safe", "delete" or "can go" about a folder (`folder-overlap-analysis.md` decision 1: pairs are never combined into a verdict; DFS-022 checks a plan as a whole). Not percentages with bars (99.9% and 100% read alike, while one unique file decides whether a folder can go, and a full bar invites "delete") and not a sentence per row (long, hard to compare down a column).
+3. **Two folders are compared by pinning one in the tree and selecting the other** (2026-11-05). Every folder node of the tree (not "All folders") has a "Pin for comparison" action; at most one folder is pinned, and pinning another replaces it. While a folder is pinned, the Overlaps tab shows "Pinned: <path>" with an "Unpin" link at its top. With a folder pinned and a different folder selected, a "Comparison" block above the note (decision 2) shows `/pair?a=<pinned>&b=<selected>` as one row in decision 2's side format (sides in the API's order). Selecting the pinned folder itself, or "All folders", sends no `/pair` request and the block reads "Select another folder to compare with the pinned one". Two nested folders are sent, and the block shows the server's `NESTED_FOLDERS` message (for example "C:\Photos contains C:\Photos\2019"). The pin lasts while the result screen is open and is not part of the URL. Not two path fields (more controls, typed paths bring `RELATIVE_PATH` and `PATH_OUTSIDE_ROOTS` to the UI, slower) and not a later ticket (the Story names it, and `/pairs` covers only immediate folders: two ancestors such as `C:\Photos` and `D:\Backup`, CLAUDE.md's folder1/folder2 case, only `/pair` answers). The "Pin for comparison" action is added to DFS-049's `results/folder-tree.*`.
 
 ## Acceptance criteria
 
@@ -48,6 +49,9 @@ The full ID of each criterion is `DFS-050.AC-<n>`.
 - **AC-2** A Folders row, and the selected folder's header, read "<path>", "Copied elsewhere <filesWithCopyElsewhere> / <totalFiles> files · <bytesWithCopyElsewhere>", "Duplicates inside <internalDuplicateFiles> files · <internalBytes>" and "Total <totalFiles> files · <totalBytes>", with the chip "all copied elsewhere" exactly when `totalFiles` > 0 and `filesWithCopyElsewhere` equals `totalFiles`.
 - **AC-3** A Folder pairs row shows side A then side B in the API's order, each as "<folder>: <filesWithCopy> / <totalFiles> files · <bytesWithCopy>" followed by "all have a copy in the other" when that side's `full` is true and "partial" when it is false.
 - **AC-4** The Overlaps tab shows the note "A copy elsewhere may itself be deleted by another choice; checking what is safe comes with the deletion plan." above its tables, and no row, header or chip on the tab contains the words "safe", "delete" or "can go".
+- **AC-5** Every folder node of the tree, but not "All folders", offers "Pin for comparison"; pinning a folder shows "Pinned: <path>" with an "Unpin" link on the Overlaps tab, pinning another folder replaces it, and "Unpin" removes the label and the Comparison block.
+- **AC-6** With a folder pinned and a different folder selected, the Overlaps tab requests `/pair` with `a=<pinned path>` and `b=<selected path>` and shows its result in a "Comparison" block as one pair row in AC-3's format.
+- **AC-7** With a folder pinned and the pinned folder itself or "All folders" selected, no `/pair` request is sent and the Comparison block reads "Select another folder to compare with the pinned one"; when `/pair` answers `400 NESTED_FOLDERS`, the block shows the server's message.
 
 ## Scenarios
 
@@ -91,6 +95,39 @@ Feature: Overlaps tab
     Then both sides read "all have a copy in the other"
     And the note "A copy elsewhere may itself be deleted by another choice; checking what is safe comes with the deletion plan." is shown above the tables
     And no row, header or chip contains "safe", "delete" or "can go"
+
+  @AC-5
+  Scenario: Pinning, replacing and unpinning a folder
+    Given the result screen of scan "7f3c…" shows roots "C:\Photos" and "D:\Backup"
+    Then "All folders" offers no "Pin for comparison" action
+    When the user pins "D:\Backup"
+    Then the Overlaps tab shows "Pinned: D:\Backup" with an "Unpin" link
+    When the user pins "C:\Photos"
+    Then it shows "Pinned: C:\Photos" and no longer "Pinned: D:\Backup"
+    When the user clicks "Unpin"
+    Then neither the pinned label nor a Comparison block is shown
+
+  @AC-6
+  Scenario: Comparing two folders from different roots
+    Given "D:\Backup" is pinned
+    And /pair answers (sides sorted by folder) side a "C:\Photos" with filesWithCopy 340, totalFiles 3210, bytesWithCopy 1288490188, full false and side b "D:Backup" with filesWithCopy 2, totalFiles 2, bytesWithCopy 900, full true
+    When the user selects "C:\Photos"
+    Then /pair is requested with a "D:\Backup" and b "C:\Photos"
+    And the Comparison block shows "C:\Photos: 340 / 3210 files · 1.2 GB" with "partial" before "D:\Backup: 2 / 2 files · 900 B" with "all have a copy in the other"
+
+  @AC-7
+  Scenario: Nothing to compare yet
+    Given "D:\Backup" is pinned
+    When the user selects "D:\Backup", then "All folders"
+    Then no /pair request was sent
+    And the Comparison block reads "Select another folder to compare with the pinned one"
+
+  @AC-7
+  Scenario: Nested folders
+    Given "C:\Photos" is pinned
+    And /pair answers 400 NESTED_FOLDERS with message "C:\Photos contains C:\Photos\2019"
+    When the user selects "C:\Photos\2019"
+    Then the Comparison block shows "C:\Photos contains C:\Photos\2019"
 ```
 
 ## Scope
@@ -111,6 +148,5 @@ Feature: Overlaps tab
 
 ## Open questions
 
-- How two folders are picked for the comparison (from the tree, from a pair row, by typing).
 - Becoming the landing tab: Overlaps first, Sets second (U3).
 - Archetype, gates and autorun.
