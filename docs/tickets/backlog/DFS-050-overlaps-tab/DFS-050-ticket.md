@@ -41,6 +41,7 @@ Milestone M-1 ("see the results of a scan"), step 5 of 5 (`docs/design/ui.md`, "
 2. **Rows show exact fractions; "full" is a marker, never a verdict; one fixed note above the tables** (2026-11-05). Sizes and counts use the shared helpers (`formatBytes`, `plural` in `scans/scan-format.ts`, as DFS-049). The Folders table has the columns Folder (its path), "Copied elsewhere" (`<filesWithCopyElsewhere> / <totalFiles> files · <bytesWithCopyElsewhere>`), "Duplicates inside" (`<internalDuplicateFiles> files · <internalBytes>`) and "Total" (`<totalFiles> files · <totalBytes>`); a row with `totalFiles` > 0 and `filesWithCopyElsewhere` = `totalFiles` carries the chip "all copied elsewhere". The header for the selected folder (decision 1) reads the same way. The Folder pairs table has one row per pair with two side columns, A and B in the API's order, each reading `<folder>: <filesWithCopy> / <totalFiles> files · <bytesWithCopy>` followed by "all have a copy in the other" when the side's `full` is true and "partial" otherwise. Above the tables a fixed note reads "A copy elsewhere may itself be deleted by another choice; checking what is safe comes with the deletion plan." No row, chip or note uses "safe", "delete" or "can go" about a folder (`folder-overlap-analysis.md` decision 1: pairs are never combined into a verdict; DFS-022 checks a plan as a whole). Not percentages with bars (99.9% and 100% read alike, while one unique file decides whether a folder can go, and a full bar invites "delete") and not a sentence per row (long, hard to compare down a column).
 3. **Two folders are compared by pinning one in the tree and selecting the other** (2026-11-05). Every folder node of the tree (not "All folders") has a "Pin for comparison" action; at most one folder is pinned, and pinning another replaces it. While a folder is pinned, the Overlaps tab shows "Pinned: <path>" with an "Unpin" link at its top. With a folder pinned and a different folder selected, a "Comparison" block above the note (decision 2) shows `/pair?a=<pinned>&b=<selected>` as one row in decision 2's side format (sides in the API's order). Selecting the pinned folder itself, or "All folders", sends no `/pair` request and the block reads "Select another folder to compare with the pinned one". Two nested folders are sent, and the block shows the server's `NESTED_FOLDERS` message (for example "C:\Photos contains C:\Photos\2019"). The pin lasts while the result screen is open and is not part of the URL. Not two path fields (more controls, typed paths bring `RELATIVE_PATH` and `PATH_OUTSIDE_ROOTS` to the UI, slower) and not a later ticket (the Story names it, and `/pairs` covers only immediate folders: two ancestors such as `C:\Photos` and `D:\Backup`, CLAUDE.md's folder1/folder2 case, only `/pair` answers). The "Pin for comparison" action is added to DFS-049's `results/folder-tree.*`.
 4. **Overlaps is the first tab and selected on open; Sets is second** (2026-11-05). As U3 says: the result screen opens on the folder-level answer. Angular Material creates every tab's content on open and attaches only the active one, so the Sets tab still requests its first page on open (DFS-049 AC-6 holds), but DFS-049's `results/result-screen.spec.ts` tests that read the Sets cards must select the Sets tab first; the test-author updates them in the test phase (`sets-tab.spec.ts` mounts the tab alone and is unaffected). Not Sets first (contradicts U3, and the folder answer sits behind a click on every open) and not remembering the last tab (hidden state, a criterion more, little value).
+5. **Each table pages on its own with page size 10, and has its own loading, empty and error states, as the Sets tab** (2026-11-05). The generated client's `OverlapsService` (`listSummaries`, `listPairs`, `getPair`; DFS-048 decision 6). Each table has a `mat-paginator`, page size 10, choices 10, 25 and 50, and a count line "<totalItems> folders" or "<totalItems> folder pairs"; selecting another folder requests page 0 of both. With no items, Folders reads "No folders with copies here" and Folder pairs "No folder pairs share copies here", without a paginator. While a table or the Comparison block loads, it shows its own indeterminate progress bar; a failed load shows the server's message with `role="alert"` in that table's (or block's) place and leaves the other table as it is. Same patterns as DFS-049's `sets-tab.html`. Not page size 25 (two stacked 25-row tables push the pairs far down) and not "Show more" (grows without bound; DFS-049 decision 5).
 
 ## Acceptance criteria
 
@@ -54,6 +55,8 @@ The full ID of each criterion is `DFS-050.AC-<n>`.
 - **AC-6** With a folder pinned and a different folder selected, the Overlaps tab requests `/pair` with `a=<pinned path>` and `b=<selected path>` and shows its result in a "Comparison" block as one pair row in AC-3's format.
 - **AC-7** With a folder pinned and the pinned folder itself or "All folders" selected, no `/pair` request is sent and the Comparison block reads "Select another folder to compare with the pinned one"; when `/pair` answers `400 NESTED_FOLDERS`, the block shows the server's message.
 - **AC-8** The result screen's tabs are "Overlaps" then "Sets", Overlaps is selected when the screen opens, and selecting "Sets" shows DFS-049's Sets tab with its cards.
+- **AC-9** Each table has its own paginator of page size 10 (choices 10, 25, 50) and a count line "<totalItems> folders" or "<totalItems> folder pairs"; choosing a page or size in one table requests that table only, with that `page` and `size`, and selecting another folder requests page 0 of both.
+- **AC-10** With no items, Folders reads "No folders with copies here" and Folder pairs "No folder pairs share copies here", without a paginator; while a table or the Comparison block loads it shows a progress bar; a failed load of one table shows the server's message with `role="alert"` in its place while the other table still shows its rows.
 
 ## Scenarios
 
@@ -138,6 +141,33 @@ Feature: Overlaps tab
     Then the tabs read "Overlaps", "Sets" in that order and "Overlaps" is selected
     When the user selects the "Sets" tab
     Then the set's card is shown
+
+  @AC-9
+  Scenario: The two tables page independently
+    Given listSummaries answers totalItems 34 and listPairs answers totalItems 12 for scan "7f3c…" without under
+    When the Overlaps tab is shown
+    Then it reads "34 folders" and "12 folder pairs", and both were requested with page 0 and size 10
+    When the user goes to the next page of the Folders table
+    Then listSummaries is requested with page 1 and size 10 and listPairs is not requested again
+    When the user chooses page size 25 in the Folder pairs table
+    Then listPairs is requested with size 25 and listSummaries is not requested again
+    When the user selects folder "C:\Photos"
+    Then listSummaries and listPairs are both requested with under "C:\Photos" and page 0
+
+  @AC-10
+  Scenario: Nothing overlaps
+    Given listSummaries and listPairs both answer no items and totalItems 0
+    Then the Folders table reads "No folders with copies here" and the Folder pairs table "No folder pairs share copies here"
+    And neither shows a paginator
+
+  @AC-10
+  Scenario: Loading, and one table failing
+    Given listSummaries has not answered yet
+    Then the Folders table shows a progress bar
+    When listSummaries fails with 403 and message "The path is outside the scanned folders"
+    And listPairs answers one pair
+    Then the Folders table's place shows "The path is outside the scanned folders" with role "alert"
+    And the Folder pairs table still shows its pair row
 ```
 
 ## Scope
