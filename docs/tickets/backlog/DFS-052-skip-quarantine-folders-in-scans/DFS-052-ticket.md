@@ -14,7 +14,7 @@ depends_on: [DFS-051]
 touches: []
 blocked_reason:
 created: 2026-11-01
-updated: 2026-11-01
+updated: 2026-11-05
 completed:
 ---
 
@@ -28,7 +28,7 @@ So that quarantined files are never reported as duplicates of the files they wer
 
 ## Context
 
-DFS-051 moves quarantined files to `<volume root or anchor>/.dfs-quarantine/<run ID>/<path below it>` (DFS-051 decision 5 and its design's `ExecutionConfig.quarantineAnchors`). A later scan whose location contains a volume root or an anchor walks `.dfs-quarantine` like any folder, so every quarantined file reappears as a copy of its keeper. Raised by DFS-051's architect at the design gate (2026-11-01) as a follow-up outside DFS-051's scope.
+DFS-051 moves quarantined files to `<volume root or anchor>/.dfs-quarantine/<run ID>/<path below it>` (DFS-051 decision 5 and its design's `ExecutionConfig.quarantineAnchors`). A later scan whose location contains a volume root or an anchor walks `.dfs-quarantine` like any folder, so every quarantined file reappears as a copy of its keeper. Raised by DFS-051's architect at the design gate (2026-11-01) as a follow-up outside DFS-051's scope, and confirmed by DFS-051's product-owner review (its `verification.md`, "Known limits", design note 7, 2026-11-05): a later scan of a volume root would offer the quarantined files as duplicates, inviting the user to "delete" copies already in quarantine. The anchors are configured as `dfs.execution.quarantine-anchors` (`ExecutionProperties` in `scanner-spring`).
 
 The walker (`NioFileTreeWalker`, `FileTreeWalker.walk`) already leaves things out with `WalkEvent.Skipped(path, SkipReason, detail)`; default name excludes (`.DS_Store`, `._*`) are filtered in `application` (DFS-027) and counted in the summary's `excluded`.
 
@@ -70,4 +70,5 @@ Feature: Skip quarantine folders when scanning
 - Where the skip happens: the walker (a new `SkipReason`, reported as skipped) or the default excludes in `application` (counted in `excluded`, and switched off by `--no-default-excludes`?).
 - Match by the folder name `.dfs-quarantine` anywhere, or only directly under a volume root or a configured anchor?
 - A scan whose location is itself inside `.dfs-quarantine`: refuse, or scan it as asked?
+- Report it in the JSONL and text report (a new `SkipReason` would appear in `skipped` lines; search the test trees for tests asserting those, DFS-030.L-2) or count it in the summary's `excluded`?
 - Archetype (`pipeline-stage` or `use-case`, or `none` if it is a one-line skip).
