@@ -108,9 +108,23 @@
     },
     {
       "id": "implement",
-      "commit": null,
+      "commit": "b8c96ea3e6e9db0fc5f958beaf5d51a78c1b7584",
       "agent": "implementer",
-      "artifacts": [],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/plan.json",
+        "server/frontend/src/app/results/clipboard.ts",
+        "server/frontend/src/app/results/folder-tree.ts",
+        "server/frontend/src/app/results/path-copy.ts",
+        "server/frontend/src/app/results/result-error.ts",
+        "server/frontend/src/app/results/result-format.ts",
+        "server/frontend/src/app/results/result-path.ts",
+        "server/frontend/src/app/results/result-screen.ts",
+        "server/frontend/src/app/results/sets-tab.ts",
+        "server/frontend/src/app/scans/scan-row.ts"
+      ],
       "runs": [
         {
           "attempt": 1,
@@ -141,11 +155,21 @@
       "commit": null,
       "agent": "verifier",
       "artifacts": [],
-      "runs": [],
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 33,
+          "wallClockSeconds": 405,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-049: plan.json parses; state running agrees with ticket status in-progress; turns counted as the agent's tool uses"
+        }
+      ],
       "after": [
         "implement"
       ],
-      "status": "pending"
+      "status": "done"
     }
   ],
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-049-result-screen-tree-and-sets",
