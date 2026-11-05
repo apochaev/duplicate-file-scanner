@@ -1,7 +1,7 @@
 ---
 id: DFS-049
 title: Show a finished scan as a folder tree with a Sets tab
-status: ready
+status: in-review
 type: feature
 scope: [build, docs]
 archetype: component
@@ -19,7 +19,7 @@ touches:
   - docs/design/ui.md
 blocked_reason:
 created: 2026-11-01
-updated: 2026-11-02
+updated: 2026-11-05
 completed:
 ---
 
@@ -242,15 +242,15 @@ Feature: Result screen: folder tree and Sets tab
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the Vitest tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] Every checklist item of the `component` archetype is addressed in `design.md` or marked not applicable with a one-line reason
-- [ ] Every story spec uses `provideStubSurfacing()` and `settle(fixture)`
-- [ ] The production build prints no budget warning, with `@angular/router` and the new Material modules (tree, tabs, paginator) included
-- [ ] `server/frontend/package.json` and `package-lock.json` differ from `main` only by `@angular/router` `22.2.4` (decision 7)
-- [ ] Checked by hand once on the built jar: a real scan of two folders with duplicates opened from its row, the tree expanded, a folder selected, a hard link shown under its copy, the text read from the DOM and recorded in `verification.md`
-- [ ] `CLAUDE.md`'s `server` entry and `docs/design/ui.md` (U3, M-1.4) describe the result screen
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the Vitest tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] Every checklist item of the `component` archetype is addressed in `design.md` or marked not applicable with a one-line reason
+- [x] Every story spec uses `provideStubSurfacing()` and `settle(fixture)`
+- [x] The production build prints no budget warning, with `@angular/router` and the new Material modules (tree, tabs, paginator) included (verified: initial total 697.22 kB raw, 144.78 kB transfer; lazy `result-screen` chunk 205.81 kB; no warning)
+- [x] `server/frontend/package.json` and `package-lock.json` differ from `main` only by `@angular/router` `22.2.4` (decision 7)
+- [x] Checked by hand once on the built jar: a real scan of two folders with duplicates opened from its row, the tree expanded, a folder selected, a hard link shown under its copy, the text read from the DOM and recorded in `verification.md`
+- [x] `CLAUDE.md`'s `server` entry and `docs/design/ui.md` (U3, M-1.4) describe the result screen
 
 ## Open questions
 

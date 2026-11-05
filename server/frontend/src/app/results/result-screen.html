@@ -1,0 +1,40 @@
+<section class="result-screen" aria-label="Scan results">
+  <header class="result-header">
+    <a mat-button class="back-to-scans" routerLink="/">Back to scans</a>
+    <h2>Scan results</h2>
+    @if (scan(); as entry) {
+      <ul class="result-locations" aria-label="Scanned folders">
+        @for (location of entry.locations; track $index) {
+          <li>{{ location }}</li>
+        }
+      </ul>
+    }
+  </header>
+  @if (fatalError(); as message) {
+    <p class="result-error" role="alert">{{ message }}</p>
+  } @else if (roots(); as folders) {
+    <div class="result-layout">
+      <app-folder-tree
+        [scanId]="scan()!.id"
+        [roots]="folders"
+        [selected]="selectedFolder()"
+        (folderSelected)="selectFolder($event)"
+      />
+      <mat-tab-group class="result-tabs" aria-label="Result views">
+        <mat-tab label="Sets">
+          <app-sets-tab
+            [page]="page()"
+            [folder]="selectedFolder()"
+            [loading]="setsLoading()"
+            [error]="setsError()"
+            [pageIndex]="pageIndex()"
+            [pageSize]="pageSize()"
+            (pageChanged)="changePage($event)"
+          />
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  } @else {
+    <mat-progress-bar mode="indeterminate" aria-label="Loading scan results" />
+  }
+</section>

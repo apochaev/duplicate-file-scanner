@@ -25,6 +25,7 @@ A start screen takes folders and settings, shows live progress from the scanner'
 - Right: tabs, both filtered to the folder selected in the tree:
   - **Overlaps** (landing tab): folder summaries and folder pairs ranked by reclaimable bytes, paged from `GET /api/scans/{id}/summaries?under=`, `GET /api/scans/{id}/pairs?under=` and, for two chosen folders, `GET /api/scans/{id}/pair?a=&b=` (DFS-048).
   - **Sets**: duplicate sets, largest reclaimable first (catches big single files between unrelated folders), paged from `GET /api/scans/{id}/sets?under=` (DFS-047).
+- **As built (DFS-049, M-1.4):** hash routes, `#/scans/<id>` is the result screen (an "Open results" link on every COMPLETED scan row). The tree shows "All folders" and the roots as "<name> · <size> · <n> files" in API order, children on first expand; selecting a folder filters the Sets tab (`under=`), "All folders" clears it. The Sets tab has one card per set ("<n> copies · <size> each · <reclaimable> reclaimable"), hard links indented under their copy, links under the selected folder marked, a paginator (25, 50, 100) and a "Copy folder path" action per link. The Overlaps tab is DFS-050.
 - Charts (overlap matrix, treemap) are a later addition to the Overlaps tab, not part of the first version.
 
 ### U4. Folder detail view: listed live from disk
@@ -160,7 +161,7 @@ Planning labels for the suggested order above, set 2026-11-01. Ticket IDs are th
 
 | Milestone | Goal | Steps | Tickets |
 |---|---|---|---|
-| **M-1** | See the results of a scan: folder tree, Overlaps and Sets tabs | 6, 7 | DFS-046 overlap analysis in Java (M-1.1), DFS-047 result API: tree and sets (M-1.2), DFS-048 overlaps API (M-1.3), DFS-049 result screen: tree and Sets tab (M-1.4), DFS-050 Overlaps tab (M-1.5) |
+| **M-1** | See the results of a scan: folder tree, Overlaps and Sets tabs | 6, 7 | DFS-046 overlap analysis in Java (M-1.1), DFS-047 result API: tree and sets (M-1.2), DFS-048 overlaps API (M-1.3), DFS-049 result screen: tree and Sets tab (M-1.4, done), DFS-050 Overlaps tab (M-1.5) |
 | **M-2** | Inspect a folder: duplicate, unique, new-since-scan marks | 8 | not yet filed |
 | **M-3** | Build and check a plan: rules, preview, drift, verify, export as JSON | 9, 10 | not yet filed |
 | **M-4** | Show in Explorer | 11 | not yet filed |

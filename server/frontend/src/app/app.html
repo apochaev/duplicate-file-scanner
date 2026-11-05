@@ -5,7 +5,7 @@
   @switch (connection()) {
     @case ('connected') {
       <p class="connection">Connected</p>
-      <app-scan-screen />
+      <router-outlet />
     }
     @case ('disconnected') {
       <p>Open the link printed in the console</p>

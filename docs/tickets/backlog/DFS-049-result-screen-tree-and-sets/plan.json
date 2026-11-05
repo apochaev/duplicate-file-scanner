@@ -1,0 +1,197 @@
+{
+  "defects": [
+    {
+      "id": 1,
+      "phase": "implement",
+      "route": "test-author",
+      "summary": "green: app.routes.spec.ts AC-1 back-navigation test never calls router.initialNavigation(), so Location.back() cannot navigate; a test defect, not an implementation one",
+      "status": "closed"
+    }
+  ],
+  "branch": "tickets/DFS-049-result-screen-tree-and-sets",
+  "ticket": "DFS-049",
+  "phases": [
+    {
+      "id": "design",
+      "commit": "6a2072125c5e58070a8226f5114df572613218cd",
+      "agent": "architect",
+      "artifacts": [
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/DFS-049-ticket.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/design.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/plan.json",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/progress.md",
+        "server/frontend/package-lock.json",
+        "server/frontend/package.json",
+        "server/frontend/src/app/app.config.ts",
+        "server/frontend/src/app/app.html",
+        "server/frontend/src/app/app.routes.ts",
+        "server/frontend/src/app/app.ts",
+        "server/frontend/src/app/results/clipboard.ts",
+        "server/frontend/src/app/results/folder-tree.css",
+        "server/frontend/src/app/results/folder-tree.html",
+        "server/frontend/src/app/results/folder-tree.ts",
+        "server/frontend/src/app/results/path-copy.css",
+        "server/frontend/src/app/results/path-copy.html",
+        "server/frontend/src/app/results/path-copy.ts",
+        "server/frontend/src/app/results/result-error.ts",
+        "server/frontend/src/app/results/result-format.ts",
+        "server/frontend/src/app/results/result-path.ts",
+        "server/frontend/src/app/results/result-screen.css",
+        "server/frontend/src/app/results/result-screen.html",
+        "server/frontend/src/app/results/result-screen.ts",
+        "server/frontend/src/app/results/sets-tab.css",
+        "server/frontend/src/app/results/sets-tab.html",
+        "server/frontend/src/app/results/sets-tab.ts",
+        "server/frontend/src/app/scans/scan-row.css",
+        "server/frontend/src/app/scans/scan-row.html",
+        "server/frontend/src/app/scans/scan-row.ts"
+      ],
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 79,
+          "wallClockSeconds": 807,
+          "outcome": "passed",
+          "note": "PASS touches DFS-049: 30 changed files, all inside touches; turns counted as the agent's tool uses; resumed after an interrupted Codex architect attempt that left uncommitted stubs and no design.md (no run recorded for it)"
+        }
+      ],
+      "after": [],
+      "status": "done"
+    },
+    {
+      "id": "tests",
+      "commit": "29d24ff3191f40fff85913fe9cb5bbf5e22ee36c",
+      "agent": "test-author",
+      "artifacts": [
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/plan.json",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/progress.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/test-plan.md",
+        "server/frontend/src/app/app.routes.spec.ts",
+        "server/frontend/src/app/app.spec.ts",
+        "server/frontend/src/app/results/folder-tree.spec.ts",
+        "server/frontend/src/app/results/path-copy.spec.ts",
+        "server/frontend/src/app/results/result-path.spec.ts",
+        "server/frontend/src/app/results/result-screen.spec.ts",
+        "server/frontend/src/app/results/result-test-data.ts",
+        "server/frontend/src/app/results/sets-tab.spec.ts",
+        "server/frontend/src/app/scans/scan-row.spec.ts",
+        "server/frontend/src/app/scans/scan-screen.spec.ts"
+      ],
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 32,
+          "wallClockSeconds": 353,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-049: red and traceability pass; - red: 61 story tests fail with stubs, 23 other tests fail on the ticket's stub, 0 fail in declared classes, 658 other tests pass (3 skipped); - traceability: 11 criteria traced through 18 scenarios to tests and test-plan.md; turns counted as the agent's tool uses"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 5,
+          "wallClockSeconds": 29,
+          "outcome": "passed",
+          "note": "reopened for defect 1; verified with green, not test-phase (the implementation exists): PASS green DFS-049: build and tests green: 718 passed, 3 skipped; Vitest report holds all 61 DFS-049 story tests, every criterion AC-1 to AC-11 present"
+        }
+      ],
+      "after": [
+        "design"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "implement",
+      "commit": "b8c96ea3e6e9db0fc5f958beaf5d51a78c1b7584",
+      "agent": "implementer",
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/plan.json",
+        "server/frontend/src/app/results/clipboard.ts",
+        "server/frontend/src/app/results/folder-tree.ts",
+        "server/frontend/src/app/results/path-copy.ts",
+        "server/frontend/src/app/results/result-error.ts",
+        "server/frontend/src/app/results/result-format.ts",
+        "server/frontend/src/app/results/result-path.ts",
+        "server/frontend/src/app/results/result-screen.ts",
+        "server/frontend/src/app/results/sets-tab.ts",
+        "server/frontend/src/app/scans/scan-row.ts"
+      ],
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 59,
+          "wallClockSeconds": 618,
+          "outcome": "failed-gate",
+          "note": "FAIL green DFS-049: 1 problem; - app.routes.spec.ts > DFS-049.AC-1 shows the scan screen at #/ and goes back to it from a result: expected '/scans/s-1' to be '/'; traced to the test (no router.initialNavigation(), so Location.back() on the mock location never navigates), confirmed by the orchestrator reading the spec; routed to test-author; one run across a rate-limit stop, resumed by SendMessage, turns and seconds are the two invocations combined (32+27 tool uses, 353+265 s)"
+        },
+        {
+          "attempt": 2,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "reconciled after defect 1 (test fix 29d24ff), no agent relaunched; same model as attempt 1 since its failure was a test defect, not the implementation's; PASS green DFS-049: build and tests green: 718 passed, 3 skipped; PASS disabled DFS-049: no @Disabled tests in the 9 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-049: none of the 9 test files of the tests phase changed since 29d24ff3; PASS touches DFS-049: 43 changed files, all inside touches; PASS stubs DFS-049: no stub markers in 176 production files; PASS traceability DFS-049: 11 criteria traced through 18 scenarios to tests and test-plan.md; PASS consistency DFS-049: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "after": [
+        "tests"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "verify",
+      "commit": "6ea585b6f8c90fc51c435f7bdbd7117f66baa5f4",
+      "agent": "verifier",
+      "artifacts": [
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/DFS-049-ticket.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/plan.json",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/verification.md"
+      ],
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 33,
+          "wallClockSeconds": 405,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-049: plan.json parses; state running agrees with ticket status in-progress; turns counted as the agent's tool uses"
+        }
+      ],
+      "after": [
+        "implement"
+      ],
+      "status": "done"
+    }
+  ],
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-049-result-screen-tree-and-sets",
+  "state": "done",
+  "archetype": {
+    "version": 1,
+    "name": "component"
+  },
+  "gates": [
+    {
+      "after": "design",
+      "status": "approved"
+    },
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "executionNote": "User authorized temporary Codex frontend takeover while all Claude sessions are stopped. Preserve phase roles and gates; use inherited Codex model, not unavailable Claude model names."
+}

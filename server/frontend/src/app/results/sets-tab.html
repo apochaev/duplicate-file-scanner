@@ -1,0 +1,58 @@
+<section class="sets-tab" aria-label="Duplicate sets" [attr.aria-busy]="loading()">
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Loading duplicate sets" />
+  }
+  @if (error(); as message) {
+    <p class="sets-error" role="alert">{{ message }}</p>
+  }
+  @if (page(); as result) {
+    @if (result.totalItems > 0) {
+      <p class="sets-summary">{{ setsSummary(result) }}</p>
+      @for (set of result.items; track set.digest) {
+        <mat-card class="duplicate-set" appearance="outlined">
+          <mat-card-header>
+            <mat-card-title class="set-heading">{{ setHeading(set) }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <ul class="set-copies">
+              @for (copy of set.copies; track copy.links[0].path) {
+                <li class="physical-copy">
+                  @for (link of copy.links; track link.path; let first = $first) {
+                    <div
+                      class="file-link"
+                      [class.copy-line]="first"
+                      [class.hard-link]="!first"
+                      [class.in-selected-folder]="inSelectedFolder(link.path)"
+                    >
+                      <span class="file-path">{{ link.path }}</span>
+                      @if (first) {
+                        <time [attr.datetime]="link.modified">{{ link.modified | date: 'medium' }}</time>
+                      } @else {
+                        <span class="hard-link-label">hard link (same file)</span>
+                      }
+                      @if (inSelectedFolder(link.path)) {
+                        <span class="selected-label">in selected folder</span>
+                      }
+                      <app-path-copy [path]="link.path" />
+                    </div>
+                  }
+                </li>
+              }
+            </ul>
+          </mat-card-content>
+        </mat-card>
+      }
+      <mat-paginator
+        [length]="result.totalItems"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="pageSizeOptions"
+        [disabled]="loading()"
+        (page)="changePage($event)"
+        aria-label="Duplicate set pages"
+      />
+    } @else {
+      <p class="sets-empty">{{ emptyMessage() }}</p>
+    }
+  }
+</section>

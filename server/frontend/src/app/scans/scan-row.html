@@ -15,9 +15,12 @@
 </ul>
 @switch (p.status) {
   @case ('COMPLETED') {
-    <p class="scan-counts">
-      {{ plural(p.files, 'file') }} · {{ formatBytes(p.bytes) }} · {{ plural(p.groupsTotal, 'duplicate set') }}
-    </p>
+    <div class="scan-done">
+      <p class="scan-counts">
+        {{ plural(p.files, 'file') }} · {{ formatBytes(p.bytes) }} · {{ plural(p.groupsTotal, 'duplicate set') }}
+      </p>
+      <a mat-button class="open-results" [routerLink]="resultLink()">Open results</a>
+    </div>
   }
   @case ('FAILED') {
     <p class="scan-failure">{{ p.failureMessage }}</p>
