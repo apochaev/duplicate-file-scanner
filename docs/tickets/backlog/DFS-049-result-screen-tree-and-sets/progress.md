@@ -18,3 +18,14 @@
 - Gave `app.spec.ts` (router providers, mock location, initial navigation) and `scans/scan-screen.spec.ts` (`provideRouter([], withHashLocation())`) the providers the router needs. `app.spec.ts` passes; in `scan-screen.spec.ts` the tests that render a COMPLETED row now fail at `ScanRow.resultLink` (the stub), the rest pass.
 - `:server:npmTest`: every DFS-049 test fails with `not implemented: DFS-049`; the 21 uncaught exceptions Vitest lists are the same stub error.
 - `test-plan.md` written. Expected commit: `test(server): add result screen tests [DFS-049]`.
+
+## Implementation (implementer, attempt 1)
+
+- Replaced every stub in `results/*` and `scans/scan-row.ts`. The folder tree keeps its own expanded/loading/error state and rebuilds the visible rows (collapsed nodes' descendants are not in `rows`; cached children are not requested again). `ResultScreen` loads `getScan`, then roots and the first sets page together, ignoring superseded answers.
+- Updated `CLAUDE.md` (`server` entry) and `docs/design/ui.md` (U3 as built, M-1.4 done).
+- `:server:npmTest`: 83 of 84 pass. One test fails, `app.routes.spec.ts` "DFS-049.AC-1 shows the scan screen at #/ and goes back to it from a result": a test defect (see learnings L-10). `./gradlew build` is therefore not green.
+- Expected commit: `feat(server): show a finished scan as a folder tree with a Sets tab [DFS-049]`.
+
+## Tests rework (attempt 1)
+
+Fixed app.routes.spec.ts: beforeEach now calls router.initialNavigation() so the router listens to the mock Location and Location.back() navigates. Same test name and criterion; no other test changed. :server:npmTest: 82 passed. test-plan.md unchanged (approach and mapping the same).

@@ -30,6 +30,8 @@ describe('App routes', () => {
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
+    // Subscribes the router to location changes, so Location.back() navigates.
+    router.initialNavigation();
   });
 
   afterEach(() => http.verify());

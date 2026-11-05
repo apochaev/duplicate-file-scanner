@@ -1,5 +1,13 @@
 {
-  "defects": [],
+  "defects": [
+    {
+      "id": 1,
+      "phase": "implement",
+      "route": "test-author",
+      "summary": "green: app.routes.spec.ts AC-1 back-navigation test never calls router.initialNavigation(), so Location.back() cannot navigate; a test defect, not an implementation one",
+      "status": "closed"
+    }
+  ],
   "branch": "tickets/DFS-049-result-screen-tree-and-sets",
   "ticket": "DFS-049",
   "phases": [
@@ -55,9 +63,24 @@
     },
     {
       "id": "tests",
-      "commit": null,
+      "commit": "8a603e1893b8735d311efeff437e37123f5177a9",
       "agent": "test-author",
-      "artifacts": [],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/learnings.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/plan.json",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/progress.md",
+        "docs/tickets/backlog/DFS-049-result-screen-tree-and-sets/test-plan.md",
+        "server/frontend/src/app/app.routes.spec.ts",
+        "server/frontend/src/app/app.spec.ts",
+        "server/frontend/src/app/results/folder-tree.spec.ts",
+        "server/frontend/src/app/results/path-copy.spec.ts",
+        "server/frontend/src/app/results/result-path.spec.ts",
+        "server/frontend/src/app/results/result-screen.spec.ts",
+        "server/frontend/src/app/results/result-test-data.ts",
+        "server/frontend/src/app/results/sets-tab.spec.ts",
+        "server/frontend/src/app/scans/scan-row.spec.ts",
+        "server/frontend/src/app/scans/scan-screen.spec.ts"
+      ],
       "runs": [
         {
           "attempt": 1,
@@ -67,6 +90,15 @@
           "wallClockSeconds": 353,
           "outcome": "passed",
           "note": "PASS test-phase DFS-049: red and traceability pass; - red: 61 story tests fail with stubs, 23 other tests fail on the ticket's stub, 0 fail in declared classes, 658 other tests pass (3 skipped); - traceability: 11 criteria traced through 18 scenarios to tests and test-plan.md; turns counted as the agent's tool uses"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 5,
+          "wallClockSeconds": 29,
+          "outcome": "passed",
+          "note": "reopened for defect 1; verified with green, not test-phase (the implementation exists): PASS green DFS-049: build and tests green: 718 passed, 3 skipped; Vitest report holds all 61 DFS-049 story tests, every criterion AC-1 to AC-11 present"
         }
       ],
       "after": [
@@ -79,11 +111,21 @@
       "commit": null,
       "agent": "implementer",
       "artifacts": [],
-      "runs": [],
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 59,
+          "wallClockSeconds": 618,
+          "outcome": "failed-gate",
+          "note": "FAIL green DFS-049: 1 problem; - app.routes.spec.ts > DFS-049.AC-1 shows the scan screen at #/ and goes back to it from a result: expected '/scans/s-1' to be '/'; traced to the test (no router.initialNavigation(), so Location.back() on the mock location never navigates), confirmed by the orchestrator reading the spec; routed to test-author; one run across a rate-limit stop, resumed by SendMessage, turns and seconds are the two invocations combined (32+27 tool uses, 353+265 s)"
+        }
+      ],
       "after": [
         "tests"
       ],
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "verify",
