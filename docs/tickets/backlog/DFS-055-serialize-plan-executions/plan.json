@@ -49,10 +49,31 @@
       "after": [
         "design"
       ],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 44,
+          "wallClockSeconds": 429,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-055: red and traceability pass; - red: 32 story tests fail with stubs, 32 other tests fail on the ticket's stub, 0 fail in declared classes, 743 other tests pass (3 skipped); - traceability: 4 criteria traced through 9 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-055-serialize-plan-executions/learnings.md",
+        "docs/tickets/backlog/DFS-055-serialize-plan-executions/plan.json",
+        "docs/tickets/backlog/DFS-055-serialize-plan-executions/progress.md",
+        "docs/tickets/backlog/DFS-055-serialize-plan-executions/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PlanExecutionServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PlanVerifyServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/ExecutionLockProbe.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/FileChannelExecutionLockTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/InMemoryJobStoreTest.java",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java"
+      ],
+      "commit": "1c0416e2d73b67dfcaf60476a793dbde5233018a"
     },
     {
       "id": "implement",
@@ -60,7 +81,7 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
