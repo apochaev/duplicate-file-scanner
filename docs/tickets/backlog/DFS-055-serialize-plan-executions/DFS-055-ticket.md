@@ -39,6 +39,7 @@ Raised by DFS-051's product-owner review (its `verification.md`, "Known limits",
 
 1. **One plan execution at a time per process** (2026-11-05). `PlanExecutionService` lets at most one of its executions be unfinished (QUEUED, RUNNING or CANCELLING) at a time; what a second start does is decision 2. This closes the race inside a process with one rule that is simple to test, and a local single-user app has no use for two bulk moves at once. Not a lock per duplicate set (parallel runs for unrelated plans, but a digest-keyed lock table with deadlock ordering in a safety path, for parallelism nobody uses) and not a lock per path (two locks per move, mandatory ordering, the most code for no gain over a set lock). A set lock can replace this later behind the same ports. A second process sharing the quarantine (the CLI and the server) is decision 3.
 2. **A second start is refused, not queued** (2026-11-05). While an execution is unfinished, `StartPlanExecution.start` returns `Failure` with a new `ErrorCode` `EXECUTION_ALREADY_RUNNING`, whose message names the unfinished execution's ID; no job is created and nothing is checked or moved. The slot is free again as soon as that execution is recorded COMPLETED, CANCELLED or FAILED, including a job cancelled while QUEUED or rejected by the executor (DFS-042), so a start right after succeeds. Nothing moves that the user did not start at that moment, the user sees the first run's outcome before the second, and the new code is one check at start. Not a queue (files move later than asked, against a disk the first run just changed: safe, since DFS-051 re-checks each keeper before each move, but a run partly refused for reasons the user did not see coming, and a job hand-off in a safety path with its own cancel and failure cases). The future Execute button shows the refusal (M-5).
+3. **Across processes: an OS file lock in the manifest folder** (2026-11-05). An execution holds an exclusive lock on `<manifest folder>/execution.lock` (`FileChannel.tryLock`; the folder is `ExecutionConfig`'s manifest folder, `dfs.execution.manifest-folder`) from its start, before its job is created, until it is recorded COMPLETED, CANCELLED or FAILED. A start in another process while the lock is held returns decision 2's `EXECUTION_ALREADY_RUNNING`, with the message "another process is executing a plan". The OS releases the lock when a process ends, so a crash leaves no stale lock; the lock file itself stays and is reused. Failing to create or lock the file for any other reason refuses the start with DFS-051's `MANIFEST_UNWRITABLE`. The in-process check of decision 2 stays (a JVM cannot `tryLock` a region it already holds). The lock is file I/O, so it sits behind a new secondary port in `infra.port` with a `FileChannel` adapter in `infra.adapter`, wired by `ScannerFactories.planExecutionUseCases` and overridable as a `scanner-spring` bean like DFS-051's ports. Tests stay inside a `@TempDir`: the manifest folder is configured (DFS-051.L-1's seam); the cross-process case spawns a second Java process that holds the lock. Known limit: processes configured with different manifest folders are not coordinated. Not a lock per quarantine anchor (several locks per plan in a fixed order, files created on volumes before anything moves) and not a documented rule only (the invariant would rest on the user's memory, and M-5 would reopen this).
 
 ## Acceptance criteria
 
@@ -46,6 +47,7 @@ The full ID of each criterion is `DFS-055.AC-<n>`.
 
 - **AC-1** While one plan execution of a `PlanExecutionService` is unfinished (QUEUED, RUNNING or CANCELLING), no second execution of that service moves any file; in particular two executions with crosswise plans (run 1 keeps Y and quarantines X, run 2 keeps X and quarantines Y) never leave the set without a copy outside quarantine.
 - **AC-2** A start while an execution is unfinished returns `Failure` with `EXECUTION_ALREADY_RUNNING` and a message naming the unfinished execution's ID, creates no execution and moves nothing; once that execution is COMPLETED, CANCELLED or FAILED (also when cancelled while QUEUED or rejected by the executor), the next start succeeds.
+- **AC-3** While another process holds the lock on `<manifest folder>/execution.lock`, a start returns `Failure` with `EXECUTION_ALREADY_RUNNING` and the message "another process is executing a plan" and moves nothing; once that process releases the lock (or ends), a start succeeds; and an execution holds the lock from its start until it is recorded COMPLETED, CANCELLED or FAILED.
 
 ## Scenarios
 
@@ -80,6 +82,22 @@ Feature: Plan executions do not overlap
     When plan 2's execution is started
     Then the start succeeds
     And given instead that the executor rejected "e1", a start of plan 2 also succeeds
+
+  @AC-3
+  Scenario: Another process is executing
+    Given a second Java process holds the lock on "<manifest folder>/execution.lock" in a temporary folder
+    When an execution is started with that manifest folder
+    Then the start fails with EXECUTION_ALREADY_RUNNING and the message "another process is executing a plan"
+    And no file was moved
+    When the second process ends
+    Then a new start succeeds
+
+  @AC-3
+  Scenario: The lock is held exactly while the execution is unfinished
+    Given an execution with manifest folder "<tmp>/m" is RUNNING
+    Then a second Java process cannot lock "<tmp>/m/execution.lock"
+    When the execution is recorded COMPLETED
+    Then the second Java process can lock "<tmp>/m/execution.lock"
 ```
 
 ## Scope
@@ -100,6 +118,5 @@ Feature: Plan executions do not overlap
 
 ## Open questions
 
-- Two processes sharing a quarantine (the CLI and the server): in scope (a lock file beside the manifests?) or documented as unsupported?
 - Revisit DFS-051 decision 8 (later hard links checked by size and time only) or leave it?
 - Archetype (`use-case` likely), gates (a deletion ticket: the design gate is recommended) and autorun.
