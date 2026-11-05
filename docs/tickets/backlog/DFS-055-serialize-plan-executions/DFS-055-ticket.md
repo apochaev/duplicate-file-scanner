@@ -35,11 +35,15 @@ Raised by DFS-051's product-owner review (its `verification.md`, "Known limits",
 - **Related, from the same review:** later links of a hard-linked file are checked only by size and modified time, never compared (DFS-051 decision 8, accepted). If this ticket revisits the check-then-move step, that is the place to reconsider it.
 - **Where things live (DFS-051):** `StartPlanExecution` / `CancelPlanExecution` / `GetPlanExecutionStatus` / `GetPlanExecutionResult` in `domain.usecases`, `PlanExecutionService` and `JobRunner` in `application`, `ScannerFactories.planExecutionUseCases(Executor, ExecutionConfig)`, and in `scanner-spring` the `planExecutionExecutor` and `planExecutionUseCases` beans and `ExecutionProperties` (`dfs.execution.*`).
 
+## Decisions
+
+1. **One plan execution at a time per process** (2026-11-05). `PlanExecutionService` lets at most one of its executions be RUNNING or CANCELLING at a time; what a second start does is decision 2. This closes the race inside a process with one rule that is simple to test, and a local single-user app has no use for two bulk moves at once. Not a lock per duplicate set (parallel runs for unrelated plans, but a digest-keyed lock table with deadlock ordering in a safety path, for parallelism nobody uses) and not a lock per path (two locks per move, mandatory ordering, the most code for no gain over a set lock). A set lock can replace this later behind the same ports. A second process sharing the quarantine (the CLI and the server) is decision 3.
+
 ## Acceptance criteria
 
 The full ID of each criterion is `DFS-055.AC-<n>`.
 
-- **AC-1** <to be refined>
+- **AC-1** While one plan execution of a `PlanExecutionService` is RUNNING or CANCELLING, no second execution of that service moves any file; in particular two executions with crosswise plans (run 1 keeps Y and quarantines X, run 2 keeps X and quarantines Y) never leave the set without a copy outside quarantine.
 
 ## Scenarios
 
@@ -47,10 +51,13 @@ The full ID of each criterion is `DFS-055.AC-<n>`.
 Feature: Plan executions do not overlap
 
   @AC-1
-  Scenario: <to be refined>
-    Given <concrete state>
-    When <action>
-    Then <observable outcome>
+  Scenario: Crosswise plans never quarantine both copies
+    Given a completed scan with one duplicate set of "a/x.jpg" and "b/x.jpg", 2 MB each
+    And plan 1 keeps "a/x.jpg" and quarantines "b/x.jpg", and plan 2 keeps "b/x.jpg" and quarantines "a/x.jpg"
+    And the executor runs both executions on separate threads, with plan 1's execution held just after its checks
+    When both executions are started
+    Then plan 2's execution moves no file while plan 1's is RUNNING
+    And afterwards at least one of "a/x.jpg" and "b/x.jpg" is still in place
 ```
 
 ## Scope
@@ -71,7 +78,6 @@ Feature: Plan executions do not overlap
 
 ## Open questions
 
-- One execution at a time per process (simple, enough for a single-user local app), or a lock per path or per duplicate set (allows parallel runs)?
 - A second start while one runs: queue it, or refuse it with an error code?
 - Two processes sharing a quarantine (the CLI and the server): in scope (a lock file beside the manifests?) or documented as unsupported?
 - Revisit DFS-051 decision 8 (later hard links checked by size and time only) or leave it?
