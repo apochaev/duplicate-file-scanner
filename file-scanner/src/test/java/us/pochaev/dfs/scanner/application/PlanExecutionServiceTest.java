@@ -1,5 +1,6 @@
 package us.pochaev.dfs.scanner.application;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,12 +30,15 @@ import us.pochaev.dfs.scanner.domain.model.PlanTotals;
 import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.scanner.domain.model.ScanResult;
 import us.pochaev.dfs.scanner.domain.model.SkipCause;
+import us.pochaev.dfs.scanner.infra.adapter.ExecutionLockProbe;
+import us.pochaev.dfs.scanner.infra.adapter.FileChannelExecutionLock;
 import us.pochaev.dfs.scanner.infra.adapter.InMemoryJobStore;
 import us.pochaev.dfs.scanner.infra.adapter.JsonLinesManifestWriter;
 import us.pochaev.dfs.scanner.infra.adapter.NioContentComparator;
 import us.pochaev.dfs.scanner.infra.adapter.NioFileAttributesReader;
 import us.pochaev.dfs.scanner.infra.adapter.NioQuarantineDeleter;
 import us.pochaev.dfs.scanner.infra.port.ContentComparator;
+import us.pochaev.dfs.scanner.infra.port.ExecutionLock;
 import us.pochaev.dfs.scanner.infra.port.FileDeleter;
 import us.pochaev.dfs.scanner.infra.port.JobStore;
 import us.pochaev.dfs.scanner.infra.port.ManifestLine;
@@ -61,6 +65,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
@@ -98,6 +103,18 @@ class PlanExecutionServiceTest {
 
     private Path manifests() {
         return tmp.resolve("manifests");
+    }
+
+    private final List<Rig> rigs = new CopyOnWriteArrayList<>();
+
+    /** Frees every lease a test left: a locked file blocks {@code @TempDir} cleanup on Windows. */
+    @AfterEach
+    void cancelEveryRunThatWasLeftUnfinished() {
+        for (Rig rig : rigs) {
+            for (PlanExecutionId id : rig.store.created) {
+                rig.service.cancel(id);
+            }
+        }
     }
 
     // ---- builders ----
@@ -295,6 +312,15 @@ class PlanExecutionServiceTest {
         }
 
         @Override
+        public Optional<I> createUnless(I id, R record, Predicate<? super R> blocking) {
+            Optional<I> blocker = inner.createUnless(id, record, blocking);
+            if (blocker.isEmpty()) {
+                created.add(id);
+            }
+            return blocker;
+        }
+
+        @Override
         public Optional<R> find(I id) {
             return inner.find(id);
         }
@@ -302,6 +328,32 @@ class PlanExecutionServiceTest {
         @Override
         public Optional<R> update(I id, UnaryOperator<R> change) {
             return inner.update(id, change);
+        }
+    }
+
+    /** A fake lock that counts acquires and live leases, and can answer held elsewhere or fail. */
+    static final class CountingLock implements ExecutionLock {
+        final AtomicInteger acquires = new AtomicInteger();
+        final AtomicInteger live = new AtomicInteger();
+        volatile boolean heldElsewhere;
+        volatile IOException failure;
+
+        @Override
+        public Acquisition acquire(Path manifestFolder) throws IOException {
+            acquires.incrementAndGet();
+            if (failure != null) {
+                throw failure;
+            }
+            if (heldElsewhere) {
+                return new Acquisition.HeldElsewhere();
+            }
+            live.incrementAndGet();
+            AtomicBoolean released = new AtomicBoolean();
+            return new Acquisition.Acquired(() -> {
+                if (released.compareAndSet(false, true)) {
+                    live.decrementAndGet();
+                }
+            });
         }
     }
 
@@ -391,12 +443,19 @@ class PlanExecutionServiceTest {
         final PlanExecutionService service;
 
         Rig() {
-            this(null);
+            this(null, null);
         }
 
         Rig(Executor executor) {
+            this(executor, null);
+        }
+
+        /** A null executor means the manual one; a null lock means a real {@link FileChannelExecutionLock}. */
+        Rig(Executor executor, ExecutionLock lock) {
             service = new PlanExecutionService(new NioFileAttributesReader(), comparator, deleter, manifestWriter,
-                    store, executor == null ? manual : executor, new ExecutionConfig(manifests()));
+                    lock == null ? new FileChannelExecutionLock() : lock, store, executor == null ? manual : executor,
+                    new ExecutionConfig(manifests()));
+            rigs.add(this);
         }
 
         PlanExecutionId start(ScanResult scan, DeletionPlan plan) {
@@ -469,7 +528,8 @@ class PlanExecutionServiceTest {
         rig.deleter.onMove = p -> {
             if (p.equals(fx.b())) {
                 try (Stream<Path> s = Files.list(manifests())) {
-                    seen.set(lines(s.findFirst().orElseThrow()));
+                    seen.set(lines(s.filter(m -> m.getFileName().toString().endsWith(".jsonl")).findFirst()
+                            .orElseThrow()));
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
@@ -882,6 +942,10 @@ class PlanExecutionServiceTest {
     }
 
     private Blocked blockedRig(boolean twoOperations) throws IOException {
+        return blockedRig(twoOperations, null);
+    }
+
+    private Blocked blockedRig(boolean twoOperations, ExecutionLock lock) throws IOException {
         Path a = file("A/photo.jpg", PHOTO);
         Path b = file("B/photo.jpg", PHOTO);
         ScanResult scan;
@@ -895,7 +959,7 @@ class PlanExecutionServiceTest {
             scan = scan(set("d-photo", a, b));
             plan = plan(scan, rule("A", "B"));
         }
-        Rig rig = new Rig();
+        Rig rig = new Rig(null, lock);
         CountDownLatch blocked = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
         rig.comparator.before = () -> {
@@ -1232,5 +1296,446 @@ class PlanExecutionServiceTest {
         assertTrue(Files.exists(quarantined(id, fx.b())));
         assertEquals(JobStatus.COMPLETED, ok(useCases.cancel().cancel(id)).status());
         assertTrue(Files.exists(manifestOf(id)));
+    }
+
+    // ---- DFS-055: one plan execution at a time ----
+
+    private static final byte[] TWO_MB = new byte[2 * 1024 * 1024];
+
+    static {
+        for (int i = 0; i < TWO_MB.length; i++) {
+            TWO_MB[i] = (byte) (i * 31);
+        }
+    }
+
+    private Path lockFile() {
+        return manifests().resolve("execution.lock");
+    }
+
+    private DeletionPlan crosswise(Blocked bl) {
+        return plan(bl.scan(), rule("B", "A"));
+    }
+
+    /** Starts the blocked rig's first run and waits until it is RUNNING, held in its first compare. */
+    private PlanExecutionId runningFirst(Blocked bl) throws InterruptedException {
+        PlanExecutionId id = bl.rig().start(bl.scan(), bl.plan());
+        bl.rig().manual.startNext();
+        assertTrue(bl.blocked().await(10, TimeUnit.SECONDS), "the comparator never started");
+        assertEquals(JobStatus.RUNNING, bl.rig().status(id).status());
+        return id;
+    }
+
+    private void finish(Blocked bl) throws InterruptedException {
+        bl.release().countDown();
+        Thread t = bl.rig().manual.lastThread;
+        t.join(30_000);
+        assertFalse(t.isAlive(), "task still running");
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-1 Crosswise plans never quarantine both copies")
+    void crosswisePlansNeverQuarantineBothCopies() throws Exception {
+        Path a = file("A/x.jpg", TWO_MB);
+        Path b = file("B/x.jpg", TWO_MB);
+        ScanResult scan = scan(set("d-x", a, b));
+        DeletionPlan keepAQuarantineB = plan(scan, rule("A", "B"));
+        DeletionPlan keepBQuarantineA = plan(scan, rule("B", "A"));
+        Rig rig = new Rig();
+        List<Path> moves = new CopyOnWriteArrayList<>();
+        rig.deleter.onMove = moves::add;
+        CountDownLatch blocked = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        rig.comparator.before = () -> {
+            blocked.countDown();
+            try {
+                if (!release.await(30, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("never released");
+                }
+            } catch (InterruptedException e) {
+                throw new IllegalStateException(e);
+            }
+        };
+
+        PlanExecutionId first = rig.start(scan, keepAQuarantineB);
+        Thread task = rig.manual.startNext();
+        assertTrue(blocked.await(10, TimeUnit.SECONDS), "the comparator never started");
+        assertEquals(JobStatus.RUNNING, rig.status(first).status());
+
+        Result.Failure<?> refused = failed(rig.service.start(scan, keepBQuarantineA));
+
+        assertEquals(ErrorCode.EXECUTION_ALREADY_RUNNING, refused.code());
+        assertEquals(0, rig.manual.pending());
+        assertEquals(List.of(), moves);
+        assertTrue(Files.exists(a) && Files.exists(b));
+        release.countDown();
+        task.join(30_000);
+        assertFalse(task.isAlive());
+        assertEquals(JobStatus.COMPLETED, rig.status(first).status());
+        assertTrue(Files.exists(a) || Files.exists(b), "no copy left outside quarantine");
+        assertEquals(List.of(b), moves);
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-2 A second start is refused while the first is unfinished")
+    void secondStartIsRefusedWhileTheFirstIsUnfinished() throws Exception {
+        Blocked bl = blockedRig(false);
+        Rig rig = bl.rig();
+        PlanExecutionId e1 = runningFirst(bl);
+        List<Path> moves = new CopyOnWriteArrayList<>();
+        rig.deleter.onMove = moves::add;
+
+        Result.Failure<?> refused = failed(rig.service.start(bl.scan(), crosswise(bl)));
+
+        assertEquals(ErrorCode.EXECUTION_ALREADY_RUNNING, refused.code());
+        assertTrue(refused.message().contains(e1.value().toString()), refused.message());
+        assertEquals(List.of(e1), rig.store.created);
+        assertEquals(0, rig.manual.pending());
+        assertEquals(List.of(), moves);
+        finish(bl);
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-2 A second start is also refused while the first is queued or cancelling")
+    void secondStartIsRefusedWhileTheFirstIsQueuedOrCancelling() throws Exception {
+        Blocked bl = blockedRig(false);
+        Rig rig = bl.rig();
+        PlanExecutionId e1 = rig.start(bl.scan(), bl.plan());
+        assertEquals(JobStatus.QUEUED, rig.status(e1).status());
+
+        Result.Failure<?> whileQueued = failed(rig.service.start(bl.scan(), crosswise(bl)));
+
+        assertEquals(ErrorCode.EXECUTION_ALREADY_RUNNING, whileQueued.code());
+        assertTrue(whileQueued.message().contains(e1.value().toString()), whileQueued.message());
+        rig.manual.startNext();
+        assertTrue(bl.blocked().await(10, TimeUnit.SECONDS), "the comparator never started");
+        assertEquals(JobStatus.CANCELLING, ok(rig.service.cancel(e1)).status());
+
+        Result.Failure<?> whileCancelling = failed(rig.service.start(bl.scan(), crosswise(bl)));
+
+        assertEquals(ErrorCode.EXECUTION_ALREADY_RUNNING, whileCancelling.code());
+        assertEquals(List.of(e1), rig.store.created);
+        finish(bl);
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-2 A start right after the first is recorded COMPLETED succeeds")
+    void startAfterCompletedSucceeds() throws Exception {
+        Fx fx = basic();
+        Rig rig = new Rig();
+        PlanExecutionId e1 = rig.run(fx.scan(), fx.plan());
+        assertEquals(JobStatus.COMPLETED, rig.status(e1).status());
+
+        PlanExecutionId e2 = rig.start(fx.scan(), plan(fx.scan(), rule("B", "A")));
+
+        assertNotEquals(e1, e2);
+        assertEquals(List.of(e1, e2), rig.store.created);
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-2 A start right after the first is recorded FAILED succeeds")
+    void startAfterFailedSucceeds() throws Exception {
+        Fx fx = basic();
+        Rig rig = new Rig();
+        rig.manifestWriter.failOn = line -> line instanceof ManifestLine.Moving;
+        PlanExecutionId e1 = rig.start(fx.scan(), fx.plan());
+        rig.manual.runNext();
+        assertEquals(JobStatus.FAILED, rig.status(e1).status());
+
+        PlanExecutionId e2 = rig.start(fx.scan(), plan(fx.scan(), rule("B", "A")));
+
+        assertNotEquals(e1, e2);
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-2 A start right after the first is recorded CANCELLED succeeds")
+    void startAfterCancelledSucceeds() throws Exception {
+        Blocked bl = blockedRig(false);
+        Rig rig = bl.rig();
+        PlanExecutionId e1 = runningFirst(bl);
+        ok(rig.service.cancel(e1));
+        finish(bl);
+        assertEquals(JobStatus.CANCELLED, rig.status(e1).status());
+
+        PlanExecutionId e2 = rig.start(bl.scan(), crosswise(bl));
+
+        assertNotEquals(e1, e2);
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-2 A run cancelled while queued frees the slot")
+    void runCancelledWhileQueuedFreesTheSlot() throws Exception {
+        Fx fx = basic();
+        Rig rig = new Rig();
+        PlanExecutionId e1 = rig.start(fx.scan(), fx.plan());
+        assertEquals(JobStatus.CANCELLED, ok(rig.service.cancel(e1)).status());
+
+        PlanExecutionId e2 = rig.start(fx.scan(), plan(fx.scan(), rule("B", "A")));
+
+        assertNotEquals(e1, e2);
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-2 A run the executor rejected frees the slot")
+    void runTheExecutorRejectedFreesTheSlot() throws Exception {
+        Fx fx = basic();
+        ManualExecutor queue = new ManualExecutor();
+        AtomicBoolean first = new AtomicBoolean(true);
+        Rig rig = new Rig(task -> {
+            if (first.getAndSet(false)) {
+                throw new RejectedExecutionException("pool closed");
+            }
+            queue.execute(task);
+        });
+
+        Result.Failure<?> rejected = failed(rig.service.start(fx.scan(), fx.plan()));
+        assertEquals(ErrorCode.EXECUTOR_REJECTED, rejected.code());
+
+        PlanExecutionId e2 = rig.start(fx.scan(), plan(fx.scan(), rule("B", "A")));
+
+        assertEquals(2, rig.store.created.size());
+        assertEquals(e2, rig.store.created.get(1));
+        assertEquals(1, queue.pending());
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-3 Another process is executing")
+    void anotherProcessIsExecuting() throws Exception {
+        Fx fx = basic();
+        Rig rig = new Rig();
+        Files.createDirectories(manifests());
+
+        try (ExecutionLockProbe.Holder other = ExecutionLockProbe.hold(lockFile())) {
+            assertEquals("LOCKED", other.firstLine());
+
+            Result.Failure<?> refused = failed(rig.service.start(fx.scan(), fx.plan()));
+
+            assertEquals(ErrorCode.EXECUTION_ALREADY_RUNNING, refused.code());
+            assertEquals("another process is executing a plan", refused.message());
+            assertEquals(List.of(), rig.store.created);
+            assertEquals(0, rig.manual.pending());
+            assertTrue(Files.exists(fx.a()) && Files.exists(fx.b()));
+            assertEquals(List.of(), allQuarantinedFiles());
+        }
+
+        PlanExecutionId id = rig.start(fx.scan(), fx.plan());
+        assertEquals(JobStatus.QUEUED, rig.status(id).status());
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-3 The lock is held exactly while the execution is unfinished")
+    void lockIsHeldExactlyWhileTheExecutionIsUnfinished() throws Exception {
+        Blocked bl = blockedRig(false);
+        runningFirst(bl);
+
+        assertEquals("HELD", ExecutionLockProbe.tryLock(lockFile()));
+
+        finish(bl);
+        assertEquals("FREE", ExecutionLockProbe.tryLock(lockFile()));
+    }
+
+    enum Ending {
+        COMPLETED, CANCELLED, FAILED
+    }
+
+    @ParameterizedTest(name = "DFS-055.AC-3 The lock is held from the start until the run is recorded {0}")
+    @DisplayName("DFS-055.AC-3 The lock is held from the start until the run is recorded terminal")
+    @EnumSource(Ending.class)
+    void lockIsHeldUntilTheRunIsRecordedTerminal(Ending ending) throws Exception {
+        CountingLock lock = new CountingLock();
+        Blocked bl = blockedRig(false, lock);
+        Rig rig = bl.rig();
+        PlanExecutionId id = rig.start(bl.scan(), bl.plan());
+        assertEquals(1, lock.live.get(), "held from the start, before the run is picked up");
+        rig.manual.startNext();
+        assertTrue(bl.blocked().await(10, TimeUnit.SECONDS), "the comparator never started");
+        assertEquals(1, lock.live.get());
+        switch (ending) {
+            case CANCELLED -> ok(rig.service.cancel(id));
+            case FAILED -> rig.manifestWriter.failOn = line -> line instanceof ManifestLine.Moving;
+            default -> {
+            }
+        }
+
+        finish(bl);
+
+        JobStatus expected = switch (ending) {
+            case COMPLETED -> JobStatus.COMPLETED;
+            case CANCELLED -> JobStatus.CANCELLED;
+            case FAILED -> JobStatus.FAILED;
+        };
+        assertEquals(expected, rig.status(id).status());
+        assertEquals(0, lock.live.get());
+        assertEquals(1, lock.acquires.get());
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-3 A lock held elsewhere refuses the start with the exact message")
+    void lockHeldElsewhereRefusesTheStart() throws Exception {
+        Fx fx = basic();
+        CountingLock lock = new CountingLock();
+        lock.heldElsewhere = true;
+        Rig rig = new Rig(null, lock);
+
+        Result.Failure<?> refused = failed(rig.service.start(fx.scan(), fx.plan()));
+
+        assertEquals(ErrorCode.EXECUTION_ALREADY_RUNNING, refused.code());
+        assertEquals("another process is executing a plan", refused.message());
+        assertEquals(List.of(), rig.store.created);
+        assertEquals(0, rig.manual.pending());
+        assertEquals(0, lock.live.get());
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-4 The plan's own problems are reported first")
+    void thePlansOwnProblemsAreReportedFirst() throws Exception {
+        CountingLock lock = new CountingLock();
+        Blocked bl = blockedRig(false, lock);
+        PlanExecutionId e1 = runningFirst(bl);
+        DeletionPlan conflicted = plan(bl.scan(), rule("A", "B"), rule("B", "A"));
+        assertFalse(conflicted.conflicts().isEmpty());
+
+        Result.Failure<?> failure = failed(bl.rig().service.start(bl.scan(), conflicted));
+
+        assertEquals(ErrorCode.PLAN_HAS_CONFLICTS, failure.code());
+        assertEquals(List.of(e1), bl.rig().store.created);
+        assertEquals(1, lock.acquires.get(), "the lock is not touched for a plan that is refused");
+        finish(bl);
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-4 The plan is checked before the lock, even when the lock is held elsewhere")
+    void thePlanIsCheckedBeforeTheLock() throws Exception {
+        Fx fx = basic();
+        DeletionPlan conflicted = plan(fx.scan(), rule("A", "B"), rule("B", "A"));
+        CountingLock lock = new CountingLock();
+        lock.heldElsewhere = true;
+        Rig rig = new Rig(null, lock);
+        // a sound plan does reach the lock, which is held elsewhere
+        assertEquals(ErrorCode.EXECUTION_ALREADY_RUNNING, failed(rig.service.start(fx.scan(), fx.plan())).code());
+        assertEquals(1, lock.acquires.get());
+
+        Result.Failure<?> failure = failed(rig.service.start(fx.scan(), conflicted));
+
+        assertEquals(ErrorCode.PLAN_HAS_CONFLICTS, failure.code());
+        assertEquals(1, lock.acquires.get(), "the lock is not touched for a plan that is refused");
+        assertEquals(List.of(), rig.store.created);
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-4 A lock that cannot be taken refuses the start and leaves no trace")
+    void lockThatCannotBeTakenLeavesNoTrace() throws Exception {
+        Fx fx = basic();
+        CountingLock lock = new CountingLock();
+        lock.failure = new IOException("read-only volume");
+        Rig rig = new Rig(null, lock);
+
+        Result.Failure<?> failure = failed(rig.service.start(fx.scan(), fx.plan()));
+
+        assertEquals(ErrorCode.MANIFEST_UNWRITABLE, failure.code());
+        assertTrue(failure.message().contains("read-only volume"), failure.message());
+        assertEquals(List.of(), rig.store.created);
+        assertEquals(0, rig.manual.pending());
+        assertEquals(0, lock.live.get());
+        assertTrue(Files.exists(fx.a()) && Files.exists(fx.b()));
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-4 Two simultaneous starts, one winner")
+    void twoSimultaneousStartsOneWinner() throws Exception {
+        Fx fx = basic();
+        DeletionPlan other = plan(fx.scan(), rule("B", "A"));
+        for (int round = 0; round < 20; round++) {
+            CountingLock lock = new CountingLock();
+            Rig rig = new Rig(null, lock);
+            CountDownLatch go = new CountDownLatch(1);
+            AtomicReference<Result<PlanExecutionId>> r1 = new AtomicReference<>();
+            AtomicReference<Result<PlanExecutionId>> r2 = new AtomicReference<>();
+            AtomicReference<Throwable> thrown = new AtomicReference<>();
+            Thread t1 = startOnLatch(rig, fx.scan(), fx.plan(), go, r1, thrown);
+            Thread t2 = startOnLatch(rig, fx.scan(), other, go, r2, thrown);
+
+            go.countDown();
+            t1.join(30_000);
+            t2.join(30_000);
+
+            assertFalse(t1.isAlive() || t2.isAlive());
+            if (thrown.get() instanceof RuntimeException e) {
+                throw e;
+            }
+            if (thrown.get() != null) {
+                throw new AssertionError(thrown.get());
+            }
+            List<Result<PlanExecutionId>> results = List.of(r1.get(), r2.get());
+            long wins = results.stream().filter(r -> r instanceof Result.Success).count();
+            assertEquals(1, wins, results.toString());
+            for (Result<PlanExecutionId> r : results) {
+                if (r instanceof Result.Failure<PlanExecutionId> f) {
+                    assertEquals(ErrorCode.EXECUTION_ALREADY_RUNNING, f.code());
+                }
+            }
+            assertEquals(1, rig.store.created.size());
+            assertEquals(1, lock.live.get(), "only the winner still holds the lock");
+        }
+    }
+
+    private static Thread startOnLatch(Rig rig, ScanResult scan, DeletionPlan plan, CountDownLatch go,
+            AtomicReference<Result<PlanExecutionId>> result, AtomicReference<Throwable> thrown) {
+        Thread t = new Thread(() -> {
+            try {
+                go.await();
+                result.set(rig.service.start(scan, plan));
+            } catch (Throwable e) {
+                thrown.compareAndSet(null, e);
+            }
+        });
+        t.start();
+        return t;
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-4 A refused start leaves the lock held only on behalf of the first run")
+    void refusedStartLeavesTheLockWithTheFirstRun() throws Exception {
+        CountingLock lock = new CountingLock();
+        Blocked bl = blockedRig(false, lock);
+        runningFirst(bl);
+        assertEquals(1, lock.live.get());
+
+        Result.Failure<?> refused = failed(bl.rig().service.start(bl.scan(), crosswise(bl)));
+
+        assertEquals(ErrorCode.EXECUTION_ALREADY_RUNNING, refused.code());
+        assertEquals(2, lock.acquires.get());
+        assertEquals(1, lock.live.get());
+        finish(bl);
+        assertEquals(0, lock.live.get());
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-4 A run cancelled while queued releases the lock")
+    void runCancelledWhileQueuedReleasesTheLock() throws Exception {
+        Fx fx = basic();
+        Rig rig = new Rig();
+        rig.run(fx.scan(), fx.plan());
+
+        PlanExecutionId e2 = rig.start(fx.scan(), plan(fx.scan(), rule("B", "A")));
+        assertEquals("HELD", ExecutionLockProbe.tryLock(lockFile()));
+        assertEquals(JobStatus.CANCELLED, ok(rig.service.cancel(e2)).status());
+
+        assertEquals("FREE", ExecutionLockProbe.tryLock(lockFile()));
+    }
+
+    @Test
+    @DisplayName("DFS-055.AC-4 A run the executor rejected releases the lock")
+    void runTheExecutorRejectedReleasesTheLock() throws Exception {
+        Fx fx = basic();
+        CountingLock lock = new CountingLock();
+        Rig rig = new Rig(task -> {
+            throw new RejectedExecutionException("pool closed");
+        }, lock);
+
+        Result.Failure<?> failure = failed(rig.service.start(fx.scan(), fx.plan()));
+
+        assertEquals(ErrorCode.EXECUTOR_REJECTED, failure.code());
+        assertEquals(1, lock.acquires.get());
+        assertEquals(0, lock.live.get());
     }
 }

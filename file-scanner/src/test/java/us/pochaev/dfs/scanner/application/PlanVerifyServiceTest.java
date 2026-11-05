@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import java.util.function.LongConsumer;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -246,6 +247,15 @@ class PlanVerifyServiceTest {
         public void create(I id, R record) {
             inner.create(id, record);
             created.add(id);
+        }
+
+        @Override
+        public Optional<I> createUnless(I id, R record, Predicate<? super R> blocking) {
+            Optional<I> blocker = inner.createUnless(id, record, blocking);
+            if (blocker.isEmpty()) {
+                created.add(id);
+            }
+            return blocker;
         }
 
         @Override

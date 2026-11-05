@@ -567,4 +567,37 @@ class ScannerAutoConfigurationTest {
             assertEquals(1, context.getBeansOfType(GetPlanExecutionStatus.class).size());
         });
     }
+
+    @Test
+    @DisplayName("DFS-055.AC-3 The plan execution bean holds the manifest folder's lock from start until the run is cancelled while queued")
+    void planExecutionBeanHoldsTheManifestFolderLock() throws Exception {
+        Exec fx = execFixture();
+        java.util.List<Runnable> queued = new java.util.concurrent.CopyOnWriteArrayList<>();
+        // an executor that never runs a task, so the run stays QUEUED
+        executionRunner().withBean("planExecutionExecutor", java.util.concurrent.Executor.class,
+                () -> queued::add).run(context -> {
+            // start through the bean first: this is the use case that reaches the stub
+            us.pochaev.dfs.scanner.domain.model.PlanExecutionId id =
+                    startExec(context.getBean(StartPlanExecution.class), fx);
+            assertEquals(1, queued.size());
+            Path lockFile = tmp.resolve("manifests").resolve("execution.lock");
+            assertTrue(java.nio.file.Files.exists(lockFile));
+            // one channel stays open for the whole check: closing any channel of a file can release a JVM's locks
+            try (java.nio.channels.FileChannel channel = java.nio.channels.FileChannel.open(lockFile,
+                    java.nio.file.StandardOpenOption.WRITE)) {
+                try {
+                    channel.tryLock();
+                    org.junit.jupiter.api.Assertions.fail("the JVM should already hold the lock");
+                } catch (java.nio.channels.OverlappingFileLockException expected) {
+                    // expected
+                }
+
+                assertInstanceOf(Result.Success.class, context.getBean(CancelPlanExecution.class).cancel(id));
+
+                java.nio.channels.FileLock lock = channel.tryLock();
+                org.junit.jupiter.api.Assertions.assertNotNull(lock, "the lock should be free after the cancel");
+                lock.release();
+            }
+        });
+    }
 }
