@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
@@ -71,6 +72,20 @@ final class JobRunner<I, P, T> {
 
         /** {@code result} marked as cancelled, for a work that returned after a cancel was recorded. */
         T markCancelled(T result);
+
+        /**
+         * Told a job's terminal record exactly once per created job, once the job is COMPLETED, CANCELLED or FAILED
+         * and its work is not running (DFS-055: the plan execution releases its lock lease here). Called on the thread
+         * that ended the job: the task's, after {@link Settled}, when the work ran (also on the {@code Error} path
+         * and when {@code Settled} throws); the cancelling caller's, when {@link #cancel} turned QUEUED into
+         * CANCELLED; the starting caller's, when the executor rejected the task or threw, or {@link #abandon} gave the
+         * job up, each turning QUEUED into FAILED. Never for a job a pickup found no longer QUEUED (whoever ended it
+         * calls it). Must not throw. The default does nothing.
+         *
+         * @param job the job's terminal record, as stored
+         */
+        default void ended(Job<P, T> job) {
+        }
     }
 
     private final JobStore<I, Job<P, T>> store;
@@ -125,6 +140,41 @@ final class JobRunner<I, P, T> {
     Result<I> submit(I id, P initial, Work<P, T> work, Settled<P, T> settled) {
         Objects.requireNonNull(settled, "settled");
         return submitInternal(id, initial, work, settled);
+    }
+
+    /**
+     * Records {@code id} QUEUED with {@code initial} progress unless a stored job matches {@code blocks}, in one
+     * {@link JobStore#createUnless} (DFS-055 decision 5). Submits nothing: the caller follows with {@link #dispatch},
+     * or {@link #abandon} if it gives the job up first.
+     *
+     * @return empty when the job was recorded; otherwise the ID of a stored job that matches {@code blocks}, with
+     *         nothing recorded and no hook called
+     * @throws NullPointerException if an argument is null
+     */
+    Optional<I> claim(I id, P initial, Predicate<? super Job<P, T>> blocks) {
+        throw new UnsupportedOperationException("not implemented: DFS-055");
+    }
+
+    /**
+     * Gives up a claimed job before {@link #dispatch}: QUEUED becomes FAILED with {@code failure}, and if this call
+     * made that change, {@link Outcomes#ended} is called with the stored record. Any other status is left as it is.
+     *
+     * @throws NullPointerException if an argument is null
+     */
+    void abandon(I id, String failure) {
+        throw new UnsupportedOperationException("not implemented: DFS-055");
+    }
+
+    /**
+     * Submits the task of a job {@link #claim}ed QUEUED, exactly as {@link #submit(Object, Object, Work, Settled)}
+     * does after its create: {@code Success(id)}; {@code Failure(EXECUTOR_REJECTED)} on
+     * {@code RejectedExecutionException}, the job FAILED; any other {@code RuntimeException} rethrown, the job FAILED.
+     * When either failure turns QUEUED into FAILED, {@link Outcomes#ended} is called before returning or rethrowing.
+     *
+     * @throws NullPointerException if an argument is null
+     */
+    Result<I> dispatch(I id, Work<P, T> work, Settled<P, T> settled) {
+        throw new UnsupportedOperationException("not implemented: DFS-055");
     }
 
     /**

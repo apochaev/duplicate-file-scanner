@@ -1,5 +1,7 @@
 package us.pochaev.dfs.scanner.infra.port;
 
+import us.pochaev.dfs.scanner.domain.model.PlanExecutionId;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -20,6 +22,17 @@ public interface ManifestWriter {
      *                     included)
      */
     Path create(Path folder, ManifestLine.Run header) throws IOException;
+
+    /**
+     * The absolute path {@link #create} gives the manifest of {@code runId} in {@code folder},
+     * {@code <folder>/<run ID>.jsonl}, without touching the disk (DFS-055: a run's job is recorded before its manifest
+     * is created).
+     *
+     * @throws NullPointerException if an argument is null
+     */
+    default Path manifestPath(Path folder, PlanExecutionId runId) {
+        throw new UnsupportedOperationException("not implemented: DFS-055");
+    }
 
     /**
      * Opens an existing manifest for appending.

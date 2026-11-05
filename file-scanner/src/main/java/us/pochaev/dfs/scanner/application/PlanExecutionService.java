@@ -24,6 +24,7 @@ import us.pochaev.dfs.scanner.domain.usecases.command.StartPlanExecution;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetPlanExecutionResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetPlanExecutionStatus;
 import us.pochaev.dfs.scanner.infra.port.ContentComparator;
+import us.pochaev.dfs.scanner.infra.port.ExecutionLock;
 import us.pochaev.dfs.scanner.infra.port.FileAttributesReader;
 import us.pochaev.dfs.scanner.infra.port.FileDeleter;
 import us.pochaev.dfs.scanner.infra.port.JobStore;
@@ -62,6 +63,7 @@ public final class PlanExecutionService implements StartPlanExecution, CancelPla
     private final ContentComparator comparator;
     private final FileDeleter deleter;
     private final ManifestWriter manifests;
+    private final ExecutionLock lock;
     private final ExecutionConfig config;
     private final JobRunner<PlanExecutionId, PlanExecutionProgress, PlanExecutionReport> jobs;
 
@@ -70,19 +72,22 @@ public final class PlanExecutionService implements StartPlanExecution, CancelPla
      * @param comparator compares each operation's first checked link with its keeper (decision 4)
      * @param deleter    names quarantine paths and moves files (decision 5)
      * @param manifests  writes each run's manifest (decision 6)
-     * @param store      holds every run's record
+     * @param lock       the manifest folder's execution lock, one instance per service (DFS-055 decision 3)
+     * @param store      holds every run's record; also the one place a start claims the single run slot (DFS-055
+     *                   decision 5)
      * @param executor   runs every run's task
      * @param config     the manifest folder (its anchors are the deleter's business)
      * @throws NullPointerException if any argument is null
      */
     public PlanExecutionService(FileAttributesReader reader, ContentComparator comparator, FileDeleter deleter,
-                                ManifestWriter manifests,
+                                ManifestWriter manifests, ExecutionLock lock,
                                 JobStore<PlanExecutionId, Job<PlanExecutionProgress, PlanExecutionReport>> store,
                                 Executor executor, ExecutionConfig config) {
         this.reader = Objects.requireNonNull(reader, "reader");
         this.comparator = Objects.requireNonNull(comparator, "comparator");
         this.deleter = Objects.requireNonNull(deleter, "deleter");
         this.manifests = Objects.requireNonNull(manifests, "manifests");
+        this.lock = Objects.requireNonNull(lock, "lock");
         this.config = Objects.requireNonNull(config, "config");
         this.jobs = new JobRunner<>(store, executor, new ExecutionOutcomes());
     }
@@ -220,22 +225,18 @@ public final class PlanExecutionService implements StartPlanExecution, CancelPla
             bytesTotal += q.size();
             i++;
         }
-        PlanExecutionId runId = PlanExecutionId.random();
-        Path manifest;
-        try {
-            manifest = manifests.create(config.manifestFolder(),
-                    new ManifestLine.Run(runId, plan.id(), scan.roots(), Instant.now()));
-        } catch (IOException e) {
-            return new Result.Failure<>(ErrorCode.MANIFEST_UNWRITABLE,
-                    "manifest folder " + config.manifestFolder() + ": " + describe(e));
-        }
-        final long grand = bytesTotal;
-        PlanExecutionProgress initial = new PlanExecutionProgress(runId, manifest, plan, 0, 0, grand, 0, 0);
-        Run run = new Run();
-        return jobs.submit(runId, initial,
-                (progress, stop) -> execute(runId, manifest, plan, operations, entriesPerOperation, grand,
-                        listener, run, progress, stop),
-                job -> settle(job, run));
+        return launch(scan, plan, listener, operations, entriesPerOperation, bytesTotal);
+    }
+
+    /**
+     * Everything a start does after DFS-051's plan checks passed (the story's {@code design.md}, "Behavior"): take a
+     * lease on the execution lock, claim the single run slot in the job store, create the manifest, dispatch the task.
+     * Every refusal leaves no record, no ID and no lease held.
+     */
+    private Result<PlanExecutionId> launch(ScanResult scan, DeletionPlan plan, ExecutionListener listener,
+                                           List<Operation.Quarantine> operations,
+                                           List<Map<Path, FileEntry>> entriesPerOperation, long bytesTotal) {
+        throw new UnsupportedOperationException("not implemented: DFS-055");
     }
 
     private void settle(Job<PlanExecutionProgress, PlanExecutionReport> job, Run run) {
@@ -280,10 +281,11 @@ public final class PlanExecutionService implements StartPlanExecution, CancelPla
         ExecutionListener combined = event -> {
             progress.update(p -> switch (event) {
                 case ExecutionEvent.BytesCompared b -> new PlanExecutionProgress(p.runId(), p.manifest(), p.plan(),
-                        p.operationsDone(), b.bytesDone(), p.bytesTotal(), p.filesMoved(), p.bytesMoved());
+                        p.operationsDone(), b.bytesDone(), p.bytesTotal(), p.filesMoved(), p.bytesMoved(), p.lease());
                 case ExecutionEvent.OperationDone d -> new PlanExecutionProgress(p.runId(), p.manifest(), p.plan(),
                         d.done(), p.bytesDone(), p.bytesTotal(), p.filesMoved() + movedCount(d.outcome()),
-                        p.bytesMoved() + (d.outcome() instanceof OperationOutcome.Moved ? d.outcome().size() : 0));
+                        p.bytesMoved() + (d.outcome() instanceof OperationOutcome.Moved ? d.outcome().size() : 0),
+                        p.lease());
             });
             if (listener != null && !run.detached) {
                 try {
@@ -495,6 +497,12 @@ public final class PlanExecutionService implements StartPlanExecution, CancelPla
         public PlanExecutionReport markCancelled(PlanExecutionReport r) {
             return new PlanExecutionReport(r.runId(), r.planId(), r.manifest(), r.outcomes(), true, r.filesMoved(),
                     r.bytesMoved(), r.filesSkipped(), r.bytesSkipped(), r.listenerFailure());
+        }
+
+        /** Releases the run's execution lock lease (DFS-055 decisions 3, 5): {@code job.progress().lease()}. */
+        @Override
+        public void ended(Job<PlanExecutionProgress, PlanExecutionReport> job) {
+            throw new UnsupportedOperationException("not implemented: DFS-055");
         }
     }
 }

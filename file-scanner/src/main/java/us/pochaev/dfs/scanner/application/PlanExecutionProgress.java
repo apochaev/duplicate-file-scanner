@@ -2,6 +2,7 @@ package us.pochaev.dfs.scanner.application;
 
 import us.pochaev.dfs.scanner.domain.model.DeletionPlan;
 import us.pochaev.dfs.scanner.domain.model.PlanExecutionId;
+import us.pochaev.dfs.scanner.infra.port.ExecutionLock;
 
 import java.nio.file.Path;
 
@@ -18,9 +19,12 @@ import java.nio.file.Path;
  * @param bytesTotal     the sum of the plan's operation sizes
  * @param filesMoved     paths moved so far
  * @param bytesMoved     sizes of operations moved whole so far
+ * @param lease          the run's share of the execution lock (DFS-055 decision 3), released once the job is terminal
+ *                       ({@code JobRunner.Outcomes.ended}); never shown in a snapshot
  */
 public record PlanExecutionProgress(PlanExecutionId runId, Path manifest, DeletionPlan plan, int operationsDone,
-                                    long bytesDone, long bytesTotal, int filesMoved, long bytesMoved) {
+                                    long bytesDone, long bytesTotal, int filesMoved, long bytesMoved,
+                                    ExecutionLock.Lease lease) {
 
     public PlanExecutionProgress {
         java.util.Objects.requireNonNull(runId, "runId");

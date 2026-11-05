@@ -5,6 +5,7 @@ import us.pochaev.dfs.scanner.application.ListDirectoryService;
 import us.pochaev.dfs.scanner.application.PlanExecutionService;
 import us.pochaev.dfs.scanner.application.PlanVerifyService;
 import us.pochaev.dfs.scanner.domain.model.ExecutionConfig;
+import us.pochaev.dfs.scanner.infra.adapter.FileChannelExecutionLock;
 import us.pochaev.dfs.scanner.infra.adapter.JsonLinesManifestWriter;
 import us.pochaev.dfs.scanner.infra.adapter.NioQuarantineDeleter;
 import us.pochaev.dfs.scanner.application.PreviewDeletionPlanService;
@@ -123,7 +124,9 @@ public final class ScannerFactories {
      * service and one in-memory job store, on the NIO attributes reader, the NIO content comparator (1 MiB chunks), the
      * NIO quarantine deleter (with {@code config}'s quarantine anchors) and the JSON Lines manifest writer. Runs go on
      * {@code executor}, used as given. Nothing is created on disk until a run starts: the manifest folder and each
-     * quarantine folder are created on first use (decision 13).
+     * quarantine folder are created on first use (decision 13). Each set has its own {@code FileChannel} execution lock
+     * on {@code <manifest folder>/execution.lock} (DFS-055 decision 3): one run at a time per set, and while a run of
+     * this set is unfinished, a start of any other set or process with the same manifest folder is refused.
      *
      * @param executor runs every run started through the returned {@link PlanExecutionUseCases#start}
      * @param config   the manifest folder and quarantine anchors
@@ -135,7 +138,8 @@ public final class ScannerFactories {
         Objects.requireNonNull(config, "config");
         PlanExecutionService service = new PlanExecutionService(new NioFileAttributesReader(),
                 new NioContentComparator(), new NioQuarantineDeleter(config.quarantineAnchors()),
-                new JsonLinesManifestWriter(), new InMemoryJobStore<>(), executor, config);
+                new JsonLinesManifestWriter(), new FileChannelExecutionLock(), new InMemoryJobStore<>(), executor,
+                config);
         return new PlanExecutionUseCases(service, service, service, service);
     }
 }

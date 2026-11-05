@@ -4,6 +4,7 @@ import us.pochaev.dfs.scanner.infra.port.JobStore;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
@@ -25,6 +26,11 @@ public final class InMemoryJobStore<I, R> implements JobStore<I, R> {
         if (records.putIfAbsent(id, record) != null) {
             throw new IllegalStateException("job already exists: " + id);
         }
+    }
+
+    @Override
+    public Optional<I> createUnless(I id, R record, Predicate<? super R> blocking) {
+        throw new UnsupportedOperationException("not implemented: DFS-055");
     }
 
     @Override

@@ -1,6 +1,7 @@
 package us.pochaev.dfs.scanner.infra.port;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
@@ -20,6 +21,20 @@ public interface JobStore<I, R> {
      * @throws IllegalStateException if a record of {@code id} already exists
      */
     void create(I id, R record);
+
+    /**
+     * Stores the first record of a new job unless a stored record matches {@code blocking} (DFS-055 decision 5): the
+     * test of every stored record and the store are one step, atomic with respect to every other {@code create} and
+     * {@code createUnless}, so of two calls that would each block the other, exactly one stores its record. A record
+     * changed concurrently by {@link #update} is tested in its state either before or after that update.
+     * {@code blocking} must be free of side effects on this store.
+     *
+     * @return empty when {@code record} was stored; otherwise the ID of a stored record that matches {@code blocking}
+     *         (any one, if several do), and nothing stored
+     * @throws NullPointerException  if an argument is null
+     * @throws IllegalStateException if no record matches and a record of {@code id} already exists
+     */
+    Optional<I> createUnless(I id, R record, Predicate<? super R> blocking);
 
     /**
      * @return the current record of {@code id}, or empty if none was created

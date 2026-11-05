@@ -88,5 +88,12 @@ public enum ErrorCode {
      * keeper is not a link of a different physical copy of that set (DFS-051 decision 14b); the message names the
      * operation's index and digest.
      */
-    KEEPER_NOT_SEPARATE_COPY
+    KEEPER_NOT_SEPARATE_COPY,
+    /**
+     * {@code StartPlanExecution} while another plan execution is unfinished (QUEUED, RUNNING or CANCELLING): one of the
+     * same use-case set, the message naming its ID, or one holding the manifest folder's {@code execution.lock} in
+     * another process, the message "another process is executing a plan" (DFS-055 decisions 2, 3). Nothing is
+     * recorded, written or moved, and no lock is left held.
+     */
+    EXECUTION_ALREADY_RUNNING
 }
