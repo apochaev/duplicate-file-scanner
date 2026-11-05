@@ -40,7 +40,7 @@ Each browser API jsdom lacks (checklist item 4): the wrapper, its `InjectionToke
 
 ## Material components
 
-Each Material component and its module, per component (checklist item 9), and whether the initial bundle grows (checklist item 10: the size before this ticket, from the last build's "Initial total" line).
+Each Material component and its module, per component (checklist item 9), and whether the initial bundle grows (checklist item 10: the size before this ticket, from the last build's "Initial total" line, and the size after the stubs compile with `./gradlew :server:ngBuild`).
 
 ## Checklist disposition
 
@@ -62,7 +62,7 @@ One line per item of `archetype.md`'s edge-case checklist: how this ticket addre
 
 ## Expected breakage
 
-Existing test files (not this ticket's story tests) that the stubs will make fail without the stub's error, one bullet each, by the spec's file name: `` - `<name>.spec.ts`: <reason> ``. The red gate (`RedCheck`) tolerates failures only in files listed here (for example `app.spec.ts` when the shell now shows a stubbed screen). "None." if there is none.
+Existing test files (not this ticket's story tests) that the stubs will make fail without the stub's error, one bullet each, by the spec's file name: `` - `<name>.spec.ts`: <reason> ``. The red gate (`RedCheck`) tolerates failures only in files listed here (for example `app.spec.ts` when the shell now shows a stubbed screen, or a spec rendering an existing component that now uses a new directive or service without its providers: `RouterLink` without `provideRouter`, DFS-049). "None." if there is none.
 
 ## Open design notes (as of the design phase)
 

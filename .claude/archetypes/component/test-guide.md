@@ -37,10 +37,15 @@ Start from `skeletons/feature.spec.ts.tmpl`:
 - Render: `fixture = TestBed.createComponent(<Component>)`, `fixture.detectChanges()`, answer the requests the component makes on creation (`http.expectOne('/api/scans').flush([...])`), then `await settle(fixture)`.
 - Answer a request with its method and body checked: `const req = http.expectOne('/api/scans'); expect(req.request.method).toBe('POST'); expect(req.request.body).toEqual({...}); req.flush(body, { status: 201, statusText: 'Created' })`. A refusal: `req.flush({ code: 'RELATIVE_LOCATION', message: '...' }, { status: 400, statusText: 'Bad Request' })`.
 - Build API models with small functions and defaults (`entry()`, `progress()` in `scan-screen.spec.ts`), so a test states only what it is about.
+- Builders shared by several specs go in a non-spec file in the feature folder (`results/result-test-data.ts`, DFS-049); `tsconfig.app.json` compiles it too, so it uses no Vitest globals (`expect`, `vi`).
 
 ## Material harnesses
 
 Drive Material components through their harnesses, never their internal DOM: `const loader = TestbedHarnessEnvironment.loader(fixture)`, then `MatButtonHarness.with({ text: 'Start' })`, `MatChipInputHarness`, `MatChipGridHarness`, `MatExpansionPanelHarness`, `MatInputHarness.with({ selector: '.min-size' })`, `MatButtonToggleHarness`, `MatCheckboxHarness`, `MatProgressBarHarness`, each from `@angular/material/<component>/testing`. `await settle(fixture)` after each harness action. Read plain text from the page by CSS class (`.scan-status`, `.form-error`), the classes `design.md` names.
+
+## Routes (DFS-049)
+
+A spec rendering a component with a `routerLink`, or the routes themselves, provides `provideRouter([...])` with every route it navigates to; `RouterTestingHarness` needs the route in that list (an empty list fails with NG04002, not the stub's error). Call `TestBed.inject(Router).initialNavigation()` in `beforeEach`: the router starts listening to location changes only there, so without it `Location.back()` does not navigate (DFS-049 defect 1). A criterion about opening the page at a URL (a reload) sets the location first (`TestBed.inject(Location).go('/scans/s-1')`), then calls `initialNavigation()`, rather than navigating after the app has started.
 
 ## Browser APIs jsdom lacks
 
@@ -51,6 +56,7 @@ A wrapper's token gets a fake in the providers (`{ provide: EVENT_SOURCE, useVal
 - The happy path and every stated edge case, exactly as the scenarios describe them. Do not invent scenarios; report a gap instead.
 - Every page state `design.md` lists, with the exact text it gives.
 - The requests: method, URL, body (an untouched optional field absent), and that nothing else was sent (`http.verify()`).
+- A "nothing is shown" criterion (no link on a RUNNING row) reaches no stub on its own: put its assertions in a test that first renders the positive case, which does reach one (DFS-049).
 
 ## What not to do
 
@@ -58,3 +64,9 @@ A wrapper's token gets a fake in the providers (`{ provide: EVENT_SOURCE, useVal
 - Do not touch production code, `src/testing/` or `src/app/api/`.
 - Do not write files with a shell heredoc: TypeScript is full of apostrophes and backticks, which break it (DFS-040, DFS-041); use the editor.
 - Do not assert on a style or a font: jsdom computes neither from the stylesheets. A look is checked by hand on the built jar (checklist item 11), and its criterion listed in the test plan with Level `by hand on the built jar`.
+
+## The by-hand check without a person (DFS-049)
+
+The verifier can run checklist item 11 headlessly: start Chrome with `chrome --headless=new --remote-debugging-port=<port> --user-data-dir=<scratch folder>`, then drive it from the project's Node under `server/.gradle/nodejs` (it has a global `WebSocket` and `fetch`) over the DevTools protocol, using `Runtime.evaluate` to click and to read `textContent`. Caveats:
+- A scan started with `fetch('/api/scans')` does not appear in a list already loaded; reload the page first.
+- `navigator.clipboard.writeText` rejects in an unfocused headless page ("Document is not focused"), which exercises the failure path. `Emulation.setFocusEmulationEnabled` plus `Browser.grantPermissions` with `clipboardReadWrite` makes it succeed, and `readText()` confirms the copied text.
