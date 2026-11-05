@@ -19,7 +19,7 @@
 
 ## Entries
 
-### DFS-049.L-14: The component archetype says routing does not exist and forbids any `package.json` change
+### DFS-049.L-1: The component archetype says routing does not exist and forbids any `package.json` change
 
 - Status: proposed
 - Impact: local
@@ -30,7 +30,7 @@
 - Recommendation: apply; DFS-050, the next component ticket, would meet the same contradiction.
 - Decision:
 
-### DFS-049.L-15: The component design checklist misses breakage from new providers and the bundle size after stubs
+### DFS-049.L-2: The component design checklist misses breakage from new providers and the bundle size after stubs
 
 - Status: proposed
 - Impact: local
@@ -41,7 +41,7 @@
 - Recommendation: apply; both are cheap and both paid off in this run.
 - Decision:
 
-### DFS-049.L-16: The component test guide misses router and harness patterns, including the one behind defect 1
+### DFS-049.L-3: The component test guide misses router and harness patterns, including the one behind defect 1
 
 - Status: proposed
 - Impact: local
@@ -52,7 +52,7 @@
 - Recommendation: apply; item 4 would have prevented the only defect.
 - Decision:
 
-### DFS-049.L-17: The implementer leaves the architect's stub notes in doc comments, and the stubs gate misses them
+### DFS-049.L-4: The implementer leaves the architect's stub notes in doc comments, and the stubs gate misses them
 
 - Status: proposed
 - Impact: shared
@@ -63,7 +63,7 @@
 - Recommendation: apply the checklist line; park the gate token.
 - Decision:
 
-### DFS-049.L-18: The by-hand check on a component ticket can run in headless Chrome
+### DFS-049.L-5: The by-hand check on a component ticket can run in headless Chrome
 
 - Status: proposed
 - Impact: local
@@ -74,7 +74,7 @@
 - Recommendation: apply.
 - Decision:
 
-### DFS-049.L-19: Older specs keep a local `settle` and no `provideStubSurfacing()`
+### DFS-049.L-6: Older specs keep a local `settle` and no `provideStubSurfacing()`
 
 - Status: proposed
 - Impact: local
