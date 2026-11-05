@@ -1,0 +1,76 @@
+{
+  "defects": [],
+  "branch": "tickets/DFS-049-result-screen-tree-and-sets",
+  "ticket": "DFS-049",
+  "phases": [
+    {
+      "id": "design",
+      "commit": null,
+      "agent": "architect",
+      "artifacts": [],
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 79,
+          "wallClockSeconds": 807,
+          "outcome": "passed",
+          "note": "PASS touches DFS-049: 30 changed files, all inside touches; turns counted as the agent's tool uses; resumed after an interrupted Codex architect attempt that left uncommitted stubs and no design.md (no run recorded for it)"
+        }
+      ],
+      "after": [],
+      "status": "done"
+    },
+    {
+      "id": "tests",
+      "commit": null,
+      "agent": "test-author",
+      "artifacts": [],
+      "runs": [],
+      "after": [
+        "design"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "implement",
+      "commit": null,
+      "agent": "implementer",
+      "artifacts": [],
+      "runs": [],
+      "after": [
+        "tests"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "verify",
+      "commit": null,
+      "agent": "verifier",
+      "artifacts": [],
+      "runs": [],
+      "after": [
+        "implement"
+      ],
+      "status": "pending"
+    }
+  ],
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-049-result-screen-tree-and-sets",
+  "state": "running",
+  "archetype": {
+    "version": 1,
+    "name": "component"
+  },
+  "gates": [
+    {
+      "after": "design",
+      "status": "pending"
+    },
+    {
+      "after": "done",
+      "status": "pending"
+    }
+  ],
+  "executionNote": "User authorized temporary Codex frontend takeover while all Claude sessions are stopped. Preserve phase roles and gates; use inherited Codex model, not unavailable Claude model names."
+}

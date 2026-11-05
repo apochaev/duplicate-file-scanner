@@ -30,6 +30,13 @@
   font-family: monospace;
 }
 
+.scan-done {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
 .scan-counts,
 .scan-failure,
 .stream-lost {

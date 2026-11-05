@@ -1,7 +1,7 @@
 ---
 id: DFS-049
 title: Show a finished scan as a folder tree with a Sets tab
-status: ready
+status: in-progress
 type: feature
 scope: [build, docs]
 archetype: component

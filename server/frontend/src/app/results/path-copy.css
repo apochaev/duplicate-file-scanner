@@ -1,0 +1,19 @@
+:host {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-success {
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.copy-error {
+  color: var(--mat-sys-error, #b3261e);
+}
+
+.copy-fallback {
+  user-select: all;
+  overflow-wrap: anywhere;
+}

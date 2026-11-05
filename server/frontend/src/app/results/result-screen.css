@@ -1,0 +1,27 @@
+.result-header h2 {
+  margin: 8px 0 4px;
+}
+
+.result-locations {
+  margin: 4px 0 16px;
+  padding-left: 20px;
+  font-family: monospace;
+  overflow-wrap: anywhere;
+}
+
+.result-layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.result-error {
+  color: var(--mat-sys-error, #b3261e);
+}
+
+@media (max-width: 720px) {
+  .result-layout {
+    grid-template-columns: 1fr;
+  }
+}

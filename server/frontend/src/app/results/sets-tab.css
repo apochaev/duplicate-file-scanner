@@ -1,0 +1,50 @@
+.sets-summary {
+  margin: 8px 0;
+}
+
+.duplicate-set {
+  margin: 12px 0;
+}
+
+.set-copies {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.physical-copy {
+  padding: 4px 0;
+}
+
+.file-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+}
+
+.file-path {
+  font-family: monospace;
+  overflow-wrap: anywhere;
+}
+
+.hard-link {
+  margin-left: 24px;
+  padding-left: 12px;
+  border-left: 2px solid var(--mat-sys-outline-variant, #ccc);
+}
+
+.in-selected-folder {
+  background: var(--mat-sys-secondary-container, #e8def8);
+}
+
+time,
+.hard-link-label,
+.selected-label {
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.sets-error {
+  color: var(--mat-sys-error, #b3261e);
+}

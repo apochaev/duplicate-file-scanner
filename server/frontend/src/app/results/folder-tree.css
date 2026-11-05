@@ -1,0 +1,39 @@
+.folder-tree {
+  min-width: 0;
+}
+
+.folder-node {
+  flex-wrap: wrap;
+  min-height: 40px;
+}
+
+.folder-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.folder-toggle,
+.folder-toggle-space {
+  flex: none;
+  min-width: 40px;
+}
+
+.folder-select {
+  justify-content: flex-start;
+  height: auto;
+  min-height: 36px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+[aria-pressed='true'] {
+  background: var(--mat-sys-secondary-container, #e8def8);
+}
+
+.folder-error {
+  margin: 4px 0;
+  color: var(--mat-sys-error, #b3261e);
+  overflow-wrap: anywhere;
+}
