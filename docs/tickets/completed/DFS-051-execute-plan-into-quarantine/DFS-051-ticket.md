@@ -1,7 +1,7 @@
 ---
 id: DFS-051
 title: Execute a deletion plan into quarantine
-status: in-review
+status: done
 type: feature
 scope: [file-scanner, build]
 archetype: use-case
@@ -24,8 +24,8 @@ touches:
   - scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java
 blocked_reason:
 created: 2026-11-01
-updated: 2026-11-01
-completed:
+updated: 2026-11-05
+completed: 2026-11-05
 ---
 
 # DFS-051: Execute a deletion plan into quarantine
