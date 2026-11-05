@@ -1,7 +1,7 @@
 ---
 id: DFS-049
 title: Show a finished scan as a folder tree with a Sets tab
-status: in-progress
+status: in-review
 type: feature
 scope: [build, docs]
 archetype: component
@@ -19,7 +19,7 @@ touches:
   - docs/design/ui.md
 blocked_reason:
 created: 2026-11-01
-updated: 2026-11-02
+updated: 2026-11-05
 completed:
 ---
 
