@@ -110,7 +110,7 @@ Feature: Overlaps tab
   @AC-6
   Scenario: Comparing two folders from different roots
     Given "D:\Backup" is pinned
-    And /pair answers (sides sorted by folder) side a "C:\Photos" with filesWithCopy 340, totalFiles 3210, bytesWithCopy 1288490188, full false and side b "D:Backup" with filesWithCopy 2, totalFiles 2, bytesWithCopy 900, full true
+    And /pair answers (sides sorted by folder) side a "C:\Photos" with filesWithCopy 340, totalFiles 3210, bytesWithCopy 1288490188, full false and side b "D:\Backup" with filesWithCopy 2, totalFiles 2, bytesWithCopy 900, full true
     When the user selects "C:\Photos"
     Then /pair is requested with a "D:\Backup" and b "C:\Photos"
     And the Comparison block shows "C:\Photos: 340 / 3210 files · 1.2 GB" with "partial" before "D:\Backup: 2 / 2 files · 900 B" with "all have a copy in the other"
