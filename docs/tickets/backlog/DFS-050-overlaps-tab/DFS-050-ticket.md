@@ -1,13 +1,13 @@
 ---
 id: DFS-050
 title: Add the Overlaps tab to the result screen
-status: draft
+status: ready
 type: feature
 scope: [build, docs]
 archetype: component
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 gates: [design, done]
-# autorun: false       # pipeline tickets: true lets Claude start /story run itself
+autorun: true
 priority: high
 lane: frontend
 depends_on: [DFS-048, DFS-049]
