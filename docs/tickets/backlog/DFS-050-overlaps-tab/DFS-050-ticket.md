@@ -40,6 +40,7 @@ Milestone M-1 ("see the results of a scan"), step 5 of 5 (`docs/design/ui.md`, "
 1. **One Overlaps tab, stacked: the selected folder's summary, a Folders table, a Folder pairs table** (2026-11-05). With a folder selected in the tree, a header line shows that folder's own summary (`SummaryPage.folder` from `/summaries?under=<path>`); under "All folders" there is no header. Below it a "Folders" table of summaries (`/summaries?under=`), then a "Folder pairs" table (`/pairs?under=`), each with its own paginator, both filtered to the selection. Both questions, "can this folder go?" and "where are the copies?", are on screen at once. Not a "Folders | Pairs" toggle (a click to see the other half) and not the pairs table alone (it loses the ranking of the most redundant folders, and coverage spread over several folders shows in no single pair: `folder-overlap-analysis.md` decision 1).
 2. **Rows show exact fractions; "full" is a marker, never a verdict; one fixed note above the tables** (2026-11-05). Sizes and counts use the shared helpers (`formatBytes`, `plural` in `scans/scan-format.ts`, as DFS-049). The Folders table has the columns Folder (its path), "Copied elsewhere" (`<filesWithCopyElsewhere> / <totalFiles> files · <bytesWithCopyElsewhere>`), "Duplicates inside" (`<internalDuplicateFiles> files · <internalBytes>`) and "Total" (`<totalFiles> files · <totalBytes>`); a row with `totalFiles` > 0 and `filesWithCopyElsewhere` = `totalFiles` carries the chip "all copied elsewhere". The header for the selected folder (decision 1) reads the same way. The Folder pairs table has one row per pair with two side columns, A and B in the API's order, each reading `<folder>: <filesWithCopy> / <totalFiles> files · <bytesWithCopy>` followed by "all have a copy in the other" when the side's `full` is true and "partial" otherwise. Above the tables a fixed note reads "A copy elsewhere may itself be deleted by another choice; checking what is safe comes with the deletion plan." No row, chip or note uses "safe", "delete" or "can go" about a folder (`folder-overlap-analysis.md` decision 1: pairs are never combined into a verdict; DFS-022 checks a plan as a whole). Not percentages with bars (99.9% and 100% read alike, while one unique file decides whether a folder can go, and a full bar invites "delete") and not a sentence per row (long, hard to compare down a column).
 3. **Two folders are compared by pinning one in the tree and selecting the other** (2026-11-05). Every folder node of the tree (not "All folders") has a "Pin for comparison" action; at most one folder is pinned, and pinning another replaces it. While a folder is pinned, the Overlaps tab shows "Pinned: <path>" with an "Unpin" link at its top. With a folder pinned and a different folder selected, a "Comparison" block above the note (decision 2) shows `/pair?a=<pinned>&b=<selected>` as one row in decision 2's side format (sides in the API's order). Selecting the pinned folder itself, or "All folders", sends no `/pair` request and the block reads "Select another folder to compare with the pinned one". Two nested folders are sent, and the block shows the server's `NESTED_FOLDERS` message (for example "C:\Photos contains C:\Photos\2019"). The pin lasts while the result screen is open and is not part of the URL. Not two path fields (more controls, typed paths bring `RELATIVE_PATH` and `PATH_OUTSIDE_ROOTS` to the UI, slower) and not a later ticket (the Story names it, and `/pairs` covers only immediate folders: two ancestors such as `C:\Photos` and `D:\Backup`, CLAUDE.md's folder1/folder2 case, only `/pair` answers). The "Pin for comparison" action is added to DFS-049's `results/folder-tree.*`.
+4. **Overlaps is the first tab and selected on open; Sets is second** (2026-11-05). As U3 says: the result screen opens on the folder-level answer. Angular Material creates every tab's content on open and attaches only the active one, so the Sets tab still requests its first page on open (DFS-049 AC-6 holds), but DFS-049's `results/result-screen.spec.ts` tests that read the Sets cards must select the Sets tab first; the test-author updates them in the test phase (`sets-tab.spec.ts` mounts the tab alone and is unaffected). Not Sets first (contradicts U3, and the folder answer sits behind a click on every open) and not remembering the last tab (hidden state, a criterion more, little value).
 
 ## Acceptance criteria
 
@@ -52,6 +53,7 @@ The full ID of each criterion is `DFS-050.AC-<n>`.
 - **AC-5** Every folder node of the tree, but not "All folders", offers "Pin for comparison"; pinning a folder shows "Pinned: <path>" with an "Unpin" link on the Overlaps tab, pinning another folder replaces it, and "Unpin" removes the label and the Comparison block.
 - **AC-6** With a folder pinned and a different folder selected, the Overlaps tab requests `/pair` with `a=<pinned path>` and `b=<selected path>` and shows its result in a "Comparison" block as one pair row in AC-3's format.
 - **AC-7** With a folder pinned and the pinned folder itself or "All folders" selected, no `/pair` request is sent and the Comparison block reads "Select another folder to compare with the pinned one"; when `/pair` answers `400 NESTED_FOLDERS`, the block shows the server's message.
+- **AC-8** The result screen's tabs are "Overlaps" then "Sets", Overlaps is selected when the screen opens, and selecting "Sets" shows DFS-049's Sets tab with its cards.
 
 ## Scenarios
 
@@ -128,6 +130,14 @@ Feature: Overlaps tab
     And /pair answers 400 NESTED_FOLDERS with message "C:\Photos contains C:\Photos\2019"
     When the user selects "C:\Photos\2019"
     Then the Comparison block shows "C:\Photos contains C:\Photos\2019"
+
+  @AC-8
+  Scenario: The screen opens on Overlaps
+    Given scan "7f3c…" is COMPLETED and listSets answers one set
+    When its result screen is shown
+    Then the tabs read "Overlaps", "Sets" in that order and "Overlaps" is selected
+    When the user selects the "Sets" tab
+    Then the set's card is shown
 ```
 
 ## Scope
@@ -148,5 +158,4 @@ Feature: Overlaps tab
 
 ## Open questions
 
-- Becoming the landing tab: Overlaps first, Sets second (U3).
 - Archetype, gates and autorun.
