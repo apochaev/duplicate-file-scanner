@@ -121,7 +121,7 @@ public final class PreviewDeletionPlanService implements PreviewDeletionPlan {
             leftBehind.add(new LeftBehind(i, q, Math.max(0, left), Math.max(0, leftBytes)));
         }
 
-        String id = planId(operations, conflicts);
+        String id = PlanIds.of(operations, conflicts);
         return new Result.Success<>(new DeletionPlan(id, List.copyOf(operations), conflicts, totals, leftBehind));
     }
 
@@ -259,61 +259,5 @@ public final class PreviewDeletionPlanService implements PreviewDeletionPlan {
             case Source.FromRule r -> "";
             case Source.FromPick p -> p.pick().digest();
         };
-    }
-
-    private static String planId(List<Operation.Quarantine> operations, List<Conflict> conflicts) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        str(out, "dfs-deletion-plan/1");
-        num(out, operations.size());
-        for (Operation.Quarantine q : operations) {
-            str(out, "quarantine");
-            str(out, q.digest());
-            num(out, q.size());
-            num(out, q.links().size());
-            for (Path link : q.links()) {
-                str(out, link.toString());
-            }
-            str(out, q.keeper().toString());
-            source(out, q.source());
-        }
-        num(out, conflicts.size());
-        for (Conflict conflict : conflicts) {
-            str(out, conflict.digest());
-            num(out, conflict.sources().size());
-            for (Source s : conflict.sources()) {
-                source(out, s);
-            }
-        }
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(out.toByteArray()));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private static void source(ByteArrayOutputStream out, Source source) {
-        switch (source) {
-            case Source.FromRule r -> {
-                str(out, "rule");
-                num(out, r.index());
-                str(out, r.rule().keep().toString());
-                str(out, r.rule().quarantineIn().toString());
-            }
-            case Source.FromPick p -> {
-                str(out, "pick");
-                str(out, p.pick().digest());
-                str(out, p.pick().keep().toString());
-            }
-        }
-    }
-
-    private static void num(ByteArrayOutputStream out, long n) {
-        str(out, Long.toString(n));
-    }
-
-    private static void str(ByteArrayOutputStream out, String s) {
-        byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
-        out.writeBytes((bytes.length + ":").getBytes(StandardCharsets.US_ASCII));
-        out.writeBytes(bytes);
     }
 }

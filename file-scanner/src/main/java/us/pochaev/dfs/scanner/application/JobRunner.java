@@ -46,6 +46,23 @@ final class JobRunner<I, P, T> {
         void update(UnaryOperator<P> change);
     }
 
+    /**
+     * Told the job's terminal record once its task has recorded it, so a use case can act on the status that was
+     * actually recorded rather than on its work's own view (DFS-051: the manifest's {@code end} line).
+     */
+    @FunctionalInterface
+    interface Settled<P, T> {
+
+        /**
+         * Runs on the executor's thread, after the task's last {@link JobStore#update} has recorded COMPLETED,
+         * CANCELLED or FAILED, and before the task returns (or rethrows an {@code Error}). Never called for a job whose
+         * work did not run: cancelled while QUEUED, rejected by the executor, or found not QUEUED at pickup.
+         *
+         * @param job the job's terminal record, as stored
+         */
+        void settled(Job<P, T> job);
+    }
+
     /** The two results only the use case knows how to build. */
     interface Outcomes<P, T> {
 
@@ -77,18 +94,47 @@ final class JobRunner<I, P, T> {
      * @throws RuntimeException any other exception from the executor, rethrown after marking the job FAILED
      */
     Result<I> submit(I id, P initial, Work<P, T> work) {
+        return submit(id, initial, work, job -> {
+        });
+    }
+
+    private Result<I> submitInternal(I id, P initial, Work<P, T> work, Settled<P, T> settled) {
         store.create(id, new Job<>(JobStatus.QUEUED, initial, null, ""));
         try {
-            executor.execute(() -> runTask(id, work));
+            executor.execute(() -> runTask(id, work, settled));
         } catch (RejectedExecutionException e) {
             String failure = e.getClass().getName() + ": " + e.getMessage();
             markFailed(id, failure, true);
-            return new Result.Failure<>(ErrorCode.EXECUTOR_REJECTED, "executor rejected the plan verify: " + failure);
+            return new Result.Failure<>(ErrorCode.EXECUTOR_REJECTED, rejectionMessage(failure));
         } catch (RuntimeException e) {
             markFailed(id, e.getClass().getName() + ": " + e.getMessage(), true);
             throw e;
         }
         return new Result.Success<>(id);
+    }
+
+    /**
+     * As {@link #submit(Object, Object, Work)}, and once the task has recorded the job's terminal status, calls
+     * {@code settled} with the stored record (see {@link Settled}). The three-argument form becomes this one with a
+     * no-op {@code settled}. An exception from {@code settled} leaves the recorded status as it is: a
+     * {@code RuntimeException} propagates out of the task, and on the {@code Error} path it is added as suppressed to
+     * the {@code Error}, which is still rethrown.
+     *
+     * @throws NullPointerException if {@code settled} is null
+     */
+    Result<I> submit(I id, P initial, Work<P, T> work, Settled<P, T> settled) {
+        Objects.requireNonNull(settled, "settled");
+        return submitInternal(id, initial, work, settled);
+    }
+
+    /**
+     * The {@code EXECUTOR_REJECTED} message, naming no particular use case (DFS-051 decision 7c, DFS-042.L-3):
+     * {@code "executor rejected the task: " + failure}.
+     *
+     * @param failure {@code <exception class name>: <message>} of the rejection
+     */
+    static String rejectionMessage(String failure) {
+        return "executor rejected the task: " + failure;
     }
 
     private void markFailed(I id, String failure, boolean queuedToo) {
@@ -99,7 +145,7 @@ final class JobRunner<I, P, T> {
         });
     }
 
-    private void runTask(I id, Work<P, T> work) {
+    private void runTask(I id, Work<P, T> work, Settled<P, T> settled) {
         Optional<Job<P, T>> started = store.update(id, job -> job.status() == JobStatus.QUEUED
                 ? new Job<>(JobStatus.RUNNING, job.progress(), null, "") : job);
         if (started.isEmpty() || started.get().status() != JobStatus.RUNNING) {
@@ -115,9 +161,11 @@ final class JobRunner<I, P, T> {
             t = work.run(progress, stop);
         } catch (RuntimeException e) {
             markFailed(id, e.getClass().getName() + ": " + e.getMessage(), false);
+            settle(id, settled, null);
             return;
         } catch (Error e) {
             markFailed(id, e.getClass().getName() + ": " + e.getMessage(), false);
+            settle(id, settled, e);
             throw e;
         }
         store.update(id, job -> switch (job.status()) {
@@ -125,6 +173,23 @@ final class JobRunner<I, P, T> {
             case CANCELLING -> new Job<>(JobStatus.CANCELLED, job.progress(), outcomes.markCancelled(t), "");
             default -> job;
         });
+        settle(id, settled, null);
+    }
+
+    /** Calls the hook with the stored record; a hook exception is suppressed into {@code error} when there is one. */
+    private void settle(I id, Settled<P, T> settled, Error error) {
+        Optional<Job<P, T>> stored = store.find(id);
+        if (stored.isEmpty()) {
+            return;
+        }
+        try {
+            settled.settled(stored.get());
+        } catch (RuntimeException e) {
+            if (error == null) {
+                throw e;
+            }
+            error.addSuppressed(e);
+        }
     }
 
     /**

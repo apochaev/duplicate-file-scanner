@@ -1,0 +1,178 @@
+{
+  "ticket": "DFS-051",
+  "archetype": {
+    "name": "use-case",
+    "version": 9
+  },
+  "branch": "tickets/DFS-051-execute-plan-into-quarantine",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-051-execute-plan-into-quarantine",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 45,
+          "wallClockSeconds": 663,
+          "outcome": "passed",
+          "note": "PASS touches DFS-051: 33 changed files, all inside touches; two invocations as one run: the first stopped with API 429 (5-hour usage limit) before writing anything, its turns not reported; resumed after the reset with SendMessage (45 tool uses, 663 s, about 179k subagent tokens); ticket amended mid-run in c54c837 (decision 14, AC-22, AC-23) and the agent told by message"
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "high",
+          "turns": 26,
+          "wallClockSeconds": 195,
+          "outcome": "passed",
+          "note": "PASS touches DFS-051: 33 changed files, all inside touches; rework after design-gate feedback (manifest end line from the recorded job status), attempt counter reset per approve-with-feedback; 26 tool uses, 195 s, about 63k subagent tokens"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/design.md",
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/learnings.md",
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/plan.json",
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/JobRunner.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanExecutionProgress.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanExecutionService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanIds.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/PlanExecutionUseCases.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/factory/ScannerFactories.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ExecutionConfig.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ExecutionEvent.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ExecutionListener.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/MovedFile.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/OperationOutcome.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanExecutionId.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanExecutionReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanExecutionSnapshot.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/SkipCause.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/SkippedFile.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/command/CancelPlanExecution.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/command/StartPlanExecution.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/GetPlanExecutionResult.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/query/GetPlanExecutionStatus.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/JsonLinesManifestWriter.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioQuarantineDeleter.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/FileDeleter.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ManifestLine.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ManifestWriter.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ExecutionProperties.java",
+        "scanner-spring/src/main/java/us/pochaev/dfs/scannerspring/ScannerAutoConfiguration.java"
+      ],
+      "commit": "0d3fe588eccd6abe721627db858a685c149d360b"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 35,
+          "wallClockSeconds": 624,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-051: red and traceability pass; - red: 54 story tests fail with stubs, 1 other tests fail on the ticket's stub, 0 fail in declared classes, 555 other tests pass (3 skipped); - traceability: 23 criteria traced through 30 scenarios to tests and test-plan.md; about 168k subagent tokens"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/progress.md",
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PlanExecutionRealThreadTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PlanExecutionServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/PlanVerifyServiceTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/JsonLinesManifestWriterTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NioQuarantineDeleterTest.java",
+        "scanner-spring/src/test/java/us/pochaev/dfs/scannerspring/ScannerAutoConfigurationTest.java"
+      ],
+      "commit": "962c5f983312c0c6cc3e71eaeb511c8b32195611"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 32,
+          "wallClockSeconds": 459,
+          "outcome": "passed",
+          "note": "PASS green DFS-051: build and tests green: 607 passed, 3 skipped; PASS disabled DFS-051: no @Disabled tests in the 6 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-051: none of the 6 test files of the tests phase changed since 962c5f98; PASS touches DFS-051: 25 changed files, all inside touches; PASS stubs DFS-051: no stub markers in 167 production files; PASS traceability DFS-051: 23 criteria traced through 30 scenarios to tests and test-plan.md; PASS consistency DFS-051: plan.json parses; state running agrees with ticket status in-progress; about 118k subagent tokens"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/JobRunner.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanExecutionProgress.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanExecutionService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanIds.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PreviewDeletionPlanService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ExecutionConfig.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ExecutionEvent.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/MovedFile.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/OperationOutcome.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanExecutionId.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanExecutionReport.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/PlanExecutionSnapshot.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/SkippedFile.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/JsonLinesManifestWriter.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioQuarantineDeleter.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ManifestLine.java"
+      ],
+      "commit": "c7c737bff8833b620c93d3efcca3b81276f98d8a"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 32,
+          "wallClockSeconds": 309,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-051: plan.json parses; state running agrees with ticket status in-progress; two invocations as one run: the first stopped at the verifier's 20-turn cap with nothing written (29 tool uses, 219 s, about 148k subagent tokens); resumed with SendMessage to write verification.md and tick done-items; both invocations together: 32 tool uses, 309 s, about 156k subagent tokens"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/DFS-051-ticket.md",
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/learnings.md",
+        "docs/tickets/backlog/DFS-051-execute-plan-into-quarantine/verification.md"
+      ],
+      "commit": "c095771a263e97c7dd989763d1c20674bafb416e"
+    }
+  ],
+  "gates": [
+    {
+      "after": "design",
+      "status": "approved"
+    },
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": []
+}

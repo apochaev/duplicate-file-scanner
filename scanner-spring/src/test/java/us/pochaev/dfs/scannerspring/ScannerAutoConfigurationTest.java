@@ -7,6 +7,11 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.context.annotation.ImportCandidates;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import us.pochaev.dfs.scanner.domain.factory.PlanExecutionUseCases;
+import us.pochaev.dfs.scanner.domain.usecases.command.CancelPlanExecution;
+import us.pochaev.dfs.scanner.domain.usecases.command.StartPlanExecution;
+import us.pochaev.dfs.scanner.domain.usecases.query.GetPlanExecutionResult;
+import us.pochaev.dfs.scanner.domain.usecases.query.GetPlanExecutionStatus;
 import us.pochaev.dfs.scanner.domain.factory.PlanVerifyUseCases;
 import us.pochaev.dfs.scanner.domain.factory.ScanUseCases;
 import us.pochaev.dfs.scanner.domain.factory.ScannerFactories;
@@ -38,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -141,7 +147,7 @@ class ScannerAutoConfigurationTest {
             runner().withBean("scanExecutor", ExecutorService.class, () -> mine).run(context -> {
                 StartScan start = context.getBean(StartScan.class);
                 assertEquals(ScanStatus.COMPLETED, emptyScan(start, context.getBean(GetScanStatus.class)));
-                assertEquals(java.util.Set.of("scanExecutor", "planVerifyExecutor"),
+                assertEquals(java.util.Set.of("scanExecutor", "planVerifyExecutor", "planExecutionExecutor"),
                         context.getBeansOfType(ExecutorService.class).keySet());
                 assertSame(mine, context.getBean("scanExecutor"));
                 assertTrue(mine.count.get() >= 1, "tasks counted: " + mine.count.get());
@@ -411,6 +417,154 @@ class ScannerAutoConfigurationTest {
             us.pochaev.dfs.scanner.domain.model.PlanVerifyId id =
                     startOn(context.getBean(us.pochaev.dfs.scanner.domain.usecases.command.StartPlanVerify.class));
             assertInstanceOf(Result.Success.class, mine.status().status(id));
+        });
+    }
+
+    // ---- DFS-051: plan execution ----
+
+    private static final byte[] PHOTO = "abcdefghijklmnopqrstuvwxyz!".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+    private record Exec(ScanResult scan, DeletionPlan plan, Path b) {
+    }
+
+    @SuppressWarnings("unchecked")
+    private Exec execFixture() throws java.io.IOException {
+        List<FileEntry> entries = new java.util.ArrayList<>();
+        Path b = null;
+        for (String folder : List.of("A", "B")) {
+            Path p = tmp.resolve("lib").resolve(folder).resolve("photo.jpg");
+            java.nio.file.Files.createDirectories(p.getParent());
+            java.nio.file.Files.write(p, PHOTO);
+            java.nio.file.Files.setLastModifiedTime(p, java.nio.file.attribute.FileTime.from(Instant.EPOCH));
+            entries.add(new FileEntry(p, PHOTO.length, Instant.EPOCH));
+            b = p;
+        }
+        ScanResult scan = new ScanResult(List.of(tmp.resolve("lib")), List.of(),
+                List.of(new DuplicateSet(PHOTO.length, "d-photo", entries)), List.of(), 0);
+        DeletionPlan plan = ((Result.Success<DeletionPlan>) assertInstanceOf(Result.Success.class,
+                ScannerFactories.previewDeletionPlan().preview(scan, new PlanRequest(List.of(new KeepAndQuarantine(
+                        tmp.resolve("lib/A"), tmp.resolve("lib/B"))), List.of(), List.of())))).value();
+        return new Exec(scan, plan, b);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static us.pochaev.dfs.scanner.domain.model.JobStatus awaitExecution(
+            GetPlanExecutionStatus status, us.pochaev.dfs.scanner.domain.model.PlanExecutionId id) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+        us.pochaev.dfs.scanner.domain.model.JobStatus current;
+        do {
+            java.util.concurrent.locks.LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(1));
+            current = ((Result.Success<us.pochaev.dfs.scanner.domain.model.PlanExecutionSnapshot>)
+                    assertInstanceOf(Result.Success.class, status.status(id))).value().status();
+        } while (current != us.pochaev.dfs.scanner.domain.model.JobStatus.COMPLETED
+                && current != us.pochaev.dfs.scanner.domain.model.JobStatus.FAILED && System.nanoTime() < deadline);
+        return current;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static us.pochaev.dfs.scanner.domain.model.PlanExecutionId startExec(StartPlanExecution start, Exec fx) {
+        return ((Result.Success<us.pochaev.dfs.scanner.domain.model.PlanExecutionId>) assertInstanceOf(
+                Result.Success.class, start.start(fx.scan(), fx.plan()))).value();
+    }
+
+    private ApplicationContextRunner executionRunner() {
+        return runner().withPropertyValues(
+                "dfs.execution.manifest-folder=" + tmp.resolve("manifests"),
+                "dfs.execution.quarantine-anchors[0]=" + tmp);
+    }
+
+    @Test
+    @DisplayName("DFS-051.AC-20 The autoconfiguration provides the plan execution beans, manifest folder from the property")
+    void providesPlanExecutionBeans() throws Exception {
+        Exec fx = execFixture();
+        executionRunner().run(context -> {
+            // start through the bean first: on a failed context getBean throws with the startup failure as its cause
+            StartPlanExecution start = context.getBean(StartPlanExecution.class);
+            us.pochaev.dfs.scanner.domain.model.PlanExecutionId id = startExec(start, fx);
+
+            assertEquals(us.pochaev.dfs.scanner.domain.model.JobStatus.COMPLETED,
+                    awaitExecution(context.getBean(GetPlanExecutionStatus.class), id));
+            assertInstanceOf(Result.Success.class, context.getBean(GetPlanExecutionResult.class).result(id));
+            assertInstanceOf(Result.Success.class, context.getBean(CancelPlanExecution.class).cancel(id));
+            assertEquals(1, context.getBeansOfType(PlanExecutionUseCases.class).size());
+            assertEquals(1, context.getBeansOfType(StartPlanExecution.class).size());
+            assertEquals(1, context.getBeansOfType(CancelPlanExecution.class).size());
+            assertEquals(1, context.getBeansOfType(GetPlanExecutionStatus.class).size());
+            assertEquals(1, context.getBeansOfType(GetPlanExecutionResult.class).size());
+            assertTrue(context.containsBean("planExecutionExecutor"));
+            assertFalse(java.nio.file.Files.exists(fx.b()));
+            assertTrue(java.nio.file.Files.exists(tmp.resolve(".dfs-quarantine").resolve(id.value().toString())
+                    .resolve(tmp.relativize(fx.b()))));
+            assertTrue(java.nio.file.Files.exists(tmp.resolve("manifests").resolve(id.value() + ".jsonl")));
+        });
+    }
+
+    @Test
+    @DisplayName("DFS-051.AC-20 With no property the manifest folder is under the user home and nothing is created at startup")
+    void defaultManifestFolderAndNothingCreatedAtStartup() throws Exception {
+        Exec fx = execFixture();
+        // exercise the use case first: a pure configuration assertion passes against the stubs
+        executionRunner().run(context -> {
+            us.pochaev.dfs.scanner.domain.model.PlanExecutionId id =
+                    startExec(context.getBean(StartPlanExecution.class), fx);
+            assertEquals(us.pochaev.dfs.scanner.domain.model.JobStatus.COMPLETED,
+                    awaitExecution(context.getBean(GetPlanExecutionStatus.class), id));
+        });
+        runner().run(context -> assertEquals(Path.of(System.getProperty("user.home"), ".dfs", "manifests"),
+                context.getBean(us.pochaev.dfs.scanner.domain.model.ExecutionConfig.class).manifestFolder()));
+        Path neverCreated = tmp.resolve("fresh-" + java.util.UUID.randomUUID());
+        runner().withPropertyValues("dfs.execution.manifest-folder=" + neverCreated).run(context -> {
+            assertEquals(neverCreated, context.getBean(us.pochaev.dfs.scanner.domain.model.ExecutionConfig.class)
+                    .manifestFolder());
+            assertFalse(java.nio.file.Files.exists(neverCreated));
+        });
+    }
+
+    @Test
+    @DisplayName("DFS-051.AC-20 An app's own planExecutionExecutor replaces the default")
+    void appPlanExecutionExecutorReplacesDefault() throws Exception {
+        Exec fx = execFixture();
+        CountingExecutor mine = new CountingExecutor();
+        try {
+            executionRunner().withBean("planExecutionExecutor", ExecutorService.class, () -> mine).run(context -> {
+                us.pochaev.dfs.scanner.domain.model.PlanExecutionId id =
+                        startExec(context.getBean(StartPlanExecution.class), fx);
+                assertEquals(us.pochaev.dfs.scanner.domain.model.JobStatus.COMPLETED,
+                        awaitExecution(context.getBean(GetPlanExecutionStatus.class), id));
+                assertSame(mine, context.getBean("planExecutionExecutor"));
+                assertTrue(mine.count.get() >= 1, "tasks counted: " + mine.count.get());
+            });
+        } finally {
+            mine.shutdownNow();
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-051.AC-20 An app's own StartPlanExecution bean replaces the default")
+    void appStartPlanExecutionReplacesDefault() throws Exception {
+        Exec fx = execFixture();
+        StartPlanExecution mine = new StartPlanExecution() {
+            @Override
+            public Result<us.pochaev.dfs.scanner.domain.model.PlanExecutionId> start(ScanResult scan,
+                                                                                         DeletionPlan plan) {
+                return new Result.Failure<>(ErrorCode.PLAN_EDITED, "mine");
+            }
+
+            @Override
+            public Result<us.pochaev.dfs.scanner.domain.model.PlanExecutionId> start(ScanResult scan,
+                    DeletionPlan plan, us.pochaev.dfs.scanner.domain.model.ExecutionListener listener) {
+                return new Result.Failure<>(ErrorCode.PLAN_EDITED, "mine");
+            }
+        };
+        // exercise the factory first: it is the default the bean backs off from
+        PlanExecutionUseCases own = ScannerFactories.planExecutionUseCases(Runnable::run,
+                new us.pochaev.dfs.scanner.domain.model.ExecutionConfig(tmp.resolve("own"), List.of(tmp)));
+        us.pochaev.dfs.scanner.domain.model.PlanExecutionId ran = startExec(own.start(), fx);
+        assertEquals(us.pochaev.dfs.scanner.domain.model.JobStatus.COMPLETED, awaitExecution(own.status(), ran));
+        executionRunner().withBean("myStartPlanExecution", StartPlanExecution.class, () -> mine).run(context -> {
+            assertSame(mine, context.getBean(StartPlanExecution.class));
+            assertEquals(1, context.getBeansOfType(StartPlanExecution.class).size());
+            assertEquals(1, context.getBeansOfType(GetPlanExecutionStatus.class).size());
         });
     }
 }

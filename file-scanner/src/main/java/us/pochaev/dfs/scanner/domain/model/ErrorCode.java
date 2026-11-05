@@ -28,7 +28,10 @@ public enum ErrorCode {
      * follows (DFS-032 decision 4). A scan's start location is resolved instead.
      */
     LOCATION_IS_LINK,
-    /** The caller-supplied executor rejected the scan's or the plan verify's task (DFS-018, DFS-042 decision 5). */
+    /**
+     * The caller-supplied executor rejected the scan's, the plan verify's or the plan execution's task (DFS-018,
+     * DFS-042 decision 5, DFS-051 decision 7).
+     */
     EXECUTOR_REJECTED,
     /** {@code GetScanResult} on a scan whose status is not COMPLETED; the message names the status. */
     SCAN_NOT_COMPLETED,
@@ -54,5 +57,36 @@ public enum ErrorCode {
      * {@code GetPlanVerifyResult} on a job whose status is QUEUED, RUNNING, CANCELLING or FAILED (DFS-042 decision 3);
      * the message names the status.
      */
-    PLAN_VERIFY_NOT_FINISHED
+    PLAN_VERIFY_NOT_FINISHED,
+    /**
+     * {@code StartPlanExecution} was given a plan whose {@code conflicts} is not empty (DFS-051 decision 4); the message
+     * names the first conflict's digest. Nothing is recorded, written or moved.
+     */
+    PLAN_HAS_CONFLICTS,
+    /**
+     * The {@link PlanExecutionId} was never returned by {@code StartPlanExecution} of the same use-case set in this
+     * process (DFS-051 decision 7); the message names the ID.
+     */
+    UNKNOWN_PLAN_EXECUTION,
+    /**
+     * {@code GetPlanExecutionResult} on a run whose status is QUEUED, RUNNING, CANCELLING or FAILED (DFS-051 decision
+     * 9); the message names the status.
+     */
+    PLAN_EXECUTION_NOT_FINISHED,
+    /**
+     * The manifest folder, or the run's manifest file in it, could not be created or written (DFS-051 decision 13);
+     * the message names the folder and the I/O error. Nothing is recorded or moved.
+     */
+    MANIFEST_UNWRITABLE,
+    /**
+     * A plan's {@link DeletionPlan#id()} does not match the ID recomputed from its operations and conflicts with
+     * DFS-022's canonical encoding (DFS-051 decision 14a); the message names both IDs.
+     */
+    PLAN_EDITED,
+    /**
+     * A plan operation's links are not exactly one physical copy's links in the scan's set with its digest, or its
+     * keeper is not a link of a different physical copy of that set (DFS-051 decision 14b); the message names the
+     * operation's index and digest.
+     */
+    KEEPER_NOT_SEPARATE_COPY
 }
