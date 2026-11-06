@@ -1,13 +1,13 @@
 ---
 id: DFS-054
 title: Preview a deletion plan through the server API
-status: draft
+status: ready
 type: feature
 scope: [build]
 archetype: endpoint
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 gates: [design, done]
-# autorun: false       # pipeline tickets: true lets Claude start /story run itself
+autorun: true
 priority: high
 lane: backend
 depends_on: []
