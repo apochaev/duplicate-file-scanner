@@ -90,7 +90,7 @@
       "after": [
         "tests"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -100,10 +100,30 @@
           "wallClockSeconds": 367,
           "outcome": "failed-gate",
           "note": "FAIL green DFS-055: 1 problem (test defect, routed to test-author as defect 1); PASS stubs: no stub markers in 202 production files; PASS touches: 23 changed files, all inside touches; PASS disabled: no @Disabled tests in the 6 test files of the tests phase; implementation left uncommitted in the worktree for reconciliation after the test fix"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "reconciled after the tests rework (defect 1), implementer not relaunched; implementation committed here because the failed-gate attempt had no commit: PASS green: 804 passed, 3 skipped; PASS disabled; PASS freeze: none of the 6 test files of the tests phase changed since 2ccb7d30; PASS touches: 23 changed files, all inside touches; PASS stubs: no stub markers in 202 production files; PASS traceability: 4 criteria traced through 9 scenarios; PASS consistency: state running agrees with ticket status in-progress"
         }
       ],
-      "artifacts": [],
-      "commit": null
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/tickets/backlog/DFS-055-serialize-plan-executions/learnings.md",
+        "docs/tickets/backlog/DFS-055-serialize-plan-executions/plan.json",
+        "docs/tickets/backlog/DFS-055-serialize-plan-executions/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/JobRunner.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanExecutionProgress.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/PlanExecutionService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/FileChannelExecutionLock.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/InMemoryJobStore.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/ManifestWriter.java"
+      ],
+      "commit": "e22db1709c49f4ecfdc89480f7e46c700d5d6e98"
     },
     {
       "id": "verify",
@@ -111,7 +131,7 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [],
       "artifacts": [],
       "commit": null
