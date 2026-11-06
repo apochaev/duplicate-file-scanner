@@ -35,6 +35,10 @@ Milestone M-3 ("build and check a plan"), first step (`docs/design/ui.md`, "Mile
 - **The server's conventions (DFS-040, DFS-047, DFS-048):** a COMPLETED scan only (`409 SCAN_NOT_COMPLETED`), `404 UNKNOWN_SCAN`, paths absolute (`400 RELATIVE_PATH`) and inside a scan root (`403 PATH_OUTSIDE_ROOTS`), `{code, message}` errors, the API's own records (never core types), the spec committed as `server/frontend/openapi.json` and `./gradlew :server:updateOpenApi`.
 - **Analysis decision 1** (`docs/design/folder-overlap-analysis.md`): pairs are never combined into a verdict; only the whole-plan check says what is safe. This endpoint is that check.
 
+## Decisions
+
+1. **Previewing creates a frozen plan the server keeps** (2026-11-05). `POST /api/scans/{id}/plans` takes the whole request (rules, exceptions, picks), previews it with `PreviewDeletionPlan`, keeps the resulting plan with the scan in memory (lost on restart, like scans) and answers `201` with `Location: /api/scans/{id}/plans/{planId}` and the plan's summary; `GET` on that location reads it back. The plan ID is DFS-022's content-derived ID, so the same request previews to the same ID. The draft lives in the browser; editing it and previewing again posts a new request and gets a new ID (U7, D4). The later drift, verify and execute endpoints name `{planId}`, so the browser never resends or rebuilds a plan, and a big plan's operations can be paged from the kept copy. Not a stateless preview answering the whole plan (every later step recomputes, no paging, and "frozen" rests on the client resending the same request) and not a server-held draft edited rule by rule (many endpoints and a mutable plan on the server, against D4, where only previewed plans are fixed).
+
 ## Acceptance criteria
 
 The full ID of each criterion is `DFS-054.AC-<n>`.
@@ -72,8 +76,7 @@ Feature: Plan preview API
 
 ## Open questions
 
-- Endpoint shape: `POST /api/scans/{id}/plan` taking the whole request and answering the whole plan, or a server-held plan edited rule by rule?
-- Whether the server keeps previewed plans by ID (for the later drift, verify and execute steps) or the client sends the plan back each time.
+- How many previewed plans the server keeps per scan, and for how long.
 - Response size on a big scan: the whole operation list, or totals plus paged operations grouped by rule?
 - How the left-behind counts and conflicts are presented in the API's records.
 - Archetype (`endpoint` likely), gates (a deletion-planning ticket: the design gate is recommended) and autorun.
