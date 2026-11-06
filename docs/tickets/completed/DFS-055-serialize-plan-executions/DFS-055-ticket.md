@@ -1,7 +1,7 @@
 ---
 id: DFS-055
 title: Run plan executions one at a time
-status: in-review
+status: done
 type: fix
 scope: [file-scanner, build, docs]
 archetype: use-case
@@ -23,7 +23,7 @@ touches:
 blocked_reason:
 created: 2026-11-05
 updated: 2026-11-05
-completed:
+completed: 2026-11-05
 ---
 
 # DFS-055: Run plan executions one at a time
