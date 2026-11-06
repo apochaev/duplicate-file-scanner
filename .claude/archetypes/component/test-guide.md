@@ -43,6 +43,8 @@ Start from `skeletons/feature.spec.ts.tmpl`:
 
 Drive Material components through their harnesses, never their internal DOM: `const loader = TestbedHarnessEnvironment.loader(fixture)`, then `MatButtonHarness.with({ text: 'Start' })`, `MatChipInputHarness`, `MatChipGridHarness`, `MatExpansionPanelHarness`, `MatInputHarness.with({ selector: '.min-size' })`, `MatButtonToggleHarness`, `MatCheckboxHarness`, `MatProgressBarHarness`, each from `@angular/material/<component>/testing`. `await settle(fixture)` after each harness action. Read plain text from the page by CSS class (`.scan-status`, `.form-error`), the classes `design.md` names.
 
+A spec that selects a tab through `MatTabGroupHarness` and then `settle()`s provides `{provide: MAT_TABS_CONFIG, useValue: {animationDuration: '0ms'}}` in its own `providers`: in jsdom a newly selected tab's content attaches only after about 500 ms of real timers, longer than `settle()` waits. Otherwise the implementer can only turn the animation off in the product's template (DFS-050.L-3).
+
 ## Routes (DFS-049)
 
 A spec rendering a component with a `routerLink`, or the routes themselves, provides `provideRouter([...])` with every route it navigates to; `RouterTestingHarness` needs the route in that list (an empty list fails with NG04002, not the stub's error). Call `TestBed.inject(Router).initialNavigation()` in `beforeEach`: the router starts listening to location changes only there, so without it `Location.back()` does not navigate (DFS-049 defect 1). A criterion about opening the page at a URL (a reload) sets the location first (`TestBed.inject(Location).go('/scans/s-1')`), then calls `initialNavigation()`, rather than navigating after the app has started.
@@ -64,6 +66,7 @@ A wrapper's token gets a fake in the providers (`{ provide: EVENT_SOURCE, useVal
 - Do not touch production code, `src/testing/` or `src/app/api/`.
 - Do not write files with a shell heredoc: TypeScript is full of apostrophes and backticks, which break it (DFS-040, DFS-041); use the editor.
 - Do not assert on a style or a font: jsdom computes neither from the stylesheets. A look is checked by hand on the built jar (checklist item 11), and its criterion listed in the test plan with Level `by hand on the built jar`.
+- Do not write a Windows path in a string literal with single backslashes: `'D:\Backup'` is `'D:Backup'` in JavaScript. Double them (`'D:\\Backup'`) or use `String.raw`. The red run cannot catch this, since the test fails on the stub either way; it shows up only at implement's green (DFS-050.L-2).
 
 ## The by-hand check without a person (DFS-049)
 

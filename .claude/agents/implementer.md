@@ -35,6 +35,7 @@ Read nothing else. Do not read other tickets or source files `design.md` and `to
 3. Keep every layer boundary `design.md` states. Do not add a cross-layer dependency the ArchUnit tests do not already allow — if the implementation needs one, that is a design change: report it rather than working around the check.
 4. Run `./gradlew build` until it is green, including the ArchUnit layering tests and `ModuleExportsTest`. It also builds the frontend and runs its Vitest tests (`:server:npmTest`), so it is the same command for a TypeScript story.
 5. Append a short note to `progress.md`: what you implemented, the commit you expect. If you deviated from `design.md` for a reason the architect did not anticipate, append it to `learnings.md` rather than only fixing it silently.
+6. Before handing off, check each docs done-item part by part: find every section, table and row it names in `git diff`, and confirm a new Markdown bullet starts its own line rather than the end of the previous one (DFS-050.L-5).
 
 ## Boundaries
 

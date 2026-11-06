@@ -15,6 +15,7 @@ You are making the architect's stubs pass the tests the test-author already wrot
 - **Streams and wrappers.** Subscribe in `ngOnInit` only when the resource is still changing; unsubscribe on destroy (`inject(DestroyRef).onDestroy(() => this.stream?.unsubscribe())`, as DFS-041's `ScanRow`); the wrapper closes the browser object on terminal status and on unsubscribe (DFS-041's `ScanEventsService`).
 - **Templates.** `@if`/`@for (...; track id)`/`@empty`; `role="alert"` on error messages; labels on regions and fields (`aria-label`, `mat-label`); `<time [attr.datetime]>` for times. Text exactly as `design.md`'s "Page states" gives it: the tests compare it.
 - **Material.** Import each component's module in the component that uses it (`MatChipsModule`, `MatExpansionModule`, `MatButtonToggleModule`, ...). Text styles come from the theme's typography tokens; do not set a `font-family` (DFS-044).
+- **Tabs that load data.** Content placed directly inside a `mat-tab` is created once and only detached when another tab is selected, so a component that loads on input changes keeps requesting while hidden. Wrap it in `<ng-template matTabContent>`: it is created when its tab is shown and destroyed when left (DFS-050.L-4).
 - **Formatting.** Pure helpers in a `<feature>-format.ts` (DFS-041's `statusLabel`, `formatBytes`), so a component stays declarative and the helper is testable on its own.
 
 ## Writing files
