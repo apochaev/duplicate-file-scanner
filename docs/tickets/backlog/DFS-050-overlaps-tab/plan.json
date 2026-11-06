@@ -1,0 +1,176 @@
+{
+  "ticket": "DFS-050",
+  "archetype": {
+    "name": "component",
+    "version": 2
+  },
+  "branch": "tickets/DFS-050-overlaps-tab",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-050-overlaps-tab",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 52,
+          "wallClockSeconds": 674,
+          "outcome": "passed",
+          "note": "PASS touches DFS-050: 14 changed files, all inside touches; turns counted as the agent's tool uses"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-050-overlaps-tab/DFS-050-ticket.md",
+        "docs/tickets/backlog/DFS-050-overlaps-tab/design.md",
+        "docs/tickets/backlog/DFS-050-overlaps-tab/learnings.md",
+        "docs/tickets/backlog/DFS-050-overlaps-tab/progress.md",
+        "server/frontend/src/app/results/folder-tree.css",
+        "server/frontend/src/app/results/folder-tree.html",
+        "server/frontend/src/app/results/folder-tree.ts",
+        "server/frontend/src/app/results/overlaps-tab.css",
+        "server/frontend/src/app/results/overlaps-tab.html",
+        "server/frontend/src/app/results/overlaps-tab.ts",
+        "server/frontend/src/app/results/result-format.ts",
+        "server/frontend/src/app/results/result-screen.html",
+        "server/frontend/src/app/results/result-screen.ts"
+      ],
+      "commit": "18ccda9bc86731d5bc61cba609ac17686feffa3e"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 22,
+          "wallClockSeconds": 276,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-050: red and traceability pass; - red: 17 story tests fail with stubs, 23 other tests fail on the ticket's stub, 0 fail in declared classes, 711 other tests pass (3 skipped); - traceability: 10 criteria traced through 13 scenarios to tests and test-plan.md; turns counted as the agent's tool uses"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 15,
+          "wallClockSeconds": 70,
+          "outcome": "passed",
+          "note": "reopened for defect 1, verified with green instead of test-phase (the implementation is on disk): PASS green DFS-050: build and tests green: 735 passed, 3 skipped; turns counted as the agent's tool uses"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-050-overlaps-tab/progress.md",
+        "docs/tickets/backlog/DFS-050-overlaps-tab/test-plan.md",
+        "server/frontend/src/app/results/folder-tree.spec.ts",
+        "server/frontend/src/app/results/overlaps-tab.spec.ts",
+        "server/frontend/src/app/results/result-screen.spec.ts",
+        "server/frontend/src/app/results/result-test-data.ts"
+      ],
+      "commit": "50c4e2bf91015d131d2e3fc6ed90d905d8d881d2"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 33,
+          "wallClockSeconds": 480,
+          "outcome": "failed-gate",
+          "note": "FAIL green DFS-050: 4 problems, all single-backslash path literals in the specs (folder-tree.spec.ts AC-5; result-screen.spec.ts AC-5, AC-6, AC-8); routed to test-author as defect 1; implementation left uncommitted in the worktree; turns counted as the agent's tool uses; reconciled after defect 1 against the working tree, then committed: PASS green DFS-050: build and tests green: 735 passed, 3 skipped; PASS disabled DFS-050: no @Disabled tests in the 3 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-050: none of the 3 test files of the tests phase changed since 50c4e2bf; PASS touches DFS-050: 21 changed files, all inside touches; PASS stubs DFS-050: no stub markers in 178 production files; PASS traceability DFS-050: 10 criteria traced through 13 scenarios to tests and test-plan.md; PASS consistency DFS-050: plan.json parses; state running agrees with ticket status in-progress"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 5,
+          "wallClockSeconds": 41,
+          "outcome": "passed",
+          "note": "sent back by the user at the done gate for the docs/design/ui.md fix only: PASS green DFS-050: build and tests green: 735 passed, 3 skipped; PASS disabled DFS-050: no @Disabled tests in the 3 test files of the tests phase; 0 skipped by an assumption; PASS freeze DFS-050: none of the 3 test files of the tests phase changed since 50c4e2bf; PASS touches DFS-050: 22 changed files, all inside touches; PASS stubs DFS-050: no stub markers in 178 production files; PASS traceability DFS-050: 10 criteria traced through 13 scenarios to tests and test-plan.md; PASS consistency DFS-050: plan.json parses; state running agrees with ticket status in-progress; turns counted as the agent's tool uses"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-050-overlaps-tab/learnings.md",
+        "docs/tickets/backlog/DFS-050-overlaps-tab/progress.md",
+        "server/frontend/src/app/results/folder-tree.ts",
+        "server/frontend/src/app/results/overlaps-tab.html",
+        "server/frontend/src/app/results/overlaps-tab.ts",
+        "server/frontend/src/app/results/result-format.ts",
+        "server/frontend/src/app/results/result-screen.html",
+        "server/frontend/src/app/results/result-screen.ts"
+      ],
+      "commit": "68559a6997407d6fe6d38d8ed37c8660286e53ec"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 31,
+          "wallClockSeconds": 385,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-050: plan.json parses; state running agrees with ticket status in-progress; verdict: 10/10 criteria met, one docs done-item left unticked (ui.md milestones, run-on bullet); turns counted as the agent's tool uses"
+        },
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 18,
+          "wallClockSeconds": 75,
+          "outcome": "passed",
+          "note": "rerun after the user sent implement back at the done gate (docs fix): PASS consistency DFS-050: plan.json parses; state running agrees with ticket status in-progress; verdict: 10/10 criteria met, every done-item ticked, no open defect; turns counted as the agent's tool uses"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-050-overlaps-tab/DFS-050-ticket.md",
+        "docs/tickets/backlog/DFS-050-overlaps-tab/learnings.md",
+        "docs/tickets/backlog/DFS-050-overlaps-tab/verification.md"
+      ],
+      "commit": "1a0be2d8de7634c297825a60b93be429e954aec8"
+    }
+  ],
+  "gates": [
+    {
+      "after": "design",
+      "status": "approved"
+    },
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": [
+    {
+      "id": 1,
+      "phase": "implement",
+      "route": "test-author",
+      "summary": "green: 4 story tests compare against single-backslash path literals ('D:\\Backup' is 'D:Backup' in JS) in folder-tree.spec.ts (AC-5) and result-screen.spec.ts (AC-5, AC-6, AC-8); confirmed by reading the specs",
+      "status": "closed"
+    }
+  ]
+}
