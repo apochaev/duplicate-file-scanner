@@ -115,17 +115,7 @@ final class JobRunner<I, P, T> {
 
     private Result<I> submitInternal(I id, P initial, Work<P, T> work, Settled<P, T> settled) {
         store.create(id, new Job<>(JobStatus.QUEUED, initial, null, ""));
-        try {
-            executor.execute(() -> runTask(id, work, settled));
-        } catch (RejectedExecutionException e) {
-            String failure = e.getClass().getName() + ": " + e.getMessage();
-            markFailed(id, failure, true);
-            return new Result.Failure<>(ErrorCode.EXECUTOR_REJECTED, rejectionMessage(failure));
-        } catch (RuntimeException e) {
-            markFailed(id, e.getClass().getName() + ": " + e.getMessage(), true);
-            throw e;
-        }
-        return new Result.Success<>(id);
+        return dispatch(id, work, settled);
     }
 
     /**
@@ -152,7 +142,10 @@ final class JobRunner<I, P, T> {
      * @throws NullPointerException if an argument is null
      */
     Optional<I> claim(I id, P initial, Predicate<? super Job<P, T>> blocks) {
-        throw new UnsupportedOperationException("not implemented: DFS-055");
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(initial, "initial");
+        Objects.requireNonNull(blocks, "blocks");
+        return store.createUnless(id, new Job<>(JobStatus.QUEUED, initial, null, ""), blocks);
     }
 
     /**
@@ -162,7 +155,19 @@ final class JobRunner<I, P, T> {
      * @throws NullPointerException if an argument is null
      */
     void abandon(I id, String failure) {
-        throw new UnsupportedOperationException("not implemented: DFS-055");
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(failure, "failure");
+        boolean[] changed = {false};
+        Optional<Job<P, T>> after = store.update(id, job -> {
+            if (job.status() == JobStatus.QUEUED) {
+                changed[0] = true;
+                return new Job<>(JobStatus.FAILED, job.progress(), null, failure);
+            }
+            return job;
+        });
+        if (changed[0] && after.isPresent()) {
+            outcomes.ended(after.get());
+        }
     }
 
     /**
@@ -174,7 +179,20 @@ final class JobRunner<I, P, T> {
      * @throws NullPointerException if an argument is null
      */
     Result<I> dispatch(I id, Work<P, T> work, Settled<P, T> settled) {
-        throw new UnsupportedOperationException("not implemented: DFS-055");
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(work, "work");
+        Objects.requireNonNull(settled, "settled");
+        try {
+            executor.execute(() -> runTask(id, work, settled));
+        } catch (RejectedExecutionException e) {
+            String failure = e.getClass().getName() + ": " + e.getMessage();
+            markFailed(id, failure, true);
+            return new Result.Failure<>(ErrorCode.EXECUTOR_REJECTED, rejectionMessage(failure));
+        } catch (RuntimeException e) {
+            markFailed(id, e.getClass().getName() + ": " + e.getMessage(), true);
+            throw e;
+        }
+        return new Result.Success<>(id);
     }
 
     /**
@@ -188,11 +206,19 @@ final class JobRunner<I, P, T> {
     }
 
     private void markFailed(I id, String failure, boolean queuedToo) {
-        store.update(id, job -> {
+        boolean[] fromQueued = {false};
+        Optional<Job<P, T>> after = store.update(id, job -> {
             boolean live = job.status() == JobStatus.RUNNING || job.status() == JobStatus.CANCELLING
                     || (queuedToo && job.status() == JobStatus.QUEUED);
-            return live ? new Job<>(JobStatus.FAILED, job.progress(), null, failure) : job;
+            if (!live) {
+                return job;
+            }
+            fromQueued[0] = job.status() == JobStatus.QUEUED;
+            return new Job<>(JobStatus.FAILED, job.progress(), null, failure);
         });
+        if (fromQueued[0] && after.isPresent()) {
+            outcomes.ended(after.get());
+        }
     }
 
     private void runTask(I id, Work<P, T> work, Settled<P, T> settled) {
@@ -201,6 +227,14 @@ final class JobRunner<I, P, T> {
         if (started.isEmpty() || started.get().status() != JobStatus.RUNNING) {
             return;
         }
+        try {
+            runWork(id, work, settled);
+        } finally {
+            store.find(id).ifPresent(outcomes::ended);
+        }
+    }
+
+    private void runWork(I id, Work<P, T> work, Settled<P, T> settled) {
         Progress<P> progress = change -> store.update(id, job ->
                 job.status() == JobStatus.RUNNING || job.status() == JobStatus.CANCELLING
                         ? new Job<>(job.status(), change.apply(job.progress()), job.result(), job.failure())
@@ -250,12 +284,20 @@ final class JobRunner<I, P, T> {
      */
     Optional<Job<P, T>> cancel(I id) {
         Objects.requireNonNull(id, "id");
-        return store.update(id, job -> switch (job.status()) {
-            case QUEUED -> new Job<>(JobStatus.CANCELLED, job.progress(),
-                    outcomes.cancelledBeforeStart(job.progress()), "");
+        boolean[] fromQueued = {false};
+        Optional<Job<P, T>> after = store.update(id, job -> switch (job.status()) {
+            case QUEUED -> {
+                fromQueued[0] = true;
+                yield new Job<>(JobStatus.CANCELLED, job.progress(),
+                        outcomes.cancelledBeforeStart(job.progress()), "");
+            }
             case RUNNING -> new Job<>(JobStatus.CANCELLING, job.progress(), null, "");
             default -> job;
         });
+        if (fromQueued[0] && after.isPresent()) {
+            outcomes.ended(after.get());
+        }
+        return after;
     }
 
     /**

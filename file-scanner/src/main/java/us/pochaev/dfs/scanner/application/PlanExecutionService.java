@@ -236,7 +236,52 @@ public final class PlanExecutionService implements StartPlanExecution, CancelPla
     private Result<PlanExecutionId> launch(ScanResult scan, DeletionPlan plan, ExecutionListener listener,
                                            List<Operation.Quarantine> operations,
                                            List<Map<Path, FileEntry>> entriesPerOperation, long bytesTotal) {
-        throw new UnsupportedOperationException("not implemented: DFS-055");
+        Path folder = config.manifestFolder();
+        ExecutionLock.Acquisition acquisition;
+        try {
+            acquisition = lock.acquire(folder);
+        } catch (IOException e) {
+            return new Result.Failure<>(ErrorCode.MANIFEST_UNWRITABLE,
+                    "manifest folder " + folder + ": " + describe(e));
+        }
+        if (!(acquisition instanceof ExecutionLock.Acquisition.Acquired acquired)) {
+            return new Result.Failure<>(ErrorCode.EXECUTION_ALREADY_RUNNING,
+                    "another process is executing a plan");
+        }
+        ExecutionLock.Lease lease = acquired.lease();
+        PlanExecutionId runId = PlanExecutionId.random();
+        Path manifest;
+        Optional<PlanExecutionId> blocker;
+        try {
+            manifest = manifests.manifestPath(folder, runId);
+            PlanExecutionProgress initial =
+                    new PlanExecutionProgress(runId, manifest, plan, 0, 0, bytesTotal, 0, 0, lease);
+            blocker = jobs.claim(runId, initial, job -> job.status() == JobStatus.QUEUED
+                    || job.status() == JobStatus.RUNNING || job.status() == JobStatus.CANCELLING);
+        } catch (RuntimeException | Error e) {
+            lease.release();
+            throw e;
+        }
+        if (blocker.isPresent()) {
+            lease.release();
+            return new Result.Failure<>(ErrorCode.EXECUTION_ALREADY_RUNNING,
+                    "plan execution " + blocker.get().value() + " is not finished");
+        }
+        try {
+            manifests.create(folder, new ManifestLine.Run(runId, plan.id(), scan.roots(), Instant.now()));
+        } catch (IOException e) {
+            String msg = "manifest folder " + folder + ": " + describe(e);
+            jobs.abandon(runId, msg);
+            return new Result.Failure<>(ErrorCode.MANIFEST_UNWRITABLE, msg);
+        } catch (RuntimeException e) {
+            jobs.abandon(runId, e.getClass().getName() + ": " + e.getMessage());
+            throw e;
+        }
+        Run run = new Run();
+        return jobs.dispatch(runId,
+                (progress, stop) -> execute(runId, manifest, plan, operations, entriesPerOperation, bytesTotal,
+                        listener, run, progress, stop),
+                job -> settle(job, run));
     }
 
     private void settle(Job<PlanExecutionProgress, PlanExecutionReport> job, Run run) {
@@ -502,7 +547,7 @@ public final class PlanExecutionService implements StartPlanExecution, CancelPla
         /** Releases the run's execution lock lease (DFS-055 decisions 3, 5): {@code job.progress().lease()}. */
         @Override
         public void ended(Job<PlanExecutionProgress, PlanExecutionReport> job) {
-            throw new UnsupportedOperationException("not implemented: DFS-055");
+            job.progress().lease().release();
         }
     }
 }

@@ -83,6 +83,7 @@ Any layer, and the top level, may have a `util` package for shared helpers. A `u
 ## Safety invariants (must hold, and be tested)
 
 - **Never delete the last copy.** Every `DeletionPlan` must leave at least one verified surviving copy per `DuplicateSet`. Rules can conflict (folder1's copy may itself be marked for deletion by another rule), so validate the plan as a whole, not rule by rule.
+- **One plan execution runs at a time**, per process (a second start is refused with `EXECUTION_ALREADY_RUNNING`) and per manifest folder across processes (an OS lock on `<manifest folder>/execution.lock`, DFS-055); processes with different manifest folders are not coordinated.
 - **Re-verify at execution time:** the keeper and the candidate still exist and are unchanged, and content is byte-identical (decision 4).
 - **Preview is a pure query; execution is a separate command.** `PreviewDeletionPlan` never touches disk state.
 - **Hard links are not duplicates.** Paths that are the same physical file must not count as copies of each other. Identify them by a key per file (`FileIdentity.key`), grouped within a candidate set: `fileKey()` (device and inode) on Linux and macOS; on Windows, where `fileKey()` is null (verified), the volume serial number and 128-bit file ID from `GetFileInformationByHandleEx(FileIdInfo)` through the FFM API. Never compare pairwise: a set of n plain copies would cost n²/2 checks (DFS-026).

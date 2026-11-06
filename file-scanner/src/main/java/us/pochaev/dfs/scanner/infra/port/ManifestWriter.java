@@ -31,7 +31,9 @@ public interface ManifestWriter {
      * @throws NullPointerException if an argument is null
      */
     default Path manifestPath(Path folder, PlanExecutionId runId) {
-        throw new UnsupportedOperationException("not implemented: DFS-055");
+        java.util.Objects.requireNonNull(folder, "folder");
+        java.util.Objects.requireNonNull(runId, "runId");
+        return folder.resolve(runId.value() + ".jsonl").toAbsolutePath();
     }
 
     /**

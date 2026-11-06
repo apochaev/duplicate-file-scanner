@@ -20,7 +20,7 @@ public final class InMemoryJobStore<I, R> implements JobStore<I, R> {
     private final ConcurrentHashMap<I, R> records = new ConcurrentHashMap<>();
 
     @Override
-    public void create(I id, R record) {
+    public synchronized void create(I id, R record) {
         java.util.Objects.requireNonNull(id, "id");
         java.util.Objects.requireNonNull(record, "record");
         if (records.putIfAbsent(id, record) != null) {
@@ -29,8 +29,19 @@ public final class InMemoryJobStore<I, R> implements JobStore<I, R> {
     }
 
     @Override
-    public Optional<I> createUnless(I id, R record, Predicate<? super R> blocking) {
-        throw new UnsupportedOperationException("not implemented: DFS-055");
+    public synchronized Optional<I> createUnless(I id, R record, Predicate<? super R> blocking) {
+        java.util.Objects.requireNonNull(id, "id");
+        java.util.Objects.requireNonNull(record, "record");
+        java.util.Objects.requireNonNull(blocking, "blocking");
+        for (java.util.Map.Entry<I, R> e : records.entrySet()) {
+            if (blocking.test(e.getValue())) {
+                return Optional.of(e.getKey());
+            }
+        }
+        if (records.putIfAbsent(id, record) != null) {
+            throw new IllegalStateException("job already exists: " + id);
+        }
+        return Optional.empty();
     }
 
     @Override
