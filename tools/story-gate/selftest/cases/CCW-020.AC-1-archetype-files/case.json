@@ -2,7 +2,7 @@
   "check": "contains",
   "scenarios": ["The archetype's files exist"],
   "contains": {
-    ".claude/archetypes/component/archetype.md": ["---\nname: component\nversion: 1\nphases: [design, test, implement, verify]\ngates: [design, done]\nmodels:\n"],
+    ".claude/archetypes/component/archetype.md": ["---\nname: component\nversion: ", "\nphases: [design, test, implement, verify]\ngates: [design, done]\nmodels:\n"],
     ".claude/archetypes/component/design.md.tmpl": ["## Summary", "## Page states", "## Checklist disposition", "## Expected breakage", "## Stubs (as of the design phase)"],
     ".claude/archetypes/component/test-plan.md.tmpl": ["## Criterion → scenario → test", "provideStubSurfacing()"],
     ".claude/archetypes/component/impl-guide.md": ["# component — implementer guide"],

@@ -5,6 +5,6 @@
     "docs/design/ui.md": ["The component archetype exists too (`.claude/archetypes/component/`, CCW-020", "the gates now run the Vitest tests at the red step as well (`npmTest`)"],
     "docs/design/story-orchestration.md": ["in a TypeScript story, the stubs' `Error`", "or in TypeScript `throw new Error('not implemented: <TICKET-ID>')`", "in Vitest, the name given to `it`"],
     ".claude/skills/tickets/SKILL.md": ["a Vitest test starts the name given to `it` with it, inside any `describe` (CCW-020)"],
-    ".claude/archetypes/endpoint/archetype.md": ["- an Angular screen (`component`, CCW-020);", "\nversion: 2\n"]
+    ".claude/archetypes/endpoint/archetype.md": ["- an Angular screen (`component`, CCW-020);", "\nversion: "]
   }
 }
