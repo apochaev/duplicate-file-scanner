@@ -148,4 +148,22 @@ describe('FolderTree', () => {
       'true',
     ]);
   });
+
+  it('DFS-050.AC-5 offers "Pin for comparison" on every folder node but not on "All folders", and emits the folder pinned', async () => {
+    const pinned: string[] = [];
+    await render([photos, backup]);
+    fixture.componentInstance.folderPinned.subscribe((path) => pinned.push(path));
+
+    const pins = await loader.getAllHarnesses(MatButtonHarness.with({ selector: '.folder-pin' }));
+    expect(pins).toHaveLength(2);
+    expect(await pins[0].getText()).toBe('Pin for comparison');
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('button.all-folders')?.textContent).not.toContain('Pin');
+    expect(root.querySelectorAll('.folder-pin')).toHaveLength(labels().length);
+
+    await pins[1].click();
+    await settle(fixture);
+    expect(pinned).toEqual(['D:\Backup']);
+    expect(selections).toEqual([]);
+  });
 });

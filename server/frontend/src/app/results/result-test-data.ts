@@ -1,5 +1,16 @@
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
-import { DuplicateSetView, FolderNode, ScanEntry, ScanProgress, SetPage } from '../api/models';
+import {
+  DuplicateSetView,
+  FolderNode,
+  FolderPairView,
+  FolderSummaryView,
+  PairPage,
+  PairSideView,
+  ScanEntry,
+  ScanProgress,
+  SetPage,
+  SummaryPage,
+} from '../api/models';
 
 /** Builders and request helpers shared by the DFS-049 specs, so a test states only what it is about. */
 
@@ -79,5 +90,87 @@ export function expectSets(
       (r.params.get('under') ?? null) === under &&
       r.params.get('page') === String(page) &&
       r.params.get('size') === String(size),
+  );
+}
+
+/** DFS-050: builders and request helpers for the Overlaps tab. */
+
+export function summary(path: string, update: Partial<FolderSummaryView> = {}): FolderSummaryView {
+  return {
+    folder: path,
+    totalFiles: 10,
+    totalBytes: 1000,
+    filesWithCopyElsewhere: 4,
+    bytesWithCopyElsewhere: 400,
+    internalDuplicateFiles: 0,
+    internalBytes: 0,
+    ...update,
+  };
+}
+
+export function summaryPage(
+  items: FolderSummaryView[],
+  update: Partial<SummaryPage> = {},
+): SummaryPage {
+  return { items, page: 0, size: 10, totalItems: items.length, ...update };
+}
+
+export function side(path: string, update: Partial<PairSideView> = {}): PairSideView {
+  return { folder: path, totalFiles: 10, totalBytes: 1000, filesWithCopy: 4, bytesWithCopy: 400, full: false, ...update };
+}
+
+export function pair(a: PairSideView, b: PairSideView): FolderPairView {
+  return { a, b };
+}
+
+export function pairPage(items: FolderPairView[], update: Partial<PairPage> = {}): PairPage {
+  return { items, page: 0, size: 10, totalItems: items.length, ...update };
+}
+
+/** The one `GET /api/scans/<id>/<kind>` (`summaries` or `pairs`) with `under` (null: absent), `page` and, when given, `size`. */
+export function expectOverlaps(
+  http: HttpTestingController,
+  id: string,
+  kind: 'summaries' | 'pairs',
+  under: string | null,
+  page = 0,
+  size: number | null = 10,
+): TestRequest {
+  return http.expectOne(
+    (r) =>
+      r.method === 'GET' &&
+      r.url === `/api/scans/${id}/${kind}` &&
+      r.params.has('under') === (under !== null) &&
+      (r.params.get('under') ?? null) === under &&
+      r.params.get('page') === String(page) &&
+      (size === null || r.params.get('size') === String(size)),
+  );
+}
+
+export function expectSummaries(
+  http: HttpTestingController,
+  id: string,
+  under: string | null,
+  page = 0,
+  size: number | null = 10,
+): TestRequest {
+  return expectOverlaps(http, id, 'summaries', under, page, size);
+}
+
+export function expectPairs(
+  http: HttpTestingController,
+  id: string,
+  under: string | null,
+  page = 0,
+  size: number | null = 10,
+): TestRequest {
+  return expectOverlaps(http, id, 'pairs', under, page, size);
+}
+
+/** The one `GET /api/scans/<id>/pair?a=&b=`. */
+export function expectPair(http: HttpTestingController, id: string, a: string, b: string): TestRequest {
+  return http.expectOne(
+    (r) =>
+      r.method === 'GET' && r.url === `/api/scans/${id}/pair` && r.params.get('a') === a && r.params.get('b') === b,
   );
 }

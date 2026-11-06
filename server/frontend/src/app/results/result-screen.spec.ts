@@ -8,6 +8,7 @@ import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { MatButtonHarness } from '@angular/material/button/testing';
 import { MatPaginatorHarness } from '@angular/material/paginator/testing';
 import { MatProgressBarHarness } from '@angular/material/progress-bar/testing';
+import { MatTabGroupHarness } from '@angular/material/tabs/testing';
 import { MatTreeHarness } from '@angular/material/tree/testing';
 import { FolderNode, ScanEntry, SetPage } from '../api/models';
 import { provideStubSurfacing, settle } from '../../testing/stub-surfacing';
@@ -18,12 +19,19 @@ import {
   UNKNOWN_SCAN,
   duplicateSet,
   expectFolders,
+  expectPair,
+  expectPairs,
   expectScan,
   expectSets,
+  expectSummaries,
   folder,
+  pair,
+  pairPage,
   refuse,
   scanEntry,
   setPage,
+  side,
+  summaryPage,
 } from './result-test-data';
 
 describe('ResultScreen', () => {
@@ -63,14 +71,38 @@ describe('ResultScreen', () => {
     await settle(harness.fixture);
   }
 
-  /** Opens the screen and answers getScan, the roots and the first page of sets. */
-  async function openLoaded(roots: FolderNode[], sets: SetPage, scan: ScanEntry = completed): Promise<void> {
+  /** Answers the Overlaps tab's two requests for `under` (page 0, size 10) with no items. */
+  async function answerOverlaps(id = 's-1', under: string | null = null): Promise<void> {
+    expectSummaries(http, id, under).flush(summaryPage([]));
+    expectPairs(http, id, under).flush(pairPage([]));
+    await step();
+  }
+
+  /** Selects the tab labelled `label` (DFS-050 decision 4: Overlaps is the first tab and selected on open). */
+  async function selectTab(label: string): Promise<void> {
+    const tabs = await loader.getHarness(MatTabGroupHarness);
+    await tabs.selectTab({ label });
+    await step();
+  }
+
+  /**
+   * Opens the screen and answers getScan, the roots, the first page of sets and the Overlaps tab's first requests, then
+   * selects the Sets tab (the tests of DFS-049 read the Sets cards), unless `tab` is 'Overlaps'.
+   */
+  async function openLoaded(
+    roots: FolderNode[],
+    sets: SetPage,
+    scan: ScanEntry = completed,
+    tab: 'Sets' | 'Overlaps' = 'Sets',
+  ): Promise<void> {
     await open(scan.id);
     expectScan(http, scan.id).flush(scan);
     await step();
     expectFolders(http, scan.id, null).flush(roots);
     expectSets(http, scan.id, null).flush(sets);
     await step();
+    await answerOverlaps(scan.id);
+    if (tab === 'Sets') await selectTab('Sets');
   }
 
   function page(): HTMLElement {
@@ -114,6 +146,7 @@ describe('ResultScreen', () => {
     expectFolders(http, 's-1', null).flush([]);
     expectSets(http, 's-1', null).flush(setPage([], { totalItems: 0 }));
     await step();
+    await answerOverlaps();
   });
 
   it('DFS-049.AC-4 says the scan is not in this server run for a 404 and requests nothing else', async () => {
@@ -283,6 +316,8 @@ describe('ResultScreen', () => {
     expectFolders(http, 's-1', null).flush([photos]);
     const sets = expectSets(http, 's-1', null);
     await step();
+    await answerOverlaps();
+    await selectTab('Sets');
 
     const bars = await loader.getAllHarnesses(MatProgressBarHarness.with({ selector: '[aria-label="Loading duplicate sets"]' }));
     expect(bars).toHaveLength(1);
@@ -309,5 +344,66 @@ describe('ResultScreen', () => {
     expect(alert?.getAttribute('role')).toBe('alert');
     expect(alert?.textContent?.trim()).toBe('The path is not absolute');
     expectNoResultView();
+  });
+
+  it('DFS-050.AC-8 shows the tabs "Overlaps" then "Sets", Overlaps selected on open, and the set cards once Sets is selected', async () => {
+    await openLoaded([photos, backup], oneSet, completed, 'Overlaps');
+
+    const tabs = await loader.getHarness(MatTabGroupHarness);
+    const all = await tabs.getTabs();
+    expect(await Promise.all(all.map((tab) => tab.getLabel()))).toEqual(['Overlaps', 'Sets']);
+    expect(await all[0].isSelected()).toBe(true);
+    expect(page().querySelector('app-overlaps-tab')).not.toBeNull();
+    expect(page().querySelector('.duplicate-set')).toBeNull();
+
+    await selectTab('Sets');
+    expect(page().querySelectorAll('.duplicate-set')).toHaveLength(1);
+    expect(text('.file-link.copy-line .file-path')).toEqual(['C:\Photos\a.jpg', 'D:\Backup\a.jpg']);
+  });
+
+  it('DFS-050.AC-5 pins a folder from the tree, replaces the pin, and unpins it, with no selection change', async () => {
+    await openLoaded([photos, backup], oneSet, completed, 'Overlaps');
+    expect(page().querySelectorAll('button.folder-pin')).toHaveLength(2);
+    expect(page().querySelector('.pinned-folder')).toBeNull();
+
+    const pinBackup = await loader.getHarness(MatButtonHarness.with({ selector: '[aria-label="Pin for comparison: Backup"]' }));
+    await pinBackup.click();
+    await step();
+    expect(text('.pinned-folder')).toEqual(['Pinned: D:\Backup']);
+    expect(text('.comparison-hint')).toEqual(['Select another folder to compare with the pinned one']);
+
+    const pinPhotos = await loader.getHarness(MatButtonHarness.with({ selector: '[aria-label="Pin for comparison: Photos"]' }));
+    await pinPhotos.click();
+    await step();
+    expect(text('.pinned-folder')).toEqual(['Pinned: C:\Photos']);
+
+    await (await loader.getHarness(MatButtonHarness.with({ text: 'Unpin' }))).click();
+    await step();
+    expect(page().querySelector('.pinned-folder')).toBeNull();
+    expect(page().querySelector('section.comparison')).toBeNull();
+    expect(page().querySelector('button.all-folders')?.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('DFS-050.AC-6 compares the pinned folder with a folder selected in the tree', async () => {
+    await openLoaded([photos, backup], oneSet, completed, 'Overlaps');
+    await (await loader.getHarness(MatButtonHarness.with({ selector: '[aria-label="Pin for comparison: Backup"]' }))).click();
+    await step();
+
+    await selectFolder(/^Photos/);
+    expectSummaries(http, 's-1', 'C:\Photos').flush(summaryPage([]));
+    expectPairs(http, 's-1', 'C:\Photos').flush(pairPage([]));
+    expectPair(http, 's-1', 'D:\Backup', 'C:\Photos').flush(
+      pair(
+        side('C:\Photos', { filesWithCopy: 340, totalFiles: 3210, bytesWithCopy: 1288490188, full: false }),
+        side('D:\Backup', { filesWithCopy: 2, totalFiles: 2, bytesWithCopy: 900, full: true }),
+      ),
+    );
+    expectSets(http, 's-1', 'C:\Photos').flush(oneSet);
+    await step();
+
+    expect(text('.comparison-pair .side-text')).toEqual([
+      'C:\Photos: 340 / 3210 files · 1.2 GB',
+      'D:\Backup: 2 / 2 files · 900 B',
+    ]);
   });
 });
