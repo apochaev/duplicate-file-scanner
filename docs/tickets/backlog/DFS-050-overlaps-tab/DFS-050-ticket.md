@@ -1,7 +1,7 @@
 ---
 id: DFS-050
 title: Add the Overlaps tab to the result screen
-status: ready
+status: in-review
 type: feature
 scope: [build, docs]
 archetype: component
@@ -17,7 +17,7 @@ touches:
   - docs/design/ui.md
 blocked_reason:
 created: 2026-11-01
-updated: 2026-11-05
+updated: 2026-11-06
 completed:
 ---
 
@@ -190,14 +190,14 @@ Feature: Overlaps tab
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the Vitest tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] Every checklist item of the `component` archetype is addressed in `design.md` or marked not applicable with a one-line reason
-- [ ] Every story spec uses `provideStubSurfacing()` and `settle(fixture)`
-- [ ] The production build prints no budget warning, with the Material table module included
-- [ ] Checked by hand once on the built jar: a real scan of two overlapping folders (one a full copy of part of the other), the Overlaps tab read on open, a folder selected, one folder pinned and another compared, a nested pair tried, the text read from the DOM and recorded in `verification.md`
-- [ ] `CLAUDE.md`'s `server` entry and `docs/design/ui.md` (U3, M-1.5, M-1) describe the Overlaps tab
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the Vitest tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] Every checklist item of the `component` archetype is addressed in `design.md` or marked not applicable with a one-line reason
+- [x] Every story spec uses `provideStubSurfacing()` and `settle(fixture)`
+- [x] The production build prints no budget warning, with the Material table module included (verifier: initial total 701.30 kB, lazy `result-screen` 260.31 kB)
+- [x] Checked by hand once on the built jar: a real scan of two overlapping folders (one a full copy of part of the other), the Overlaps tab read on open, a folder selected, one folder pinned and another compared, a nested pair tried, the text read from the DOM and recorded in `verification.md`
+- [x] `CLAUDE.md`'s `server` entry and `docs/design/ui.md` (U3, M-1.5, M-1) describe the Overlaps tab
 
 ## Open questions
 

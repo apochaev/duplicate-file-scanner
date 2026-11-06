@@ -23,14 +23,12 @@ export interface FolderTreeRow {
  * The folder tree of a COMPLETED scan (DFS-049 decision 3, `ui.md` U3): "All folders" above the scan's roots, in the
  * order `listFolders` returns them. A node with `hasChildren` expands; its children are requested with
  * `parent=<its path>` the first time only, then kept, so collapsing and expanding again makes no request (AC-5).
- * Selecting a node or "All folders" emits its path, or null (AC-6); the parent owns the selection.
+ * Selecting a node or "All folders" emits its path, or null (AC-6); the parent owns the selection. Every folder node
+ * (not "All folders") has a "Pin for comparison" action that emits `folderPinned` (DFS-050 decision 3).
  *
  * A flat `mat-tree` (`levelAccessor`): `rows` holds only the visible rows, so a collapsed node's descendants are not in
  * it. Expansion goes through the tree's own model (`matTreeNodeToggle`, keyed by path), so `aria-expanded` and
  * `MatTreeNodeHarness.expand()` work; the node's `expandedChange` drives the load.
- *
- * Stubs (design phase): `rootRows`, `expandedChange`, `select` and `folderLabel` throw; inputs, the output, the
- * injected service, the template's structure and classes are final.
  */
 @Component({
   selector: 'app-folder-tree',
@@ -46,6 +44,8 @@ export class FolderTree {
   readonly selected = input<string | null>(null);
   /** A folder's path when the user selects it, null for "All folders". */
   readonly folderSelected = output<string | null>();
+  /** A folder's path when the user clicks its "Pin for comparison" (DFS-050 decision 3, AC-5); the parent owns the pin. */
+  readonly folderPinned = output<string>();
 
   protected readonly rows = linkedSignal(() => this.rootRows(this.roots()));
 
@@ -102,6 +102,14 @@ export class FolderTree {
   /** Emits `folderSelected` with the folder's path, or null for "All folders" (AC-6). */
   protected select(path: string | null): void {
     this.folderSelected.emit(path);
+  }
+
+  /**
+   * Emits `folderPinned` with the folder's path (DFS-050 AC-5). Offered on every folder node, never on "All folders";
+   * it does not change the selection.
+   */
+  protected pin(path: string): void {
+    this.folderPinned.emit(path);
   }
 
   private refresh(): void {

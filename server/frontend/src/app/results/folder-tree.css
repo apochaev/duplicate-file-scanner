@@ -2,6 +2,11 @@
   min-width: 0;
 }
 
+.folder-pin {
+  flex: none;
+  margin-left: auto;
+}
+
 .folder-node {
   flex-wrap: wrap;
   min-height: 40px;
