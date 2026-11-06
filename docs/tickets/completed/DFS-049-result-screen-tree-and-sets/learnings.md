@@ -76,11 +76,11 @@
 
 ### DFS-049.L-6: Older specs keep a local `settle` and no `provideStubSurfacing()`
 
-- Status: proposed
+- Status: parked
 - Impact: local
 - Target: `.claude/archetypes/component/test-guide.md`, or a cleanup ticket
 - Change: either migrate `scan-screen.spec.ts` and `app.spec.ts` to the shared helpers, or tell test authors to leave them as they are.
 - Evidence: DFS-049 note L-8.
 - Recurrences: 1 (DFS-049)
 - Recommendation: park; it caused no failure.
-- Decision:
+- Decision: parked 2026-11-05 by the user
