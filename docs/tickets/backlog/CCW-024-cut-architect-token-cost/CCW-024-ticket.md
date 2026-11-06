@@ -146,7 +146,7 @@ Feature: Architect avoids rework and test reading
 **Out of scope:**
 - Thinner `component` stubs, and a separate stub-writing phase on a cheaper model (see Context).
 - Changing any agent's model, effort or `maxTurns`.
-- The two story-gate selftest cases already failing on `main` on 2026-11-06 (`CCW-020.AC-1-archetype-files`, `CCW-020.AC-12-docs`: they expect archetype versions that later edits bumped).
+- The two story-gate selftest cases already failing on `main` on 2026-11-06 (`CCW-020.AC-1-archetype-files`, `CCW-020.AC-12-docs`: they expect archetype versions that later edits bumped). Since fixed later on 2026-11-06 outside this ticket, in `a4a1676` (the cases no longer pin a version number); `selftest` now passes all 126 cases.
 - Having `story-gate` compute Expected breakage itself.
 - The other pipeline agents (test-author, implementer, verifier), which may hit the same read-before-edit refusal; not measured.
 
@@ -156,7 +156,7 @@ Feature: Architect avoids rework and test reading
 - [x] Search for every other mention of how Expected breakage is found (`.claude/`, `CLAUDE.md`, `docs/design/`) and record the hits in `verification.md` (CCW-018.L-1) — recorded under Evidence; nothing else needed changing
 - [ ] The live run in AC-5 is done, its three signals checked and its figures recorded in `verification.md`
 - [ ] If a `component` design phase has run after the merge by the time AC-5 is verified, its stub-writing share of output is recorded in `verification.md`; otherwise `verification.md` says none ran (decision 5)
-- [x] `tools/story-gate/story-gate selftest` shows no failure beyond the two listed under Out of scope (`CCW-015.AC-7-instructions` passes) — 2026-11-06, `FAIL selftest: 2 problems`, the same two
+- [x] `tools/story-gate/story-gate selftest` shows no failure beyond the two listed under Out of scope (`CCW-015.AC-7-instructions` passes) — 2026-11-06, `FAIL selftest: 2 problems`, the same two; since fixed later on 2026-11-06 outside this ticket, in `a4a1676` (the cases no longer pin a version number); `selftest` now passes all 126 cases
 - [x] The four Java archetypes' `version:` is bumped — use-case 10, pipeline-stage 17, wiring 4, endpoint 4
 - [x] No files changed outside the paths listed under Touches — `git diff --stat main` shows only those five files and this ticket's folder
 
@@ -170,7 +170,7 @@ Feature: Architect avoids rework and test reading
 6. **Refinement findings, recorded without a separate decision** (2026-11-06):
    - **Selftest phrases.** `tools/story-gate/selftest/cases/CCW-015.AC-7-instructions/case.json` asserts four phrases in `architect.md`: "Declare under `design.md`'s `## Expected breakage` every existing test class", "simple class name only", "Write \"None.\" when there is none" and "every class declared under `## Expected breakage`, by name". The rewritten step 4 keeps all four verbatim, so the case and `tools/story-gate/` stay out of `touches`.
    - **Archetype versions.** `docs/design/story-orchestration.md` (line 116) bumps an archetype's `version` whenever it is changed; the four Java archetypes go from use-case 9, wiring 3, endpoint 3, pipeline-stage 16 to one above.
-   - **Selftest baseline.** `tools/story-gate/story-gate selftest` on `main` on 2026-11-06 fails two cases unrelated to this ticket (see Out of scope); the done check is "no failure beyond those two".
+   - **Selftest baseline.** `tools/story-gate/story-gate selftest` on `main` on 2026-11-06 fails two cases unrelated to this ticket (see Out of scope); the done check is "no failure beyond those two". Since fixed later on 2026-11-06 outside this ticket, in `a4a1676` (the cases no longer pin a version number); `selftest` now passes all 126 cases.
    - **Other mentions searched** (CCW-018.L-1): `Expected breakage`, `grep -rl` and "search the test" across `.claude/`, `CLAUDE.md` and `docs/design/`. Hits: `architect.md` (changed here), the `component` `archetype.md` checklist item 3 (already says to run `:server:npmTest`; consistent, unchanged), the five `design.md.tmpl` files (describe the section's format, not how it is found; unchanged), and the tickets skill's refine rule on output formats (about refinement, unrelated).
 
 ## Open questions

@@ -28,12 +28,12 @@ Nothing runs by itself: these are instruction edits. Read `.claude/agents/archit
 
 - AC-5 and the decision 5 measurement (the stub-writing share in the next `component` design phase) are open until those runs happen.
 - The other pipeline agents (test-author, implementer, verifier) may hit the same read-before-edit refusal; not measured, out of scope.
-- `story-gate selftest` still fails the two cases that already failed on `main` (`CCW-020.AC-1-archetype-files`, `CCW-020.AC-12-docs`, stale archetype versions); out of scope.
+- `story-gate selftest` failed two cases that already failed on `main` (`CCW-020.AC-1-archetype-files`, `CCW-020.AC-12-docs`, stale archetype versions); out of scope, and fixed later on 2026-11-06 outside this ticket, in `a4a1676` (the cases no longer pin a version number); `selftest` now passes all 126 cases.
 
 ### Evidence
 
 - Commit `db54a27` on `tickets/CCW-024-cut-architect-token-cost`: `architect.md` and the four Java `archetype.md` files, versions bumped use-case 9→10, pipeline-stage 16→17, wiring 3→4, endpoint 3→4.
-- `tools/story-gate/story-gate selftest --root <worktree>` on 2026-11-06: `FAIL selftest: 2 problems`, the same two as on `main` before the change; `CCW-015.AC-7-instructions`, which pins four phrases of step 4 and the Summary, passes.
+- `tools/story-gate/story-gate selftest --root <worktree>` on 2026-11-06: `FAIL selftest: 2 problems`, the same two as on `main` before the change; `CCW-015.AC-7-instructions`, which pins four phrases of step 4 and the Summary, passes. The two failures were fixed later on 2026-11-06 outside this ticket, in `a4a1676` (the cases no longer pin a version number); `selftest` now passes all 126 cases.
 - Search for other mentions (CCW-018.L-1), `grep -rn "Expected breakage\|grep -rl\|search the test\|their callers" .claude CLAUDE.md docs/design`, excluding the `design.md.tmpl` files: `architect.md` (changed), the four Java `archetype.md` files (changed), `component/archetype.md` checklist item 3 (already says run `:server:npmTest`; consistent), `pipeline-stage/test-guide.md:37` (test-author guidance on output literals; unrelated), the tickets skill's refine rule (about refinement; unrelated). The five `design.md.tmpl` files describe the section's format, not how it is found; unchanged.
 
 ### How it went
