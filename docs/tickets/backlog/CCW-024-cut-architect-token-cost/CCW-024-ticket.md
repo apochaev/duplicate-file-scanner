@@ -1,7 +1,7 @@
 ---
 id: CCW-024
 title: Cut the architect's token cost
-status: ready
+status: in-progress
 type: chore
 scope: [docs]
 archetype: none

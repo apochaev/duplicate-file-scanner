@@ -1,6 +1,6 @@
 ---
 name: wiring
-version: 3
+version: 4
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
@@ -34,6 +34,7 @@ Written from DFS-019 (a factory, run through the pipeline as `use-case`, which m
 - An edit to an existing guard test named in `touches` (an `ArchitectureTest` rule, `allowEmptyShould`) belongs to the test-author; the architect specifies it in `design.md` (DFS-019).
 - A ticket that moves a composition root (for example from an app's `@Configuration` into an autoconfigure module) deletes the replaced wiring, and the tests that compile against it, in the design phase, alongside the new stubs. Left in place, the old beans satisfy every `@ConditionalOnMissingBean`, the new beans back off, and the story tests pass against the stubs (DFS-031.L-2).
 - The architect copies `skeletons/PortBeansConfiguration.java.tmpl` for a composition root's `@Configuration`, replacing every `<...>`.
+- **Expected breakage run** (CCW-024): after the stubs compile, run `./gradlew :scanner-spring:test :cli:test :server:test --continue` once (the wiring in `scanner-spring` and `domain.factory` reaches every app that loads it), keep only the failing classes from its output, and check each one's report for `not implemented: <TICKET-ID>`; declare the others under `design.md`'s `## Expected breakage` (`architect.md` step 4). Do not search the test trees for callers instead.
 
 ## Edge-case checklist
 

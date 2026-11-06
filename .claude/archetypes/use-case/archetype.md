@@ -1,6 +1,6 @@
 ---
 name: use-case
-version: 9
+version: 10
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
@@ -31,6 +31,7 @@ Written from what refining DFS-018 (track scans asynchronously) surfaced (CCW-01
 - A factory method or Spring bean that exposes the use case (a `ScannerFactories` method, a `ScannerAutoConfiguration` bean) is written for real at design, not stubbed: a throwing factory fails every context that loads the auto-configuration. A criterion about it (the bean exists, it backs off) therefore has no code path through a stub, so `design.md` tells the test-author to call the use case through the factory or bean before the wiring assertion, which makes the test fail red on the use case's stub (DFS-022.L-1; the `wiring` archetype's DFS-031.L-1).
 - A helper shared with existing code (for example a classification moved out of an adapter): the architect adds the helper as a stub and leaves the existing consumer untouched; the implementer moves the consumer onto it, and the consumer's existing tests must pass unchanged (the `freeze` and `green` checks prove it). Refactoring the consumer at design would break its tests before implementation (DFS-032.L-2).
 - Write `design.md`'s `## Summary` early and batch stub writes, so a stop at the turn cap still leaves a usable design (DFS-032.L-1).
+- **Expected breakage run** (CCW-024): after the stubs compile, run `./gradlew test --continue` once (a use case in `file-scanner` reaches every app that depends on it (`scanner-spring`, `cli`, `server`)), keep only the failing classes from its output, and check each one's report for `not implemented: <TICKET-ID>`; declare the others under `design.md`'s `## Expected breakage` (`architect.md` step 4). Do not search the test trees for callers instead.
 
 ## Edge-case checklist
 

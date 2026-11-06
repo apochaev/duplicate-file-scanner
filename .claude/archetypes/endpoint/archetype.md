@@ -1,6 +1,6 @@
 ---
 name: endpoint
-version: 3
+version: 4
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
@@ -32,6 +32,7 @@ Written from DFS-036 (security), DFS-038 (the spec chain) and DFS-040 (a data en
 - **Stubs**, owned by the architect: each controller method's body throws `new UnsupportedOperationException("not implemented: <TICKET-ID>")`; its signature, mapping and every annotation are final, since they define the spec. Records are not stubbed: write their components and `@Schema` annotations. A registry or stream class the design introduces gets the same stub per method. Copy `skeletons/FeatureController.java.tmpl` and `skeletons/ApiRecord.java.tmpl`, replacing every `<...>`.
 - **The spec, owned by the architect:** after writing the stubs, run `./gradlew :server:updateOpenApi` and commit the regenerated `server/frontend/openapi.json` with the design. `OpenApiSpecTest` then passes from the red run on, and the spec is part of what the human reviews at the design gate. The frontend build (which runs inside `:server:test`) must stay green with the regenerated client: if a changed record breaks frontend code, the design fixes that code too, and the ticket's `touches` names it.
 - **Tests** go in `server/src/test/java/us/pochaev/dfs/server` (see `test-guide.md`); the shared helpers `TestServer` and `StubSurfacingConfiguration` already exist there.
+- **Expected breakage run** (CCW-024): after the stubs compile, run `./gradlew :server:test --continue` once (an endpoint reaches only `server`; its test task also builds the frontend), keep only the failing classes from its output, and check each one's report for `not implemented: <TICKET-ID>`; declare the others under `design.md`'s `## Expected breakage` (`architect.md` step 4). Do not search the test trees for callers instead.
 
 ## Edge-case checklist
 
