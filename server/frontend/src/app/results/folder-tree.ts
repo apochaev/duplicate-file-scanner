@@ -26,14 +26,9 @@ export interface FolderTreeRow {
  * Selecting a node or "All folders" emits its path, or null (AC-6); the parent owns the selection. Every folder node
  * (not "All folders") has a "Pin for comparison" action that emits `folderPinned` (DFS-050 decision 3).
  *
- * Stubs (DFS-050 design phase): `pin` throws.
- *
  * A flat `mat-tree` (`levelAccessor`): `rows` holds only the visible rows, so a collapsed node's descendants are not in
  * it. Expansion goes through the tree's own model (`matTreeNodeToggle`, keyed by path), so `aria-expanded` and
  * `MatTreeNodeHarness.expand()` work; the node's `expandedChange` drives the load.
- *
- * Stubs (design phase): `rootRows`, `expandedChange`, `select` and `folderLabel` throw; inputs, the output, the
- * injected service, the template's structure and classes are final.
  */
 @Component({
   selector: 'app-folder-tree',
@@ -114,7 +109,7 @@ export class FolderTree {
    * it does not change the selection.
    */
   protected pin(path: string): void {
-    throw new Error('not implemented: DFS-050');
+    this.folderPinned.emit(path);
   }
 
   private refresh(): void {

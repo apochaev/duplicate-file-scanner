@@ -36,17 +36,17 @@ export const SIDE_PARTIAL = 'partial';
  * e.g. "340 / 400 files · 1.2 GB" (DFS-050 AC-2); `plural` on `totalFiles`.
  */
 export function copiedElsewhereText(summary: FolderSummaryView): string {
-  throw new Error('not implemented: DFS-050');
+  return `${summary.filesWithCopyElsewhere} / ${plural(summary.totalFiles, 'file')} · ${formatBytes(summary.bytesWithCopyElsewhere)}`;
 }
 
 /** A folder summary's "Duplicates inside" value: "<internalDuplicateFiles> files · <internalBytes>", e.g. "12 files · 80.0 MB" (AC-2). */
 export function duplicatesInsideText(summary: FolderSummaryView): string {
-  throw new Error('not implemented: DFS-050');
+  return `${plural(summary.internalDuplicateFiles, 'file')} · ${formatBytes(summary.internalBytes)}`;
 }
 
 /** A folder summary's "Total" value: "<totalFiles> files · <totalBytes>", e.g. "400 files · 1.4 GB" (AC-2). */
 export function summaryTotalText(summary: FolderSummaryView): string {
-  throw new Error('not implemented: DFS-050');
+  return `${plural(summary.totalFiles, 'file')} · ${formatBytes(summary.totalBytes)}`;
 }
 
 /**
@@ -54,7 +54,7 @@ export function summaryTotalText(summary: FolderSummaryView): string {
  * `filesWithCopyElsewhere` equals `totalFiles`; an empty folder never does (AC-2).
  */
 export function isAllCopiedElsewhere(summary: FolderSummaryView): boolean {
-  throw new Error('not implemented: DFS-050');
+  return summary.totalFiles > 0 && summary.filesWithCopyElsewhere === summary.totalFiles;
 }
 
 /**
@@ -62,10 +62,10 @@ export function isAllCopiedElsewhere(summary: FolderSummaryView): boolean {
  * "C:\Photos\2019: 340 / 400 files · 1.2 GB" (AC-3); `plural` on `totalFiles`.
  */
 export function pairSideText(side: PairSideView): string {
-  throw new Error('not implemented: DFS-050');
+  return `${side.folder}: ${side.filesWithCopy} / ${plural(side.totalFiles, 'file')} · ${formatBytes(side.bytesWithCopy)}`;
 }
 
 /** `SIDE_FULL` when the side's `full` is true, `SIDE_PARTIAL` otherwise; never a verdict (AC-3, AC-4). */
 export function pairCoverageText(side: PairSideView): string {
-  throw new Error('not implemented: DFS-050');
+  return side.full ? SIDE_FULL : SIDE_PARTIAL;
 }

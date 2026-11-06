@@ -7,6 +7,7 @@ import { MatTableModule } from '@angular/material/table';
 import { FolderPairView, PairPage, SummaryPage } from '../api/models';
 import { OverlapsService } from '../api/services';
 import { plural } from '../scans/scan-format';
+import { failureMessage } from './result-error';
 import {
   copiedElsewhereText,
   duplicatesInsideText,
@@ -52,10 +53,6 @@ export type Comparison =
  * A container: it requests its pages itself through `OverlapsService`, following its inputs. The selection and the pin
  * are owned by the result screen; "Unpin" is emitted. Two effects: (`scanId`, `folder`) → `selectionChanged()`;
  * (`scanId`, `pinned`, `folder`) → `compare()`. Neither tracks what those methods read or write.
- *
- * Stubs (design phase): `selectionChanged`, `loadSummaries`, `loadPairs`, `compare`, `changeSummariesPage`,
- * `changePairsPage`, `unpin` and the format helpers from `result-format.ts` throw; inputs, the output, the injected
- * service, the signals, the template's structure and its classes are final.
  */
 @Component({
   selector: 'app-overlaps-tab',
@@ -109,6 +106,9 @@ export class OverlapsTab {
   protected readonly pairCoverageText = pairCoverageText;
 
   private readonly overlaps = inject(OverlapsService);
+  private summariesRequest = 0;
+  private pairsRequest = 0;
+  private compareRequest = 0;
 
   constructor() {
     effect(() => {
@@ -129,7 +129,12 @@ export class OverlapsTab {
    * cleared (so no header or row of the previous folder lingers), then `loadSummaries()` and `loadPairs()`.
    */
   protected selectionChanged(): void {
-    throw new Error('not implemented: DFS-050');
+    this.summaries.set(null);
+    this.pairs.set(null);
+    this.summariesIndex.set(0);
+    this.pairsIndex.set(0);
+    void this.loadSummaries();
+    void this.loadPairs();
   }
 
   /**
@@ -138,12 +143,52 @@ export class OverlapsTab {
    * (AC-10). An answer to a superseded request is ignored.
    */
   protected async loadSummaries(): Promise<void> {
-    throw new Error('not implemented: DFS-050');
+    const request = ++this.summariesRequest;
+    const under = this.folder();
+    this.summariesLoading.set(true);
+    this.summariesError.set(null);
+    try {
+      const page = await this.overlaps.listSummaries({
+        id: this.scanId(),
+        ...(under === null ? {} : { under }),
+        page: this.summariesIndex(),
+        size: this.summariesSize(),
+      });
+      if (request === this.summariesRequest) {
+        this.summaries.set(page);
+        this.summariesLoading.set(false);
+      }
+    } catch (failure) {
+      if (request === this.summariesRequest) {
+        this.summariesLoading.set(false);
+        this.summariesError.set(failureMessage(failure));
+      }
+    }
   }
 
   /** As `loadSummaries`, for the Folder pairs table: `listPairs({ id: scanId, under, page, size })` (AC-1, AC-9, AC-10). */
   protected async loadPairs(): Promise<void> {
-    throw new Error('not implemented: DFS-050');
+    const request = ++this.pairsRequest;
+    const under = this.folder();
+    this.pairsLoading.set(true);
+    this.pairsError.set(null);
+    try {
+      const page = await this.overlaps.listPairs({
+        id: this.scanId(),
+        ...(under === null ? {} : { under }),
+        page: this.pairsIndex(),
+        size: this.pairsSize(),
+      });
+      if (request === this.pairsRequest) {
+        this.pairs.set(page);
+        this.pairsLoading.set(false);
+      }
+    } catch (failure) {
+      if (request === this.pairsRequest) {
+        this.pairsLoading.set(false);
+        this.pairsError.set(failureMessage(failure));
+      }
+    }
   }
 
   /**
@@ -152,21 +197,46 @@ export class OverlapsTab {
    * `failed` with `failureMessage` (a `400 NESTED_FOLDERS` shows the server's message). A superseded answer is ignored.
    */
   protected async compare(): Promise<void> {
-    throw new Error('not implemented: DFS-050');
+    const request = ++this.compareRequest;
+    const pinned = this.pinned();
+    const folder = this.folder();
+    if (pinned === null) {
+      this.comparison.set(null);
+      return;
+    }
+    if (folder === null || folder === pinned) {
+      this.comparison.set({ kind: 'hint' });
+      return;
+    }
+    this.comparison.set({ kind: 'loading' });
+    try {
+      const pair = await this.overlaps.getPair({ id: this.scanId(), a: pinned, b: folder });
+      if (request === this.compareRequest) {
+        this.comparison.set({ kind: 'loaded', pair });
+      }
+    } catch (failure) {
+      if (request === this.compareRequest) {
+        this.comparison.set({ kind: 'failed', message: failureMessage(failure) });
+      }
+    }
   }
 
   /** The Folders paginator's page or size change: requests that page of this table only (AC-9). */
   protected changeSummariesPage(event: PageEvent): void {
-    throw new Error('not implemented: DFS-050');
+    this.summariesIndex.set(event.pageIndex);
+    this.summariesSize.set(event.pageSize);
+    void this.loadSummaries();
   }
 
   /** The Folder pairs paginator's page or size change: requests that page of this table only (AC-9). */
   protected changePairsPage(event: PageEvent): void {
-    throw new Error('not implemented: DFS-050');
+    this.pairsIndex.set(event.pageIndex);
+    this.pairsSize.set(event.pageSize);
+    void this.loadPairs();
   }
 
   /** "Unpin" clicked: emits `unpinned` (AC-5). */
   protected unpin(): void {
-    throw new Error('not implemented: DFS-050');
+    this.unpinned.emit();
   }
 }

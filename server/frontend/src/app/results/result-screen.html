@@ -21,14 +21,16 @@
         (folderSelected)="selectFolder($event)"
         (folderPinned)="pinFolder($event)"
       />
-      <mat-tab-group class="result-tabs" aria-label="Result views">
+      <mat-tab-group class="result-tabs" aria-label="Result views" animationDuration="0ms">
         <mat-tab label="Overlaps">
-          <app-overlaps-tab
-            [scanId]="scan()!.id"
-            [folder]="selectedFolder()"
-            [pinned]="pinnedFolder()"
-            (unpinned)="unpin()"
-          />
+          <ng-template matTabContent>
+            <app-overlaps-tab
+              [scanId]="scan()!.id"
+              [folder]="selectedFolder()"
+              [pinned]="pinnedFolder()"
+              (unpinned)="unpin()"
+            />
+          </ng-template>
         </mat-tab>
         <mat-tab label="Sets">
           <app-sets-tab

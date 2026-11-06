@@ -59,7 +59,7 @@
           <ng-container matColumnDef="folder">
             <th mat-header-cell *matHeaderCellDef>Folder</th>
             <td mat-cell *matCellDef="let summary">
-              <span class="summary-folder">{{ summary.folder }}</span>
+              <span class="summary-folder">{{ summary.folder }}</span>{{ ' ' }}
               @if (isAllCopiedElsewhere(summary)) {
                 <mat-chip-set aria-label="Folder coverage">
                   <mat-chip class="all-copied">all copied elsewhere</mat-chip>
