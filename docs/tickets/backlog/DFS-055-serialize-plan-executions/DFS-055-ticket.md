@@ -152,15 +152,15 @@ Feature: Plan executions do not overlap
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] Every item of the `use-case` archetype's checklist is addressed in `design.md` or marked not applicable with a one-line reason
-- [ ] No test this ticket adds or changes uses `Thread.sleep`; waiting is on a latch, a future or a bounded poll
-- [ ] `PlanExecutionService` has no field other than its ports, its seams and the executor
-- [ ] `ModuleExportsTest` stays green, and no new package is exported
-- [ ] The cross-process tests start their child Java process and stop it within the test, bounded by a timeout, and leave no process running
-- [ ] `CLAUDE.md` states that one plan execution runs at a time, per process and per manifest folder
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] Every item of the `use-case` archetype's checklist is addressed in `design.md` or marked not applicable with a one-line reason
+- [x] No test this ticket adds or changes uses `Thread.sleep`; waiting is on a latch, a future or a bounded poll
+- [x] `PlanExecutionService` has no field other than its ports, its seams and the executor
+- [x] `ModuleExportsTest` stays green, and no new package is exported
+- [x] The cross-process tests start their child Java process and stop it within the test, bounded by a timeout, and leave no process running
+- [x] `CLAUDE.md` states that one plan execution runs at a time, per process and per manifest folder
 
 ## Open questions
 

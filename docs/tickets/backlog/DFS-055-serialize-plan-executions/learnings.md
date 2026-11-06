@@ -10,3 +10,8 @@
 ## Implement: test defect in the FAILED case of lockIsHeldUntilTheRunIsRecordedTerminal
 
 In `PlanExecutionServiceTest.lockIsHeldUntilTheRunIsRecordedTerminal` (Ending.FAILED), `failOn = line instanceof ManifestLine.Moving` is set after the run is already blocked inside the comparator. `PlanExecutionService.execute` appends `Moving` before it compares, so that line is already written; nothing later fails and the run ends COMPLETED, not FAILED. The sibling `startAfterFailedSucceeds` sets `failOn` before the run starts and passes. Fix in the test: set `failOn` before `rig.start(...)`, or fail a line appended after the compare. Not changed by the implementer.
+
+## Verify
+
+- **L-7 (verifier): an OS file lock shared by shares needs care on POSIX.** POSIX `fcntl` locks are dropped when *any* channel of the file in the JVM is closed. `FileChannelExecutionLock` avoids opening a second channel when it already holds the lock, but its `OverlappingFileLockException` path (other in-JVM code holding the file) still opens and closes one. That is harmless today, since nothing else opens `execution.lock`. A use-case or adapter guide note could say: an adapter holding an OS file lock must be the only code in the JVM that opens that file, and must never open a second channel on it.
+- **L-8 (verifier): a scenario's "separate threads" wording does not fit a refused start.** The AC-1 scenario asks for both executions on separate threads, but the second start is refused on the caller's thread and never gets one. Refinement could word race scenarios by observable outcome ("the second start is refused while the first is RUNNING") rather than by thread placement.
