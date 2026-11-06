@@ -1,7 +1,7 @@
 ---
 id: DFS-055
 title: Run plan executions one at a time
-status: in-progress
+status: in-review
 type: fix
 scope: [file-scanner, build, docs]
 archetype: use-case

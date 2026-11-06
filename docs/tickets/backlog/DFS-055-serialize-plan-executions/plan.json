@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-055-serialize-plan-executions",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-055-serialize-plan-executions",
-  "state": "awaiting-approval",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -158,7 +158,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": [
