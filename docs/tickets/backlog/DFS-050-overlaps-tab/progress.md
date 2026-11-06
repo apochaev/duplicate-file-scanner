@@ -16,6 +16,10 @@ Test-author wrote overlaps-tab.spec.ts (13 tests), one test each in folder-tree.
 
 Implemented the six `result-format.ts` helpers, `OverlapsTab` (selectionChanged, loadSummaries, loadPairs, compare, paging, unpin, with request counters), `FolderTree.pin`, `ResultScreen.pinFolder`/`unpin` (and `pinnedFolder.set(null)` in `loadScan`); removed the stub notes; updated CLAUDE.md and docs/design/ui.md. Not green: 4 tests fail on test defects (single-backslash path literals in folder-tree.spec.ts and result-screen.spec.ts), reported to the orchestrator. Commit expected: `feat(server): add the Overlaps tab to the result screen [DFS-050]`.
 
+Feedback at the done gate (2026-11-06, the user): docs only. In `docs/design/ui.md`, mark M-1.5 (DFS-050) and M-1 done in the Milestones table, and put the "As built (DFS-050, M-1.5)" bullet on its own line instead of the end of the DFS-049 bullet's line (verification.md, Known limits). Change no code or test.
+
 ## Tests: defect 1 fix
 
 Doubled single-backslash Windows path literals (`D:\Backup`, `C:\Photos`, `.jpg`) in folder-tree.spec.ts (line 166) and result-screen.spec.ts (lines 361, 372, 378, 393-406). No assertion or test name changed. `./gradlew :server:npmTest`: 99 of 99 pass. No commit made.
+
+Implement (attempt 1): ui.md Milestones marks M-1 and DFS-050 done; the DFS-050 "As built" bullet is on its own line.
