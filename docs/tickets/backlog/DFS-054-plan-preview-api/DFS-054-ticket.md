@@ -9,7 +9,7 @@ archetype: endpoint
 gates: [design, done]
 autorun: true
 priority: high
-lane: backend
+lane: frontend
 depends_on: []
 touches:
   - server/src/main/java/us/pochaev/dfs/server/plan
