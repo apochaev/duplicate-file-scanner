@@ -163,7 +163,7 @@ describe('FolderTree', () => {
 
     await pins[1].click();
     await settle(fixture);
-    expect(pinned).toEqual(['D:\Backup']);
+    expect(pinned).toEqual(['D:\\Backup']);
     expect(selections).toEqual([]);
   });
 });

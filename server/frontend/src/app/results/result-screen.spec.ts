@@ -358,7 +358,7 @@ describe('ResultScreen', () => {
 
     await selectTab('Sets');
     expect(page().querySelectorAll('.duplicate-set')).toHaveLength(1);
-    expect(text('.file-link.copy-line .file-path')).toEqual(['C:\Photos\a.jpg', 'D:\Backup\a.jpg']);
+    expect(text('.file-link.copy-line .file-path')).toEqual(['C:\\Photos\\a.jpg', 'D:\\Backup\\a.jpg']);
   });
 
   it('DFS-050.AC-5 pins a folder from the tree, replaces the pin, and unpins it, with no selection change', async () => {
@@ -369,13 +369,13 @@ describe('ResultScreen', () => {
     const pinBackup = await loader.getHarness(MatButtonHarness.with({ selector: '[aria-label="Pin for comparison: Backup"]' }));
     await pinBackup.click();
     await step();
-    expect(text('.pinned-folder')).toEqual(['Pinned: D:\Backup']);
+    expect(text('.pinned-folder')).toEqual(['Pinned: D:\\Backup']);
     expect(text('.comparison-hint')).toEqual(['Select another folder to compare with the pinned one']);
 
     const pinPhotos = await loader.getHarness(MatButtonHarness.with({ selector: '[aria-label="Pin for comparison: Photos"]' }));
     await pinPhotos.click();
     await step();
-    expect(text('.pinned-folder')).toEqual(['Pinned: C:\Photos']);
+    expect(text('.pinned-folder')).toEqual(['Pinned: C:\\Photos']);
 
     await (await loader.getHarness(MatButtonHarness.with({ text: 'Unpin' }))).click();
     await step();
@@ -390,20 +390,20 @@ describe('ResultScreen', () => {
     await step();
 
     await selectFolder(/^Photos/);
-    expectSummaries(http, 's-1', 'C:\Photos').flush(summaryPage([]));
-    expectPairs(http, 's-1', 'C:\Photos').flush(pairPage([]));
-    expectPair(http, 's-1', 'D:\Backup', 'C:\Photos').flush(
+    expectSummaries(http, 's-1', 'C:\\Photos').flush(summaryPage([]));
+    expectPairs(http, 's-1', 'C:\\Photos').flush(pairPage([]));
+    expectPair(http, 's-1', 'D:\\Backup', 'C:\\Photos').flush(
       pair(
-        side('C:\Photos', { filesWithCopy: 340, totalFiles: 3210, bytesWithCopy: 1288490188, full: false }),
-        side('D:\Backup', { filesWithCopy: 2, totalFiles: 2, bytesWithCopy: 900, full: true }),
+        side('C:\\Photos', { filesWithCopy: 340, totalFiles: 3210, bytesWithCopy: 1288490188, full: false }),
+        side('D:\\Backup', { filesWithCopy: 2, totalFiles: 2, bytesWithCopy: 900, full: true }),
       ),
     );
-    expectSets(http, 's-1', 'C:\Photos').flush(oneSet);
+    expectSets(http, 's-1', 'C:\\Photos').flush(oneSet);
     await step();
 
     expect(text('.comparison-pair .side-text')).toEqual([
-      'C:\Photos: 340 / 3210 files · 1.2 GB',
-      'D:\Backup: 2 / 2 files · 900 B',
+      'C:\\Photos: 340 / 3210 files · 1.2 GB',
+      'D:\\Backup: 2 / 2 files · 900 B',
     ]);
   });
 });
