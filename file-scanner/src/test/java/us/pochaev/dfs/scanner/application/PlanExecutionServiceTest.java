@@ -1551,7 +1551,8 @@ class PlanExecutionServiceTest {
         assertEquals(1, lock.live.get());
         switch (ending) {
             case CANCELLED -> ok(rig.service.cancel(id));
-            case FAILED -> rig.manifestWriter.failOn = line -> line instanceof ManifestLine.Moving;
+            // the Moving line is already written before the compare; the Moved line comes after it
+            case FAILED -> rig.manifestWriter.failOn = line -> line instanceof ManifestLine.Moved;
             default -> {
             }
         }
