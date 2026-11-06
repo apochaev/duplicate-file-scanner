@@ -197,7 +197,7 @@ Feature: Overlaps tab
 - [x] Every story spec uses `provideStubSurfacing()` and `settle(fixture)`
 - [x] The production build prints no budget warning, with the Material table module included (verifier: initial total 701.30 kB, lazy `result-screen` 260.31 kB)
 - [x] Checked by hand once on the built jar: a real scan of two overlapping folders (one a full copy of part of the other), the Overlaps tab read on open, a folder selected, one folder pinned and another compared, a nested pair tried, the text read from the DOM and recorded in `verification.md`
-- [ ] `CLAUDE.md`'s `server` entry and `docs/design/ui.md` (U3, M-1.5, M-1) describe the Overlaps tab
+- [x] `CLAUDE.md`'s `server` entry and `docs/design/ui.md` (U3, M-1.5, M-1) describe the Overlaps tab
 
 ## Open questions
 

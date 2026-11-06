@@ -44,7 +44,9 @@ java --enable-native-access=ALL-UNNAMED -jar server/build/libs/dfs-server.jar
 
 ### Known limits
 
-- **`docs/design/ui.md` is not finished; this is the one open defect.** The milestone table still lists DFS-050 (M-1.5) without "done" and does not mark M-1 done, which the ticket's Scope and its last done-item require. The new "As built (DFS-050, M-1.5)" bullet was also appended to the end of the DFS-049 bullet's line instead of starting a line of its own, so it renders as one run-on bullet with a literal "- **As built…" inside it.
+- **No open defects.** The `docs/design/ui.md` gap from the first review is fixed in 68559a6. The milestone table now reads `**M-1** (done)` and `DFS-050 Overlaps tab (M-1.5, done)`, and the "As built (DFS-050, M-1.5)" bullet is on its own line (line 29), right after the DFS-049 bullet (line 28).
+- Two choices are still yours to reject (see "Decided without you"): the tab switch has no animation, and the full "Pin for comparison" label wraps folder names in the narrow tree.
+- No test covers the pairs table's own progress bar or the guards that drop superseded requests. Neither is required by a criterion.
 - Charts (overlap matrix, treemap), building a rule from a pair, and keeping the pin or the tab in the URL are out of scope, as the ticket says.
 - Page positions are lost when you switch to Sets and back.
 
@@ -55,6 +57,7 @@ java --enable-native-access=ALL-UNNAMED -jar server/build/libs/dfs-server.jar
   - `folder-tree.spec.ts`: 1 new (AC-5);
   - `result-screen.spec.ts`: 3 new (AC-5, AC-6, AC-8), plus 10 DFS-049 tests updated to select Sets first.
 - **Deterministic gate on 8182892:** green 735 passed, disabled, freeze, touches (21 files), stubs, traceability and consistency all passed.
+- **Deterministic gate on 68559a6 (the docs fix):** the same checks passed again (green 735 passed, touches 22 files). The fix changes only `docs/design/ui.md` and `progress.md` (`git diff --stat 5bed8f9 68559a6`), so the test results and the by-hand check above still apply.
 - **Bundle:** `ngBuild --rerun` gives initial total 701.30 kB and lazy `result-screen` 260.31 kB, with no budget warning.
 - **Live check:** on the built `dfs-server.jar` with headless Chrome. The DOM text is recorded under "By-hand check on the built jar" below.
 
@@ -64,12 +67,12 @@ java --enable-native-access=ALL-UNNAMED -jar server/build/libs/dfs-server.jar
 |---|---|---|
 | Design | 1 | Passed; you approved it at the design gate. |
 | Tests | 1, reopened once | Defect 1: four story tests used single-backslash path literals (`'D:\Backup'` is `D:Backup` in JS). The implementer caught it, it went to the test-author, and it was fixed in 50c4e2b. |
-| Implement | 1 | Failed the gate on defect 1 at first, then passed after the test fix (no code change needed). |
-| Verify | 1 | This review. |
+| Implement | 1, sent back once | Failed the gate on defect 1 at first, then passed after the test fix (no code change needed). At the done gate you sent it back for the `docs/design/ui.md` fix only. That was done in 68559a6 (no code or test changed), and the gate passed again. |
+| Verify | 2 | The first review found 10 of 10 criteria met and the ui.md docs gap. This second review confirms the fix. |
 
 There were no escalations.
 
-**Verdict: send back to implement for the `docs/design/ui.md` fix only** (mark M-1.5 and M-1 done in the milestone table, and put the DFS-050 "As built" bullet on its own line). All acceptance criteria are met. If you would rather take that two-line docs fix at close, the story is otherwise ready for your approval.
+**Verdict: ready for your approval.** All 10 acceptance criteria are met, every done-item is ticked, and no defect is open.
 
 ## Summary
 
@@ -86,8 +89,8 @@ There were no escalations.
 - Tests are behavioral: rendered DOM text, exact request params (`under` absent vs present), harnesses. They do not restate the code.
 - Implementer deviations: `matTabContent` is correct and needed. `animationDuration="0ms"` is cosmetic and a product-owner choice.
 - No `CLAUDE.md` safety invariant is touched (read-only UI, no deletion).
-- Open defect: `docs/design/ui.md` does not mark M-1.5 and M-1 done, and the DFS-050 bullet is fused onto the DFS-049 line. The docs done-item is not met.
-- Back to implement for that docs fix, or the product owner accepts it as a fix at close. Everything else is ready for the human gate.
+- The ui.md docs defect from the first review is fixed in 68559a6: M-1 and M-1.5 are marked done, and the DFS-050 "As built" bullet has its own line. The docs done-item is met and ticked.
+- Ready for the human gate. No open defects.
 
 ## Acceptance criteria
 
@@ -149,9 +152,9 @@ This ticket is a read-only UI over GET endpoints, so most invariants do not appl
 ## Docs
 
 - **`CLAUDE.md`, met.** The `server` entry gains one sentence on the Overlaps tab (first, selected on open, own data, note, header, two paged tables, the pin and the Comparison block, Sets second). It is accurate.
-- **`docs/design/ui.md`, not met.**
-  - U3 gains an accurate "As built (DFS-050, M-1.5)" description. However, it was appended to the same line as the DFS-049 "As built" bullet (`… a "Copy folder path" action per link. - **As built (DFS-050, M-1.5):** …`), so it is not a bullet of its own.
-  - The Milestones table (line 164) still reads `DFS-050 Overlaps tab (M-1.5)` without "done", and M-1 is not marked done. The ticket's Scope ("the milestone table marks M-1.5 and M-1 done") and the last done-item require both.
+- **`docs/design/ui.md`, met after the fix in 68559a6.**
+  - First review: the U3 "As built (DFS-050, M-1.5)" text was accurate, but it was appended to the DFS-049 bullet's line. The Milestones table also had neither M-1.5 nor M-1 marked done.
+  - Now: the DFS-050 bullet starts its own line (line 29). The Milestones table (line 165) reads `| **M-1** (done) | … | DFS-050 Overlaps tab (M-1.5, done) |`. This matches the Scope ("the milestone table marks M-1.5 and M-1 done") and the last done-item. The U3 text did not change.
 
 ## By-hand check on the built jar
 
@@ -204,4 +207,6 @@ Verified and ticked:
 - no budget warning (initial 701.30 kB, lazy result-screen 260.31 kB);
 - the by-hand check on the built jar.
 
-Left unticked: "`CLAUDE.md`'s `server` entry and `docs/design/ui.md` (U3, M-1.5, M-1) describe the Overlaps tab". CLAUDE.md and U3 are done, but M-1.5 and M-1 are not marked in the milestone table (see Docs).
+- "`CLAUDE.md`'s `server` entry and `docs/design/ui.md` (U3, M-1.5, M-1) describe the Overlaps tab". This was left unticked in the first review and is ticked in the second, after the fix in 68559a6 (see Docs).
+
+Every done-item is now ticked.
