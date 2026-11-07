@@ -391,6 +391,22 @@ class ScanApiTest {
     }
 
     @Test
+    @DisplayName("DFS-052.AC-6 A location in a quarantine is refused with 400 LOCATION_IN_QUARANTINE and starts no scan")
+    void locationInAQuarantineIsRefused(@TempDir Path tmp, CapturedOutput output) throws Exception {
+        Path location = Files.createDirectories(tmp.resolve(".dfs-quarantine/run-1"));
+        try (TestServer server = TestServer.start()) {
+            String cookie = server.login(server.token(output.getOut()));
+
+            HttpResponse<String> r = server.sendJson("POST", "/api/scans", cookie, server.origin(), startBody(location));
+
+            assertEquals(400, r.statusCode(), r.body());
+            assertEquals("LOCATION_IN_QUARANTINE", body(r).path("code").asString(), r.body());
+            assertTrue(body(r).path("message").asString().contains(location.toString()), r.body());
+            assertEquals(0, body(server.get("/api/scans", cookie)).size());
+        }
+    }
+
+    @Test
     @DisplayName("DFS-040.AC-8 The spec describes the five scan operations and their schemas")
     void specDescribesTheScanApi() throws Exception {
         JsonNode spec = JSON.readTree(Files.readString(Path.of(System.getProperty("dfs.openapi.file"))));
