@@ -43,10 +43,26 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 24,
+          "wallClockSeconds": 196,
+          "outcome": "passed",
+          "note": "red: 30 story tests fail with stubs, 27 other tests fail on the ticket's stub, 0 fail in declared classes, 811 other tests pass (3 skipped); traceability: 8 criteria traced through 11 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-057-detailed-scan-progress/progress.md",
+        "docs/tickets/backlog/DFS-057-detailed-scan-progress/test-plan.md",
+        "server/frontend/src/app/scans/scan-eta.spec.ts",
+        "server/frontend/src/app/scans/scan-phase.spec.ts",
+        "server/frontend/src/app/scans/scan-row.spec.ts"
+      ],
+      "commit": "61358ce0a8fbfebf4ca372d6f1be78d56239c28b"
     },
     {
       "id": "implement",
