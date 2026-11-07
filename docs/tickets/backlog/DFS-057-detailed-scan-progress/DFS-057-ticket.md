@@ -35,6 +35,16 @@ Asked by the product owner on 2026-11-07 while running a real scan: "progress ba
 - **The CLI's model** (DFS-024, DFS-025; `cli/.../ProgressDisplay.java`): folders, files and bytes found while walking; files done while sampling; files, bytes, percentage and ETA while hashing, the ETA following the recent rate.
 - A list of finished phases with their totals needs the server to keep them: DFS-058, decided after this ticket is seen on a real scan.
 
+## Decisions
+
+1. **One line per phase, like the CLI, with the found totals kept underneath** (2026-11-07). While a scan is not finished, its row shows, by `phase`:
+   - **WALK:** "Finding files: 1,204 folders · 48,210 files · 310 GB found"; the bar is indeterminate (no total exists yet).
+   - **PARTIAL_HASH:** "Comparing samples: 3,100 of 9,400 files · 6,300 left · 33%"; the bar and the percentage follow files (`hashedFiles / hashFilesTotal`). Sample bytes are not shown.
+   - **FULL_HASH:** "Hashing files: 1,204 of 5,880 files · 4,676 left · 3.1 GB of 12.4 GB · 9.3 GB left · 26%" plus the ETA (decision 2); the bar and the percentage follow bytes (`hashedBytes / hashBytesTotal`).
+   - **HARD_LINKS:** "Checking hard links: group 40 of 310" (`groupsDone` of `groupsTotal`); the bar follows groups.
+   - In every phase after WALK, a second line keeps "Found: 48,210 files · 310 GB" (`files`, `bytes`).
+   Each phase shows the numbers that mean something in it, and the found / sampled / hashed totals show how the candidates narrowed. Numbers use the page's existing `plural` and `formatBytes` (`scan-format.ts`). Not one generic line for every hashing phase (shows sample bytes, nothing for walk or hard links, no "left") and not a grid of Done / Total / Left (empty cells in two phases, harder to read at a glance).
+
 ## Acceptance criteria
 
 The full ID of each criterion is `DFS-057.AC-<n>`.
@@ -71,6 +81,5 @@ Feature: Detailed scan progress
 
 ## Open questions
 
-- What the line shows in each phase (walk, partial hash, full hash, hard links), and in what words.
 - The ETA: computed in the browser from which rate (bytes, recent window as DFS-025), when it is shown, and what it says before it is known.
 - Archetype (`component` likely), gates and autorun.
