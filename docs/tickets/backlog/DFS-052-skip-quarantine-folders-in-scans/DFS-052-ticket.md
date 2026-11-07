@@ -1,7 +1,7 @@
 ---
 id: DFS-052
 title: Skip quarantine folders when scanning
-status: ready
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: use-case
@@ -171,13 +171,13 @@ Feature: Skip quarantine folders when scanning
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] Each test's `@DisplayName` starts with its criterion ID (`DFS-052.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] Every use-case-archetype checklist item is addressed or marked not applicable with a reason
-- [ ] The test trees were searched for tests asserting `skipped` lines or the list of skip reasons, and any that broke were updated (DFS-030.L-2)
-- [ ] `CLAUDE.md` lists `QUARANTINE` among the walker's skip reasons and states that scans leave quarantine folders out and refuse locations inside one (the verifier reads it)
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above is an automated test and passes
+- [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-052.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] Every use-case-archetype checklist item is addressed or marked not applicable with a reason
+- [x] The test trees were searched for tests asserting `skipped` lines or the list of skip reasons, and any that broke were updated (DFS-030.L-2)
+- [x] `CLAUDE.md` lists `QUARANTINE` among the walker's skip reasons and states that scans leave quarantine folders out and refuse locations inside one (the verifier reads it)
+- [x] No files changed outside the paths listed under Touches
 
 ## Open questions
 

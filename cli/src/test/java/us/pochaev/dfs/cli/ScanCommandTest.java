@@ -1106,6 +1106,68 @@ class ScanCommandTest {
                 lines.get(1));
     }
 
+    // --- DFS-052: quarantine folders
+
+    /** A/photo.jpg and a byte-identical copy under .dfs-quarantine/run-1/A/, created at test time. */
+    private Path quarantineTree() throws IOException {
+        Files.createDirectories(tmp.resolve("A"));
+        write(tmp.resolve("A/photo.jpg"), DUP);
+        Files.createDirectories(tmp.resolve(".dfs-quarantine/run-1/A"));
+        write(tmp.resolve(".dfs-quarantine/run-1/A/photo.jpg"), DUP);
+        return tmp.toRealPath().resolve(".dfs-quarantine");
+    }
+
+    @Test
+    @DisplayName("DFS-052.AC-5 JSON Lines hold a skipped line with reason QUARANTINE and no set line")
+    void jsonLinesReportTheQuarantineFolder() throws IOException {
+        Path quarantine = quarantineTree();
+
+        Run run = scan(tmp.toString());
+
+        assertEquals(0, run.exitCode, run.err);
+        List<JsonNode> lines = run.jsonLines();
+        assertEquals(2, lines.size(), run.out);
+        JsonNode skipped = lines.get(0);
+        assertEquals("skipped", skipped.get("type").asString());
+        assertEquals(quarantine.toString(), skipped.get("path").asString());
+        assertEquals("QUARANTINE", skipped.get("reason").asString());
+        assertEquals("summary", lines.get(1).get("type").asString());
+        assertEquals(1, lines.get(1).get("skipped").asInt());
+        assertEquals(0, lines.get(1).get("sets").asInt());
+    }
+
+    @Test
+    @DisplayName("DFS-052.AC-5 The text report lists the quarantine folder under Skipped and counts it")
+    void textReportListsTheQuarantineFolder() throws IOException {
+        Path quarantine = quarantineTree();
+
+        Run run = scan(tmp.toString(), "--format=text");
+
+        assertEquals(0, run.exitCode, run.err);
+        List<String> lines = run.textBody();
+        assertTrue(lines.contains("Skipped (1):"), run.out);
+        assertTrue(lines.stream().anyMatch(l -> l.startsWith("    " + quarantine + "  QUARANTINE  ")), run.out);
+        assertEquals("Summary: 0 sets, 0 files, 0 B reclaimable, 1 skipped, 0 excluded", lines.getLast());
+    }
+
+    /**
+     * The ticket text says exit 2; the user decided on exit 1 (ScanCommand.ERROR, the code of every
+     * refused start, DFS-020.AC-13), see design.md open note 6 and test-plan.md.
+     */
+    @Test
+    @DisplayName("DFS-052.AC-5 A location in a quarantine is refused with exit 1 and the message on stderr")
+    void aLocationInAQuarantineIsRefused() throws IOException {
+        quarantineTree();
+        Path location = tmp.resolve(".dfs-quarantine/run-1");
+
+        Run run = scan(location.toString());
+
+        assertEquals(ScanCommand.ERROR, run.exitCode);
+        assertTrue(run.err.startsWith("error: LOCATION_IN_QUARANTINE: "), run.err);
+        assertTrue(run.err.contains(location.toString()), run.err);
+        assertEquals("", run.out);
+    }
+
     // --- helpers
 
     private Run scan(String... args) {

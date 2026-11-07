@@ -1,6 +1,7 @@
 package us.pochaev.dfs.scanner.infra.adapter;
 
 import us.pochaev.dfs.scanner.domain.model.PlanExecutionId;
+import us.pochaev.dfs.scanner.domain.model.QuarantineFolder;
 import us.pochaev.dfs.scanner.infra.port.FileDeleter;
 
 import java.io.IOException;
@@ -19,8 +20,8 @@ import java.util.List;
  */
 public final class NioQuarantineDeleter implements FileDeleter {
 
-    /** The quarantine folder's name below a volume root or an anchor. */
-    public static final String QUARANTINE_FOLDER = ".dfs-quarantine";
+    /** The quarantine folder's name below a volume root or an anchor; the shared constant since DFS-052. */
+    public static final String QUARANTINE_FOLDER = QuarantineFolder.NAME;
 
     private final List<Path> anchors;
 

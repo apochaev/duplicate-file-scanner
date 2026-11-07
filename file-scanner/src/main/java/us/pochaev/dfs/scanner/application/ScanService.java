@@ -14,6 +14,7 @@ import us.pochaev.dfs.scanner.infra.port.LocationResolver;
 import us.pochaev.dfs.scanner.infra.port.ScanRepository;
 
 import us.pochaev.dfs.scanner.domain.model.ErrorCode;
+import us.pochaev.dfs.scanner.domain.model.QuarantineFolder;
 import us.pochaev.dfs.scanner.domain.model.ScanEvent;
 import us.pochaev.dfs.scanner.domain.model.ScanStatus;
 import us.pochaev.dfs.scanner.infra.port.ScanRecord;
@@ -91,6 +92,11 @@ public final class ScanService implements StartScan, CancelScan, GetScanStatus, 
         if (locations.isEmpty()) {
             return new Result.Failure<>(ErrorCode.NO_LOCATIONS, "no locations to scan");
         }
+        Optional<Path> quarantined = firstInQuarantine(locations);
+        if (quarantined.isPresent()) {
+            return new Result.Failure<>(ErrorCode.LOCATION_IN_QUARANTINE,
+                    "location is in a quarantine folder: " + quarantined.get());
+        }
         for (Path location : locations) {
             try {
                 resolver.realPath(location);
@@ -118,6 +124,22 @@ public final class ScanService implements StartScan, CancelScan, GetScanStatus, 
             throw e;
         }
         return new Result.Success<>(id);
+    }
+
+    /**
+     * The first of {@code locations}, in list order, whose absolute path ({@code toAbsolutePath().normalize()}, no
+     * disk access) has a name element equal to {@link QuarantineFolder#NAME}, case-sensitively; the location as the
+     * caller gave it. Empty when there is none (DFS-052 decision 3).
+     */
+    private static Optional<Path> firstInQuarantine(List<Path> locations) {
+        for (Path location : locations) {
+            for (Path name : location.toAbsolutePath().normalize()) {
+                if (name.toString().equals(QuarantineFolder.NAME)) {
+                    return Optional.of(location);
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
