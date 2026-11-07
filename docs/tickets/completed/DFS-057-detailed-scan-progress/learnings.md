@@ -10,33 +10,33 @@
 
 ### DFS-057.L-1: The architect guide misses existing specs whose assertions the ticket's new behavior breaks later
 
-- Status: proposed
+- Status: applied
 - Impact: shared
 - Target: `.claude/agents/architect.md`
 - Change: add a step: when a ticket changes existing visible behavior, grep the existing specs for the selectors and texts being replaced, then either keep them compatible or list the specs the test-author must update under Expected breakage.
 - Evidence: DFS-057 notes (architect, first bullet): Expected breakage comes from the red run and shows nothing about assertions the implementation breaks later; DFS-041.AC-6 in `scan-screen.spec.ts` asserted `.scan-phase` and was found only by grepping. Related but different: DFS-049.L-2 (breakage from new providers, which the red run does show).
 - Recurrences: 1 (DFS-057)
 - Recommendation: apply; a cheap check that prevents breakage the red run cannot show.
-- Decision:
+- Decision: applied 2026-11-07 by the user; commit `docs: apply DFS-057.L-1, L-2 and L-3`
 
 ### DFS-057.L-2: The component checklist does not say a stub must not be reached from an RxJS `next` callback
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/component/archetype.md` checklist item 3
 - Change: add: do not call a stub from an RxJS subscriber callback, since RxJS rethrows its error from a timer outside Angular's `ErrorHandler` and `provideStubSurfacing()` does not see it; feed it from an `effect` instead. Add that Vitest's "Unhandled Errors" block in a spec without `provideStubSurfacing()` is not a separate red regression.
 - Evidence: DFS-057 notes (architect, second and third bullets): `ScanRow` feeds the ETA estimator from an `effect`; `scan-row.spec.ts` showed 2 "Uncaught Exception" entries at red while every failing test still named `not implemented: DFS-057`.
 - Recurrences: 1 (DFS-057)
 - Recommendation: apply; two verified gotchas with a concrete workaround.
-- Decision:
+- Decision: applied 2026-11-07 by the user; commit `docs: apply DFS-057.L-1, L-2 and L-3`
 
 ### DFS-057.L-3: The component live check has no fast-to-hash folder and no ready browser driver, so a progress ticket's check stays partial
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/component/archetype.md` (checklist item 11 and extra done-items) and a scratch Playwright driver kept with the archetype
 - Change: for a progress or ETA ticket, name a folder of a few large duplicate files for the live check instead of a large tree; ship a ready-made scratch Playwright-for-Java driver (Gradle-cache jars, `setChannel("msedge")`, `C:/` paths in `-cp` under Git Bash) so the verifier spends no turns building one.
 - Evidence: DFS-057 plan.json verify run: 42 turns, hit the 30-turn cap once and was resumed; the live check saw WALK and PARTIAL_HASH on a 100 000-file tree and never FULL_HASH or the ETA; the done-item stayed unticked and the ticket closed with it open. Related: DFS-051 (verifier turn cap), which raised the cap instead of shortening the check.
 - Recurrences: 1 (DFS-057)
 - Recommendation: apply; the live check is the only part of the ticket that was not verified.
-- Decision:
+- Decision: applied 2026-11-07 by the user; commit `docs: apply DFS-057.L-1, L-2 and L-3`. The ready-made scratch Playwright driver the entry asks for is not written: only the folder advice and the driver recipe went into the checklist; the driver file remains open.
