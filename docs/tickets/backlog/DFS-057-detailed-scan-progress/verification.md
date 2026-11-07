@@ -102,6 +102,7 @@ Partly done. Built `dfs-server.jar` (bundle confirmed to hold the implementation
 
 - Seen: WALK, e.g. "Finding files: 6616 folders · 49665 files · 1.1 GB found", bar `mode=indeterminate`, `aria-label="Scan progress"`, no found line, no ETA. PARTIAL_HASH, e.g. "Comparing samples: 182 of 102175 files · 101993 left · 0%", "Found: 102724 files · 2.4 GB", determinate bar with `aria-valuenow` 0.178 (follows files), no ETA. (The "·" shows as a replacement character only in the scratch program's console output, a Windows stdout encoding artefact.)
 - Not seen: FULL_HASH, the ETA settling, HARD_LINKS, the final COMPLETED row, and the console-error count (stopped after 22 s in the sample phase at the turn cap, before the program printed its console summary). Sampling ~100 000 small files from a cold cache ran at about 10 files/s, so this folder was a poor choice for reaching hashing quickly.
+- Console, read after the hand-off: the program logged 592 console errors. All are `net::ERR_CONNECTION_REFUSED` (591) or `ERR_CONNECTION_RESET` (1), from the page retrying its event stream after I stopped the server. No error from the page itself showed up while it ran through WALK and PARTIAL_HASH.
 - That done-item stays unticked; the product owner's own review on a real scan (decision 3) covers it.
 
 ## Done-items
