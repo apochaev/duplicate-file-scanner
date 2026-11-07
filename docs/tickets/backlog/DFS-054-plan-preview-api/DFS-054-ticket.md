@@ -1,7 +1,7 @@
 ---
 id: DFS-054
 title: Preview a deletion plan through the server API
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: endpoint
@@ -23,7 +23,7 @@ touches:
   - docs/design/ui.md
 blocked_reason:
 created: 2026-11-05
-updated: 2026-11-06
+updated: 2026-11-07
 completed:
 ---
 
@@ -63,7 +63,7 @@ The full ID of each criterion is `DFS-054.AC-<n>`.
 - **AC-4** `GET /api/scans/{id}/plans/{planId}/conflicts` answers a `ConflictPage` of every conflict, largest `size` first: the set's `digest` and `size`, its copies (each with its links and the rules that would quarantine it or keep it) and the conflict's `sources`.
 - **AC-5** `operations` and `conflicts` page like `/sets`: `page` and `size` (`400` `INVALID_PAGE` for `page` < 0 or `size` outside 1-500), and a page past the end is empty with the same `totalItems`; an unknown `planId` answers `404` `UNKNOWN_PLAN` on both.
 - **AC-6** No plan quarantines the last copy: for crossing rules (keep A, quarantine in B; keep B, quarantine in A), each set with copies only in A and B is a conflict and no operation names it, and in every plan the API answers, every set of the scan keeps at least one copy that no operation moves.
-- **AC-7** Hard links are not copies: for a set whose file in A has a hard link in B and a real copy in C, the rule "keep C, quarantine in A" answers one operation whose `links` are both the A and the B path, and no operation's `keeper` is a link of the copy it moves.
+- **AC-7** Hard links are not copies: for a set whose file in A has a hard link also in A and a real copy in C, the rule "keep C, quarantine in A" answers one operation whose `links` are both A paths (the core moves a copy only when every link lies under `quarantineIn`), and no operation's `keeper` is a link of the copy it moves.
 - **AC-8** Previewing is a pure query: after any `POST /plans`, answered or refused, every file under the scan's roots has the same path, size and modified time as before, and no file or folder was created.
 - **AC-9** Every request path (each rule's `keep` and `quarantineIn`, each exception, each pick's `keep`) must be absolute (`400` `RELATIVE_PATH`) and inside a scan root (`403` `PATH_OUTSIDE_ROOTS`, also through `..`), the message naming the field (e.g. `rules[1].keep`); a refused request answers no `Location`.
 - **AC-10** The core's refusals answer `400` with the same code and message (`INVALID_RULE`, `UNKNOWN_SET`, `PATH_NOT_IN_SET`, `DUPLICATE_PICK`), only the first problem in request order is reported, and an empty request (no rules, no picks) answers `201` with an empty plan (zero totals and counts).
@@ -135,10 +135,10 @@ Feature: Plan preview API
 
   @AC-7
   Scenario: A hard-linked copy moves with all its links
-    Given "<tmp>/B/photo-link.jpg" is created at test time as a hard link of "<tmp>/A/photo.jpg" (skipped where the platform refuses)
+    Given "<tmp>/A/photo-link.jpg" is created at test time as a hard link of "<tmp>/A/photo.jpg" (skipped where the platform refuses)
     And "<tmp>/C/photo.jpg" is a real copy, and the scan is run again
     When I preview "keep C, quarantine in A"
-    Then one operation for photo has links "<tmp>/A/photo.jpg" and "<tmp>/B/photo-link.jpg" and keeper "<tmp>/C/photo.jpg"
+    Then one operation for photo has links "<tmp>/A/photo.jpg" and "<tmp>/A/photo-link.jpg" and keeper "<tmp>/C/photo.jpg"
     And no operation's keeper is a link of the copy it moves
 
   @AC-8
@@ -232,14 +232,14 @@ Feature: Plan preview API
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] Each test's `@DisplayName` starts with its criterion ID (`DFS-054.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
-- [ ] Every endpoint-archetype checklist item is addressed in `design.md` or marked not applicable with a reason
-- [ ] `CLAUDE.md`'s `server` entry lists the four plan endpoints, and `docs/design/ui.md` U6, U7 and D4 name them (the verifier reads them)
-- [ ] No test this ticket adds uses `Thread.sleep` (AC-13 waits on latches)
-- [ ] Started by hand once on Windows: a real folder scanned, then plans previewed with `curl` (a rule, crossing rules with conflicts, one refused path), their operations and conflicts paged, the server log free of warnings and errors
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above is an automated test and passes (verifier 2026-11-07: 26 PlanApiTest invocations green; AC-7 wording corrected in e791473)
+- [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-054.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
+- [x] Every endpoint-archetype checklist item is addressed in `design.md` or marked not applicable with a reason
+- [x] `CLAUDE.md`'s `server` entry lists the four plan endpoints, and `docs/design/ui.md` U6, U7 and D4 name them (the verifier reads them)
+- [x] No test this ticket adds uses `Thread.sleep` (AC-13 waits on latches)
+- [x] Started by hand once on Windows: a real folder scanned, then plans previewed with `curl` (a rule, crossing rules with conflicts, one refused path), their operations and conflicts paged, the server log free of warnings and errors (verifier, 2026-11-07, built jar: rule 2 ops/7340032 bytes, crossing 2 conflicts, RELATIVE_PATH and PATH_OUTSIDE_ROOTS refused; no warning from plan requests)
+- [x] No files changed outside the paths listed under Touches
 
 ## Open questions
 

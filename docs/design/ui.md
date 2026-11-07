@@ -58,13 +58,15 @@ The scanner does not compute folder overlaps (CLAUDE.md decision 1). The server 
 - **Exceptions** exclude files or folders from a rule ("keep this one"), from the preview or folder view.
 - **Single-set picks** choose the keeper for one set, from the Sets tab.
 
-Every preview entry shows which rule or pick produced it. DFS-022 validates the plan as a whole (never the last copy). A keep-priority list ("C:/Photos > E:/Archive > D:/backup") may come later as a shortcut that generates rules.
+The server previews a whole draft with `POST /api/scans/{id}/plans` (DFS-054); each operation and conflict names its source, a rule index or a pick. Every preview entry shows which rule or pick produced it. DFS-022 validates the plan as a whole (never the last copy). A keep-priority list ("C:/Photos > E:/Archive > D:/backup") may come later as a shortcut that generates rules.
 
 ### U7. Preview and double-check
 
 1. **Plan check** (DFS-022, from the scan result): totals (files, bytes, sets touched), entries grouped by rule with their keeper, files left behind, and last-copy conflicts, which block confirming.
 2. **Drift check**, automatic on opening the preview: re-read size and modification time of every candidate and keeper; mark *changed*, *missing* or *new conflict* (e.g. a keeper deleted since the scan) and exclude those entries until rescanned. Reads only metadata.
 3. **Content verify**, on request per file, per rule or for the whole plan: the same byte-for-byte compare against the keeper that execution runs (`ContentComparator`, CLAUDE.md decision 4), read-only, with progress. Entries show *verified at <time>* or *differs*.
+
+The preview endpoints are `POST /api/scans/{id}/plans` (`previewPlan`), `GET /api/scans/{id}/plans/{planId}` (`getPlan`), and `GET .../operations` (`listPlanOperations`) and `GET .../conflicts` (`listPlanConflicts`) under it, the last two paged (DFS-054).
 
 A previewed plan is **frozen**: it gets an ID, and executing it (later) runs exactly that plan and refuses if it was edited since. Editing creates a new draft. Large plans require typing the file count to confirm. Execution still re-verifies everything (decision 4); the preview checks are for your confidence, not a replacement.
 
@@ -111,7 +113,7 @@ Several scans can exist in memory at once. The start screen lists this session's
 
 ### D4. Plan lifecycle in the first version
 
-Draft (editable) → previewed (frozen, has an ID; U7) → editing creates a new draft. With no executing yet, the end point is "export plan as JSON", so the CLI can run it once DFS-021 and the executor exist.
+Draft (editable) → previewed (frozen, has an ID; U7) → editing creates a new draft. The draft lives in the browser; `POST /api/scans/{id}/plans` freezes it into a plan the server keeps for the server run, and editing previews again, to a new ID (DFS-054). With no executing yet, the end point is "export plan as JSON", so the CLI can run it once DFS-021 and the executor exist.
 
 ### D5. Guard rails
 
