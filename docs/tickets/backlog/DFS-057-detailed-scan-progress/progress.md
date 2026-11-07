@@ -10,3 +10,6 @@
 ## Test phase
 
 Test-author: wrote scan-phase.spec.ts, scan-eta.spec.ts and a "ScanRow phase lines" describe in scan-row.spec.ts, plus test-plan.md. All DFS-057 tests fail with "not implemented: DFS-057". Expected commit: test(server): add DFS-057 specs [DFS-057].
+
+## Implement phase
+Implemented `phaseView` (scan-phase.ts), `EtaEstimator.record` and `formatEta` (scan-eta.ts) per design.md; updated CLAUDE.md and docs/design/ui.md U2. Expected commit: `feat(server): show phase counts and ETA on the scan row [DFS-057]`.
