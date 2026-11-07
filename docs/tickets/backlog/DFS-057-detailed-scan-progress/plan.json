@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-057-detailed-scan-progress",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-057-detailed-scan-progress",
-  "state": "running",
+  "state": "awaiting-approval",
   "phases": [
     {
       "id": "design",
@@ -97,10 +97,24 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 42,
+          "wallClockSeconds": 525,
+          "outcome": "passed",
+          "note": "consistency passes; hit 30-turn cap once, resumed same agent to finish; live check partial (PARTIAL_HASH seen, hashing/ETA not)"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-057-detailed-scan-progress/DFS-057-ticket.md",
+        "docs/tickets/backlog/DFS-057-detailed-scan-progress/learnings.md",
+        "docs/tickets/backlog/DFS-057-detailed-scan-progress/verification.md"
+      ],
+      "commit": "89e4b755be335837f68d643ab37e9f8df49ea3ad"
     }
   ],
   "gates": [
