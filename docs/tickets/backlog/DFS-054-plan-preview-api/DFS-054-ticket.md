@@ -232,7 +232,7 @@ Feature: Plan preview API
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
+- [x] Every scenario above is an automated test and passes (verifier 2026-11-07: 26 PlanApiTest invocations green; AC-7 wording corrected in e791473)
 - [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-054.AC-n`)
 - [x] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
 - [x] Every endpoint-archetype checklist item is addressed in `design.md` or marked not applicable with a reason

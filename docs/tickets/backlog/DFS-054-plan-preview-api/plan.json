@@ -1,0 +1,146 @@
+{
+  "ticket": "DFS-054",
+  "archetype": {
+    "name": "endpoint",
+    "version": 4
+  },
+  "branch": "tickets/DFS-054-plan-preview-api",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-054-plan-preview-api",
+  "state": "awaiting-approval",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 66,
+          "wallClockSeconds": 664,
+          "outcome": "passed",
+          "note": "touches: 23 changed files, all inside touches (turns = tool uses)"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-054-plan-preview-api/DFS-054-ticket.md",
+        "docs/tickets/backlog/DFS-054-plan-preview-api/design.md",
+        "docs/tickets/backlog/DFS-054-plan-preview-api/learnings.md",
+        "docs/tickets/backlog/DFS-054-plan-preview-api/progress.md",
+        "server/frontend/openapi.json",
+        "server/src/main/java/us/pochaev/dfs/server/plan/ConflictCopy.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/ConflictPage.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/KeptPlan.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/LeftBehindView.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/OperationPage.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanConflict.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanController.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanOperation.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanPickRequest.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanRequests.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanRuleRequest.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanSource.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanStore.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanSummary.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanTotalsView.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanViews.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PreviewPlanRequest.java"
+      ],
+      "commit": "b6c1ec2ef05ad67db1ca13ec19d6a868817ebe74"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 19,
+          "wallClockSeconds": 272,
+          "outcome": "passed",
+          "note": "red: 26 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 824 other tests pass (3 skipped); traceability: 14 criteria traced through 17 scenarios to tests and test-plan.md (turns = tool uses)"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-054-plan-preview-api/learnings.md",
+        "docs/tickets/backlog/DFS-054-plan-preview-api/progress.md",
+        "docs/tickets/backlog/DFS-054-plan-preview-api/test-plan.md",
+        "server/src/test/java/us/pochaev/dfs/server/PlanApiTest.java"
+      ],
+      "commit": "be48c95e8dc891bd22455239eaa68192d1b39919"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 52,
+          "wallClockSeconds": 380,
+          "outcome": "passed",
+          "note": "green 847 passed 3 skipped; disabled, freeze, touches (27 files), stubs, traceability (14 criteria/17 scenarios), consistency pass (turns = tool uses)"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-054-plan-preview-api/progress.md",
+        "server/src/main/java/us/pochaev/dfs/server/plan/KeptPlan.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanController.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanRequests.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanStore.java",
+        "server/src/main/java/us/pochaev/dfs/server/plan/PlanViews.java"
+      ],
+      "commit": "e7c9d33d9a6fb557566db0bb0be64edfaed3e178"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 39,
+          "wallClockSeconds": 248,
+          "outcome": "passed",
+          "note": "AC-7 partially met (scenario contradicts the core); 13/14 met (turns = tool uses)"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-054-plan-preview-api/DFS-054-ticket.md",
+        "docs/tickets/backlog/DFS-054-plan-preview-api/learnings.md",
+        "docs/tickets/backlog/DFS-054-plan-preview-api/verification.md"
+      ],
+      "commit": "56bc3bbe8d637d4e52be1de524c33aa085418884"
+    }
+  ],
+  "gates": [
+    {
+      "after": "design",
+      "status": "approved"
+    },
+    {
+      "after": "done",
+      "status": "pending"
+    }
+  ],
+  "defects": []
+}
