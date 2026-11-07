@@ -1,7 +1,7 @@
 ---
 id: DFS-054
 title: Preview a deletion plan through the server API
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: endpoint
@@ -23,7 +23,7 @@ touches:
   - docs/design/ui.md
 blocked_reason:
 created: 2026-11-05
-updated: 2026-11-06
+updated: 2026-11-07
 completed:
 ---
 
