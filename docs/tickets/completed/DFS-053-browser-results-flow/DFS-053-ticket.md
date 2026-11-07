@@ -1,7 +1,7 @@
 ---
 id: DFS-053
 title: Exercise the scan and results flow in a browser
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: none
@@ -15,7 +15,7 @@ touches: [server/build.gradle.kts, server/src/test/java/us/pochaev/dfs/server, d
 blocked_reason:
 created: 2026-11-02
 updated: 2026-11-07
-completed:
+completed: 2026-11-07
 ---
 
 # DFS-053: Exercise the scan and results flow in a browser
