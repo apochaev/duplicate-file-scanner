@@ -233,13 +233,13 @@ Feature: Plan preview API
 ## Definition of done
 
 - [ ] Every scenario above is an automated test and passes
-- [ ] Each test's `@DisplayName` starts with its criterion ID (`DFS-054.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
-- [ ] Every endpoint-archetype checklist item is addressed in `design.md` or marked not applicable with a reason
-- [ ] `CLAUDE.md`'s `server` entry lists the four plan endpoints, and `docs/design/ui.md` U6, U7 and D4 name them (the verifier reads them)
-- [ ] No test this ticket adds uses `Thread.sleep` (AC-13 waits on latches)
-- [ ] Started by hand once on Windows: a real folder scanned, then plans previewed with `curl` (a rule, crossing rules with conflicts, one refused path), their operations and conflicts paged, the server log free of warnings and errors
-- [ ] No files changed outside the paths listed under Touches
+- [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-054.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
+- [x] Every endpoint-archetype checklist item is addressed in `design.md` or marked not applicable with a reason
+- [x] `CLAUDE.md`'s `server` entry lists the four plan endpoints, and `docs/design/ui.md` U6, U7 and D4 name them (the verifier reads them)
+- [x] No test this ticket adds uses `Thread.sleep` (AC-13 waits on latches)
+- [x] Started by hand once on Windows: a real folder scanned, then plans previewed with `curl` (a rule, crossing rules with conflicts, one refused path), their operations and conflicts paged, the server log free of warnings and errors (verifier, 2026-11-07, built jar: rule 2 ops/7340032 bytes, crossing 2 conflicts, RELATIVE_PATH and PATH_OUTSIDE_ROOTS refused; no warning from plan requests)
+- [x] No files changed outside the paths listed under Touches
 
 ## Open questions
 
