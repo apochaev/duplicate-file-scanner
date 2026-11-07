@@ -6,7 +6,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import us.pochaev.dfs.scanner.domain.model.ErrorCode;
+import us.pochaev.dfs.scanner.domain.model.PlanRequest;
+import us.pochaev.dfs.scanner.domain.model.Result;
+import us.pochaev.dfs.server.api.ApiException;
+import java.net.URI;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,9 +39,6 @@ import us.pochaev.dfs.server.scan.ScanRegistry;
  * core's refusals ({@code 400} with the core's code and message); for the GETs, the plan ID
  * ({@code 404 UNKNOWN_PLAN}), then paging ({@code 400 INVALID_PAGE}). A refused POST keeps no plan and answers no
  * {@code Location}.
- * <p>
- * Stubs (design phase): every method body throws; the mappings, signatures and annotations are final, since
- * {@code ./gradlew :server:updateOpenApi} builds the committed spec from them.
  */
 @RestController
 @RequestMapping(path = "/api/scans", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -73,7 +76,37 @@ class PlanController {
             content = @Content(schema = @Schema(implementation = ApiError.class)))
     ResponseEntity<PlanSummary> previewPlan(@PathVariable String id, @RequestBody PreviewPlanRequest request) {
         // Take the ID as a String: a malformed one must be the same 404 as an unknown one (checklist item 4).
-        throw new UnsupportedOperationException("not implemented: DFS-054");
+        PlanStore store = store(id);
+        PlanRequest core = PlanRequests.toCore(request, store::insideRoots);
+        return switch (store.preview(core, preview)) {
+            case Result.Success<KeptPlan> ok -> {
+                PlanSummary summary = ok.value().summary();
+                yield ResponseEntity.created(URI.create("/api/scans/" + id + "/plans/" + summary.planId()))
+                        .body(summary);
+            }
+            case Result.Failure<KeptPlan> f ->
+                    throw new ApiException(HttpStatus.BAD_REQUEST, f.code().name(), f.message());
+        };
+    }
+
+    private PlanStore store(String id) {
+        return switch (registry.completedState(id, PlanStore.class, PlanStore::new)) {
+            case Result.Success<PlanStore> ok -> ok.value();
+            case Result.Failure<PlanStore> f -> throw new ApiException(
+                    f.code() == ErrorCode.UNKNOWN_SCAN ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT,
+                    f.code().name(), f.message());
+        };
+    }
+
+    private KeptPlan plan(String id, String planId) {
+        return store(id).find(planId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "UNKNOWN_PLAN",
+                "No plan " + planId + " was previewed for scan " + id + " in this server run"));
+    }
+
+    private static void checkPage(int page, int size) {
+        if (page < 0 || size < 1 || size > 500) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_PAGE", "page must be 0 or more and size 1 to 500");
+        }
     }
 
     @GetMapping("/{id}/plans/{planId}")
@@ -84,7 +117,7 @@ class PlanController {
     @ApiResponse(responseCode = "409", description = NOT_COMPLETED,
             content = @Content(schema = @Schema(implementation = ApiError.class)))
     PlanSummary getPlan(@PathVariable String id, @PathVariable String planId) {
-        throw new UnsupportedOperationException("not implemented: DFS-054");
+        return plan(id, planId).summary();
     }
 
     @GetMapping("/{id}/plans/{planId}/operations")
@@ -105,7 +138,9 @@ class PlanController {
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Operations per page, 1 to 500")
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("not implemented: DFS-054");
+        KeptPlan kept = plan(id, planId);
+        checkPage(page, size);
+        return kept.operationPage(page, size);
     }
 
     @GetMapping("/{id}/plans/{planId}/conflicts")
@@ -126,6 +161,8 @@ class PlanController {
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Conflicts per page, 1 to 500")
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("not implemented: DFS-054");
+        KeptPlan kept = plan(id, planId);
+        checkPage(page, size);
+        return kept.conflictPage(page, size);
     }
 }

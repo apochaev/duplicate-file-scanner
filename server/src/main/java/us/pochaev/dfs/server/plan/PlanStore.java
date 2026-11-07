@@ -1,5 +1,6 @@
 package us.pochaev.dfs.server.plan;
 
+import us.pochaev.dfs.scanner.domain.model.DeletionPlan;
 import us.pochaev.dfs.scanner.domain.model.PlanRequest;
 import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.scanner.domain.model.ScanResult;
@@ -8,6 +9,7 @@ import us.pochaev.dfs.scanner.domain.usecases.query.PreviewDeletionPlan;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The plans previewed for one COMPLETED scan (DFS-054 decisions 1, 2): kept beside the scan's entry by
@@ -18,12 +20,11 @@ import java.util.Optional;
  * request whose plan ID is already kept keeps the first copy and answers it (the core's ID is content-derived, so both
  * are equal); a refused request keeps nothing. Thread-safe: concurrent previews of different requests are each kept
  * (a concurrent map, {@code putIfAbsent} by plan ID), and a reader sees a plan only once it is fully built.
- * <p>
- * Stubs (design phase): every method throws.
  */
 final class PlanStore {
 
     private final ScanResult result;
+    private final ConcurrentHashMap<String, KeptPlan> plans = new ConcurrentHashMap<>();
 
     /** @param result the COMPLETED scan's whole result */
     PlanStore(ScanResult result) {
@@ -35,7 +36,7 @@ final class PlanStore {
      * {@link Path#startsWith} (the platform's rules: case-insensitive on Windows), as {@code ResultIndex.insideRoots}.
      */
     boolean insideRoots(Path path) {
-        throw new UnsupportedOperationException("not implemented: DFS-054");
+        return result.roots().stream().anyMatch(path::startsWith);
     }
 
     /**
@@ -48,7 +49,14 @@ final class PlanStore {
      *         {@code UNKNOWN_SET}, {@code PATH_NOT_IN_SET}, {@code DUPLICATE_PICK}) unchanged, nothing kept
      */
     Result<KeptPlan> preview(PlanRequest request, PreviewDeletionPlan preview) {
-        throw new UnsupportedOperationException("not implemented: DFS-054");
+        return switch (preview.preview(result, request)) {
+            case Result.Failure<DeletionPlan> f -> new Result.Failure<>(f.code(), f.message());
+            case Result.Success<DeletionPlan> ok -> {
+                KeptPlan mapped = PlanViews.keptPlan(ok.value(), request, result);
+                KeptPlan existing = plans.putIfAbsent(ok.value().id(), mapped);
+                yield new Result.Success<>(existing != null ? existing : mapped);
+            }
+        };
     }
 
     /**
@@ -56,6 +64,6 @@ final class PlanStore {
      * another scan is unknown here).
      */
     Optional<KeptPlan> find(String planId) {
-        throw new UnsupportedOperationException("not implemented: DFS-054");
+        return planId == null ? Optional.empty() : Optional.ofNullable(plans.get(planId));
     }
 }

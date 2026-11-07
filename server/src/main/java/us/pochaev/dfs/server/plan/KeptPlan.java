@@ -8,8 +8,6 @@ import java.util.List;
  * <p>
  * Built only by {@link PlanViews#keptPlan}: {@code operations} ordered by size (largest first), then digest, then first
  * link; {@code conflicts} by size (largest first), then digest.
- * <p>
- * Stubs (design phase): every method throws.
  *
  * @param summary    the plan's summary, its counts equal to the two lists' sizes
  * @param operations every quarantine operation, in page order
@@ -24,7 +22,15 @@ record KeptPlan(PlanSummary summary, List<PlanOperation> operations, List<PlanCo
      * @param size 1 to 500
      */
     OperationPage operationPage(int page, int size) {
-        throw new UnsupportedOperationException("not implemented: DFS-054");
+        return new OperationPage(slice(operations, page, size), page, size, operations.size());
+    }
+
+    private static <T> List<T> slice(List<T> all, int page, int size) {
+        long from = (long) page * size;
+        if (from >= all.size()) {
+            return List.of();
+        }
+        return List.copyOf(all.subList((int) from, (int) Math.min(all.size(), from + size)));
     }
 
     /**
@@ -34,6 +40,6 @@ record KeptPlan(PlanSummary summary, List<PlanOperation> operations, List<PlanCo
      * @param size 1 to 500
      */
     ConflictPage conflictPage(int page, int size) {
-        throw new UnsupportedOperationException("not implemented: DFS-054");
+        return new ConflictPage(slice(conflicts, page, size), page, size, conflicts.size());
     }
 }

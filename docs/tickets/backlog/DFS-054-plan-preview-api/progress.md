@@ -13,3 +13,5 @@
 - Wrote `server/src/test/java/us/pochaev/dfs/server/PlanApiTest.java` (26 test invocations covering AC-1 to AC-14) and `test-plan.md`. No unit tests in `plan` (the controller path covers the mapping).
 - `./gradlew :server:test --tests "*PlanApiTest"`: 26 run, 26 fail, all with `UnsupportedOperationException: not implemented: DFS-054`.
 - Expected commit: `test(server): add plan preview API tests [DFS-054]`.
+
+- **implementer**: implemented PlanController, PlanStore, KeptPlan, PlanViews, PlanRequests in server/plan (scan and result untouched); wrote the four endpoints into CLAUDE.md and docs/design/ui.md (U6, U7, D4). Expected commit: feat(server): preview deletion plans through the API [DFS-054].
