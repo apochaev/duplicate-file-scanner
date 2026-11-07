@@ -44,6 +44,7 @@ Asked by the product owner on 2026-11-07 while running a real scan: "progress ba
    - **HARD_LINKS:** "Checking hard links: group 40 of 310" (`groupsDone` of `groupsTotal`); the bar follows groups.
    - In every phase after WALK, a second line keeps "Found: 48,210 files · 310 GB" (`files`, `bytes`).
    Each phase shows the numbers that mean something in it, and the found / sampled / hashed totals show how the candidates narrowed. Numbers use the page's existing `plural` and `formatBytes` (`scan-format.ts`). Not one generic line for every hashing phase (shows sample bytes, nothing for walk or hard links, no "left") and not a grid of Done / Total / Left (empty cells in two phases, harder to read at a glance).
+2. **The ETA follows the bytes rate over the last 30 seconds, in the full-hash phase only** (2026-11-07). The browser times each `ScanProgress` it receives (the stream carries no times; the clock is injectable so Vitest can drive it). In FULL_HASH, the ETA is `(hashBytesTotal - hashedBytes)` divided by the bytes hashed per second over the received updates of the last 30 s (or since the phase started, if that is shorter). It reads "estimating…" until the phase has run 3 s and some bytes have been hashed, and also while the recent rate is 0; then "about 45 s left" under a minute, "about 4 min left" (whole minutes) under an hour, "about 1 h 20 min left" from there. No ETA in the other phases. It follows a change in disk speed within half a minute, in a few lines testable with a fake clock. Known limit: a tail of many small files makes it optimistic near the end (what DFS-025 fixed in the CLI); the counts beside it stay exact. Not the average since the phase started (slow to follow speed changes) and not a port of the CLI's DFS-025 logic (three times the code, rules in Java and TypeScript that can drift apart); a later ticket can port it if the tail bothers.
 
 ## Acceptance criteria
 
@@ -81,5 +82,4 @@ Feature: Detailed scan progress
 
 ## Open questions
 
-- The ETA: computed in the browser from which rate (bytes, recent window as DFS-025), when it is shown, and what it says before it is known.
 - Archetype (`component` likely), gates and autorun.
