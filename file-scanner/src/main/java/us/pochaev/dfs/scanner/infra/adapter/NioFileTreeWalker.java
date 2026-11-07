@@ -1,6 +1,7 @@
 package us.pochaev.dfs.scanner.infra.adapter;
 
 import us.pochaev.dfs.scanner.domain.model.FileEntry;
+import us.pochaev.dfs.scanner.domain.model.QuarantineFolder;
 import us.pochaev.dfs.scanner.domain.model.SkipReason;
 import us.pochaev.dfs.scanner.domain.model.WalkEvent;
 import us.pochaev.dfs.scanner.infra.port.FileTreeWalker;
@@ -23,6 +24,9 @@ import java.nio.file.attribute.BasicFileAttributes;
  * checked explicitly.
  */
 public final class NioFileTreeWalker implements FileTreeWalker {
+
+    /** The detail of the {@code Skipped(dir, QUARANTINE, ...)} event for a pruned quarantine folder (DFS-052). */
+    static final String QUARANTINE_DETAIL = "quarantine folder, not scanned";
 
     @Override
     public void walk(Path root, WalkListener listener) throws IOException {
@@ -59,7 +63,18 @@ public final class NioFileTreeWalker implements FileTreeWalker {
                 EntryKind kind = EntryKind.SPECIAL_DIRECTORY;
                 return emit(skipped(dir, kind.reason(), kind.detail()), FileVisitResult.SKIP_SUBTREE);
             }
+            if (!dir.equals(root) && isQuarantine(dir)) {
+                return emit(skipped(dir, SkipReason.QUARANTINE, QUARANTINE_DETAIL), FileVisitResult.SKIP_SUBTREE);
+            }
             return emit(new WalkEvent.DirectoryEntered(dir), FileVisitResult.CONTINUE);
+        }
+
+        /**
+         * Whether the plain directory {@code dir} is a quarantine folder: its file name equals
+         * {@link QuarantineFolder#NAME}, exactly and case-sensitively, decided from the name alone (DFS-052 decision 2).
+         */
+        private static boolean isQuarantine(Path dir) {
+            throw new UnsupportedOperationException("not implemented: DFS-052");
         }
 
         @Override

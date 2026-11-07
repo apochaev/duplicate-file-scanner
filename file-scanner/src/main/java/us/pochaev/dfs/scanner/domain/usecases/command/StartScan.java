@@ -12,7 +12,11 @@ import java.util.List;
  * Starts a scan on the caller-supplied executor and returns its ID at once (DFS-018).
  * <p>
  * On the caller's thread, before anything is recorded or submitted: an empty {@code locations}
- * is {@code Failure(NO_LOCATIONS)}; each location is resolved in order, and the first that does
+ * is {@code Failure(NO_LOCATIONS)}; then, from the paths' names alone and before any location is
+ * looked up on disk, the first location whose absolute path has an element named exactly
+ * {@code .dfs-quarantine} ({@code QuarantineFolder.NAME}, case-sensitive) is
+ * {@code Failure(LOCATION_IN_QUARANTINE)}, the message naming it (DFS-052 decision 3); then
+ * each location is resolved in order, and the first that does
  * not exist, is not a directory or cannot be resolved is {@code Failure(LOCATION_NOT_FOUND)},
  * {@code Failure(NOT_A_DIRECTORY)} or {@code Failure(LOCATION_UNREADABLE)}. A rejected start
  * leaves no record and no ID. Otherwise the scan is recorded QUEUED and its task submitted; if

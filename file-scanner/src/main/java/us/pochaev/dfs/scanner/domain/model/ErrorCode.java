@@ -29,6 +29,12 @@ public enum ErrorCode {
      */
     LOCATION_IS_LINK,
     /**
+     * A start location whose absolute path has an element named exactly {@link QuarantineFolder#NAME} (the location
+     * itself or an ancestor), decided from the path's names alone, before any disk access (DFS-052 decision 3); the
+     * message names the location. Nothing is started.
+     */
+    LOCATION_IN_QUARANTINE,
+    /**
      * The caller-supplied executor rejected the scan's, the plan verify's or the plan execution's task (DFS-018,
      * DFS-042 decision 5, DFS-051 decision 7).
      */
