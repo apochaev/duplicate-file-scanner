@@ -70,10 +70,26 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 11,
+          "wallClockSeconds": 153,
+          "outcome": "passed",
+          "note": "green: 851 passed, 3 skipped; disabled, freeze, touches (5 files), stubs, traceability (8 criteria, 11 scenarios), consistency all pass"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-057-detailed-scan-progress/progress.md",
+        "server/frontend/src/app/scans/scan-eta.ts",
+        "server/frontend/src/app/scans/scan-phase.ts"
+      ],
+      "commit": "0a767fe850071b07956e1b27ae67840f6477ea44"
     },
     {
       "id": "verify",
