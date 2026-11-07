@@ -1,7 +1,7 @@
 ---
 id: DFS-052
 title: Skip quarantine folders when scanning
-status: in-progress
+status: in-review
 type: feature
 scope: [file-scanner]
 archetype: use-case
