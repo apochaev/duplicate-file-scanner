@@ -1,7 +1,7 @@
 ---
 id: DFS-057
 title: Show the current phase's counts and ETA on the scan screen
-status: in-progress
+status: in-review
 type: feature
 scope: [build]
 archetype: component
@@ -164,14 +164,14 @@ Feature: Detailed scan progress
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] Each test's name given to `it` starts with its criterion ID (`DFS-057.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit tests and the Vitest tests)
-- [ ] Every component-archetype checklist item is addressed or marked not applicable with a reason
-- [ ] No test this ticket adds waits on real time (the clock is faked)
-- [ ] `CLAUDE.md`'s scan screen sentence and `docs/design/ui.md` U2 describe the phase lines and the ETA (the verifier reads them)
+- [x] Every scenario above is an automated test and passes
+- [x] Each test's name given to `it` starts with its criterion ID (`DFS-057.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit tests and the Vitest tests)
+- [x] Every component-archetype checklist item is addressed or marked not applicable with a reason
+- [x] No test this ticket adds waits on real time (the clock is faked)
+- [x] `CLAUDE.md`'s scan screen sentence and `docs/design/ui.md` U2 describe the phase lines and the ETA (the verifier reads them)
 - [ ] Started by hand once on Windows: a real folder of several GB scanned in the browser, each phase's line seen, the ETA seen to settle; the browser console free of errors
-- [ ] No files changed outside the paths listed under Touches
+- [x] No files changed outside the paths listed under Touches
 
 ## Open questions
 
