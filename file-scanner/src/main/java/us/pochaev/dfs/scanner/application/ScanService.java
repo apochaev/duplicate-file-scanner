@@ -132,7 +132,14 @@ public final class ScanService implements StartScan, CancelScan, GetScanStatus, 
      * caller gave it. Empty when there is none (DFS-052 decision 3).
      */
     private static Optional<Path> firstInQuarantine(List<Path> locations) {
-        throw new UnsupportedOperationException("not implemented: DFS-052");
+        for (Path location : locations) {
+            for (Path name : location.toAbsolutePath().normalize()) {
+                if (name.toString().equals(QuarantineFolder.NAME)) {
+                    return Optional.of(location);
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     @Override

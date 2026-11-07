@@ -74,7 +74,8 @@ public final class NioFileTreeWalker implements FileTreeWalker {
          * {@link QuarantineFolder#NAME}, exactly and case-sensitively, decided from the name alone (DFS-052 decision 2).
          */
         private static boolean isQuarantine(Path dir) {
-            throw new UnsupportedOperationException("not implemented: DFS-052");
+            Path name = dir.getFileName();
+            return name != null && name.toString().equals(QuarantineFolder.NAME);
         }
 
         @Override

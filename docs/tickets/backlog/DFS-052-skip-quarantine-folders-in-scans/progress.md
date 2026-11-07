@@ -14,3 +14,7 @@
 - Wrote 5 test locations (see test-plan.md): `NioFileTreeWalkerQuarantineTest`, `ScanQuarantineEndToEndTest`, `ScanServiceQuarantineTest`, plus tests appended to `ScanCommandTest` and `ScanApiTest`. 18 invocations, all red on `not implemented: DFS-052`.
 - AC-5 refusal asserts `ScanCommand.ERROR` (1) per the user's decision, not the ticket's 2.
 - Expected commit: `test(file-scanner): add quarantine skipping tests [DFS-052]`, made by the orchestrator.
+
+## Implement
+
+Implemented `NioFileTreeWalker.Visitor.isQuarantine` and `ScanService.firstInQuarantine`; CLAUDE.md lists QUARANTINE and the new safety invariant. Build green. Expected commit: feat(file-scanner): skip quarantine folders when scanning [DFS-052]. CLI refusal exits 1, not 2 (design open note 6).
