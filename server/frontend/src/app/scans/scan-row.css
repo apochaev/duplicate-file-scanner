@@ -38,7 +38,14 @@
 }
 
 .scan-counts,
+.scan-phase-line,
+.scan-eta,
+.scan-found,
 .scan-failure,
 .stream-lost {
   margin: 4px 0;
+}
+
+.scan-found {
+  color: var(--mat-sys-on-surface-variant, #555);
 }

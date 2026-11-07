@@ -27,14 +27,19 @@
   }
   @case ('CANCELLED') {}
   @default {
-    @if (p.phase) {
-      <span class="scan-phase">{{ phaseLabel(p.phase) }}</span>
-    }
-    <p class="scan-counts">
-      {{ plural(p.directories, 'folder') }} · {{ plural(p.files, 'file') }} · {{ formatBytes(p.bytes) }}
-    </p>
-    @if (hashing()) {
-      <mat-progress-bar mode="determinate" [value]="hashPercent()" aria-label="Hashing progress" />
+    @if (view(); as v) {
+      <p class="scan-phase-line"><span class="scan-phase">{{ v.label }}</span>: {{ v.detail }}</p>
+      @if (eta(); as e) {
+        <p class="scan-eta">{{ e }}</p>
+      }
+      @if (v.percent === null) {
+        <mat-progress-bar mode="indeterminate" aria-label="Scan progress" />
+      } @else {
+        <mat-progress-bar mode="determinate" [value]="v.percent" aria-label="Scan progress" />
+      }
+      @if (v.found) {
+        <p class="scan-found">{{ v.found }}</p>
+      }
     }
     @if (lost()) {
       <p class="stream-lost" role="alert">Live progress lost; reload the page</p>

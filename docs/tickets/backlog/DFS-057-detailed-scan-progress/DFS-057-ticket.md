@@ -1,7 +1,7 @@
 ---
 id: DFS-057
 title: Show the current phase's counts and ETA on the scan screen
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: component
