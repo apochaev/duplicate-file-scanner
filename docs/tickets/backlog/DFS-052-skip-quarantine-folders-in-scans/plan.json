@@ -1,0 +1,130 @@
+{
+  "ticket": "DFS-052",
+  "archetype": {
+    "name": "use-case",
+    "version": 10
+  },
+  "branch": "tickets/DFS-052-skip-quarantine-folders-in-scans",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-052-skip-quarantine-folders-in-scans",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 52,
+          "wallClockSeconds": 484,
+          "outcome": "passed",
+          "note": "touches: 12 changed files, all inside touches (turns = tool uses); user chose exit 1 for a location in quarantine (design open note 6)"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-052-skip-quarantine-folders-in-scans/DFS-052-ticket.md",
+        "docs/tickets/backlog/DFS-052-skip-quarantine-folders-in-scans/design.md",
+        "docs/tickets/backlog/DFS-052-skip-quarantine-folders-in-scans/learnings.md",
+        "docs/tickets/backlog/DFS-052-skip-quarantine-folders-in-scans/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ScanService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ErrorCode.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/QuarantineFolder.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/SkipReason.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/usecases/command/StartScan.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileTreeWalker.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioQuarantineDeleter.java"
+      ],
+      "commit": "fe7bc2b64129e121591753c81edd6839019bc6c2"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 28,
+          "wallClockSeconds": 283,
+          "outcome": "passed",
+          "note": "red: 18 story tests fail with stubs, 169 other tests fail on the ticket's stub, 1 fail in declared classes, 654 other tests pass (3 skipped); traceability: 6 criteria traced through 11 scenarios (turns = tool uses)"
+        }
+      ],
+      "artifacts": [
+        "cli/src/test/java/us/pochaev/dfs/cli/ScanCommandTest.java",
+        "docs/tickets/backlog/DFS-052-skip-quarantine-folders-in-scans/progress.md",
+        "docs/tickets/backlog/DFS-052-skip-quarantine-folders-in-scans/test-plan.md",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanServiceQuarantineTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/NioFileTreeWalkerQuarantineTest.java",
+        "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/ScanQuarantineEndToEndTest.java",
+        "server/src/test/java/us/pochaev/dfs/server/ScanApiTest.java"
+      ],
+      "commit": "83cf149ebcc380db545a9d20c01a4ad58fa6271b"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 11,
+          "wallClockSeconds": 193,
+          "outcome": "passed",
+          "note": "green 839 passed 3 skipped; disabled, freeze, touches (19 files), stubs, traceability (6 criteria/11 scenarios), consistency pass (turns = tool uses)"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/tickets/backlog/DFS-052-skip-quarantine-folders-in-scans/progress.md",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ScanService.java",
+        "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileTreeWalker.java"
+      ],
+      "commit": "da8a1033b0c9a389d72bd5592d372c213f3632e6"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "outcome": "passed",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "note": "6/6 criteria met; AC-5 graded against exit 1 (user decision), ticket text says 2"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-052-skip-quarantine-folders-in-scans/DFS-052-ticket.md",
+        "docs/tickets/backlog/DFS-052-skip-quarantine-folders-in-scans/learnings.md",
+        "docs/tickets/backlog/DFS-052-skip-quarantine-folders-in-scans/verification.md"
+      ],
+      "commit": "268e8910e0a570ca218ed8fe560c75755e7ff4b9"
+    }
+  ],
+  "gates": [
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": []
+}
