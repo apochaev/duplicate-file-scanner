@@ -1,13 +1,13 @@
 ---
 id: DFS-052
 title: Skip quarantine folders when scanning
-status: draft
+status: ready
 type: feature
 scope: [file-scanner]
 archetype: use-case
 # models: {architect: {model: opus, effort: high, maxTurns: 35}}
 gates: [done]
-# autorun: false       # pipeline tickets: true lets Claude start /story run itself
+autorun: true
 priority: medium
 lane: backend
 depends_on: [DFS-051, DFS-055]
