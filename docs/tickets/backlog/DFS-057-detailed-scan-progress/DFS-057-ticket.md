@@ -1,13 +1,13 @@
 ---
 id: DFS-057
 title: Show the current phase's counts and ETA on the scan screen
-status: draft
+status: ready
 type: feature
 scope: [build]
 archetype: component
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 gates: [done]
-# autorun: false       # pipeline tickets: true lets Claude start /story run itself
+autorun: true
 priority: high
 lane: frontend
 depends_on: []
