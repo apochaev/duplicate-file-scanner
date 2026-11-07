@@ -35,6 +35,7 @@ The walker (`NioFileTreeWalker`, `FileTreeWalker.walk`) already leaves things ou
 ## Decisions
 
 1. **The walker prunes the folder and reports it as skipped** (2026-11-07). `NioFileTreeWalker` never enters a directory named `.dfs-quarantine` (DFS-051's `NioQuarantineDeleter.QUARANTINE_FOLDER`) and reports it once as `WalkEvent.Skipped(path, SkipReason.QUARANTINE, detail)`, a new `SkipReason`; it appears as one `skipped` line per quarantine folder in the JSONL and text reports. Always on, not tied to `--no-default-excludes`: skipping the quarantine is a safety rule, not OS-metadata cleanup. A quarantine of thousands of files costs one directory check, and the report says where a quarantine was left out. The new `reason` value is additive (DFS-030: no `schemaVersion` bump); tests asserting `skipped` lines are searched in the test trees (DFS-030.L-2). Not a per-file filter in `application` like the default excludes (walks the whole quarantine, `--no-default-excludes` would bring quarantined files back, and `excluded` would mix OS metadata with safety) and not a silent prune (files under a scanned folder left out with no trace).
+2. **Any directory named exactly `.dfs-quarantine`, anywhere, matched case-sensitively** (2026-11-07). The walker decides by the name alone, like the default excludes' case-sensitive names. It needs no execution config (the anchors live in `ExecutionConfig`, which scans never see, and a CLI scan may have none configured), and it also catches a quarantine made under other anchor settings, by an earlier run or on a disk from another machine. Known limit: a user's own folder with that exact name is skipped too; the report shows it. Not only directly under a volume root or a configured anchor (new config wiring into scans, and it misses quarantines made under anchors since changed) and not matched ignoring case (the app never creates another casing).
 
 ## Acceptance criteria
 
@@ -71,6 +72,5 @@ Feature: Skip quarantine folders when scanning
 
 ## Open questions
 
-- Match by the folder name `.dfs-quarantine` anywhere, or only directly under a volume root or a configured anchor?
 - A scan whose location is itself inside `.dfs-quarantine`: refuse, or scan it as asked?
 - Archetype (`pipeline-stage` or `use-case`, or `none` if it is a one-line skip).
