@@ -68,6 +68,8 @@ dependencies {
 
     testImplementation(platform(SpringBootPlugin.BOM_COORDINATES))
     testImplementation("org.springframework.boot:spring-boot-test")
+    // The browser flows of DFS-053; only the e2eTest task runs them.
+    testImplementation("com.microsoft.playwright:playwright:1.64.0")
 }
 
 application {
@@ -92,6 +94,8 @@ val installDir = layout.buildDirectory.dir("install/dfs-server-boot")
 // The committed OpenAPI spec (DFS-038 decision 1).
 val openApiFile = layout.projectDirectory.file("frontend/openapi.json")
 tasks.test {
+    // The browser flows (tagged e2e, DFS-053) run in e2eTest only, so `build` needs no browser.
+    useJUnitPlatform { excludeTags("e2e") }
     dependsOn(tasks.bootJar, tasks.named("installBootDist"))
     jvmArgumentProviders.add(CommandLineArgumentProvider {
         listOf(
@@ -113,5 +117,18 @@ val updateOpenApi by tasks.registering(Test::class) {
     filter { includeTestsMatching("us.pochaev.dfs.server.OpenApiSpecTest.committedSpecMatchesTheControllers") }
     systemProperty("dfs.openapi.update", "true")
     systemProperty("dfs.openapi.file", openApiFile.asFile.absolutePath)
+    outputs.upToDateWhen { false }
+}
+
+// The browser flows (DFS-053): real Chromium against a real server. Not part of `check`; run it when the scan or
+// result flow changes. Playwright downloads its browser on first use, into a folder of this project.
+val e2eTest by tasks.registering(Test::class) {
+    description = "Runs the browser flows (Playwright, tag e2e) against a real server."
+    group = "verification"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform { includeTags("e2e") }
+    environment("PLAYWRIGHT_BROWSERS_PATH", layout.projectDirectory.dir(".gradle/playwright-browsers").asFile.absolutePath)
+    testLogging { showStandardStreams = false }
     outputs.upToDateWhen { false }
 }

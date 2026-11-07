@@ -122,7 +122,7 @@ Draft (editable) → previewed (frozen, has an ID; U7) → editing creates a new
 
 - Server: MockMvc/WebTestClient tests per endpoint, including security (missing token, wrong `Host`, wrong `Origin` → 403; a path outside the roots → 403).
 - Overlap analysis: JUnit cases from the examples in `folder-overlap-analysis.md`.
-- Frontend: unit tests per component and service; a few Playwright end-to-end flows against a real server (scan a temp fixture folder → overlaps → build a rule → preview → verify).
+- Frontend: unit tests per component and service; a few Playwright end-to-end flows against a real server (scan a temp fixture folder → overlaps → build a rule → preview → verify). As built (DFS-053): the browser flows use Playwright for Java (a test dependency of `server`) against the real server started in the test JVM (`TestServer`); the fixture is written in a temp folder, with a hard link when the platform allows one; the tests are tagged `e2e`, excluded from `test` and run by `./gradlew :server:e2eTest`, which is not part of `check` (so `build` needs no browser). Chromium alone is downloaded on first use into `server/.gradle/playwright-browsers`. A ticket that changes the scan or result flow runs `e2eTest` in its Definition of done. So far the flows cover the token link, a scan, the result screen, the folder tree, Sets (with a hard link), pin and compare, Copy folder path on the real clipboard and a reload; the rule, preview and verify steps wait for those screens.
 
 ### D7. Ticket namespaces
 

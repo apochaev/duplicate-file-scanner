@@ -1,7 +1,7 @@
 ---
 id: DFS-053
 title: Exercise the scan and results flow in a browser
-status: ready
+status: in-review
 type: feature
 scope: [build]
 archetype: none
@@ -154,13 +154,13 @@ Feature: Scan and results flow in a real browser
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test in `./gradlew :server:e2eTest` and passes (the hard-link scenario may skip on a platform without links)
-- [ ] `./gradlew build` is green and does not run the browser tests or download a browser (includes the ArchUnit and module-export tests)
-- [ ] `./gradlew :server:test` does not run the `e2e` tests; `:server:e2eTest` runs only them
-- [ ] The Chromium download lands in a folder under `server/.gradle`, and nothing is installed globally
-- [ ] No files changed outside the paths listed under Touches
-- [ ] ui.md D6 and the CLAUDE.md Commands block name `e2eTest` and the rule that tickets changing the scan or result flow run it
-- [ ] A product-owner review is written by the implementing session: what was run, the real output of `e2eTest`, and anything decided without the user
+- [x] Every scenario above is an automated test in `./gradlew :server:e2eTest` and passes (the hard-link scenario may skip on a platform without links) (8 tests (one per criterion), 0 skipped, 0 failures; the hard-link check ran)
+- [x] `./gradlew build` is green and does not run the browser tests or download a browser (includes the ArchUnit and module-export tests) (BUILD SUCCESSFUL in 2m 14s; no BrowserFlowTest in :server:test; no browser folder created)
+- [x] `./gradlew :server:test` does not run the `e2e` tests; `:server:e2eTest` runs only them (`test` excludes tag e2e, `e2eTest` includes only it (8 tests))
+- [x] The Chromium download lands in a folder under `server/.gradle`, and nothing is installed globally (server/.gradle/playwright-browsers holds chromium only (plus ffmpeg and winldd))
+- [x] No files changed outside the paths listed under Touches (git status: only Touches paths plus this ticket's folder)
+- [x] ui.md D6 and the CLAUDE.md Commands block name `e2eTest` and the rule that tickets changing the scan or result flow run it (ui.md D6 and CLAUDE.md (Commands block and server description) updated)
+- [x] A product-owner review is written by the implementing session: what was run, the real output of `e2eTest`, and anything decided without the user (verification.md, section Product owner review)
 
 ## Open questions
 
