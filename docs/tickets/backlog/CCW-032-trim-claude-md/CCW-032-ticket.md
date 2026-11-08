@@ -1,7 +1,7 @@
 ---
 id: CCW-032
 title: Trim CLAUDE.md to the rules every session needs
-status: draft
+status: ready
 type: docs
 scope: [docs]
 archetype: none
