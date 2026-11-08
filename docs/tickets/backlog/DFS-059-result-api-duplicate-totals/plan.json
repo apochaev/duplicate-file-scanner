@@ -1,15 +1,81 @@
 {
   "ticket": "DFS-059",
-  "archetype": {"name": "endpoint", "version": 4},
+  "archetype": {
+    "name": "endpoint",
+    "version": 4
+  },
   "branch": "tickets/DFS-059-result-api-duplicate-totals",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-059-result-api-duplicate-totals",
   "state": "running",
   "phases": [
-    {"id": "design", "agent": "architect", "after": [], "status": "pending", "runs": [], "artifacts": [], "commit": null},
-    {"id": "tests", "agent": "test-author", "after": ["design"], "status": "pending", "runs": [], "artifacts": [], "commit": null},
-    {"id": "implement", "agent": "implementer", "after": ["tests"], "status": "pending", "runs": [], "artifacts": [], "commit": null},
-    {"id": "verify", "agent": "verifier", "after": ["implement"], "status": "pending", "runs": [], "artifacts": [], "commit": null}
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 34,
+          "wallClockSeconds": 568,
+          "outcome": "passed",
+          "note": "touches widened to result-test-data.ts with the user's approval, then checked: PASS touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/design.md",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/learnings.md",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/plan.json",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/progress.md",
+        "server/frontend/openapi.json",
+        "server/frontend/src/app/results/result-test-data.ts",
+        "server/src/main/java/us/pochaev/dfs/server/result/FolderNode.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/ResultIndex.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/SetPage.java"
+      ],
+      "commit": "4a92e6d7211282a8c99d6f39a94b1b422e2b1f7b"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    }
   ],
-  "gates": [{"after": "done", "status": "pending"}],
+  "gates": [
+    {
+      "after": "done",
+      "status": "pending"
+    }
+  ],
   "defects": []
 }
