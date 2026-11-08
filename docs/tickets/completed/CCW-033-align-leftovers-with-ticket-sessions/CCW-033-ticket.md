@@ -1,7 +1,7 @@
 ---
 id: CCW-033
 title: Align archetypes and the launch model with sessions per ticket
-status: in-review
+status: done
 type: docs
 scope: [docs]
 archetype: none
@@ -21,7 +21,7 @@ touches:
 blocked_reason:
 created: 2026-11-08
 updated: 2026-11-08
-completed:
+completed: 2026-11-08
 ---
 
 # CCW-033: Align archetypes and the launch model with sessions per ticket
