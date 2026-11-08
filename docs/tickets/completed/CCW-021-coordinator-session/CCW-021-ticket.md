@@ -1,7 +1,7 @@
 ---
 id: CCW-021
 title: Add a coordinator session that catches up from git
-status: in-progress
+status: done
 type: feature
 scope: [docs, build]
 archetype: none
@@ -20,7 +20,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-07
-completed:
+completed: 2026-11-07
 ---
 
 # CCW-021: Add a coordinator session that catches up from git
