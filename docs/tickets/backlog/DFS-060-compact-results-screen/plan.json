@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-060-compact-results-screen",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-060-compact-results-screen",
-  "state": "awaiting-approval",
+  "state": "running",
   "phases": [
     {
       "id": "design",
@@ -53,10 +53,40 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 47,
+          "wallClockSeconds": 482,
+          "outcome": "failed-gate"
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "high",
+          "turns": 17,
+          "wallClockSeconds": 238,
+          "outcome": "passed",
+          "note": "touches: PASS 28 changed files; test-phase: PASS; red: 106 story tests fail with stubs, 43 other tests fail on the ticket's stub, 2 fail in declared classes, 858 other tests pass; traceability: 10 criteria traced through 14 scenarios"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-060-compact-results-screen/learnings.md",
+        "docs/tickets/backlog/DFS-060-compact-results-screen/progress.md",
+        "docs/tickets/backlog/DFS-060-compact-results-screen/test-plan.md",
+        "server/frontend/src/app/results/folder-tree.spec.ts",
+        "server/frontend/src/app/results/path-copy.spec.ts",
+        "server/frontend/src/app/results/result-density.spec.ts",
+        "server/frontend/src/app/results/result-format.spec.ts",
+        "server/frontend/src/app/results/result-path.spec.ts",
+        "server/frontend/src/app/results/result-screen.spec.ts",
+        "server/frontend/src/app/results/sets-tab.spec.ts",
+        "server/src/test/java/us/pochaev/dfs/server/BrowserFlowTest.java"
+      ],
+      "commit": "4694a26e86a14b722271b4283729fb88c9a53782"
     },
     {
       "id": "implement",
@@ -84,12 +114,20 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
       "status": "pending"
     }
   ],
-  "defects": []
+  "defects": [
+    {
+      "id": 1,
+      "phase": "tests",
+      "route": "test-author",
+      "summary": "touches: app.routes.spec.ts outside touches; red: result-density.spec.ts AC-9 'ignores a missing storage and a write that throws' fails with an AssertionError (expect(() => stub()).not.toThrow()), not with the stub's error",
+      "status": "closed"
+    }
+  ]
 }
