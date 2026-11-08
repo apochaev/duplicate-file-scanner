@@ -5,7 +5,10 @@
 .sets-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+}
+
+.sets-tab {
+  overflow-x: auto;
 }
 
 .sets-table th,
@@ -100,6 +103,9 @@ time,
 }
 
 .short-path {
+  display: inline-block;
+  /* Room for the PATH_BUDGET (62) characters, so the file name the rule keeps is never cut off. */
+  min-width: 62ch;
   font-family: monospace;
 }
 

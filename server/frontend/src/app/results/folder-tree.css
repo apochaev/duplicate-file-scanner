@@ -90,11 +90,24 @@
 }
 
 .folder-pin {
-  /* In the row's flow, not over the select button, so it never intercepts a click on a folder (DFS-053 flows). */
-  flex: none;
+  /* Out of the row's flow so the folder name keeps its room. It sits on the row's lower right edge, below the
+     select button's centre, so a click in the middle of a folder still reaches the folder; it stays clickable
+     (DFS-053 flows) and is only drawn on hover or focus. */
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  top: calc(100% - 7px);
+  box-sizing: border-box;
+  height: 12px;
+  min-height: 0;
   min-width: 0;
-  padding: 0 8px;
-  font-size: 0.75rem;
+  overflow: hidden;
+  padding: 0 6px;
+  font-size: 0.7rem;
+  line-height: 12px;
+  --mat-button-text-container-height: 12px;
+  --mdc-text-button-container-height: 12px;
+  background: var(--mat-sys-surface-container, #f3edf7);
   opacity: 0;
 }
 
