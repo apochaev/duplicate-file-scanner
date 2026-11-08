@@ -7,14 +7,13 @@ scope: [docs, build]
 archetype:
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 # gates: [done]        # pipeline tickets: decided in refine, required from ready on
-# autorun: false       # pipeline tickets: true lets Claude start /story run itself
 priority: low
 lane: harness
 depends_on: [CCW-021]
 touches: []
 blocked_reason:
 created: 2026-11-02
-updated: 2026-11-02
+updated: 2026-11-08
 completed:
 ---
 

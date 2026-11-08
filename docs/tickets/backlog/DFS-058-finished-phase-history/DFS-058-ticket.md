@@ -7,14 +7,13 @@ scope: [build]
 archetype:
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 # gates: [done]        # pipeline tickets: decided in refine, required from ready on
-# autorun: false       # pipeline tickets: true lets Claude start /story run itself
 priority: low
 lane: frontend
 depends_on: [DFS-057]
 touches: []
 blocked_reason:
 created: 2026-11-07
-updated: 2026-11-07
+updated: 2026-11-08
 completed:
 ---
 
@@ -70,4 +69,4 @@ Feature: Finished phase history
 
 - Whether to do this at all, after DFS-057 is seen on a real scan.
 - Which totals per phase, and whether a COMPLETED scan's row keeps showing them.
-- Archetype (`endpoint` plus the component, or two tickets), gates and autorun.
+- Archetype (`endpoint` plus the component, or two tickets) and gates.

@@ -7,14 +7,13 @@ scope: [file-scanner]
 archetype:
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 # gates: [done]        # pipeline tickets: decided in refine, required from ready on
-# autorun: false       # pipeline tickets: true lets Claude start /story run itself
 priority: low
 lane: backend
 depends_on: [DFS-055]
 touches: []
 blocked_reason:
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-08
 completed:
 ---
 
@@ -71,4 +70,4 @@ Feature: Later hard links are proven the same file
 
 - What a mismatch does: refuse only that link, or the whole copy (all its links), and how the manifest records it.
 - Whether the identity is read through DFS-026's existing `FileIdentity` port, and how a test creates a hard link and then replaces it (created at test time, skipped where the platform refuses, per CLAUDE.md's fixture rules).
-- Archetype (`use-case` likely), gates (a deletion ticket: the design gate is recommended) and autorun.
+- Archetype (`use-case` likely) and gates (a deletion ticket: the design gate is recommended).
