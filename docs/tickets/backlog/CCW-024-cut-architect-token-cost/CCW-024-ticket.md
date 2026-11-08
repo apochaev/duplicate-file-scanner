@@ -19,7 +19,7 @@ touches:
   - .claude/archetypes/pipeline-stage/archetype.md
 blocked_reason:
 created: 2026-11-06
-updated: 2026-11-06
+updated: 2026-11-07
 completed:
 ---
 
@@ -154,8 +154,8 @@ Feature: Architect avoids rework and test reading
 
 - [x] `architect.md` and the four archetype files carry the changes in AC-1 to AC-4 (checked by reading) — commit `db54a27`; verdicts in `verification.md`
 - [x] Search for every other mention of how Expected breakage is found (`.claude/`, `CLAUDE.md`, `docs/design/`) and record the hits in `verification.md` (CCW-018.L-1) — recorded under Evidence; nothing else needed changing
-- [ ] The live run in AC-5 is done, its three signals checked and its figures recorded in `verification.md`
-- [ ] If a `component` design phase has run after the merge by the time AC-5 is verified, its stub-writing share of output is recorded in `verification.md`; otherwise `verification.md` says none ran (decision 5)
+- [x] The live run in AC-5 is done, its three signals checked and its figures recorded in `verification.md` — DFS-054 on 2026-11-07: no refusal, one `:server:test --continue` run, no test reads; 66 calls, 29 requests, 40.3k output
+- [x] If a `component` design phase has run after the merge by the time AC-5 is verified, its stub-writing share of output is recorded in `verification.md`; otherwise `verification.md` says none ran (decision 5) — DFS-057: 8.4k of 33.3k output (25%, DFS-049 46%); no ticket filed
 - [x] `tools/story-gate/story-gate selftest` shows no failure beyond the two listed under Out of scope (`CCW-015.AC-7-instructions` passes) — 2026-11-06, `FAIL selftest: 2 problems`, the same two; since fixed later on 2026-11-06 outside this ticket, in `a4a1676` (the cases no longer pin a version number); `selftest` now passes all 126 cases
 - [x] The four Java archetypes' `version:` is bumped — use-case 10, pipeline-stage 17, wiring 4, endpoint 4
 - [x] No files changed outside the paths listed under Touches — `git diff --stat main` shows only those five files and this ticket's folder
