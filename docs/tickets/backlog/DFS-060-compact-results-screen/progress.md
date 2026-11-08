@@ -34,3 +34,15 @@
 - Checked on the built jar with headless Chrome over CDP: at 1440 and 1000 px `.folder-name` is 124-220 px wide, none clipped; the tab body is 688 px with scrollWidth 688; every `.path-name` is inside its cell; Reclaimable is in view; rows are 28 px; no console messages.
 - `./gradlew build` green; `:server:e2eTest` 8/8.
 - Expected commit: `fix(server): fit the folder names and the sets table in the results screen [DFS-060]`.
+
+## done gate feedback (product owner, 2026-11-08) -> implement, third pass
+
+- Feedback: "fix the pin touch target below 960 px". The verifier's live check found that below 960 px the invisible "Pin for comparison" button's Material touch target (`.folder-pin .mat-mdc-button-touch-target`) covers the middle of every folder row, so a click on a folder pins it instead of selecting it (AC-4 partially met).
+- Scope: CSS/template only if possible, inside `touches`. Keep the pin reachable by keyboard and screen reader. Re-check on the built jar at a window under 960 px (hit-test the middle of a folder row: it must select, not pin) and at 1440 px; `:server:e2eTest` stays 8/8. Add a note to `learnings.md` only if the cause was a new kind of miss.
+
+## implement, third pass (implementer, 2026-11-08)
+
+- Cause: below 960 px `.folder-pin` was `position: static`, so Material's absolutely placed `.mat-mdc-button-focus-indicator`/touch target resolved against a far ancestor and spanned the whole row (768 x 40 px), taking the click meant for the select button. Fix in `folder-tree.css`: `position: relative` in the narrow-window rule, and the pin's `.mat-mdc-button-touch-target` set to `display: none`. The button stays in the tab order with its `aria-label`.
+- Checked on the built jar with headless Chromium over CDP: before the fix every hit-test point of a row at 800 px landed on the pin; after it, four points per row (including the middle) hit the select button at 800 and 1440 px.
+- `./gradlew build` green (200 Vitest tests); `:server:e2eTest` passes.
+- Expected commit: `fix(server): keep the pin touch target out of the folder row [DFS-060]`.

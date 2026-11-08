@@ -141,6 +141,12 @@
   opacity: 0;
 }
 
+/* Material's invisible 48 px touch target would cover the middle of the row and pin instead of select (DFS-060, done
+   gate). The button itself stays focusable and labelled. */
+.folder-pin ::ng-deep .mat-mdc-button-touch-target {
+  display: none;
+}
+
 .folder-row:hover .folder-pin,
 .folder-pin:focus-visible {
   opacity: 1;
@@ -168,8 +174,10 @@
   }
 
   /* Room enough to keep the pin in the row's flow, after the numbers instead of over them. */
+  /* Relative, not static: Material's absolutely placed focus indicator and touch target then stay inside the pin's own
+     box, instead of covering the whole row and taking the click that should select the folder (DFS-060, done gate). */
   .folder-pin {
-    position: static;
+    position: relative;
     flex: none;
     margin-left: 4px;
   }
