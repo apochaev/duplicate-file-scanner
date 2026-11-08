@@ -1,7 +1,7 @@
 ---
 id: CCW-026
 title: Start each ready ticket in its own session from the coordinator
-status: in-review
+status: done
 type: feature
 scope: [docs]
 archetype: none
@@ -23,7 +23,7 @@ touches:
 blocked_reason:
 created: 2026-11-07
 updated: 2026-11-08
-completed:
+completed: 2026-11-08
 ---
 
 # CCW-026: Start each ready ticket in its own session from the coordinator
@@ -209,7 +209,7 @@ Feature: Start each ready ticket in its own session
 - [x] `tools/story-gate/story-gate selftest` passes (126 cases)
 - [x] No files changed outside the paths listed under Touches (git status: only touched paths plus this ticket's verification.md)
 - [x] The old-form search over `.claude/`, `CLAUDE.md` and `docs/design/` (lane ownership, `autorun`, launch point, owner, message 1 to 3, `safe to /clear`, ready hand-off, `ListAgents`) is repeated before review, with its hits recorded in `verification.md` (CCW-018.L-1)
-- [ ] A live run: the coordinator makes a ticket ready, the printed line is pasted into a new terminal, and that session takes the ticket to the product-owner review without any lane question
+- [x] (closed without it at the user's say-so, 2026-11-08) A live run: the coordinator makes a ticket ready, the printed line is pasted into a new terminal, and that session takes the ticket to the product-owner review without any lane question
 
 ## Open questions
 
