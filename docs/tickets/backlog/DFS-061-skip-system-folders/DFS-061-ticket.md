@@ -1,7 +1,7 @@
 ---
 id: DFS-061
 title: Skip known operating-system folders in scans
-status: draft
+status: ready
 type: feature
 scope: [file-scanner, cli]
 archetype: use-case
