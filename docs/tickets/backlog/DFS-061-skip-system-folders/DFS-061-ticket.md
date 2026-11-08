@@ -37,6 +37,8 @@ Reported by the product owner on 2026-11-08: a scan listed files under `$RECYCLE
 
 1. **Fixed folder names, matched at any depth** (2026-11-08). A directory is skipped when its name is exactly one of: `$RECYCLE.BIN`, `System Volume Information`, `Recycled`, `RECYCLER` (Windows; compared case-insensitively, as NTFS does), `.Trashes`, `.Spotlight-V100`, `.fseventsd`, `.TemporaryItems`, `.DocumentRevisions-V100` (macOS), `.Trash`, `lost+found`, or `.Trash-` followed by digits (Linux; compared case-sensitively). Wherever it sits under a scan root, the whole subtree is left out. Rejected: root-only matching (misses a stray system folder when a subfolder is scanned, and needs the walker to know volume roots) and a split rule for the ambiguous names (two rules to specify and test). Accepted cost: a user folder that happens to be named `lost+found` or `.Trash` is skipped too, which decision 2's switch will have to allow for.
 
+2. **One `skipped` entry per skipped folder, reason `SYSTEM_FOLDER`** (2026-11-08). The walker reports the folder as `WalkEvent.Skipped(path, SkipReason.SYSTEM_FOLDER, detail)` and does not enter it, as DFS-052 does for `QUARANTINE`; the `skipped` line of the JSONL, the text report's skipped section and the summary's `skipped` count then include it, and the files under it are neither listed nor counted. Rejected: a count only (the user could not see which folder was left out, which hides a wrong skip of a user folder named `lost+found`) and a different shape in each format (DFS-020 and DFS-023 keep the two in step).
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
@@ -44,6 +46,7 @@ Reported by the product owner on 2026-11-08: a scan listed files under `$RECYCLE
 The full ID of each criterion is `DFS-061.AC-<n>`.
 
 - **AC-1** A directory whose name is one of the fixed names of decision 1 is not entered, at any depth below a scan root: no file under it appears in a duplicate set; Windows names match in any letter case, the others only as spelled; a directory merely containing a name (`my.Trash`, `lost+found2`) is scanned.
+- **AC-2** Each skipped system folder is reported once as a `skipped` entry with reason `SYSTEM_FOLDER` and the folder's path, in the JSONL `skipped` line and the text report, and counted in the summary's `skipped`; no file under it is listed, counted as found, or hashed.
 
 ## Scenarios
 
@@ -74,7 +77,6 @@ Feature: Known system folders are skipped
 
 ## Open questions
 
-- Where it is applied (walker, with a skip reason, or `application`, counted) and how it is reported (a `skipped` line per folder, or a count).
 - Can it be switched off (`--no-default-excludes`, as DFS-027, or a separate flag)? DFS-052's quarantine skip cannot.
 - Interaction with a start location that is itself inside such a folder.
 - Whether the file names deferred by DFS-027 (`Thumbs.db`, `desktop.ini`, ...) join this ticket.
