@@ -68,10 +68,25 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 10,
+          "wallClockSeconds": 132,
+          "outcome": "passed",
+          "note": "green: 902 passed, 3 skipped; disabled, freeze, touches, stubs, traceability (4 criteria, 7 scenarios), consistency: PASS"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/progress.md",
+        "server/src/main/java/us/pochaev/dfs/server/result/ResultIndex.java"
+      ],
+      "commit": "737f147ecc2f52dd69ed41fbd77355c75a498c1a"
     },
     {
       "id": "verify",
