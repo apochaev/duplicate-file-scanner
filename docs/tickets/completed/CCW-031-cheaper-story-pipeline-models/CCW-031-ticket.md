@@ -1,7 +1,7 @@
 ---
 id: CCW-031
 title: Run the story pipeline's routine phases on cheaper models
-status: in-review
+status: done
 type: chore
 scope: [docs]
 archetype: none
@@ -16,7 +16,7 @@ touches:
 blocked_reason:
 created: 2026-11-08
 updated: 2026-11-08
-completed:
+completed: 2026-11-08
 ---
 
 # CCW-031: Run the story pipeline's routine phases on cheaper models
