@@ -1,14 +1,15 @@
 ---
 id: DFS-059
 title: Duplicate totals for folders and sets in the result API
-status: draft
+status: ready
 type: feature
 scope: []
 archetype: endpoint
 gates: [done]
+autorun: true
 priority: high
 lane: frontend
-depends_on: []
+depends_on: [DFS-054]
 touches:
   - server/src/main/java/us/pochaev/dfs/server/result
   - server/src/test/java/us/pochaev/dfs/server/ResultApiTest.java
@@ -43,7 +44,7 @@ Both are built from `ResultIndex`, which holds every duplicate set with its path
 
 1. **Duplicate numbers on every folder** (2026-11-07, revised the same day). `FolderNode` gains `duplicateFiles` and `duplicateBytes`: the counted files in the folder's whole subtree that belong to a duplicate set (a content with at least two physical copies in the scan), and their bytes, counted the way `files` and `bytes` count, so `duplicateFiles <= files` and `duplicateBytes <= bytes` always hold. Computed from `ResultIndex`'s sets once per scan, kept with it. First chosen as the overlap analysis' four numbers (`bytesWithCopyElsewhere`, `internalBytes`, ...); revised because their sum counts a file twice when it has a copy both inside and outside its folder (a bar over 100 %), "copied elsewhere" is 0 for the only root of a one-folder scan, and it would make the first folders request wait for the analysis. Not chosen: one overlaps request per expanded folder, or no "Dupes" column.
 2. **Two totals on every page of sets** (2026-11-07). `SetPage` gains `totalFiles` (the link paths of every matching set) and `totalBytes` (each matching set's size times its physical copies), for the same sets `totalItems` counts (all sets, or with `under`, the sets with a copy under that folder). The screen derives last copies kept (`totalBytes - totalReclaimableBytes`) and unique space (scanned bytes minus `totalBytes`). Not chosen: showing only what exists (no "Duplicate files" number, a two-part bar), or a separate scan-summary endpoint (a new endpoint and request for numbers `SetPage` nearly has).
-3. **Archetype `endpoint`, gates `[done]`** (2026-11-07). Two read-only fields added to two existing records; no new path, no change to security, paths or errors. Straight to the product-owner review.
+3. **Archetype `endpoint`, gates `[done]`** (2026-11-07). Two read-only fields added to two existing records; no new path, no change to security, paths or errors. Straight to the product-owner review. Runs after DFS-054, which also changes `us.pochaev.dfs.server.result`'s neighbourhood and `openapi.json` (both touch the spec and `TestServer`-based tests), so the two never run at once.
 
 ## Acceptance criteria
 
