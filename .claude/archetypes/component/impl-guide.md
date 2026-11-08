@@ -28,5 +28,6 @@ Write `.ts`, `.html` and `.css` files with the editor (Write or Edit), never wit
 - The build output has no budget warning (search it for "budget").
 - No stub markers remain (`StubsCheck`).
 - You have not edited a spec, `src/testing/`, `src/app/api/`, or anything outside the ticket's `touches`.
+- For a layout fix, measure bounding boxes or take a screenshot of the built jar before reporting it done. "Build green, e2e passing" does not prove a visual defect is fixed (DFS-060.L-1).
 - Leave the done-items unticked; the verifier ticks each one it has verified.
 - If you deviated from `design.md` for a reason the architect did not anticipate, add a line to `learnings.md` (D6) rather than only fixing it silently.

@@ -18,44 +18,44 @@
 
 ### DFS-060.L-1: Check visibility, not DOM presence, for layout-bound UI
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: component archetype `test-guide.md` and `impl-guide.md`
 - Change: require a Playwright flow that asserts `isVisible()` and a non-zero bounding-box width on a layout-bound component's key elements, and require the implementer to measure bounding boxes or take a screenshot on the built jar before reporting a layout fix as done.
 - Evidence: DFS-060 defects 3 and 4: the folder name was 0 px wide and the path column clipped the file name; Vitest and Playwright only asserted the text was in the DOM, and "build green, e2e 8/8" was reported for a fix that had not fixed it. Two implement reopens, about 165 turns.
 - Recurrences: 1 (DFS-060)
 - Recommendation: apply, no automated gate could see these defects.
-- Decision:
+- Decision: applied 2026-11-08 by the user; commit `docs: apply DFS-060.L-1, DFS-060.L-2, DFS-060.L-3, DFS-060.L-4`
 
 ### DFS-060.L-2: Hit-test hidden-until-hover controls at a narrow and a wide viewport
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: component archetype `test-guide.md` and the verifier checklist item 11
 - Change: for components with `opacity: 0` or hover-revealed controls, require an `elementFromPoint` hit-test of the row centre at one viewport under 960 px and one wide viewport, and a Playwright flow that repeats one row click at the narrow viewport.
 - Evidence: DFS-060 defect 5: below 960 px the invisible pin's Material touch target covered every folder row, so a click pinned instead of selecting; found only at the done gate. `opacity: 0` does not remove an element from hit-testing, and the e2e flows run only at desktop width.
 - Recurrences: 1 (DFS-060)
 - Recommendation: apply, it cost a third implement pass and was caught late.
-- Decision:
+- Decision: applied 2026-11-08 by the user; commit `docs: apply DFS-060.L-1, DFS-060.L-2, DFS-060.L-3, DFS-060.L-4`
 
 ### DFS-060.L-3: A "never throws" scenario must call the function bare under the red gate
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: component archetype `test-guide.md`
 - Change: state that a "never throws" scenario calls the function bare and asserts on an observable afterwards; `expect(() => stub()).not.toThrow()` turns the stub's error into an AssertionError and fails the red gate.
 - Evidence: DFS-060 defect 1: tests attempt 1 failed the gate on `result-density.spec.ts` AC-9 and was retried on opus.
 - Recurrences: 1 (DFS-060)
 - Recommendation: apply, it cost a failed attempt and a model escalation.
-- Decision:
+- Decision: applied 2026-11-08 by the user; commit `docs: apply DFS-060.L-1, DFS-060.L-2, DFS-060.L-3, DFS-060.L-4`
 
 ### DFS-060.L-4: Expected breakage misses routed-constructor stubs and BrowserFlowTest selectors
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: component archetype design checklist item 3 and the architect's design template
 - Change: say that a stub reached from a lazily routed component's constructor shows up in `app.routes.spec.ts` as a timeout, so that spec goes under Expected breakage (or the stub moves to a template-evaluated method), and have the architect grep `BrowserFlowTest` for every selector and text the decisions replace.
 - Evidence: DFS-060: `app.routes.spec.ts` timed out instead of failing with the stub's error (tests phase); the design's list omitted DFS-053.AC-6 `pinCompareAndUnpin` (implement defect 2), and DFS-053.AC-7 was also affected.
 - Recurrences: 1 (DFS-060)
 - Recommendation: apply, the same gap caused a defect in two phases.
-- Decision:
+- Decision: applied 2026-11-08 by the user; commit `docs: apply DFS-060.L-1, DFS-060.L-2, DFS-060.L-3, DFS-060.L-4`
