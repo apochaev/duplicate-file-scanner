@@ -50,15 +50,17 @@
               @let short = shortPath(link.path);
               <tr class="copy-row" [class.in-selected-folder]="copyInSelectedFolder(copy)">
                 <td class="copy-path">
-                  <span class="short-path" [attr.title]="link.path">
-                    <span class="path-folders">{{ short.folders }}</span><span class="path-name">{{ short.name }}</span>
-                  </span>
-                  @if (copy.links.length > 1) {
-                    <span class="badge links-badge" [attr.title]="linksTitle(copy)">{{ copy.links.length }} links</span>
-                  }
-                  @if (copyInSelectedFolder(copy)) {
-                    <span class="badge selected-badge">in selected</span>
-                  }
+                  <div class="copy-path-line">
+                    <span class="short-path" [attr.title]="link.path">
+                      <span class="path-folders">{{ short.folders }}</span><span class="path-name">{{ short.name }}</span>
+                    </span>
+                    @if (copy.links.length > 1) {
+                      <span class="badge links-badge" [attr.title]="linksTitle(copy)">{{ copy.links.length }} links</span>
+                    }
+                    @if (copyInSelectedFolder(copy)) {
+                      <span class="badge selected-badge">in selected</span>
+                    }
+                  </div>
                 </td>
                 <td class="copy-modified">
                   <time [attr.datetime]="link.modified">{{ link.modified | date: 'yyyy-MM-dd' }}</time>

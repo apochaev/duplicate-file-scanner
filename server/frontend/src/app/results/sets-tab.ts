@@ -16,8 +16,12 @@ export const NO_DUPLICATES = 'This scan found no duplicates';
 /** Under a selected folder with no sets (AC-10). */
 export const NO_DUPLICATES_UNDER_FOLDER = 'No duplicates under this folder';
 
-/** The character budget of the table's path column (DFS-060 decision 5; the prototype's ~62-character column). */
-export const PATH_BUDGET = 62;
+/**
+ * The character budget of the table's path column (DFS-060 decision 5): what the File column holds at 0.75rem
+ * monospace in the app shell's ~960 px page, about 430 px, with room left for a "<n> links" badge. The prototype had
+ * ~62 characters in a wider column; 62 did not fit (DFS-060 verification).
+ */
+export const PATH_BUDGET = 56;
 
 /**
  * The Sets tab (DFS-049 decisions 4 and 5, DFS-060 decision 4, `ui.md` U3): one page of duplicate sets as one grouped

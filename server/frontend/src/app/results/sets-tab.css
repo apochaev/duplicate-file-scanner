@@ -1,14 +1,22 @@
+.sets-tab {
+  display: block;
+  min-width: 0;
+}
+
 .sets-filter {
   margin: 8px 0;
 }
 
+/*
+ * A fixed layout keeps the table inside its tab (no sideways scrolling): Modified, Reclaimable and Copy have fixed
+ * widths and File takes the rest, about 430 px in the app shell's ~960 px page, enough for the PATH_BUDGET (56)
+ * characters of a path at 0.75rem monospace. The Reclaimable column is narrow because only the set header rows use it,
+ * and there its cell spans the Copy column too.
+ */
 .sets-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
-}
-
-.sets-tab {
-  overflow-x: auto;
 }
 
 .sets-table th,
@@ -29,11 +37,11 @@
 }
 
 .col-modified {
-  width: 6.5rem;
+  width: 6rem;
 }
 
 .col-reclaimable {
-  width: 10rem;
+  width: 4.5rem;
 }
 
 .col-copy {
@@ -42,8 +50,14 @@
 
 thead th {
   font-weight: normal;
+  white-space: nowrap;
   color: var(--mat-sys-on-surface-variant, #555);
   border-bottom: 1px solid var(--mat-sys-outline-variant, #ccc);
+}
+
+/* "Reclaimable" is wider than its column; it runs on over the empty Copy heading, above the reclaimable bytes. */
+.sets-table thead .col-reclaimable {
+  overflow: visible;
 }
 
 .set-header {
@@ -72,6 +86,16 @@ time,
   content: ' ·';
 }
 
+/* Angular drops the whitespace between the spans, so the gap after "·" is a margin. */
+.set-count {
+  margin-right: 0.3em;
+}
+
+/* Compact rows: the Copy button no taller than a line of text (Material's default is 40 px). */
+.density-compact app-path-copy {
+  --mat-button-text-container-height: 24px;
+}
+
 .reclaimable-cell {
   display: flex;
   align-items: center;
@@ -95,30 +119,54 @@ time,
 }
 
 .set-reclaimable-bytes {
+  flex: none;
   font-weight: 500;
-}
-
-.copy-path {
   white-space: nowrap;
 }
 
+/*
+ * The path and its badges on one line. Should the column still be too narrow (another font, a narrower window), the
+ * folders give way first, ending in an ellipsis, so the file name the path rule keeps always shows whole.
+ */
+.copy-path-line {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
 .short-path {
-  display: inline-block;
-  /* Room for the PATH_BUDGET (62) characters, so the file name the rule keeps is never cut off. */
-  min-width: 62ch;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
   font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.path-folders {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
 }
 
 .path-name {
+  flex: none;
   font-weight: 500;
+  white-space: pre;
+}
+
+.copy-modified {
+  white-space: nowrap;
 }
 
 .badge {
+  flex: none;
   margin-left: 6px;
   padding: 0 6px;
   border: 1px solid var(--mat-sys-outline-variant, #ccc);
   border-radius: 8px;
   font-size: 0.8em;
+  white-space: nowrap;
 }
 
 .in-selected-folder {

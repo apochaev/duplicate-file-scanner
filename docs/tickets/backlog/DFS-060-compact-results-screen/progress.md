@@ -26,3 +26,11 @@
 - `./gradlew build` green, no budget warning. `:server:e2eTest`: 7 of 8 pass; DFS-053.AC-6 fails (see learnings).
 - Expected commit: `feat(server): compact read-only results screen [DFS-060]`.
 - Miss: the design's expected-breakage list omitted DFS-053.AC-6 (`pinCompareAndUnpin`); the pin label and Comparison live in the Overlaps tab, so the flow now clicks `tab("Overlaps")` after pinning; all 8 flows pass.
+
+## implement, second reopen (implementer, 2026-11-07)
+
+- Folder tree: two-line rows (name across the row, then bar, size and duplicates in fixed 3.5rem columns at the right edge; the bar shrinks first), 24 px toggle, 12 px indent, "Pin for comparison" at the top right of the name line on hover or focus; one line and the pin in the row's flow below a 960 px window.
+- Sets table: `table-layout: fixed` (Modified 6rem, Reclaimable 4.5rem, its header cell spanning Copy), paths at 0.75rem monospace in a flex line where the folders ellipsize before the file name, `PATH_BUDGET` 62 → 56 (every test green), compact Copy button 24 px high. Result layout stacks below 960 px. CLAUDE.md and ui.md say 56.
+- Checked on the built jar with headless Chrome over CDP: at 1440 and 1000 px `.folder-name` is 124-220 px wide, none clipped; the tab body is 688 px with scrollWidth 688; every `.path-name` is inside its cell; Reclaimable is in view; rows are 28 px; no console messages.
+- `./gradlew build` green; `:server:e2eTest` 8/8.
+- Expected commit: `fix(server): fit the folder names and the sets table in the results screen [DFS-060]`.

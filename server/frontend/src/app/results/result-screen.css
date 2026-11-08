@@ -97,7 +97,8 @@
   color: var(--mat-sys-error, #b3261e);
 }
 
-@media (max-width: 720px) {
+/* Below this the Sets table's File column could not hold a path (PATH_BUDGET), so the tree moves above the tabs. */
+@media (max-width: 960px) {
   .result-layout {
     grid-template-columns: 1fr;
   }
