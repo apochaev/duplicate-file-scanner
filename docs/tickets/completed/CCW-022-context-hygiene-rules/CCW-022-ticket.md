@@ -1,7 +1,7 @@
 ---
 id: CCW-022
 title: Add context-hygiene rules for when sessions compact or clear
-status: in-review
+status: done
 type: docs
 scope: [docs, build]
 archetype: none
@@ -20,7 +20,7 @@ touches:
 blocked_reason:
 created: 2026-11-01
 updated: 2026-11-07
-completed:
+completed: 2026-11-07
 ---
 
 # CCW-022: Add context-hygiene rules for when sessions compact or clear
