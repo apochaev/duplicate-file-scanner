@@ -1,7 +1,7 @@
 ---
 id: CCW-024
 title: Cut the architect's token cost
-status: in-review
+status: done
 type: chore
 scope: [docs]
 archetype: none
@@ -20,7 +20,7 @@ touches:
 blocked_reason:
 created: 2026-11-06
 updated: 2026-11-07
-completed:
+completed: 2026-11-07
 ---
 
 # CCW-024: Cut the architect's token cost
