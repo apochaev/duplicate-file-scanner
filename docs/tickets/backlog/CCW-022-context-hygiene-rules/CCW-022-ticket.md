@@ -1,7 +1,7 @@
 ---
 id: CCW-022
 title: Add context-hygiene rules for when sessions compact or clear
-status: in-progress
+status: in-review
 type: docs
 scope: [docs, build]
 archetype: none
@@ -153,7 +153,7 @@ Feature: Context hygiene
 
 ## Definition of done
 
-- [ ] Every scenario above is checked as marked (`[run]` exercised for real, `[read]` read) and recorded in `verification.md`
+- [x] Every scenario above is checked as marked (`[run]` exercised for real, `[read]` read) and recorded in `verification.md` (user accepted AC-1, AC-3, AC-4 and AC-6 as read-only on 2026-11-07; AC-8 was run, see verification.md)
 - [x] No files changed outside the paths listed under Touches
 - [x] story-gate's self-tests pass, including the lane-filter cases (AC-8)
 - [x] The search of `.claude/`, `CLAUDE.md` and `docs/design/` for the old stop text and "read from the conversation" is repeated before `review` and its hits recorded in `verification.md` (CCW-018.L-1)

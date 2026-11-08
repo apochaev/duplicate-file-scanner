@@ -37,3 +37,6 @@ Live `[run]` scenarios (gate stop commit, real `/clear` resumes in a lane sessio
 Hand-implemented (archetype `none`); no plan.json.
 
 Not ready for approval until the live scenarios are run.
+
+## Closing note (2026-11-07)
+The user accepted the live `[run]` scenarios AC-1, AC-3, AC-4 and AC-6 as read-only and closed the ticket. Seen on main during review: DFS-060's stop commit read `docs: record DFS-060 design phase in plan.json`, not the `gate` wording, so a running session may not have reread the story skill yet.
