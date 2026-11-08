@@ -37,9 +37,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @ExtendWith(OutputCaptureExtension.class)
 class BrowserFlowTest {
 
-    /** A set card's heading with the hard link left out of the count: two copies, one copy's bytes reclaimable. */
-    private static final Pattern TWO_COPIES = Pattern.compile("^2 copies · (.+) each · \\1 reclaimable$");
-
     private static Playwright playwright;
     private static Browser browser;
 
@@ -116,11 +113,13 @@ class BrowserFlowTest {
     }
 
     @Test
-    @DisplayName("DFS-053.AC-3 Open results shows the Overlaps tab with the fixture's folders")
-    void resultScreenOpensOnOverlaps() {
+    @DisplayName("DFS-053.AC-3 Open results shows the Sets tab first, and Overlaps with the fixture's folders")
+    void resultScreenOpensOnSets() {
         openResults();
 
         assertThat(page).hasURL(Pattern.compile(".*#/scans/[^/]+$"));
+        assertThat(tab("Sets")).hasAttribute("aria-selected", "true");
+        tab("Overlaps").click();
         assertThat(tab("Overlaps")).hasAttribute("aria-selected", "true");
         Locator folders = page.locator(".summaries-table");
         assertThat(folders).containsText(fixture.keep().toString());
@@ -136,31 +135,33 @@ class BrowserFlowTest {
         assertThat(folderSelect("keep")).isVisible();
         folderSelect("extra").click();
 
+        tab("Overlaps").click();
         assertThat(page.locator(".folder-header .summary-folder")).hasText(fixture.extra().toString());
         tab("Sets").click();
         // Both sets have a copy under extra, and only those are marked.
-        assertThat(page.locator(".selected-label")).hasCount(2);
+        assertThat(page.locator(".selected-badge")).hasCount(2);
     }
 
     @Test
-    @DisplayName("DFS-053.AC-5 Sets lists both duplicate sets and marks a hard link under its copy")
+    @DisplayName("DFS-053.AC-5 Sets lists both duplicate sets and marks a copy with a hard link by a links badge")
     void setsShowCopiesAndHardLink() {
         openResults();
-        tab("Sets").click();
 
         assertThat(page.locator(".duplicate-set")).hasCount(2);
-        assertThat(page.locator(".sets-summary")).containsText("2 duplicate sets");
-        assertThat(page.locator(".set-heading").first()).hasText(TWO_COPIES);
-        assertThat(page.locator(".set-heading").last()).hasText(TWO_COPIES);
-        assertThat(page.locator(".physical-copy")).hasCount(2 * 2);
+        assertThat(page.locator(".set-count").first()).hasText("2 copies");
+        assertThat(page.locator(".set-count").last()).hasText("2 copies");
+        assertThat(page.locator(".set-size")).hasCount(2);
+        // Two physical copies per set; the hard link is no third row.
+        assertThat(page.locator("tr.copy-row")).hasCount(2 * 2);
 
         assumeTrue(fixture.hardLinked(), "this platform or its privileges do not allow a hard link");
-        assertThat(page.locator(".hard-link")).hasCount(1);
-        assertThat(page.locator(".hard-link-label")).hasText("hard link (same file)");
-        // Which of the two names the scan lists first is its choice; the mark sits under one copy that has both.
-        Locator linkedCopy = page.locator(".physical-copy").filter(new Locator.FilterOptions().setHas(page.locator(".hard-link")));
-        assertThat(linkedCopy).containsText(fixture.keep().resolve("shared-a.bin").toString());
-        assertThat(linkedCopy).containsText(fixture.keep().resolve("shared-a-link.bin").toString());
+        assertThat(page.locator(".links-badge")).hasCount(1);
+        assertThat(page.locator(".links-badge")).hasText("2 links");
+        assertThat(page.getByText("hard link (same file)")).hasCount(0);
+        // Which of the two names the scan lists first is its choice; the badge's tooltip lists both.
+        String tooltip = page.locator(".links-badge").getAttribute("title");
+        assertTrue(tooltip.contains(fixture.keep().resolve("shared-a.bin").toString()), tooltip);
+        assertTrue(tooltip.contains(fixture.keep().resolve("shared-a-link.bin").toString()), tooltip);
     }
 
     @Test
@@ -184,16 +185,16 @@ class BrowserFlowTest {
     }
 
     @Test
-    @DisplayName("DFS-053.AC-7 Copy folder path puts the folder's absolute path on the browser clipboard")
-    void copyFolderPathReachesTheClipboard() {
+    @DisplayName("DFS-053.AC-7 Copy puts the file's absolute path on the browser clipboard")
+    void copyPathReachesTheClipboard() {
         openResults();
-        tab("Sets").click();
         page.bringToFront();
+        String file = fixture.sharedAIn(fixture.extra()).toString();
 
-        page.getByLabel("Copy folder path of " + fixture.sharedAIn(fixture.extra())).click();
+        page.getByLabel("Copy path of " + file, new Page.GetByLabelOptions().setExact(true)).click();
 
         assertThat(page.locator(".copy-success")).isVisible();
-        assertEquals(fixture.extra().toString(), page.evaluate("navigator.clipboard.readText()"));
+        assertEquals(file, page.evaluate("navigator.clipboard.readText()"));
     }
 
     @Test
@@ -206,7 +207,7 @@ class BrowserFlowTest {
 
         assertThat(page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Scan results"))).isVisible();
         assertEquals(url, page.url());
-        assertThat(tab("Overlaps")).hasAttribute("aria-selected", "true");
+        assertThat(tab("Sets")).hasAttribute("aria-selected", "true");
         assertThat(page.getByText("Open the link printed in the console")).hasCount(0);
     }
 
@@ -225,7 +226,7 @@ class BrowserFlowTest {
         scanFixture();
         page.locator(".open-results").click();
         assertThat(page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Scan results"))).isVisible();
-        assertThat(page.locator(".summaries-table")).isVisible();
+        assertThat(page.locator(".sets-table")).isVisible();
     }
 
     /** The scanned root is the only tree row with a toggle until it is expanded. */
@@ -234,7 +235,8 @@ class BrowserFlowTest {
     }
 
     private Locator folderSelect(String name) {
-        return page.locator(".folder-select").filter(new Locator.FilterOptions().setHasText(name + " ·"));
+        return page.locator(".folder-select").filter(new Locator.FilterOptions().setHas(
+                page.locator(".folder-name").getByText(name, new Locator.GetByTextOptions().setExact(true))));
     }
 
     private Locator tab(String label) {

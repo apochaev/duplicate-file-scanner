@@ -8,8 +8,34 @@ import { MatProgressBarHarness } from '@angular/material/progress-bar/testing';
 import { MatTreeHarness } from '@angular/material/tree/testing';
 import { FolderNode } from '../api/models';
 import { provideStubSurfacing, settle } from '../../testing/stub-surfacing';
-import { FolderTree } from './folder-tree';
+import { FolderTree, sortByDuplicateSpace } from './folder-tree';
 import { expectFolders, folder, refuse } from './result-test-data';
+
+describe('sortByDuplicateSpace', () => {
+  it('DFS-060.AC-4 orders by duplicate bytes, largest first, then by name, without changing the input', () => {
+    const documents = folder('C:\\Archive\\Documents', { bytes: 1288490188, duplicateBytes: 0 });
+    const backups = folder('C:\\Archive\\Backups', { bytes: 76235669504, duplicateBytes: 40802189312 });
+    const photos = folder('C:\\Archive\\Photos', { bytes: 65712999219, duplicateBytes: 22548578304 });
+    const music = folder('C:\\Archive\\Music', { bytes: 2684354560, duplicateBytes: 0 });
+    const input = [documents, backups, photos, music];
+
+    const sorted = sortByDuplicateSpace(input);
+
+    expect(sorted.map((f) => f.name)).toEqual(['Backups', 'Photos', 'Documents', 'Music']);
+    expect(input.map((f) => f.name)).toEqual(['Documents', 'Backups', 'Photos', 'Music']);
+  });
+
+  it('DFS-060.AC-4 breaks a tie by name, numbers in order and letter case ignored, then by path', () => {
+    const sorted = sortByDuplicateSpace([
+      folder('C:\\x\\b10', { duplicateBytes: 5 }),
+      folder('C:\\x\\B2', { duplicateBytes: 5 }),
+      folder('C:\\y\\a', { duplicateBytes: 5 }),
+      folder('C:\\x\\a', { duplicateBytes: 5 }),
+    ]);
+
+    expect(sorted.map((f) => f.path)).toEqual(['C:\\x\\a', 'C:\\y\\a', 'C:\\x\\B2', 'C:\\x\\b10']);
+  });
+});
 
 describe('FolderTree', () => {
   let http: HttpTestingController;
@@ -41,46 +67,90 @@ describe('FolderTree', () => {
     await settle(fixture);
   }
 
-  function labels(): string[] {
-    return Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button.folder-select')).map((el) =>
-      (el.textContent ?? '').replace(/\s+/g, ' ').trim(),
+  function root(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  /** The folder names of the visible rows, in order. */
+  function names(): string[] {
+    return Array.from(root().querySelectorAll('button.folder-select .folder-name')).map((el) =>
+      (el.textContent ?? '').trim(),
     );
+  }
+
+  function selectButton(name: string): HTMLButtonElement {
+    const found = Array.from(root().querySelectorAll<HTMLButtonElement>('button.folder-select')).find(
+      (button) => (button.querySelector('.folder-name')?.textContent ?? '').trim() === name,
+    );
+    if (!found) throw new Error(`no folder row named ${name}`);
+    return found;
   }
 
   async function tree(): Promise<MatTreeHarness> {
     return loader.getHarness(MatTreeHarness);
   }
 
-  it('DFS-049.AC-5 shows the roots as "<name> · <size> · <n> files" in the order given, without asking for children', async () => {
+  it('DFS-060.AC-4 shows the roots by duplicate space then name, without asking for children', async () => {
     await render([photos, backup]);
 
-    expect(labels()).toEqual(['Photos · 12.0 GB · 3210 files', 'Backup · 900 B · 2 files']);
+    expect(names()).toEqual(['Backup', 'Photos']);
     http.expectNone((req) => req.params.has('parent'));
   });
 
-  it('DFS-049.AC-5 expands only a node with children, requesting them once with its path as parent', async () => {
+  it('DFS-060.AC-4 shows a row as name, bar, size and duplicate size, the folder path as its tooltip', async () => {
+    const archive = folder('C:\\Archive', { bytes: 76235669504, duplicateBytes: 40802189312 });
+    await render([archive]);
+
+    const row = selectButton('Archive');
+    expect(row.querySelector('.folder-size')?.textContent?.trim()).toBe('71.0 GB');
+    expect(row.querySelector('.folder-duplicate-size')?.textContent?.trim()).toBe('38.0 GB');
+    expect(row.getAttribute('title')).toBe('C:\\Archive');
+    const fill = row.querySelector<HTMLElement>('.folder-bar .folder-bar-fill');
+    expect(parseFloat(fill?.style.width ?? '')).toBeCloseTo(53.5, 1);
+  });
+
+  it('DFS-060.AC-4 lists a folder\'s children by duplicate space, largest first, then by name', async () => {
+    const archive = folder('C:\\Archive', { bytes: 145921509491, duplicateBytes: 63350767616, hasChildren: true });
+    await render([archive]);
+    const nodes = await (await tree()).getNodes();
+    await nodes[0].expand();
+    await settle(fixture);
+
+    expectFolders(http, 's-1', 'C:\\Archive').flush([
+      folder('C:\\Archive\\Documents', { bytes: 1288490188, duplicateBytes: 0 }),
+      folder('C:\\Archive\\Backups', { bytes: 76235669504, duplicateBytes: 40802189312 }),
+      folder('C:\\Archive\\Photos', { bytes: 65712999219, duplicateBytes: 22548578304 }),
+      folder('C:\\Archive\\Music', { bytes: 2684354560, duplicateBytes: 0 }),
+    ]);
+    await settle(fixture);
+
+    expect(names()).toEqual(['Archive', 'Backups', 'Photos', 'Documents', 'Music']);
+    const backups = selectButton('Backups');
+    expect(parseFloat(backups.querySelector<HTMLElement>('.folder-bar-fill')?.style.width ?? '')).toBeCloseTo(53.5, 1);
+    expect(backups.querySelector('.folder-size')?.textContent?.trim()).toBe('71.0 GB');
+    expect(backups.querySelector('.folder-duplicate-size')?.textContent?.trim()).toBe('38.0 GB');
+    expect(parseFloat(selectButton('Music').querySelector<HTMLElement>('.folder-bar-fill')?.style.width ?? '')).toBe(0);
+    expect(selectButton('Music').querySelector('.folder-duplicate-size')?.textContent?.trim()).toBe('0 B');
+  });
+
+  it('DFS-060.AC-4 expands only a node with children, requesting them once with its path as parent', async () => {
     await render([photos, backup]);
     const nodes = await (await tree()).getNodes();
-    expect(await nodes[0].isExpandable()).toBe(true);
-    expect(await nodes[1].isExpandable()).toBe(false);
+    expect(await nodes[0].isExpandable()).toBe(false);
+    expect(await nodes[1].isExpandable()).toBe(true);
 
-    await nodes[0].expand();
+    await nodes[1].expand();
     await settle(fixture);
     const req = expectFolders(http, 's-1', 'C:\\Photos');
     req.flush([folder('C:\\Photos\\2024', { bytes: 2048, files: 7 }), folder('C:\\Photos\\2025', { bytes: 100, files: 3 })]);
     await settle(fixture);
 
-    expect(labels()).toEqual([
-      'Photos · 12.0 GB · 3210 files',
-      '2024 · 2.0 KB · 7 files',
-      '2025 · 100 B · 3 files',
-      'Backup · 900 B · 2 files',
-    ]);
+    expect(names()).toEqual(['Backup', 'Photos', '2024', '2025']);
     const after = await (await tree()).getNodes();
-    expect(await after[1].getLevel()).toBe((await after[0].getLevel()) + 1);
+    expect(await after[2].getLevel()).toBe((await after[1].getLevel()) + 1);
   });
 
-  it('DFS-049.AC-5 does not ask again when a node is collapsed and expanded again', async () => {
+  it('DFS-060.AC-4 does not ask again when a node is collapsed and expanded again', async () => {
     await render([photos]);
     let nodes = await (await tree()).getNodes();
     await nodes[0].expand();
@@ -91,16 +161,16 @@ describe('FolderTree', () => {
     nodes = await (await tree()).getNodes();
     await nodes[0].collapse();
     await settle(fixture);
-    expect(labels()).toEqual(['Photos · 12.0 GB · 3210 files']);
+    expect(names()).toEqual(['Photos']);
 
     nodes = await (await tree()).getNodes();
     await nodes[0].expand();
     await settle(fixture);
-    expect(labels()).toHaveLength(2);
+    expect(names()).toHaveLength(2);
     http.expectNone((req) => req.params.has('parent'));
   });
 
-  it('DFS-049.AC-10 shows a progress bar while a level loads and the server message when it fails', async () => {
+  it('DFS-060.AC-10 shows a progress bar while a level loads and the server message when it fails', async () => {
     await render([photos]);
     const nodes = await (await tree()).getNodes();
     await nodes[0].expand();
@@ -112,44 +182,39 @@ describe('FolderTree', () => {
     refuse(expectFolders(http, 's-1', 'C:\\Photos'), 400, { code: 'RELATIVE_PATH', message: 'The path is not absolute' });
     await settle(fixture);
 
-    const alert = (fixture.nativeElement as HTMLElement).querySelector('.folder-error');
+    const alert = root().querySelector('.folder-error');
     expect(alert?.getAttribute('role')).toBe('alert');
     expect(alert?.textContent?.trim()).toBe('The path is not absolute');
     expect(await loader.getAllHarnesses(MatProgressBarHarness)).toHaveLength(0);
   });
 
-  it('DFS-049.AC-6 emits the folder path on selecting a node and null on "All folders"', async () => {
+  it('DFS-060.AC-4 emits the folder path on selecting a node and null on "All folders"', async () => {
     await render([photos, backup], 'D:\\Backup');
 
     const all = await loader.getHarness(MatButtonHarness.with({ text: 'All folders' }));
     await all.click();
     await settle(fixture);
-    const photosButton = await loader.getHarness(MatButtonHarness.with({ text: /^Photos/ }));
-    await photosButton.click();
+    selectButton('Photos').click();
     await settle(fixture);
 
     expect(selections).toEqual([null, 'C:\\Photos']);
   });
 
-  it('DFS-049.AC-6 shows "All folders" selected on opening and the selected folder pressed', async () => {
+  it('DFS-060.AC-4 shows "All folders" selected on opening and the selected folder pressed', async () => {
     await render([photos, backup], null);
-    const root = fixture.nativeElement as HTMLElement;
-    expect(root.querySelector('button.all-folders')?.getAttribute('aria-pressed')).toBe('true');
-    expect(Array.from(root.querySelectorAll('button.folder-select')).map((b) => b.getAttribute('aria-pressed'))).toEqual([
-      'false',
-      'false',
-    ]);
+    const pressed = () =>
+      Array.from(root().querySelectorAll('button.folder-select')).map((b) => b.getAttribute('aria-pressed'));
+    expect(root().querySelector('button.all-folders')?.getAttribute('aria-pressed')).toBe('true');
+    expect(pressed()).toEqual(['false', 'false']);
 
     fixture.componentRef.setInput('selected', 'D:\\Backup');
     await settle(fixture);
-    expect(root.querySelector('button.all-folders')?.getAttribute('aria-pressed')).toBe('false');
-    expect(Array.from(root.querySelectorAll('button.folder-select')).map((b) => b.getAttribute('aria-pressed'))).toEqual([
-      'false',
-      'true',
-    ]);
+    expect(root().querySelector('button.all-folders')?.getAttribute('aria-pressed')).toBe('false');
+    expect(names()).toEqual(['Backup', 'Photos']);
+    expect(pressed()).toEqual(['true', 'false']);
   });
 
-  it('DFS-050.AC-5 offers "Pin for comparison" on every folder node but not on "All folders", and emits the folder pinned', async () => {
+  it('DFS-060.AC-4 offers "Pin for comparison" on every folder node but not on "All folders", and emits the folder pinned', async () => {
     const pinned: string[] = [];
     await render([photos, backup]);
     fixture.componentInstance.folderPinned.subscribe((path) => pinned.push(path));
@@ -157,11 +222,11 @@ describe('FolderTree', () => {
     const pins = await loader.getAllHarnesses(MatButtonHarness.with({ selector: '.folder-pin' }));
     expect(pins).toHaveLength(2);
     expect(await pins[0].getText()).toBe('Pin for comparison');
-    const root = fixture.nativeElement as HTMLElement;
-    expect(root.querySelector('button.all-folders')?.textContent).not.toContain('Pin');
-    expect(root.querySelectorAll('.folder-pin')).toHaveLength(labels().length);
+    expect(root().querySelector('button.all-folders')?.textContent).not.toContain('Pin');
+    expect(root().querySelectorAll('.folder-pin')).toHaveLength(names().length);
 
-    await pins[1].click();
+    const pinBackup = await loader.getHarness(MatButtonHarness.with({ selector: '[aria-label="Pin for comparison: Backup"]' }));
+    await pinBackup.click();
     await settle(fixture);
     expect(pinned).toEqual(['D:\\Backup']);
     expect(selections).toEqual([]);
