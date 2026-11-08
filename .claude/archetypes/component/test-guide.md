@@ -59,9 +59,12 @@ A wrapper's token gets a fake in the providers (`{ provide: EVENT_SOURCE, useVal
 - Every page state `design.md` lists, with the exact text it gives.
 - The requests: method, URL, body (an untouched optional field absent), and that nothing else was sent (`http.verify()`).
 - A "nothing is shown" criterion (no link on a RUNNING row) reaches no stub on its own: put its assertions in a test that first renders the positive case, which does reach one (DFS-049).
+- A component with an `opacity: 0` or hover-revealed control gets a Playwright flow that repeats one row click at a viewport under 960 px, since `opacity: 0` does not remove an element from hit-testing and the other flows run at desktop width (DFS-060.L-2).
 
 ## What not to do
 
+- Do not stop at "the text is in the DOM" for a layout-bound component. jsdom has no layout, so Vitest cannot see a 0 px column or a clipped name. Add a Playwright flow in `BrowserFlowTest` that asserts `isVisible()` and a bounding-box width above 0 on the component's key elements (the name, the path, the figure the user reads), and list it in the test plan (DFS-060.L-1).
+- Do not write `expect(() => stub()).not.toThrow()` for a "never throws" scenario. It turns the stub's `not implemented` error into an AssertionError, and the red gate fails. Call the function bare, then assert on an observable afterwards (DFS-060.L-3).
 - Do not test the generated client or Angular itself; test what the screen does with them.
 - Do not touch production code, `src/testing/` or `src/app/api/`.
 - Do not write files with a shell heredoc: TypeScript is full of apostrophes and backticks, which break it (DFS-040, DFS-041); use the editor.

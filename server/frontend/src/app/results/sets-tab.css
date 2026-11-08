@@ -1,48 +1,184 @@
-.sets-summary {
+.sets-tab {
+  display: block;
+  min-width: 0;
+}
+
+.sets-filter {
   margin: 8px 0;
 }
 
-.duplicate-set {
-  margin: 12px 0;
+/*
+ * A fixed layout keeps the table inside its tab (no sideways scrolling): Modified, Reclaimable and Copy have fixed
+ * widths and File takes the rest, about 430 px in the app shell's ~960 px page, enough for the PATH_BUDGET (56)
+ * characters of a path at 0.75rem monospace. The Reclaimable column is narrow because only the set header rows use it,
+ * and there its cell spans the Copy column too.
+ */
+.sets-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
 }
 
-.set-copies {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.sets-table th,
+.sets-table td {
+  padding: 2px 8px;
+  text-align: left;
+  vertical-align: middle;
+  overflow: hidden;
 }
 
-.physical-copy {
-  padding: 4px 0;
+.density-comfortable .sets-table th,
+.density-comfortable .sets-table td {
+  padding: 8px;
 }
 
-.file-link {
+.col-file {
+  width: auto;
+}
+
+.col-modified {
+  width: 6rem;
+}
+
+.col-reclaimable {
+  width: 4.5rem;
+}
+
+.col-copy {
+  width: 5rem;
+}
+
+thead th {
+  font-weight: normal;
+  white-space: nowrap;
+  color: var(--mat-sys-on-surface-variant, #555);
+  border-bottom: 1px solid var(--mat-sys-outline-variant, #ccc);
+}
+
+/* "Reclaimable" is wider than its column; it runs on over the empty Copy heading, above the reclaimable bytes. */
+.sets-table thead .col-reclaimable {
+  overflow: visible;
+}
+
+.set-header {
+  background: var(--mat-sys-surface-container, #f3edf7);
+}
+
+.set-title {
+  font-weight: normal;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.set-name {
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.set-count,
+.set-size,
+time,
+.path-folders {
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.set-count::after {
+  content: ' ·';
+}
+
+/* Angular drops the whitespace between the spans, so the gap after "·" is a margin. */
+.set-count {
+  margin-right: 0.3em;
+}
+
+/* Compact rows: the Copy button no taller than a line of text (Material's default is 40 px). */
+.density-compact app-path-copy {
+  --mat-button-text-container-height: 24px;
+}
+
+.reclaimable-cell {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  padding: 2px 4px;
 }
 
-.file-path {
+.bar {
+  flex: 1;
+  max-width: 6rem;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--mat-sys-surface-variant, #e7e0ec);
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--mat-sys-primary, #6750a4);
+}
+
+.set-reclaimable-bytes {
+  flex: none;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/*
+ * The path and its badges on one line. Should the column still be too narrow (another font, a narrower window), the
+ * folders give way first, ending in an ellipsis, so the file name the path rule keeps always shows whole.
+ */
+.copy-path-line {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.short-path {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
   font-family: monospace;
-  overflow-wrap: anywhere;
+  font-size: 0.75rem;
 }
 
-.hard-link {
-  margin-left: 24px;
-  padding-left: 12px;
-  border-left: 2px solid var(--mat-sys-outline-variant, #ccc);
+.path-folders {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+
+.path-name {
+  flex: none;
+  font-weight: 500;
+  white-space: pre;
+}
+
+.copy-modified {
+  white-space: nowrap;
+}
+
+.badge {
+  flex: none;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--mat-sys-outline-variant, #ccc);
+  border-radius: 8px;
+  font-size: 0.8em;
+  white-space: nowrap;
 }
 
 .in-selected-folder {
   background: var(--mat-sys-secondary-container, #e8def8);
 }
 
-time,
-.hard-link-label,
-.selected-label {
-  color: var(--mat-sys-on-surface-variant, #555);
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
 .sets-error {

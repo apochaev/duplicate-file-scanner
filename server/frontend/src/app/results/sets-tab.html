@@ -1,4 +1,16 @@
-<section class="sets-tab" aria-label="Duplicate sets" [attr.aria-busy]="loading()">
+<section class="sets-tab" [class]="densityClass()" aria-label="Duplicate sets" [attr.aria-busy]="loading()">
+  @if (folder() !== null) {
+    <mat-button-toggle-group
+      class="sets-filter"
+      aria-label="Sets shown"
+      hideSingleSelectionIndicator
+      [value]="filtered()"
+      (change)="chooseFilter($event.value)"
+    >
+      <mat-button-toggle class="filter-all" [value]="false">All sets</mat-button-toggle>
+      <mat-button-toggle class="filter-under" [value]="true">Copies under {{ folderName() }}</mat-button-toggle>
+    </mat-button-toggle-group>
+  }
   @if (loading()) {
     <mat-progress-bar mode="indeterminate" aria-label="Loading duplicate sets" />
   }
@@ -7,41 +19,59 @@
   }
   @if (page(); as result) {
     @if (result.totalItems > 0) {
-      <p class="sets-summary">{{ setsSummary(result) }}</p>
-      @for (set of result.items; track set.digest) {
-        <mat-card class="duplicate-set" appearance="outlined">
-          <mat-card-header>
-            <mat-card-title class="set-heading">{{ setHeading(set) }}</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <ul class="set-copies">
-              @for (copy of set.copies; track copy.links[0].path) {
-                <li class="physical-copy">
-                  @for (link of copy.links; track link.path; let first = $first) {
-                    <div
-                      class="file-link"
-                      [class.copy-line]="first"
-                      [class.hard-link]="!first"
-                      [class.in-selected-folder]="inSelectedFolder(link.path)"
-                    >
-                      <span class="file-path">{{ link.path }}</span>
-                      @if (first) {
-                        <time [attr.datetime]="link.modified">{{ link.modified | date: 'medium' }}</time>
-                      } @else {
-                        <span class="hard-link-label">hard link (same file)</span>
-                      }
-                      @if (inSelectedFolder(link.path)) {
-                        <span class="selected-label">in selected folder</span>
-                      }
-                      <app-path-copy [path]="link.path" />
-                    </div>
-                  }
-                </li>
-              }
-            </ul>
-          </mat-card-content>
-        </mat-card>
-      }
+      <table class="sets-table">
+        <thead>
+          <tr>
+            <th scope="col" class="col-file">File</th>
+            <th scope="col" class="col-modified">Modified</th>
+            <th scope="col" class="col-reclaimable">Reclaimable</th>
+            <th scope="col" class="col-copy"><span class="visually-hidden">Copy path</span></th>
+          </tr>
+        </thead>
+        @for (set of result.items; track set.digest) {
+          <tbody class="duplicate-set">
+            <tr class="set-header">
+              <th scope="rowgroup" colspan="2" class="set-title">
+                <span class="set-name">{{ setName(set) }}</span>
+                <span class="set-count">{{ copiesText(set.copies.length) }}</span>
+                <span class="set-size">{{ formatBytes(set.size) }} each</span>
+              </th>
+              <td colspan="2" class="set-reclaimable">
+                <div class="reclaimable-cell">
+                  <span class="bar" aria-hidden="true">
+                    <span class="bar-fill" [style.width.%]="reclaimableWidth(set)"></span>
+                  </span>
+                  <span class="set-reclaimable-bytes">{{ formatBytes(set.reclaimableBytes) }}</span>
+                </div>
+              </td>
+            </tr>
+            @for (copy of set.copies; track copy.links[0].path) {
+              @let link = copy.links[0];
+              @let short = shortPath(link.path);
+              <tr class="copy-row" [class.in-selected-folder]="copyInSelectedFolder(copy)">
+                <td class="copy-path">
+                  <div class="copy-path-line">
+                    <span class="short-path" [attr.title]="link.path">
+                      <span class="path-folders">{{ short.folders }}</span><span class="path-name">{{ short.name }}</span>
+                    </span>
+                    @if (copy.links.length > 1) {
+                      <span class="badge links-badge" [attr.title]="linksTitle(copy)">{{ copy.links.length }} links</span>
+                    }
+                    @if (copyInSelectedFolder(copy)) {
+                      <span class="badge selected-badge">in selected</span>
+                    }
+                  </div>
+                </td>
+                <td class="copy-modified">
+                  <time [attr.datetime]="link.modified">{{ link.modified | date: 'yyyy-MM-dd' }}</time>
+                </td>
+                <td class="copy-spacer"></td>
+                <td class="copy-action"><app-path-copy [path]="link.path" /></td>
+              </tr>
+            }
+          </tbody>
+        }
+      </table>
       <mat-paginator
         [length]="result.totalItems"
         [pageIndex]="pageIndex()"

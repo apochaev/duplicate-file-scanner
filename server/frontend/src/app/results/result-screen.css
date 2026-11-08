@@ -1,17 +1,94 @@
-.result-header h2 {
+.result-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+}
+
+.result-title h2 {
   margin: 8px 0 4px;
 }
 
 .result-locations {
-  margin: 4px 0 16px;
-  padding-left: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   font-family: monospace;
   overflow-wrap: anywhere;
 }
 
+.result-started {
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.density-toggle {
+  margin-left: auto;
+}
+
+.result-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 40px;
+  margin: 12px 0 8px;
+}
+
+.figure dt {
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.figure dd {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+}
+
+.space-bar {
+  display: flex;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--mat-sys-surface-variant, #e7e0ec);
+}
+
+.segment-reclaimable,
+.legend-reclaimable::before {
+  background: var(--mat-sys-primary, #6750a4);
+}
+
+.segment-kept,
+.legend-kept::before {
+  background: var(--mat-sys-inverse-primary, #d0bcff);
+}
+
+.segment-unique,
+.legend-unique::before {
+  background: var(--mat-sys-outline-variant, #cac4d0);
+}
+
+.space-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin: 6px 0 16px;
+  padding: 0;
+  list-style: none;
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.legend-item::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 2px;
+}
+
 .result-layout {
   display: grid;
-  grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr);
+  grid-template-columns: minmax(16rem, 1fr) minmax(0, 3fr);
   gap: 16px;
   align-items: start;
 }
@@ -20,7 +97,8 @@
   color: var(--mat-sys-error, #b3261e);
 }
 
-@media (max-width: 720px) {
+/* Below this the Sets table's File column could not hold a path (PATH_BUDGET), so the tree moves above the tabs. */
+@media (max-width: 960px) {
   .result-layout {
     grid-template-columns: 1fr;
   }

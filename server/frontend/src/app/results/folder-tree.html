@@ -2,10 +2,16 @@
   <button mat-button type="button" class="all-folders" [attr.aria-pressed]="selected() === null" (click)="select(null)">
     All folders
   </button>
+  <div class="folder-columns" aria-hidden="true">
+    <span class="folder-columns-name">Folder</span>
+    <span class="folder-columns-size">Size</span>
+    <span class="folder-columns-duplicates">Duplicates</span>
+  </div>
   <mat-tree [dataSource]="rows()" [levelAccessor]="levelOf" [expansionKey]="keyOf" [trackBy]="trackRow" aria-label="Folders">
     <mat-tree-node
       *matTreeNodeDef="let row"
       matTreeNodePadding
+      matTreeNodePaddingIndent="12"
       class="folder-node"
       [isExpandable]="row.folder.hasChildren"
       (expandedChange)="expandedChange(row, $event)"
@@ -25,13 +31,18 @@
           <span class="folder-toggle-space"></span>
         }
         <button
-          mat-button
           type="button"
           class="folder-select"
           [attr.aria-pressed]="selected() === row.folder.path"
+          [attr.title]="row.folder.path"
           (click)="select(row.folder.path)"
         >
-          {{ folderLabel(row.folder) }}
+          <span class="folder-name">{{ row.folder.name }}</span>
+          <span class="folder-bar" aria-hidden="true">
+            <span class="folder-bar-fill" [style.width.%]="duplicateWidth(row.folder)"></span>
+          </span>
+          <span class="folder-size">{{ formatBytes(row.folder.bytes) }}</span>
+          <span class="folder-duplicate-size">{{ formatBytes(row.folder.duplicateBytes) }}</span>
         </button>
         <button
           mat-button

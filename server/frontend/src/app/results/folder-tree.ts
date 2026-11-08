@@ -4,8 +4,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTreeModule } from '@angular/material/tree';
 import { FolderNode } from '../api/models';
 import { ResultsService } from '../api/services';
+import { formatBytes } from '../scans/scan-format';
 import { failureMessage } from './result-error';
-import { folderLabel } from './result-format';
+import { barPercent } from './result-format';
 
 /** One visible row of the flat tree: a folder at a depth, with the state of its children's load. */
 export interface FolderTreeRow {
@@ -20,11 +21,27 @@ export interface FolderTreeRow {
 }
 
 /**
- * The folder tree of a COMPLETED scan (DFS-049 decision 3, `ui.md` U3): "All folders" above the scan's roots, in the
- * order `listFolders` returns them. A node with `hasChildren` expands; its children are requested with
- * `parent=<its path>` the first time only, then kept, so collapsing and expanding again makes no request (AC-5).
- * Selecting a node or "All folders" emits its path, or null (AC-6); the parent owns the selection. Every folder node
- * (not "All folders") has a "Pin for comparison" action that emits `folderPinned` (DFS-050 decision 3).
+ * One level of the folder list in DFS-060 decision 3's order (AC-4), as a new array: `duplicateBytes` largest first,
+ * then by `name` (`localeCompare` with `numeric: true` and `sensitivity: 'base'`), then by `path`, so the order is
+ * total. The input is not changed.
+ */
+export function sortByDuplicateSpace(folders: readonly FolderNode[]): FolderNode[] {
+  return [...folders].sort(
+    (a, b) =>
+      b.duplicateBytes - a.duplicateBytes ||
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }) ||
+      a.path.localeCompare(b.path),
+  );
+}
+
+/**
+ * The folder tree of a COMPLETED scan (DFS-049 decision 3, DFS-060 decision 3, `ui.md` U3): "All folders" above the
+ * scan's roots. Every level (the roots, and each folder's children) is shown in `sortByDuplicateSpace` order; a row
+ * shows the folder's name, a bar of `duplicateBytes` over `bytes`, and its size and duplicate size in right-aligned
+ * columns (DFS-060 AC-4). A node with `hasChildren` expands; its children are requested with `parent=<its path>` the
+ * first time only, then kept, so collapsing and expanding again makes no request (DFS-049 AC-5). Selecting a node or
+ * "All folders" emits its path, or null (AC-6); the parent owns the selection. Every folder node (not "All folders")
+ * has a "Pin for comparison" action, shown on hover or focus, that emits `folderPinned` (DFS-050 decision 3).
  *
  * A flat `mat-tree` (`levelAccessor`): `rows` holds only the visible rows, so a collapsed node's descendants are not in
  * it. Expansion goes through the tree's own model (`matTreeNodeToggle`, keyed by path), so `aria-expanded` and
@@ -49,7 +66,7 @@ export class FolderTree {
 
   protected readonly rows = linkedSignal(() => this.rootRows(this.roots()));
 
-  protected readonly folderLabel = folderLabel;
+  protected readonly formatBytes = formatBytes;
   protected readonly levelOf = (row: FolderTreeRow): number => row.level;
   protected readonly keyOf = (row: FolderTreeRow): string => row.folder.path;
   protected readonly trackRow = (_index: number, row: FolderTreeRow): string => row.folder.path;
@@ -61,7 +78,7 @@ export class FolderTree {
   private readonly loadingPaths = new Set<string>();
   private readonly errors = new Map<string, string>();
 
-  /** The roots as level-0 rows, collapsed, in the given order (AC-5). */
+  /** The roots as level-0 rows, collapsed, in `sortByDuplicateSpace` order (DFS-060 AC-4). */
   protected rootRows(roots: FolderNode[]): FolderTreeRow[] {
     this.loadedChildren.clear();
     this.expandedPaths.clear();
@@ -112,13 +129,18 @@ export class FolderTree {
     this.folderPinned.emit(path);
   }
 
+  /** The width of a row's bar, in percent: `barPercent(duplicateBytes, bytes)` (DFS-060 AC-4). */
+  protected duplicateWidth(folder: FolderNode): number {
+    return barPercent(folder.duplicateBytes, folder.bytes);
+  }
+
   private refresh(): void {
     this.rows.set(this.visibleRows(this.roots(), 0));
   }
 
-  /** The folders at one level, each followed by its children when it is expanded and they are loaded. */
+  /** The folders at one level in `sortByDuplicateSpace` order, each followed by its children when expanded and loaded. */
   private visibleRows(folders: FolderNode[], level: number): FolderTreeRow[] {
-    return folders.flatMap((folder) => {
+    return sortByDuplicateSpace(folders).flatMap((folder) => {
       const path = folder.path;
       const expanded = this.expandedPaths.has(path);
       const row: FolderTreeRow = {

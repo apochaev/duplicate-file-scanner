@@ -1,7 +1,7 @@
 ---
 id: DFS-060
 title: Compact read-only results screen
-status: ready
+status: in-review
 type: feature
 scope: []
 archetype: component
@@ -16,7 +16,7 @@ touches:
   - docs/design/ui.md
 blocked_reason:
 created: 2026-11-07
-updated: 2026-11-07
+updated: 2026-11-08
 completed:
 ---
 
@@ -212,14 +212,14 @@ Feature: Compact results screen
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] Each test's name given to `it` starts with its criterion ID (`DFS-060.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit tests and the Vitest tests)
-- [ ] `./gradlew :server:e2eTest` passes with DFS-053's flows updated
-- [ ] Every component-archetype checklist item is addressed or marked not applicable with a reason
-- [ ] `CLAUDE.md`'s result screen sentences and `docs/design/ui.md` U3 describe the header, the folder list, the sets table, the path rule and the density toggle (the verifier reads them)
-- [ ] Started by hand once on Windows on a real scan with duplicates, compared with `docs/design/mockups/results-screen-prototype-2026-11-07.png`; the browser console free of errors
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above is an automated test and passes
+- [x] Each test's name given to `it` starts with its criterion ID (`DFS-060.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit tests and the Vitest tests)
+- [x] `./gradlew :server:e2eTest` passes with DFS-053's flows updated (verifier read `server/build/test-results/e2eTest/TEST-us.pochaev.dfs.server.BrowserFlowTest.xml` after the pin fix c8a7b81, `--rerun`: tests 8, skipped 0, failures 0, errors 0)
+- [x] Every component-archetype checklist item is addressed or marked not applicable with a reason
+- [x] `CLAUDE.md`'s result screen sentences and `docs/design/ui.md` U3 describe the header, the folder list, the sets table, the path rule and the density toggle (the verifier reads them)
+- [x] Started by hand once on Windows on a real scan with duplicates, compared with `docs/design/mockups/results-screen-prototype-2026-11-07.png`; the browser console free of errors (verifier, built jar at c8a7b81, 1440 and 800 px over CDP: structure matches the prototype, no console errors; a mouse click in the middle of a folder row selects it at both widths, and the pin pins on its own)
+- [x] No files changed outside the paths listed under Touches
 
 ## Open questions
 

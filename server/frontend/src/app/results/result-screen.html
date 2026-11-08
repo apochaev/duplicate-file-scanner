@@ -1,13 +1,51 @@
 <section class="result-screen" aria-label="Scan results">
   <header class="result-header">
-    <a mat-button class="back-to-scans" routerLink="/">Back to scans</a>
-    <h2>Scan results</h2>
+    <div class="result-title">
+      <a mat-button class="back-to-scans" routerLink="/">Back to scans</a>
+      <h2>Scan results</h2>
+      @if (scan(); as entry) {
+        <ul class="result-locations" aria-label="Scanned folders">
+          @for (location of entry.locations; track $index) {
+            <li>{{ location }}</li>
+          }
+        </ul>
+        <span class="result-started">
+          Started <time [attr.datetime]="entry.startedAt">{{ entry.startedAt | date: 'yyyy-MM-dd HH:mm' }}</time>
+        </span>
+      }
+      <mat-button-toggle-group
+        class="density-toggle"
+        aria-label="Row density"
+        hideSingleSelectionIndicator
+        [value]="density()"
+        (change)="chooseDensity($event.value)"
+      >
+        <mat-button-toggle value="compact">Compact</mat-button-toggle>
+        <mat-button-toggle value="comfortable">Comfortable</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
     @if (scan(); as entry) {
-      <ul class="result-locations" aria-label="Scanned folders">
-        @for (location of entry.locations; track $index) {
-          <li>{{ location }}</li>
-        }
-      </ul>
+      @if (totals(); as sums) {
+        <dl class="result-figures" aria-label="Scan totals">
+          @for (figure of headerFigures(entry, sums); track figure.label) {
+            <div class="figure">
+              <dt class="figure-label">{{ figure.label }}</dt>
+              <dd class="figure-value">{{ figure.value }}</dd>
+            </div>
+          }
+        </dl>
+        @let segments = spaceSegments(entry, sums);
+        <div class="space-bar" aria-hidden="true">
+          @for (segment of segments; track segment.kind) {
+            <span class="space-segment segment-{{ segment.kind }}" [style.width.%]="segment.percent"></span>
+          }
+        </div>
+        <ul class="space-legend" aria-label="Scanned space">
+          @for (segment of segments; track segment.kind) {
+            <li class="legend-item legend-{{ segment.kind }}">{{ segment.legend }}</li>
+          }
+        </ul>
+      }
     }
   </header>
   @if (fatalError(); as message) {
@@ -22,6 +60,21 @@
         (folderPinned)="pinFolder($event)"
       />
       <mat-tab-group class="result-tabs" aria-label="Result views" animationDuration="0ms">
+        <mat-tab label="Sets">
+          <app-sets-tab
+            [page]="page()"
+            [folder]="selectedFolder()"
+            [filtered]="filterBySelection()"
+            [roots]="rootPaths()"
+            [density]="density()"
+            [loading]="setsLoading()"
+            [error]="setsError()"
+            [pageIndex]="pageIndex()"
+            [pageSize]="pageSize()"
+            (pageChanged)="changePage($event)"
+            (filterChanged)="setFilter($event)"
+          />
+        </mat-tab>
         <mat-tab label="Overlaps">
           <ng-template matTabContent>
             <app-overlaps-tab
@@ -31,17 +84,6 @@
               (unpinned)="unpin()"
             />
           </ng-template>
-        </mat-tab>
-        <mat-tab label="Sets">
-          <app-sets-tab
-            [page]="page()"
-            [folder]="selectedFolder()"
-            [loading]="setsLoading()"
-            [error]="setsError()"
-            [pageIndex]="pageIndex()"
-            [pageSize]="pageSize()"
-            (pageChanged)="changePage($event)"
-          />
         </mat-tab>
       </mat-tab-group>
     </div>

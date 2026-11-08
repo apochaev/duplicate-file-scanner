@@ -43,7 +43,7 @@ describe('PathCopy', () => {
   }
 
   async function press(): Promise<void> {
-    const button = await loader.getHarness(MatButtonHarness.with({ text: 'Copy folder path' }));
+    const button = await loader.getHarness(MatButtonHarness.with({ text: 'Copy' }));
     await button.click();
     await settle(fixture);
   }
@@ -53,50 +53,48 @@ describe('PathCopy', () => {
   }
 
   it.each([
-    ['C:\\Photos\\a.jpg', 'C:\\Photos'],
-    ['C:\\a.jpg', 'C:\\'],
-    ['\\\\nas\\share\\a.jpg', '\\\\nas\\share\\'],
-    ['/photos/a.jpg', '/photos'],
-    ['/a.jpg', '/'],
-    ['C:\\Family Photos\\été\\a.jpg', 'C:\\Family Photos\\été'],
-  ])('DFS-049.AC-11 copies the folder of %s as exactly %s and announces it after the write succeeds', async (file, folder) => {
+    'C:\\Archive\\Backups\\MacBook-2020\\Users\\me\\Pictures\\Iceland 2019\\pano.tif',
+    'C:\\a.jpg',
+    '\\\\nas\\share\\a.jpg',
+    '/photos/a.jpg',
+    'C:\\Family Photos\\été\\a.jpg',
+  ])('DFS-060.AC-7 copies the full path %s exactly and announces it after the write succeeds', async (file) => {
     const clipboard = new FakeClipboard();
     await render(file, clipboard);
 
     await press();
-    expect(clipboard.written).toEqual([folder]);
+    expect(clipboard.written).toEqual([file]);
     // Not yet: the write has not resolved.
     expect(page().querySelector('.copy-success')).toBeNull();
 
     clipboard.accept();
     await settle(fixture);
-    expect(page().querySelector('.copy-success')?.textContent?.trim()).toBe('Folder path copied');
+    expect(page().querySelector('.copy-success')?.textContent?.trim()).toBe('Copied');
     expect(page().querySelector('.copy-success')?.getAttribute('role')).toBe('status');
     expect(page().querySelector('.copy-error')).toBeNull();
   });
 
-  it('DFS-049.AC-11 copies the alias folder of a hard link, not the other link', async () => {
-    const clipboard = new FakeClipboard();
-    await render('D:\\Aliases\\a.jpg', clipboard);
-
+  it('DFS-060.AC-7 labels the button "Copy path of <path>"', async () => {
+    await render('C:\\Photos\\a.jpg', new FakeClipboard());
     await press();
-    expect(clipboard.written).toEqual(['D:\\Aliases']);
+
+    expect(page().querySelector('button.copy-path-button')?.getAttribute('aria-label')).toBe(
+      'Copy path of C:\\Photos\\a.jpg',
+    );
   });
 
-  it('DFS-049.AC-11 shows an error and the selectable folder when the clipboard is unavailable', async () => {
+  it('DFS-060.AC-7 shows an error and the selectable path when the clipboard is unavailable', async () => {
     await render('C:\\Photos\\a.jpg', null);
 
     await press();
     const error = page().querySelector('.copy-error');
     expect(error?.getAttribute('role')).toBe('alert');
-    expect(error?.textContent?.trim()).toBe(
-      'Clipboard access is not available; select the folder path below and copy it',
-    );
-    expect(page().querySelector('.copy-fallback')?.textContent?.trim()).toBe('C:\\Photos');
+    expect(error?.textContent?.trim()).toBe('Clipboard access is not available; select the path below and copy it');
+    expect(page().querySelector('.copy-fallback')?.textContent?.trim()).toBe('C:\\Photos\\a.jpg');
     expect(page().querySelector('.copy-success')).toBeNull();
   });
 
-  it('DFS-049.AC-11 shows an error and the selectable folder when the write is rejected', async () => {
+  it('DFS-060.AC-7 shows an error and the selectable path when the write is rejected', async () => {
     const clipboard = new FakeClipboard();
     await render('C:\\Photos\\a.jpg', clipboard);
 
@@ -106,8 +104,8 @@ describe('PathCopy', () => {
 
     const error = page().querySelector('.copy-error');
     expect(error?.getAttribute('role')).toBe('alert');
-    expect(error?.textContent?.trim()).toBe('The folder path could not be copied; select it below and copy it');
-    expect(page().querySelector('.copy-fallback')?.textContent?.trim()).toBe('C:\\Photos');
+    expect(error?.textContent?.trim()).toBe('The path could not be copied; select it below and copy it');
+    expect(page().querySelector('.copy-fallback')?.textContent?.trim()).toBe('C:\\Photos\\a.jpg');
     expect(page().querySelector('.copy-success')).toBeNull();
   });
 });
