@@ -121,9 +121,10 @@ Feature: Harness leftovers follow sessions per ticket
 
 ## Definition of done
 
-- [ ] `grep -rn -i "lane that owns\|request to the" .claude/` finds nothing
-- [ ] `lanes.md` names no `dfs-backend`, `dfs-frontend` or `dfs-harness` session
-- [ ] `tools/story-gate/story-gate selftest` passes, if `CatchUp.java` changed
+- [ ] Every scenario above checked as marked (mechanical or read), with the evidence noted beside this item
+- [ ] `tools/story-gate/story-gate selftest` passes
+- [ ] The old-form search repeated before `review` (CCW-018.L-1): `claude -n`, `permission-mode auto`, `--model`, `dfs-backend`, `dfs-frontend`, `dfs-harness`, `lane that owns`, `request to the` over `.claude/`, `CLAUDE.md`, `docs/design/`, `docs/tickets/lanes.md`, `tools/story-gate/`; the search and its hits recorded in `verification.md`
+- [ ] `verification.md` opens with the `## Product owner review` section (`.claude/agents/verifier.md`)
 - [ ] No files changed outside the paths listed under Touches
 
 ## Decisions
@@ -131,6 +132,8 @@ Feature: Harness leftovers follow sessions per ticket
 1. **Launch model keyed on archetype (decided 2026-11-08).** Every launch line of a ticket whose archetype is not `none` carries `--model sonnet`, in any lane and for every command of that ticket (the same session runs it to `done`); an `archetype: none` line has no `--model` and runs on the default model (Opus). CCW-031 kept `dfs-harness` on Opus because it edited skills by hand; under sessions per ticket that work is an `archetype: none` ticket, while a pipeline session only drives the loop whatever its lane. `CatchUp` already reads each ticket's `archetype`, so no new field is parsed. Rejected: keying on lane (CCW-031's literal rule; every printer would need lane and archetype), a flag the user adds by hand, dropping the recommendation. Flag order: `-n <ID>` first, then `--model sonnet`, then `--permission-mode auto` (CCW-026.AC-10 checks the ID after `-n`).
 2. **Archetype `none` (decided 2026-11-08).** Implemented by hand in its own session, like CCW-026: instruction edits plus a small `CatchUp` change with self-test cases. No archetype fits harness work; all five build product code. No gates (not a pipeline ticket). By decision 1 its session runs on the default model.
 
+3. **CCW-031's Sonnet check moves to the next pipeline ticket (decided 2026-11-08).** It can only run after this ticket merges, so it is no done-item here (CCW-026.L-1). When the coordinator next refines a pipeline ticket after CCW-033 lands, it adds to that ticket's Definition of done: "the session ran on `--model sonnet` (its session header); every gate stopped and notified as the `story` skill specifies; recorded under 'How it went' in `verification.md`".
+
 ## Open questions
 
-3. Where CCW-031's deferred Sonnet check is recorded once the first Sonnet-driven ticket session runs.
+None.
