@@ -24,6 +24,13 @@ import java.util.stream.Stream;
  * It prints only when the name maps to {@code coordinator} in {@code docs/tickets/lanes.md}; in any other session, or
  * with no name, it prints nothing and exits 0, so the hook is silent in lane sessions. In hook mode it always exits 0
  * (a failure is one line the coordinator can read); otherwise a failure exits 2.
+ *
+ * <pre>
+ * story-gate catch-up --session &lt;name&gt; --lanes   a lane session's /tickets list (CCW-022): only the worktrees of
+ *                                                tickets in that session's own lanes, each with its next command
+ * </pre>
+ *
+ * A name that maps to lanes gets that view; the coordinator, an unlisted name or no name gets nothing.
  */
 final class CatchUp {
 
@@ -62,6 +69,103 @@ final class CatchUp {
             return new Outcome(render(main, name), 0);
         } catch (RuntimeException e) {
             return new Outcome("catch-up could not run: " + e.getMessage() + "\n", hook ? 0 : 2);
+        }
+    }
+
+    /**
+     * A lane session's view (CCW-022): the worktrees of tickets whose {@code lane} is one of the session's lanes, each
+     * with its {@code plan.json} state and next command. Empty text for the coordinator, an unlisted name or no name.
+     */
+    static Outcome runLanes(Path root, String sessionArg, String envName) {
+        String name = sessionArg != null ? sessionArg : sessionName(null, envName);
+        if (name == null) return new Outcome("", 0);
+        try {
+            Path main = mainTree(root);
+            String lanesText = readOrNull(main.resolve("docs/tickets/lanes.md"));
+            String role = lanesText == null ? null : roleOf(lanesText, name);
+            if (role == null || ROLE.equals(role)) return new Outcome("", 0);
+            List<String> lanes = List.of(role.split(", "));
+            List<String> lines = new ArrayList<>();
+            for (Worktree t : worktrees(Git.run(main, "worktree", "list", "--porcelain", "-z"))) {
+                Path path = Path.of(t.path());
+                String id = ticketOf(t.branch());
+                if (id == null || samePath(path, main)) continue;
+                String ticket = ticketTextOrNull(path, id);
+                if (ticket == null || !lanes.contains(frontValue(ticket, "lane"))) continue;
+                lines.add(laneLine(id, relative(main, path), planTextOrNull(path, id), frontValue(ticket, "archetype"),
+                        learningsNonEmpty(path, id)));
+            }
+            StringBuilder out = new StringBuilder("Catch-up for " + name + " (lanes: " + role + "):\n");
+            section(out, "started tickets in your lanes", lines, "none");
+            return new Outcome(out.toString(), 0);
+        } catch (RuntimeException e) {
+            return new Outcome("catch-up could not run: " + e.getMessage() + "\n", 2);
+        }
+    }
+
+    /** {@code CCW-022 ../repo-CCW-022-x: plan awaiting-approval at the gate after design; next: /story approve CCW-022}. */
+    static String laneLine(String id, String path, String planText, String archetype, boolean learnings) {
+        String state = planText == null ? "no plan.json" : planState(planText);
+        return id + " " + path + ": " + state + "; next: " + nextCommand(id, planText, archetype, learnings);
+    }
+
+    /**
+     * The command that resumes a started ticket: {@code /story approve} at a gate, {@code /story run} when blocked
+     * or running, {@code /story learn} or {@code /tickets done} when the plan is done, and for a ticket with no
+     * plan.json {@code /tickets start --worktree} when its archetype is {@code none}, else {@code /story run}.
+     */
+    static String nextCommand(String id, String planText, String archetype, boolean learnings) {
+        if (planText == null) {
+            return "none".equals(archetype) ? "/tickets start " + id + " --worktree" : "/story run " + id;
+        }
+        Map<String, Object> plan;
+        try {
+            plan = Json.asObject(Json.parse(planText));
+        } catch (Json.ParseException e) {
+            return "fix plan.json by hand";
+        }
+        String state = plan == null ? null : Json.asString(plan.get("state"));
+        if (state == null) return "fix plan.json by hand";
+        return switch (state) {
+            case "awaiting-approval" -> "/story approve " + id;
+            case "done" -> learnings || !objects(plan.get("defects")).isEmpty()
+                    ? "/story learn " + id : "/tickets done " + id;
+            default -> "/story run " + id;
+        };
+    }
+
+    /** The value of a top-level frontmatter key, or null. */
+    static String frontValue(String ticketText, String key) {
+        String t = ticketText.replace("\r\n", "\n");
+        if (!t.startsWith("---\n")) return null;
+        int end = t.indexOf("\n---", 4);
+        String front = end < 0 ? t : t.substring(4, end);
+        Matcher m = Pattern.compile("(?m)^" + key + ":[ \\t]*(\\S.*?)[ \\t]*$").matcher(front);
+        return m.find() ? m.group(1) : null;
+    }
+
+    private static String ticketTextOrNull(Path tree, String id) {
+        try {
+            return readOrNull(Story.find(tree, id).folder().resolve(id + "-ticket.md"));
+        } catch (GateError e) {
+            return null;
+        }
+    }
+
+    private static String planTextOrNull(Path tree, String id) {
+        try {
+            return Story.find(tree, id).planText();
+        } catch (GateError e) {
+            return null;
+        }
+    }
+
+    private static boolean learningsNonEmpty(Path tree, String id) {
+        try {
+            String t = readOrNull(Story.find(tree, id).folder().resolve("learnings.md"));
+            return t != null && !t.isBlank();
+        } catch (GateError e) {
+            return false;
         }
     }
 

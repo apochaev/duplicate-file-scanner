@@ -105,14 +105,24 @@ Ported from D5, with the escalation, blocked-clearing and gate-summary rules fro
 9. On a check failing: append a defect to `plan.json`'s `defects` — `{"id": <next>, "phase": "<id>", "route": "<agent>", "summary": "<the verdict's compact reason>", "status": "open"}`. Routing: a `test-phase` failure routes to `test-author`; any other failure on the `implement` phase routes to `implementer`; a `design`-phase `touches` failure routes to `architect`; a `verify`-phase failure routes to `verifier`. Exception: when an `implement`-phase `green` failure is traced to a defect in a test rather than in the implementation (the implementer reports it, and the orchestrator confirms it by reading the failing test; the implementer's claim alone is not enough), route that defect to `test-author` instead. Record the implement attempt as `failed-gate`, then do not retry `implement`. Reopen `tests` the way `approve <ID> [feedback]` sends `tests` back: attempt counter reset to 1, verified with `green` rather than `test-phase`, and `implement` set to `in-progress` so step 5 reconciles it against its existing commit without relaunching the implementer. Then loop back to step 4. If this phase's `runs` now holds two failed attempts, set state `blocked` and stop — the escalation (see "Blocked", below) is the output. Otherwise mark the phase `pending` again and loop back to step 4 in the same invocation (a same-phase retry happens without returning control to the user; only `blocked` and a human gate stop the run).
 10. Immediately after a phase is marked `done` (step 8), check whether a gate is configured right after it (its own id, or `done` if it was the last phase in `phases:`). If so: leave that gate's plan entry `pending` (only `approve`, below, changes it) and set overall state `awaiting-approval`; stop and show the stop (see "Human gate", below) instead of looping to step 4.
 
+## Every stop (CCW-022)
+
+A stop is a human gate, `blocked`, or the finish. As the last step before showing it, in this order:
+
+1. **Commit the bookkeeping.** Stage `plan.json` and any other story-folder file this skill wrote (`progress.md`) in the worktree, by name, and commit as `docs: record <ID> <stop> in plan.json [<ID>]` (`<stop>` is `gate`, `blocked` or `done`), another deliberate, narrow exception to "commits only when asked". Skip it only when there is nothing to commit. Afterwards `git -C <worktree> status --porcelain` prints nothing unless a phase agent left uncommitted work.
+2. **Write down what only the chat holds.** A decision agreed in conversation goes to the ticket's Decisions section, a note for the next phase to `progress.md`, an open question to the ticket, and is committed with step 1 when it is a story-folder file. Gate feedback is never kept in chat: it is passed as `/story approve <ID> <feedback>`.
+3. **End with the clear line**, after the stop's own text: `safe to /clear; resume with <command>`. When files of the session's own are uncommitted (listed by `git status --porcelain` in the worktree and the repo checkout), list them as information, not as a blocker: `safe to /clear (uncommitted, on disk: <files>); resume with <command>`. Files in the working tree survive `/clear`; only the conversation is lost. The command is `/story approve <ID>` at a gate, `/story run <ID>` after `blocked`, and at the finish `/story learn <ID>` when there is something to learn, otherwise `/tickets done <ID>`. Withhold the line only while step 2 has not been done.
+
+For the middle of a ticket, where the conversation still matters, use `/compact` with the template in the `tickets` skill's "Context hygiene" section, not this skill.
+
 ## Human gate
 
-Shown once, whenever step 10 above stops the run:
+Shown once, whenever step 10 above stops the run (after "Every stop"'s commit):
 
 - At the `design` gate: the architect's `## Summary` section from `design.md`, verbatim.
 - At the `done` gate (the product-owner review, CCW-017): the verifier's `## Product owner review` section from `verification.md`, verbatim; when `verification.md` has no such section (written before CCW-017), its `## Summary` instead. Nothing else in the file is read for this purpose.
-- Ends with the exact command: `/story approve <TICKET-ID>` (approve and continue), and a one-line reminder that free-text feedback instead of approval is read from the conversation, not a flag.
-- Then sends the stop's notification (see "Notifications").
+- Ends with the exact command: `/story approve <TICKET-ID>` (approve and continue), and a one-line reminder that feedback instead of approval is given as `/story approve <TICKET-ID> <feedback>`, so it survives a `/clear`.
+- Then the clear line (see "Every stop") and the stop's notification (see "Notifications").
 
 ## Notifications (CCW-017)
 
@@ -130,7 +140,7 @@ The tool skips itself when the user is at the terminal and may report "not sent"
 Shown once, whenever step 9 above sets state `blocked`:
 
 - Names the phase, the open defect's summary, and the concrete options (D12): retry — fix whatever the defect names, then plain `/story run <TICKET-ID>` (step 3 above reconciles or re-attempts fresh, attempt counter reset); edit the ticket or `design.md` by hand and resume the same way; or cancel via `/tickets cancel <TICKET-ID>` — a cancelled ticket is never `ready`/`in-progress`, so a later `run` refuses it on its own, with no separate `/story cancel`.
-- Then sends the stop's notification (see "Notifications").
+- Then the clear line with `/story run <TICKET-ID>` (see "Every stop") and the stop's notification (see "Notifications").
 
 ## Finishing
 
@@ -138,6 +148,8 @@ When step 4 finds every phase `done`: run the `tickets` skill's `review <ID>` fi
 
 - If `learnings.md` is non-empty, or `plan.json` has any defect (open or closed): end with the exact command `/story learn <TICKET-ID>`.
 - Otherwise: state plainly that there is nothing to learn.
+
+The finish is a stop: do "Every stop" (commit `plan.json` as `docs: record <ID> done in plan.json [<ID>]`, then the clear line), which ends with `safe to /clear; resume with /story learn <TICKET-ID>` in the first case and `safe to /clear; resume with /tickets done <TICKET-ID>` in the second.
 
 Setting the ticket all the way to `done` is not this skill's job — that stays a separate, human `/tickets done <ID>` once the user is satisfied with the result; `done` merges the branch into the repo checkout's `main` and offers to remove the worktree. D3's "before done" gate is about the pipeline's own finish line, not the ticket lifecycle's terminal state.
 
