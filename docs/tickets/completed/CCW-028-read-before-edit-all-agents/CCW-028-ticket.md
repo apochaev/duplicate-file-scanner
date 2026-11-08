@@ -1,7 +1,7 @@
 ---
 id: CCW-028
 title: Apply the read-before-edit rule to the implementer, test-author and verifier
-status: in-review
+status: done
 type: chore
 scope: [docs]
 archetype: none
@@ -15,7 +15,7 @@ touches:
 blocked_reason:
 created: 2026-11-07
 updated: 2026-11-07
-completed:
+completed: 2026-11-07
 ---
 
 # CCW-028: Apply the read-before-edit rule to the implementer, test-author and verifier
