@@ -1,11 +1,12 @@
 ---
 id: DFS-060
 title: Compact read-only results screen
-status: draft
+status: ready
 type: feature
 scope: []
 archetype: component
 gates: [design, done]
+autorun: true
 priority: high
 lane: frontend
 depends_on: [DFS-059]
