@@ -93,7 +93,7 @@ final class CatchUp {
                 String ticket = ticketTextOrNull(path, id);
                 if (ticket == null || !lanes.contains(frontValue(ticket, "lane"))) continue;
                 lines.add(laneLine(id, relative(main, path), planTextOrNull(path, id), frontValue(ticket, "archetype"),
-                        learningsNonEmpty(path, id)));
+                        frontValue(ticket, "status"), learningsNonEmpty(path, id)));
             }
             StringBuilder out = new StringBuilder("Catch-up for " + name + " (lanes: " + role + "):\n");
             section(out, "started tickets in your lanes", lines, "none");
@@ -104,9 +104,10 @@ final class CatchUp {
     }
 
     /** {@code CCW-022 ../repo-CCW-022-x: plan awaiting-approval at the gate after design; next: /story approve CCW-022}. */
-    static String laneLine(String id, String path, String planText, String archetype, boolean learnings) {
+    static String laneLine(String id, String path, String planText, String archetype, String status,
+            boolean learnings) {
         String state = planText == null ? "no plan.json" : planState(planText);
-        return id + " " + path + ": " + state + "; next: " + nextCommand(id, planText, archetype, learnings);
+        return id + " " + path + ": " + state + "; next: " + nextCommand(id, planText, archetype, status, learnings);
     }
 
     /**
@@ -115,8 +116,17 @@ final class CatchUp {
      * plan.json {@code /tickets start --worktree} when its archetype is {@code none}, else {@code /story run}.
      */
     static String nextCommand(String id, String planText, String archetype, boolean learnings) {
+        return nextCommand(id, planText, archetype, null, learnings);
+    }
+
+    /** As above; a hand-implemented ticket already {@code in-progress} or later is continued, not started again. */
+    static String nextCommand(String id, String planText, String archetype, String status, boolean learnings) {
         if (planText == null) {
-            return "none".equals(archetype) ? "/tickets start " + id + " --worktree" : "/story run " + id;
+            if (!"none".equals(archetype)) return "/story run " + id;
+            return status == null || status.equals("ready")
+                    ? "/tickets start " + id + " --worktree"
+                    : status.equals("in-review") ? "/tickets done " + id
+                    : "continue in its worktree, then /tickets review " + id;
         }
         Map<String, Object> plan;
         try {

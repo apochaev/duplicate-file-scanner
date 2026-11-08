@@ -106,6 +106,10 @@ final class CatchUpSelfTest {
                 "/tickets start CCW-022 --worktree|/story run DFS-051",
                 CatchUp.nextCommand("CCW-022", null, "none", false) + "|"
                         + CatchUp.nextCommand("DFS-051", null, "pipeline-stage", false));
+        expect(problems, "CCW-022.AC-8 a started hand-implemented ticket is continued, not started again",
+                "continue in its worktree, then /tickets review CCW-022|/tickets done CCW-022",
+                CatchUp.nextCommand("CCW-022", null, "none", "in-progress", false) + "|"
+                        + CatchUp.nextCommand("CCW-022", null, "none", "in-review", false));
         expect(problems, "CCW-022.AC-8 frontmatter values", "backend|none|null",
                 CatchUp.frontValue("---\nid: X\nlane: backend\narchetype: none\n---\nlane: frontend\n", "lane") + "|"
                         + CatchUp.frontValue("---\nlane: a\narchetype: none  \n---\n", "archetype") + "|"

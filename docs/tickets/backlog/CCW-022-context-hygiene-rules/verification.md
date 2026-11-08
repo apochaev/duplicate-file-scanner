@@ -29,6 +29,10 @@ Live `[run]` scenarios (gate stop commit, real `/clear` resumes in a lane sessio
 ### Evidence
 `story-gate selftest`: PASS, 126 cases, includes the new catch-up cases (`CatchUpSelfTest`, unit and `laneCase`). Old-text search of `.claude/`, `CLAUDE.md`, `docs/design/` for "read from the conversation", "from the conversation, not a flag" and "again after approval": no hits after the edits (the three hits before were story SKILL "Human gate" and D12).
 
+### Live checks run (2026-11-07)
+- Real repo, `catch-up --lanes`: dfs-harness lists CCW-022 and CCW-028, dfs-backend and dfs-frontend list none (no ticket of theirs had a worktree); `--hook` in a lane session printed 0 bytes; dfs-product's catch-up printed the CCW-022 worktree. Found and fixed: a started `archetype: none` ticket was told `/tickets start` again; it now says "continue in its worktree, then /tickets review <ID>".
+- Not run (a session cannot `/clear` itself, and no story was in flight): AC-3, AC-4, the live gate stop and its `plan.json` commit.
+
 ### How it went
 Hand-implemented (archetype `none`); no plan.json.
 
