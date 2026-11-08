@@ -1,7 +1,7 @@
 ---
 id: CCW-033
 title: Align archetypes and the launch model with sessions per ticket
-status: draft
+status: ready
 type: docs
 scope: [docs]
 archetype: none
