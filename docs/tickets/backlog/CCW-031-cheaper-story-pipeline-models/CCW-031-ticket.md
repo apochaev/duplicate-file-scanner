@@ -1,14 +1,18 @@
 ---
 id: CCW-031
 title: Run the story pipeline's routine phases on cheaper models
-status: draft
+status: ready
 type: chore
 scope: [docs]
-archetype:
+archetype: none
 priority: high
 lane: harness
 depends_on: []
-touches: []
+touches:
+  - .claude/archetypes/component/archetype.md
+  - .claude/archetypes/endpoint/archetype.md
+  - .claude/archetypes/wiring/archetype.md
+  - docs/tickets/lanes.md
 blocked_reason:
 created: 2026-11-08
 updated: 2026-11-08
@@ -20,8 +24,8 @@ completed:
 ## Story
 
 As the user paying for every `/story run`
-I want the architect on templated archetypes, the retro and reflect agents, and the session driving `/story` to run on cheaper models
-So that the largest usage contributor shrinks without weakening design on core tickets or review on risky ones
+I want the architect on the templated archetypes and the sessions driving `/story` for the backend and frontend lanes to run on cheaper models
+So that the largest usage contributor shrinks without weakening design on core tickets
 
 ## Context
 
@@ -45,56 +49,85 @@ Filed 2026-11-08 by dfs-harness from Claude Code's usage report for the last 24 
 
 ## Acceptance criteria
 
-<!-- Filled during refinement. -->
-
 The full ID of each criterion is `CCW-031.AC-<n>`.
 
-- **AC-1** <one testable statement>
+- **AC-1** `architect` is `{model: sonnet, effort: high, maxTurns: 25}` in the `models:` of the `component`, `endpoint` and `wiring` archetypes, and `{model: opus, effort: high}` in `use-case` and `pipeline-stage` (unchanged).
+- **AC-2** `docs/tickets/lanes.md` recommends launching the `backend` and `frontend` sessions with `claude --model sonnet -n <name>`, and keeps `harness` and `dfs-product` on Opus.
+- **AC-3** `retro.md` and `reflect.md` keep `model: sonnet` and `effort: low` (decision 2: no change).
+- **AC-4** `tools/story-gate/story-gate selftest` passes after the edits.
 
 ## Scenarios
+
+Archetype `none`: each scenario is run mechanically (a command) or checked by reading, as recorded.
 
 ```gherkin
 Feature: Routine pipeline phases run on cheaper models
 
   @AC-1
-  Scenario: <a component ticket's design phase launches the architect on sonnet/high>
-    Given <concrete state>
-    When <action>
-    Then <observable outcome>
+  Scenario: Templated archetypes step the architect down (mechanical)
+    Given the `models:` block of each archetype.md
+    When `grep -n "architect:"` runs over .claude/archetypes/*/archetype.md
+    Then component, endpoint and wiring show `model: sonnet, effort: high, maxTurns: 25`
 
   @AC-1
-  Scenario: <a use-case ticket's design phase still launches the architect on opus/high>
-    Given <concrete state>
-    When <action>
-    Then <observable outcome>
+  Scenario: Core archetypes keep Opus (mechanical)
+    Given the same grep
+    When it lists use-case and pipeline-stage
+    Then use-case shows `model: opus, effort: high, maxTurns: 35` and pipeline-stage `model: opus, effort: high, maxTurns: 25`
 
   @AC-1
-  Scenario: <a failed sonnet design attempt is retried on opus>
-    Given <concrete state>
-    When <action>
-    Then <observable outcome>
+  Scenario: A failed Sonnet design attempt is retried on Opus (read)
+    Given the story skill's step 6 rule "one tier above whatever that resolved to"
+    When a wiring ticket's first design attempt fails
+    Then by that rule the second attempt resolves to model opus, and the verifier's note in verification.md quotes the rule
+
+  @AC-2
+  Scenario: Lane note recommends Sonnet for backend and frontend only (mechanical)
+    Given docs/tickets/lanes.md
+    When `grep -n "model" docs/tickets/lanes.md` runs
+    Then the hits name backend and frontend with `--model sonnet`, and harness and dfs-product as staying on Opus
+
+  @AC-3
+  Scenario: Retro and reflect are unchanged (mechanical)
+    Given .claude/agents/retro.md and reflect.md
+    When `git diff main -- .claude/agents` runs
+    Then it prints nothing, and their frontmatter reads `model: sonnet`, `effort: low`
+
+  @AC-4
+  Scenario: The gate still passes (mechanical)
+    Given the edited archetype files
+    When `tools/story-gate/story-gate selftest` runs
+    Then it exits 0
 ```
 
 ## Scope
 
 **Touches:**
-- <likely the `models:` of `.claude/archetypes/{component,endpoint,wiring}/archetype.md`, `.claude/agents/retro.md`, `.claude/agents/reflect.md`, and the `story` skill or `docs/tickets/lanes.md` for the driving session's model>
+- `.claude/archetypes/component/archetype.md`, `endpoint/archetype.md`, `wiring/archetype.md`: the `architect:` line of `models:`
+- `docs/tickets/lanes.md`: the launch-model recommendation
 
 **Out of scope:**
 - The verifier's model (CCW-030).
 - What the architect reads (CCW-029).
-- The test-author and implementer, already on Sonnet.
+- The test-author and implementer, already on Sonnet; retro and reflect (decision 2).
+- `docs/design/story-orchestration.md` line 176 (agent default table, `opus`) and the `models` example in the `tickets` skill and template: they describe the default and an example, not these archetypes, so they stay as they are.
 
 ## Definition of done
 
 - [ ] Every scenario above is checked (mechanically or by reading, as recorded per scenario)
 - [ ] `tools/story-gate/story-gate selftest` passes
 - [ ] No files changed outside the paths listed under Touches
-- [ ] The next design phase on a stepped-down archetype is compared with a recent Opus run of the same archetype (turns, outcome, defects found later)
+- [ ] A search of `.claude/`, `CLAUDE.md` and `docs/design/` for the old `architect: {model: opus` form is recorded in `verification.md`, each remaining hit explained
+- [ ] `verification.md` opens with the `## Product owner review` section
+- [ ] After the first Sonnet-driven story, a note records whether its gates and notifications fired as the `story` skill specifies (an unverified assumption, decision 3)
 
 ## Open questions
 
-1. Architect: `sonnet/high` for `component`, `endpoint` and `wiring` only, or also `pipeline-stage`? Does `maxTurns` need raising for Sonnet?
-2. Retro and reflect: `haiku/low`, or keep Sonnet? They only propose and never write, but a weak retro proposal costs a human review.
-3. Driving session: a recommendation in the `story` skill or `lanes.md` (launch lane sessions with `--model sonnet`), or nothing in the repo (a habit only)? Does a Sonnet session still follow the `story` skill's gates and notifications reliably?
-4. How many runs before deciding the step-down holds: one per archetype, or the next three design phases?
+None.
+
+## Decisions
+
+1. **Architect step-down (decided 2026-11-08):** `architect: {model: sonnet, effort: high}` in the `models:` of `component`, `endpoint` and `wiring` only; `use-case` and `pipeline-stage` keep `opus/high`. `maxTurns` is not a lever: the Agent tool cannot pass it, so the architect's own frontmatter (35) binds and already covers every archetype. A failed Sonnet attempt retries on Opus by the existing rule.
+2. **Retro and reflect (decided 2026-11-08):** no change. Both are already `sonnet/low`, run at most 15 turns, and `retro` only when there were defects or learnings; `haiku` could weaken proposals against shared harness files. They leave this ticket's scope.
+3. **Driving session (decided 2026-11-08):** a recommendation, not enforcement, in `docs/tickets/lanes.md`: the `backend` and `frontend` sessions are launched with `claude --model sonnet -n <name>`; `harness` and the coordinator stay on Opus, since they edit skills, agents and tickets. That a Sonnet session follows the `story` skill's gates and notifications is an unverified assumption, checked by the first Sonnet-driven story (a Definition of done item).
+4. **Confirmation (decided 2026-11-08):** the next three design phases on `component`, `endpoint` and `wiring` tickets, whatever the mix, each compared with a recent Opus run of the same archetype (turns, retry to Opus, defects routed to the architect). An archetype goes back to `opus/high` if two of its Sonnet runs needed the Opus retry or caused a design-routed defect. The review is a follow-up the user runs, not part of this ticket.
