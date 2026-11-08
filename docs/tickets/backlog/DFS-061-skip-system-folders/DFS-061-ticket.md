@@ -41,6 +41,8 @@ Reported by the product owner on 2026-11-08: a scan listed files under `$RECYCLE
 
 3. **`--no-default-excludes` also switches the folder skip off** (2026-11-08). The folder skip belongs to `ScanConfig.defaultExcludes` (DFS-027 decision 6) with the two file names: with the flag, the folders are walked like any other, and no `SYSTEM_FOLDER` entry is reported. No new option and no new `ScanConfig` field. Rejected: a separate flag (a second option, usage case and field for a rare need) and no switch (a user folder named `lost+found` or `.Trash` could not be scanned). Unlike DFS-052's `.dfs-quarantine`, which is skipped always, since scanning it would break the deletion invariants.
 
+4. **A scan root is always walked; only folders found below it are matched** (2026-11-08). `scan D:\$RECYCLE.BIN` or a path inside it is an explicit request, so the root itself and its parents are never tested against the names; a matching folder below the root is still skipped. No new error code, unlike `LOCATION_IN_QUARANTINE` (DFS-052), which exists because quarantined files would break the deletion invariants. Rejected: refusing such a location with a new error (a new code and exit path, lifted by `--no-default-excludes`, blocking the legitimate use of seeing what a recycle bin holds).
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
@@ -50,6 +52,7 @@ The full ID of each criterion is `DFS-061.AC-<n>`.
 - **AC-1** A directory whose name is one of the fixed names of decision 1 is not entered, at any depth below a scan root: no file under it appears in a duplicate set; Windows names match in any letter case, the others only as spelled; a directory merely containing a name (`my.Trash`, `lost+found2`) is scanned.
 - **AC-2** Each skipped system folder is reported once as a `skipped` entry with reason `SYSTEM_FOLDER` and the folder's path, in the JSONL `skipped` line and the text report, and counted in the summary's `skipped`; no file under it is listed, counted as found, or hashed.
 - **AC-3** With `--no-default-excludes` (a `ScanConfig` whose `defaultExcludes` is false), files under the folders of decision 1 are scanned like any other and no `SYSTEM_FOLDER` entry is reported; `ScanConfig.defaults()` has the skip on.
+- **AC-4** A scan location whose own name, or a parent's name, is one of the fixed names is walked normally; only matching folders found below it are skipped.
 
 ## Scenarios
 
@@ -80,6 +83,5 @@ Feature: Known system folders are skipped
 
 ## Open questions
 
-- Interaction with a start location that is itself inside such a folder.
 - Whether the file names deferred by DFS-027 (`Thumbs.db`, `desktop.ini`, ...) join this ticket.
 - Archetype and gates.
