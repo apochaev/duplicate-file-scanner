@@ -7,7 +7,7 @@ scope: [docs]
 archetype:
 priority: high
 lane: harness
-depends_on: []
+depends_on: [CCW-026]
 touches: []
 blocked_reason:
 created: 2026-11-08
@@ -32,7 +32,7 @@ Filed 2026-11-08 by dfs-harness from Claude Code's usage report for the last 24 
 - **It loads everywhere.** Every session and every pipeline subagent loads it; the implementing agents are told to read "only that ticket and this file" (CLAUDE.md "Tickets", tickets skill "Implementing a ticket"). CCW-022's rule "Keep what loads every turn small: `CLAUDE.md` holds rules, not ticket history" is not yet applied to the file itself.
 - **Ideas for refinement (none decided):**
   - The server and API paragraph moves to `server/CLAUDE.md` (loaded when work touches `server/`) and `docs/design/ui.md`, leaving a short summary in the root file.
-  - The Tickets section's mechanics (lanes, coordinator, autorun, close flow, context hygiene) move to the `tickets` and `story` skills, which already hold them in full; about five lines stay (statuses, only `ready` is implemented, stay within `touches`, branch naming, namespaces).
+  - The Tickets section's mechanics (as CCW-026 leaves them: the coordinator, sessions per ticket and their printed launch lines, `lane` as a label of `list`, the close flow; autorun, lane owners and messages are gone) move to the `tickets` and `story` skills, which already hold them in full; about five lines stay (statuses, only `ready` is implemented, stay within `touches`, branch naming, namespaces).
   - "Current state" keeps only what is still open; the duplicate sentence goes.
 
 ## Acceptance criteria
