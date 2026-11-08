@@ -9,6 +9,10 @@ function isSeparator(char: string): boolean {
   return char === BACKSLASH || char === '/';
 }
 
+function splitElements(path: string): string[] {
+  return path.split(/[\\/]+/).filter((element) => element !== '');
+}
+
 /**
  * Whether `path` equals `folder` or lies under it: it starts with `folder` followed by a separator, so `C:\Photos2\x`
  * is not under `C:\Photos` (DFS-049 decision 4, AC-8). A folder that already ends in a separator (a root such as
@@ -60,7 +64,61 @@ export const ELLIPSIS = '…';
  *    can exceed the budget.
  */
 export function displayPath(path: string, roots: readonly string[], budget: number): ShortPath {
-  throw new Error('not implemented: DFS-060');
+  const separator = path.includes(BACKSLASH) ? BACKSLASH : '/';
+  const root = roots
+    .filter((candidate) => isPathUnderFolder(path, candidate))
+    .reduce<string | null>((best, candidate) => (best === null || candidate.length > best.length ? candidate : best), null);
+
+  let lead = '';
+  let elements: string[];
+  let headCount = 1;
+  if (root === null) {
+    lead = /^[\\/]+/.exec(path)?.[0] ?? '';
+    elements = splitElements(path);
+  } else {
+    elements = splitElements(path.slice(root.length));
+    if (roots.length > 1) {
+      const rootName = splitElements(root).pop();
+      if (rootName !== undefined) {
+        elements.unshift(rootName);
+        headCount = 2;
+      }
+    }
+  }
+  const name = elements.pop() ?? '';
+  const folders = elements;
+
+  const join = (parts: readonly string[]): string => parts.map((part) => part + separator).join('');
+  const whole = lead + join(folders);
+  if (whole.length + name.length <= budget) {
+    return { text: whole + name, folders: whole, name };
+  }
+
+  const head = lead + join(folders.slice(0, headCount));
+  const rest = folders.slice(headCount);
+  const ellipsis = rest.length > 0 ? ELLIPSIS + separator : '';
+  let trailing: string[] = [];
+  for (let i = rest.length - 1; i >= 0; i--) {
+    const candidate = [rest[i], ...trailing];
+    if ((head + ellipsis + join(candidate) + name).length > budget) {
+      break;
+    }
+    trailing = candidate;
+  }
+  const shownFolders = head + ellipsis + join(trailing);
+  let shownName = name;
+  if (shownFolders.length + name.length > budget) {
+    const dot = name.lastIndexOf('.');
+    const extension = dot > 0 ? name.slice(dot) : '';
+    const stem = name.slice(0, name.length - extension.length);
+    const keep = Math.min(stem.length, Math.max(2, budget - shownFolders.length - extension.length - 1));
+    if (keep < stem.length) {
+      const first = Math.ceil(keep / 2);
+      const last = Math.floor(keep / 2);
+      shownName = stem.slice(0, first) + ELLIPSIS + stem.slice(stem.length - last) + extension;
+    }
+  }
+  return { text: shownFolders + shownName, folders: shownFolders, name: shownName };
 }
 
 /**
@@ -68,7 +126,11 @@ export function displayPath(path: string, roots: readonly string[], budget: numb
  * `ubuntu.iso`, `C:\Archive\Backups\old-drive` → `old-drive`. A path without one (`C:\`, `/`) is returned as given.
  */
 export function fileName(path: string): string {
-  throw new Error('not implemented: DFS-060');
+  const elements = splitElements(path);
+  if (elements.length === 0 || (elements.length === 1 && DRIVE_ROOT.test(elements[0]))) {
+    return path;
+  }
+  return elements[elements.length - 1];
 }
 
 const DRIVE_ROOT = /^[A-Za-z]:$/;

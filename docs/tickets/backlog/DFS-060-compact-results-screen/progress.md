@@ -18,3 +18,11 @@
 - Reverted `app.routes.spec.ts` (outside `touches`); its two DFS-049.AC-1 tests stay expected breakage.
 - `result-density.spec.ts` "DFS-060.AC-9 ignores a missing storage and a write that throws" now calls `writeDensity` directly and asserts on the fake storage afterwards, so the stub's error propagates instead of becoming an AssertionError.
 - Gates: `touches` PASS (28 files); `test-phase` PASS (106 story tests red on the stub, traceability 10 criteria / 14 scenarios).
+
+## implement (implementer, 2026-11-07)
+
+- Replaced every stub: `result-density.ts`, `result-path.ts` (`displayPath`, `fileName`), `result-format.ts`, `folder-tree.ts`, `path-copy.ts`, `sets-tab.ts`, `result-screen.ts` (`totals`, `filterBySelection`, `setFilter`, `chooseDensity`); removed the "Stubs (design phase)" class comments. Templates were already final.
+- `CLAUDE.md` server entry and `docs/design/ui.md` U3 describe the compact screen (new DFS-060 bullet; Overlaps no longer "landing tab").
+- `./gradlew build` green, no budget warning. `:server:e2eTest`: 7 of 8 pass; DFS-053.AC-6 fails (see learnings).
+- Expected commit: `feat(server): compact read-only results screen [DFS-060]`.
+- Miss: the design's expected-breakage list omitted DFS-053.AC-6 (`pinCompareAndUnpin`); the pin label and Comparison live in the Overlaps tab, so the flow now clicks `tab("Overlaps")` after pinning; all 8 flows pass.

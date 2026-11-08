@@ -90,8 +90,11 @@
 }
 
 .folder-pin {
-  position: absolute;
-  right: 0;
+  /* In the row's flow, not over the select button, so it never intercepts a click on a folder (DFS-053 flows). */
+  flex: none;
+  min-width: 0;
+  padding: 0 8px;
+  font-size: 0.75rem;
   opacity: 0;
 }
 

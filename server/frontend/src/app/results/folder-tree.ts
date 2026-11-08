@@ -6,6 +6,7 @@ import { FolderNode } from '../api/models';
 import { ResultsService } from '../api/services';
 import { formatBytes } from '../scans/scan-format';
 import { failureMessage } from './result-error';
+import { barPercent } from './result-format';
 
 /** One visible row of the flat tree: a folder at a depth, with the state of its children's load. */
 export interface FolderTreeRow {
@@ -25,7 +26,12 @@ export interface FolderTreeRow {
  * total. The input is not changed.
  */
 export function sortByDuplicateSpace(folders: readonly FolderNode[]): FolderNode[] {
-  throw new Error('not implemented: DFS-060');
+  return [...folders].sort(
+    (a, b) =>
+      b.duplicateBytes - a.duplicateBytes ||
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }) ||
+      a.path.localeCompare(b.path),
+  );
 }
 
 /**
@@ -40,9 +46,6 @@ export function sortByDuplicateSpace(folders: readonly FolderNode[]): FolderNode
  * A flat `mat-tree` (`levelAccessor`): `rows` holds only the visible rows, so a collapsed node's descendants are not in
  * it. Expansion goes through the tree's own model (`matTreeNodeToggle`, keyed by path), so `aria-expanded` and
  * `MatTreeNodeHarness.expand()` work; the node's `expandedChange` drives the load.
- *
- * Stubs (design phase): `sortByDuplicateSpace` and `duplicateWidth` throw; inputs, outputs, the template's structure
- * and its classes are final.
  */
 @Component({
   selector: 'app-folder-tree',
@@ -128,7 +131,7 @@ export class FolderTree {
 
   /** The width of a row's bar, in percent: `barPercent(duplicateBytes, bytes)` (DFS-060 AC-4). */
   protected duplicateWidth(folder: FolderNode): number {
-    throw new Error('not implemented: DFS-060');
+    return barPercent(folder.duplicateBytes, folder.bytes);
   }
 
   private refresh(): void {

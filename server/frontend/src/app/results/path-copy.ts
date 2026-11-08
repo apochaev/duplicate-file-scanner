@@ -13,8 +13,6 @@ export const CLIPBOARD_REJECTED = 'The path could not be copied; select it below
  * the scan spells it, as plain text through `CLIPBOARD`. "Copied" appears only once the write has resolved; a missing
  * clipboard or a refused write shows an alert and the path, selectable, for copying by hand. Changes no scan or disk
  * state.
- *
- * Stubs (design phase): `copy()` throws; the template's structure and classes are final.
  */
 @Component({
   selector: 'app-path-copy',
@@ -36,6 +34,18 @@ export class PathCopy {
    * write clears `copied` and sets `failure` to `CLIPBOARD_UNAVAILABLE` or `CLIPBOARD_REJECTED` (DFS-060 AC-7).
    */
   protected async copy(): Promise<void> {
-    throw new Error('not implemented: DFS-060');
+    if (this.clipboard === null) {
+      this.copied.set(false);
+      this.failure.set(CLIPBOARD_UNAVAILABLE);
+      return;
+    }
+    try {
+      await this.clipboard.writeText(this.path());
+      this.copied.set(true);
+      this.failure.set(null);
+    } catch {
+      this.copied.set(false);
+      this.failure.set(CLIPBOARD_REJECTED);
+    }
   }
 }

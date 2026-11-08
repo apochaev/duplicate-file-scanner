@@ -40,7 +40,12 @@ export const LEGEND_UNIQUE = 'Unique';
  * Scanned "<formatBytes(progress.bytes)> · <plural(progress.files, 'file')>", e.g. "474.0 GB · 76214 files".
  */
 export function headerFigures(scan: ScanEntry, totals: SetPage): HeaderFigure[] {
-  throw new Error('not implemented: DFS-060');
+  return [
+    { label: FIGURE_RECLAIMABLE, value: formatBytes(totals.totalReclaimableBytes) },
+    { label: FIGURE_SETS, value: String(totals.totalItems) },
+    { label: FIGURE_FILES, value: String(totals.totalFiles) },
+    { label: FIGURE_SCANNED, value: `${formatBytes(scan.progress.bytes)} · ${plural(scan.progress.files, 'file')}` },
+  ];
 }
 
 /**
@@ -49,7 +54,18 @@ export function headerFigures(scan: ScanEntry, totals: SetPage): HeaderFigure[] 
  * `barPercent` of `progress.bytes` and its legend ("Reclaimable · …", "Last copies, always kept · …", "Unique · …").
  */
 export function spaceSegments(scan: ScanEntry, totals: SetPage): SpaceSegment[] {
-  throw new Error('not implemented: DFS-060');
+  const scanned = scan.progress.bytes;
+  const segment = (kind: SegmentKind, label: string, bytes: number): SpaceSegment => ({
+    kind,
+    bytes,
+    percent: barPercent(bytes, scanned),
+    legend: `${label} · ${formatBytes(bytes)}`,
+  });
+  return [
+    segment('reclaimable', LEGEND_RECLAIMABLE, totals.totalReclaimableBytes),
+    segment('kept', LEGEND_KEPT, totals.totalBytes - totals.totalReclaimableBytes),
+    segment('unique', LEGEND_UNIQUE, Math.max(0, scanned - totals.totalBytes)),
+  ];
 }
 
 /**
@@ -57,12 +73,12 @@ export function spaceSegments(scan: ScanEntry, totals: SetPage): SpaceSegment[] 
  * by zero (DFS-060 AC-3, AC-4, AC-5).
  */
 export function barPercent(part: number, whole: number): number {
-  throw new Error('not implemented: DFS-060');
+  return whole > 0 ? Math.min(100, Math.max(0, (part / whole) * 100)) : 0;
 }
 
 /** A set's copy count: "1 copy", "3 copies", counting physical copies, never links (DFS-060 AC-5). */
 export function copiesText(count: number): string {
-  throw new Error('not implemented: DFS-060');
+  return count === 1 ? '1 copy' : `${count} copies`;
 }
 
 /** A pair side whose `full` is true (DFS-050 decision 2, AC-3). */

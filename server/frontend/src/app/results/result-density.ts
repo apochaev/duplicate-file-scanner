@@ -26,7 +26,11 @@ export const DENSITY_STORAGE = new InjectionToken<DensityStorage | null>('DENSIT
  * throws, as it does with storage blocked).
  */
 export function browserStorage(): DensityStorage | null {
-  throw new Error('not implemented: DFS-060');
+  try {
+    return typeof window === 'undefined' ? null : (window.localStorage ?? null);
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -34,10 +38,19 @@ export function browserStorage(): DensityStorage | null {
  * for a null storage and when `getItem` throws (AC-9).
  */
 export function readDensity(storage: DensityStorage | null): Density {
-  throw new Error('not implemented: DFS-060');
+  try {
+    const value = storage?.getItem(DENSITY_KEY);
+    return value === 'comfortable' ? 'comfortable' : 'compact';
+  } catch {
+    return 'compact';
+  }
 }
 
 /** Stores `density` under `DENSITY_KEY`; does nothing for a null storage and ignores a `setItem` that throws (AC-9). */
 export function writeDensity(storage: DensityStorage | null, density: Density): void {
-  throw new Error('not implemented: DFS-060');
+  try {
+    storage?.setItem(DENSITY_KEY, density);
+  } catch {
+    // Storage may be full or blocked; the choice then lasts only for this visit.
+  }
 }

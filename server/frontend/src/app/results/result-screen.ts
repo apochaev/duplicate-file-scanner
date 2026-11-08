@@ -12,7 +12,7 @@ import { FolderNode, ScanEntry, SetPage } from '../api/models';
 import { ResultsService, ScansService } from '../api/services';
 import { FolderTree } from './folder-tree';
 import { OverlapsTab } from './overlaps-tab';
-import { DENSITY_STORAGE, Density, readDensity } from './result-density';
+import { DENSITY_STORAGE, Density, readDensity, writeDensity } from './result-density';
 import { headerFigures, spaceSegments } from './result-format';
 import { SetsTab } from './sets-tab';
 
@@ -33,10 +33,6 @@ export const DEFAULT_PAGE_SIZE = 50;
  * Header totals (DFS-060 decision 1): `totals` holds the latest page answered for a request without `under`, so the
  * figures and the bar always describe the whole scan, whatever folder or filter the table shows. The first page of a
  * scan is always unfiltered, so the header fills as soon as it answers.
- *
- * Stubs (design phase): `chooseDensity`, `setFilter`, and the helpers `readDensity`, `headerFigures` and
- * `spaceSegments` throw; `loadSets` and `selectFolder` still need decision 1's `totals` and decision 4's filter (see
- * their comments). Inputs, outputs, injected services, the template's structure and its classes are final.
  */
 @Component({
   selector: 'app-result-screen',
@@ -121,6 +117,8 @@ export class ResultScreen implements OnInit {
     this.selectedFolder.set(null);
     this.pinnedFolder.set(null);
     this.page.set(null);
+    this.totals.set(null);
+    this.filterBySelection.set(true);
     this.pageIndex.set(0);
     this.pageSize.set(DEFAULT_PAGE_SIZE);
     this.setsLoading.set(false);
@@ -161,7 +159,7 @@ export class ResultScreen implements OnInit {
   protected async loadSets(): Promise<void> {
     const generation = this.generation;
     const request = ++this.setsRequest;
-    const under = this.selectedFolder();
+    const under = this.filterBySelection() ? this.selectedFolder() : null;
     this.setsLoading.set(true);
     this.setsError.set(null);
     try {
@@ -173,6 +171,9 @@ export class ResultScreen implements OnInit {
       });
       if (request === this.setsRequest && generation === this.generation) {
         this.page.set(page);
+        if (under === null) {
+          this.totals.set(page);
+        }
         this.setsLoading.set(false);
       }
     } catch (failure) {
@@ -195,6 +196,7 @@ export class ResultScreen implements OnInit {
    */
   protected selectFolder(path: string | null): void {
     this.selectedFolder.set(path);
+    this.filterBySelection.set(true);
     this.pageIndex.set(0);
     void this.loadSets();
   }
@@ -211,12 +213,15 @@ export class ResultScreen implements OnInit {
    * page, with `under` for "Copies under <folder>" (true) and without for "All sets" (false). The selection stays.
    */
   protected setFilter(filtered: boolean): void {
-    throw new Error('not implemented: DFS-060');
+    this.filterBySelection.set(filtered);
+    this.pageIndex.set(0);
+    void this.loadSets();
   }
 
   /** The density toggle (DFS-060 decision 6, AC-9): sets `density` and stores it with `writeDensity(storage, …)`. */
   protected chooseDensity(density: Density): void {
-    throw new Error('not implemented: DFS-060');
+    this.density.set(density);
+    writeDensity(this.storage, density);
   }
 
   /** Pins a folder for comparison, replacing any pinned one; the selection is unchanged (DFS-050 AC-5). */

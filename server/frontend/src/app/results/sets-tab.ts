@@ -7,8 +7,8 @@ import { CopyView, DuplicateSetView, SetPage } from '../api/models';
 import { formatBytes } from '../scans/scan-format';
 import { PathCopy } from './path-copy';
 import { Density } from './result-density';
-import { ShortPath, isPathUnderFolder } from './result-path';
-import { copiesText } from './result-format';
+import { ShortPath, displayPath, fileName, isPathUnderFolder } from './result-path';
+import { barPercent, copiesText } from './result-format';
 
 /** Under "All folders", a scan with no sets (AC-10). */
 export const NO_DUPLICATES = 'This scan found no duplicates';
@@ -29,10 +29,6 @@ export const PATH_BUDGET = 62;
  * link's short path, modified date and copy button). A copy with several links carries a "<n> links" badge whose
  * tooltip lists every link's full path; a copy with a link under the selected folder carries "in selected" (AC-5,
  * AC-6). With a folder selected, a toggle above the table chooses "All sets" or "Copies under <folder name>" (AC-8).
- *
- * Stubs (design phase): `densityClass`, `setName`, `shortPath`, `reclaimableWidth`, `linksTitle`,
- * `copyInSelectedFolder`, `folderName`, `chooseFilter` and the helper `copiesText` throw; inputs, outputs, the
- * template's structure and its classes are final.
  */
 @Component({
   selector: 'app-sets-tab',
@@ -77,7 +73,7 @@ export class SetsTab {
    * folder selected but `filtered` false ("All sets"), `NO_DUPLICATES`.
    */
   protected emptyMessage(): string {
-    return this.folder() === null ? NO_DUPLICATES : NO_DUPLICATES_UNDER_FOLDER;
+    return this.folder() === null || !this.filtered() ? NO_DUPLICATES : NO_DUPLICATES_UNDER_FOLDER;
   }
 
   /** Emits the paginator's event as `pageChanged` (AC-9). */
@@ -87,17 +83,17 @@ export class SetsTab {
 
   /** The section's density class: `density-compact` or `density-comfortable` (DFS-060 AC-9). */
   protected densityClass(): string {
-    throw new Error('not implemented: DFS-060');
+    return `density-${this.density()}`;
   }
 
   /** A set header's name: the file name of the set's first link (`fileName`) (DFS-060 AC-5). */
   protected setName(set: DuplicateSetView): string {
-    throw new Error('not implemented: DFS-060');
+    return fileName(set.copies[0].links[0].path);
   }
 
   /** A copy row's path: `displayPath(path, roots(), PATH_BUDGET)` (DFS-060 AC-7). */
   protected shortPath(path: string): ShortPath {
-    throw new Error('not implemented: DFS-060');
+    return displayPath(path, this.roots(), PATH_BUDGET);
   }
 
   /**
@@ -105,26 +101,28 @@ export class SetsTab {
    * `reclaimableBytes` on the page, so the largest set's bar is full (DFS-060 AC-5).
    */
   protected reclaimableWidth(set: DuplicateSetView): number {
-    throw new Error('not implemented: DFS-060');
+    const largest = Math.max(0, ...(this.page()?.items ?? []).map((item) => item.reclaimableBytes));
+    return barPercent(set.reclaimableBytes, largest);
   }
 
   /** The "<n> links" badge's tooltip: every link's full path, one per line, in the API's order (DFS-060 AC-6). */
   protected linksTitle(copy: CopyView): string {
-    throw new Error('not implemented: DFS-060');
+    return copy.links.map((link) => link.path).join('\n');
   }
 
   /** Whether any of the copy's links is under the selected folder (`inSelectedFolder`) (DFS-060 AC-6). */
   protected copyInSelectedFolder(copy: CopyView): boolean {
-    throw new Error('not implemented: DFS-060');
+    return copy.links.some((link) => this.inSelectedFolder(link.path));
   }
 
   /** The selected folder's last name element (`fileName`), for "Copies under <folder name>" (DFS-060 AC-8). */
   protected folderName(): string {
-    throw new Error('not implemented: DFS-060');
+    const folder = this.folder();
+    return folder === null ? '' : fileName(folder);
   }
 
   /** Emits the filter toggle's choice as `filterChanged` (DFS-060 AC-8). */
   protected chooseFilter(filtered: boolean): void {
-    throw new Error('not implemented: DFS-060');
+    this.filterChanged.emit(filtered);
   }
 }
