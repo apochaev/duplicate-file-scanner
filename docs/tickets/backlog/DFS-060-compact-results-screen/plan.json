@@ -1,15 +1,95 @@
 {
   "ticket": "DFS-060",
-  "archetype": {"name": "component", "version": 4},
+  "archetype": {
+    "name": "component",
+    "version": 4
+  },
   "branch": "tickets/DFS-060-compact-results-screen",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-060-compact-results-screen",
-  "state": "running",
+  "state": "awaiting-approval",
   "phases": [
-    {"id": "design", "agent": "architect", "after": [], "status": "pending", "runs": [], "artifacts": [], "commit": null},
-    {"id": "tests", "agent": "test-author", "after": ["design"], "status": "pending", "runs": [], "artifacts": [], "commit": null},
-    {"id": "implement", "agent": "implementer", "after": ["tests"], "status": "pending", "runs": [], "artifacts": [], "commit": null},
-    {"id": "verify", "agent": "verifier", "after": ["implement"], "status": "pending", "runs": [], "artifacts": [], "commit": null}
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 65,
+          "wallClockSeconds": 880,
+          "outcome": "passed",
+          "note": "touches: PASS (19 changed files, all inside touches); ngBuild: initial 705.73 kB, no budget warning"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-060-compact-results-screen/DFS-060-ticket.md",
+        "docs/tickets/backlog/DFS-060-compact-results-screen/design.md",
+        "docs/tickets/backlog/DFS-060-compact-results-screen/learnings.md",
+        "docs/tickets/backlog/DFS-060-compact-results-screen/plan.json",
+        "docs/tickets/backlog/DFS-060-compact-results-screen/progress.md",
+        "server/frontend/src/app/results/folder-tree.css",
+        "server/frontend/src/app/results/folder-tree.html",
+        "server/frontend/src/app/results/folder-tree.ts",
+        "server/frontend/src/app/results/path-copy.html",
+        "server/frontend/src/app/results/path-copy.ts",
+        "server/frontend/src/app/results/result-density.ts",
+        "server/frontend/src/app/results/result-format.ts",
+        "server/frontend/src/app/results/result-path.ts",
+        "server/frontend/src/app/results/result-screen.css",
+        "server/frontend/src/app/results/result-screen.html",
+        "server/frontend/src/app/results/result-screen.ts",
+        "server/frontend/src/app/results/sets-tab.css",
+        "server/frontend/src/app/results/sets-tab.html",
+        "server/frontend/src/app/results/sets-tab.ts"
+      ],
+      "commit": "72654a9ec9a39652913091f5fa89cfb92218ea47"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    }
   ],
-  "gates": [{"after": "design", "status": "pending"}, {"after": "done", "status": "pending"}],
+  "gates": [
+    {
+      "after": "design",
+      "status": "pending"
+    },
+    {
+      "after": "done",
+      "status": "pending"
+    }
+  ],
   "defects": []
 }
