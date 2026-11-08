@@ -131,6 +131,15 @@
           "wallClockSeconds": 884,
           "outcome": "passed",
           "note": "second reopen for layout (folder name 0 px; sets table overflow); resumed once after the 40-turn cap; screenshot of the built jar viewed by the orchestrator; green 973 passed; e2eTest 8/8; all gate checks PASS"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 19,
+          "wallClockSeconds": 498,
+          "outcome": "passed",
+          "note": "third pass, product owner feedback (pin touch target below 960 px); CSS only; green 973 passed, 3 skipped; disabled, freeze, touches, stubs, traceability, consistency PASS; e2eTest 8/8; hit-test at 800 and 1440 px by the implementer"
         }
       ],
       "artifacts": [
@@ -151,7 +160,7 @@
         "server/frontend/src/app/results/sets-tab.html",
         "server/frontend/src/app/results/sets-tab.ts"
       ],
-      "commit": "d4c1e745af9eb8171ea1b85069ecb7e84df6d295"
+      "commit": "c8a7b81581defdc9879183872620d360aa984b2a"
     },
     {
       "id": "verify",
@@ -169,6 +178,15 @@
           "wallClockSeconds": 0,
           "outcome": "passed",
           "note": "resumed three times after the 30-turn cap; two sends back to implement for layout; final live check: AC-4 partially met (pin button catches clicks below 960 px), all other criteria met; left to the product owner at the gate"
+        },
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 26,
+          "wallClockSeconds": 346,
+          "outcome": "passed",
+          "note": "re-verification after the third implement pass; consistency PASS; all 10 criteria met; live check on the built jar at 800 and 1440 px"
         }
       ],
       "artifacts": [
@@ -176,7 +194,7 @@
         "docs/tickets/backlog/DFS-060-compact-results-screen/learnings.md",
         "docs/tickets/backlog/DFS-060-compact-results-screen/verification.md"
       ],
-      "commit": "bddb34daa334c10df6d9886b0396826d5bfb01c0"
+      "commit": "ec3d8fd06e15755148f0b4702d83ea161916c42d"
     }
   ],
   "gates": [
@@ -216,6 +234,13 @@
       "phase": "verify",
       "route": "implementer",
       "summary": "first layout fix left folder names at 0 px and made the sets table scroll sideways, hiding Reclaimable",
+      "status": "closed"
+    },
+    {
+      "id": 5,
+      "phase": "verify",
+      "route": "implementer",
+      "summary": "AC-4: below 960 px the invisible pin button's touch target covers the folder row and catches clicks (product owner feedback at the done gate)",
       "status": "closed"
     }
   ]
