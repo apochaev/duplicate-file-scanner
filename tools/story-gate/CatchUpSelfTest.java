@@ -90,6 +90,32 @@ final class CatchUpSelfTest {
                 CatchUp.advice(Map.of("ADV-003-r1.md", "# x\n", "ADV-003-r2.md", proposals.get("ADV-003-r2.md")),
                         Map.of()).get(0));
 
+        // CCW-022.AC-8: next commands and the lane filter.
+        String awaiting = plan.formatted("awaiting-approval", "done", "pending");
+        expect(problems, "CCW-022.AC-8 gate: approve", "/story approve DFS-051",
+                CatchUp.nextCommand("DFS-051", awaiting, "pipeline-stage", false));
+        expect(problems, "CCW-022.AC-8 blocked and running: run", "/story run DFS-051|/story run DFS-051",
+                CatchUp.nextCommand("DFS-051", plan.formatted("blocked", "in-progress", "approved"), "x", false) + "|"
+                        + CatchUp.nextCommand("DFS-051", plan.formatted("running", "pending", "approved"), "x", false));
+        expect(problems, "CCW-022.AC-8 done: learn with learnings or defects, else done",
+                "/story learn DFS-051|/story learn DFS-051|/tickets done DFS-051",
+                CatchUp.nextCommand("DFS-051", plan.formatted("done", "done", "approved"), "x", true) + "|"
+                        + CatchUp.nextCommand("DFS-051", "{\"state\": \"done\", \"defects\": [{\"id\": 1}]}", "x", false)
+                        + "|" + CatchUp.nextCommand("DFS-051", "{\"state\": \"done\"}", "x", false));
+        expect(problems, "CCW-022.AC-8 no plan: start for none, run for a pipeline ticket",
+                "/tickets start CCW-022 --worktree|/story run DFS-051",
+                CatchUp.nextCommand("CCW-022", null, "none", false) + "|"
+                        + CatchUp.nextCommand("DFS-051", null, "pipeline-stage", false));
+        expect(problems, "CCW-022.AC-8 a started hand-implemented ticket is continued, not started again",
+                "continue in its worktree, then /tickets review CCW-022|/tickets done CCW-022",
+                CatchUp.nextCommand("CCW-022", null, "none", "in-progress", false) + "|"
+                        + CatchUp.nextCommand("CCW-022", null, "none", "in-review", false));
+        expect(problems, "CCW-022.AC-8 frontmatter values", "backend|none|null",
+                CatchUp.frontValue("---\nid: X\nlane: backend\narchetype: none\n---\nlane: frontend\n", "lane") + "|"
+                        + CatchUp.frontValue("---\nlane: a\narchetype: none  \n---\n", "archetype") + "|"
+                        + CatchUp.frontValue("---\nlane: a\n---\n", "archetype"));
+
+        problems.addAll(laneCase());
         problems.addAll(repoCase());
         return problems.stream().map(p -> "catch-up: " + p).toList();
     }
@@ -134,6 +160,57 @@ final class CatchUpSelfTest {
             if (text.contains("Secret")) problems.add("AC-9 the catch-up printed ticket content");
         } catch (IOException | RuntimeException e) {
             problems.add("the repository case failed to run: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+        } finally {
+            if (tmp != null) deleteTree(tmp);
+        }
+        return problems;
+    }
+
+    /**
+     * CCW-022.AC-8 on a real repository: a backend ticket and a frontend ticket each have a worktree with a plan
+     * awaiting approval; dfs-backend sees only its own, the coordinator and an unlisted name see nothing.
+     */
+    private static List<String> laneCase() {
+        List<String> problems = new ArrayList<>();
+        Path tmp = null;
+        try {
+            tmp = Files.createTempDirectory("story-gate-lanes-");
+            Path main = Files.createDirectories(tmp.resolve("repo"));
+            git(main, "-c", "init.defaultBranch=main", "init", "-q");
+            write(main.resolve("docs/tickets/lanes.md"), LANES);
+            write(main.resolve("docs/tickets/backlog/DFS-061-b/DFS-061-ticket.md"),
+                    "---\nid: DFS-061\nlane: backend\narchetype: pipeline-stage\n---\nSecret ticket text\n");
+            write(main.resolve("docs/tickets/backlog/DFS-062-f/DFS-062-ticket.md"),
+                    "---\nid: DFS-062\nlane: frontend\narchetype: pipeline-stage\n---\nSecret ticket text\n");
+            git(main, "add", "-A");
+            git(main, "commit", "-q", "--no-verify", "-m", "base");
+            String plan = """
+                    {"state": "awaiting-approval", "phases": [{"id": "design", "status": "done"}],
+                     "gates": [{"after": "design", "status": "pending"}]}""";
+            for (String[] t : new String[][] {{"DFS-061", "b"}, {"DFS-062", "f"}}) {
+                Path tree = tmp.resolve("repo-" + t[0] + "-" + t[1]);
+                git(main, "worktree", "add", "-q", "-b", "tickets/" + t[0] + "-" + t[1], tree.toString());
+                write(tree.resolve("docs/tickets/backlog/" + t[0] + "-" + t[1] + "/plan.json"), plan);
+            }
+            CatchUp.Outcome backend = CatchUp.runLanes(main, "dfs-backend", null);
+            expect(problems, "CCW-022.AC-8 a lane session sees its own worktree and not another lane's", String.join("\n",
+                    "Catch-up for dfs-backend (lanes: backend):",
+                    "started tickets in your lanes:",
+                    "- DFS-061 ../repo-DFS-061-b: plan awaiting-approval at the gate after design; next: "
+                            + "/story approve DFS-061", "") + "/0", backend.text() + "/" + backend.exit());
+            if (backend.text().contains("DFS-062") || backend.text().contains("Secret")) {
+                problems.add("CCW-022.AC-8 the lane view shows another lane's ticket or ticket content");
+            }
+            CatchUp.Outcome frontend = CatchUp.runLanes(main, "dfs-frontend", null);
+            if (!frontend.text().contains("DFS-062") || frontend.text().contains("DFS-061")) {
+                problems.add("CCW-022.AC-8 the frontend lane view is wrong: " + frontend.text());
+            }
+            CatchUp.Outcome coordinator = CatchUp.runLanes(main, "dfs-product", null);
+            CatchUp.Outcome stranger = CatchUp.runLanes(main, "dfs-other", null);
+            expect(problems, "CCW-022.AC-8 the coordinator and an unlisted name get nothing", "''|''",
+                    "'" + coordinator.text() + "'|'" + stranger.text() + "'");
+        } catch (IOException | RuntimeException e) {
+            problems.add("the lane case failed to run: " + e.getClass().getSimpleName() + ": " + e.getMessage());
         } finally {
             if (tmp != null) deleteTree(tmp);
         }

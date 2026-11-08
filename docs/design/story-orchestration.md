@@ -216,10 +216,10 @@ Rejected: one criterion per scenario (as fine-grained as the scenarios, no requi
 
 The aspiration is that every point where `/story run` (or `/story learn`) returns control to the user ends its output with an explicit next action, never a bare status the user has to interpret. This applies to every stop, not only the two default human gates (D3):
 
-- **A human gate reached:** the compact summary (D3) ends with the literal command to approve or give feedback (`/story run <ID>` again after approval, or how to reject).
+- **A human gate reached:** the compact summary (D3) ends with the literal command to approve or give feedback (`/story approve <ID>`, or `/story approve <ID> <feedback>` to send work back). *Addendum (CCW-022):* a plain `/story run <ID>` only re-shows the gate, so it is not the resume command; `plan.json` is committed before every stop (`docs: record <ID> <stop> in plan.json [<ID>]`), and every stop ends with `safe to /clear; resume with <command>` (uncommitted files listed beside it as information), so the user can clear the session and resume with one command.
 - **A run resumes and stops again** (the next gate, or the same gate re-shown after a failed reconciliation): same rule — the resumed output still ends with the next command.
 - **`blocked`** (two failed attempts on a phase, D5): the escalation names the phase, the defect, and the concrete options (retry, edit the ticket/design and resume, or cancel the story), not just "blocked."
-- **The pipeline finishes** (`state: done`): says so and names the next thing that becomes possible (`/story learn <ID>` if there is anything to learn, otherwise that there is nothing to learn).
+- **The pipeline finishes** (`state: done`): says so and names the next thing that becomes possible (`/story learn <ID>` if there is anything to learn, otherwise that there is nothing to learn and `/tickets done <ID>`), after the same `plan.json` commit and clear line (CCW-022).
 - **`/story learn` shows proposals:** each one ends with the commands to decide it, as `/learn review` already does (apply, park, reject).
 
 This generalizes what `tickets` and `learn` already do at their own stop points (for example `tickets done`'s trailing `/learn reflect <ID>` offer, `learn apply`'s wait-for-approval before writing) to every stop the orchestrator itself introduces, so a run never leaves the user needing to recall a command from memory or ask "what now."
