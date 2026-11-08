@@ -1347,13 +1347,23 @@
             "format" : "int32",
             "description" : "Every matching set"
           },
+          "totalFiles" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The link paths of every matching set (hard links each counted)"
+          },
+          "totalBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The sum over every matching set of its size times its physical copies"
+          },
           "totalReclaimableBytes" : {
             "type" : "integer",
             "format" : "int64",
             "description" : "The reclaimable bytes of every matching set"
           }
         },
-        "required" : [ "items", "page", "size", "totalItems", "totalReclaimableBytes" ]
+        "required" : [ "items", "page", "size", "totalBytes", "totalFiles", "totalItems", "totalReclaimableBytes" ]
       },
       "OperationPage" : {
         "type" : "object",
@@ -1614,6 +1624,16 @@
             "format" : "int64",
             "description" : "Their summed size in bytes"
           },
+          "duplicateFiles" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Counted files in the whole subtree whose content has at least two physical copies in the scan, each link path once, as files counts; at most files"
+          },
+          "duplicateBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Their summed size in bytes; at most bytes"
+          },
           "directFiles" : {
             "type" : "integer",
             "format" : "int64",
@@ -1629,7 +1649,7 @@
             "description" : "Whether listFolders with this folder as parent answers at least one folder"
           }
         },
-        "required" : [ "bytes", "directBytes", "directFiles", "files", "hasChildren", "name", "path" ]
+        "required" : [ "bytes", "directBytes", "directFiles", "duplicateBytes", "duplicateFiles", "files", "hasChildren", "name", "path" ]
       }
     }
   }
