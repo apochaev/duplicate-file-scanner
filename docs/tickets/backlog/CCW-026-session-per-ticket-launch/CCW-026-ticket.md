@@ -1,7 +1,7 @@
 ---
 id: CCW-026
 title: Start each ready ticket in its own session from the coordinator
-status: in-progress
+status: in-review
 type: feature
 scope: [docs]
 archetype: none
