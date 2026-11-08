@@ -27,6 +27,8 @@ Read only:
 
 Read nothing else. Do not read the implementer's guide, other tickets, or source files the stubs and `design.md` do not name.
 
+Read every existing file you will change with the Read tool before you Write or Edit it, even one you have already printed with `cat`, `sed`, `grep` or another shell command: an existing test class you extend (for example `ScanCommandTest.java`), a Vitest spec (for example `scan-row.spec.ts`), and `test-plan.md` or `progress.md` if they already exist. Write and Edit refuse a change to a file not read through Read (`File has not been read yet`), and each refused call costs another round trip carrying the whole context (CCW-028: 54 refused writes across the implementer, test-author and verifier, 53 on a file never opened with Read). After a refusal, Read the file and retry once; never repeat the same Edit.
+
 ## Naming convention
 
 Every test's name starts with the full ID(s) of the criteria it proves, then a readable title, and nothing precedes the ID. The archetype's `test-guide.md` shows the form; in Java it is the `@DisplayName`:

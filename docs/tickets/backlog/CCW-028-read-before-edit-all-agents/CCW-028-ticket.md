@@ -1,7 +1,7 @@
 ---
 id: CCW-028
 title: Apply the read-before-edit rule to the implementer, test-author and verifier
-status: ready
+status: in-review
 type: chore
 scope: [docs]
 archetype: none
@@ -108,11 +108,11 @@ Feature: Read before edit in every editing agent
 ## Definition of done
 
 - [ ] Every scenario above is checked (mechanically or by reading, as recorded per scenario)
-- [ ] `tools/story-gate/story-gate selftest` passes
-- [ ] No files changed outside the paths listed under Touches
-- [ ] AC-1 to AC-3 checked by reading the three agent files, recorded in `verification.md`
+- [x] `tools/story-gate/story-gate selftest` passes
+- [x] No files changed outside the paths listed under Touches
+- [x] AC-1 to AC-3 checked by reading the three agent files, recorded in `verification.md`
 - [ ] The AC-4 run is done, its implementer, test-author and verifier transcripts checked and the counts recorded in `verification.md`
-- [ ] The phrases pinned by `CCW-020.AC-4-agent-prompts` are unchanged
+- [x] The phrases pinned by `CCW-020.AC-4-agent-prompts` are unchanged
 
 ## Open questions
 
