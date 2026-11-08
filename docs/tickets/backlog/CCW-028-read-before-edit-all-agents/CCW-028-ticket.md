@@ -107,11 +107,11 @@ Feature: Read before edit in every editing agent
 
 ## Definition of done
 
-- [ ] Every scenario above is checked (mechanically or by reading, as recorded per scenario)
+- [x] Every scenario above is checked (mechanically or by reading, as recorded per scenario) (AC-1 to AC-3 read; AC-4 run on DFS-059)
 - [x] `tools/story-gate/story-gate selftest` passes
 - [x] No files changed outside the paths listed under Touches
 - [x] AC-1 to AC-3 checked by reading the three agent files, recorded in `verification.md`
-- [ ] The AC-4 run is done, its implementer, test-author and verifier transcripts checked and the counts recorded in `verification.md`
+- [x] The AC-4 run is done, its implementer, test-author and verifier transcripts checked and the counts recorded in `verification.md` (DFS-059: 0 refused in all three phases)
 - [x] The phrases pinned by `CCW-020.AC-4-agent-prompts` are unchanged
 
 ## Open questions
