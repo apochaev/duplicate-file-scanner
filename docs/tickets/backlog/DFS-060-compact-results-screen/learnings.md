@@ -13,3 +13,49 @@
 - **verify / verifier (re-check after the layout fix)**: the fix commit moved the pin out of the row's flow, but the folder name stayed invisible. The cause was never only the pin: the tree column is about 256 px, and the row grid's fixed columns (3.5rem + 4.5rem + 4.5rem plus gaps, about 224 px) plus the 32 px toggle leave nothing for `minmax(0, 1fr)`. The path fix (`.sets-tab { display: inline-block; min-width: 62ch; overflow-x: auto }`) un-clipped the file names but made the table wider than its tab, adding a horizontal scrollbar. That pushes the Reclaimable bytes out of view and wraps the Modified dates. A fix that reports "build green, e2e 8/8" is not evidence for a visual defect: the implementer should take a screenshot of the built jar too, or the e2e flows should assert a non-zero bounding box for `.folder-name`, `.path-name` and `.set-reclaimable-bytes` within the viewport.
 - **implement / implementer (second reopen)**: departures from design.md: `PATH_BUDGET` is 56, not 62. The sets-tab spec allows 55-63, and 56 characters at 0.75rem monospace fill the ~430 px File column. The tree rows are two lines, because the ~256 px column cannot hold a name plus three fixed columns on one line. The template got a `.copy-path-line` wrapper (no tested class changed) and an indent of 12 instead of 16. For the live check, headless Chrome with `--remote-debugging-port` driven by a short Node script over CDP (the project's own `server/.gradle/nodejs` node, which has a global `WebSocket`) can expand the tree, hover, read `getBoundingClientRect`/`scrollWidth` and take screenshots. `--dump-dom` cannot click.
 - **verify / verifier (final re-check)**: `document.elementFromPoint` at the centre of each `button.folder-select` catches what a by-eye check cannot see. At 800 px (the one-column layout below 960 px), every row centre hits the invisible `folder-pin` button through Material's `.mat-mdc-button-touch-target`, which reaches far beyond the pin's 110 x 16 px box, so a click in the middle of a folder pins it. `opacity: 0` does not take an element out of hit-testing. The e2e flows run only at desktop width, so they cannot see it. A live check for a component with hidden-until-hover controls should hit-test at one narrow and one wide viewport, and a Playwright flow could repeat one row click at a narrow viewport. Earlier lesson confirmed: keep the measuring script in its own scratch folder and give each headless Chrome its own `--remote-debugging-port`, because reusing a port right after killing Chrome got `ECONNRESET`.
+
+## Entries
+
+### DFS-060.L-1: Check visibility, not DOM presence, for layout-bound UI
+
+- Status: proposed
+- Impact: local
+- Target: component archetype `test-guide.md` and `impl-guide.md`
+- Change: require a Playwright flow that asserts `isVisible()` and a non-zero bounding-box width on a layout-bound component's key elements, and require the implementer to measure bounding boxes or take a screenshot on the built jar before reporting a layout fix as done.
+- Evidence: DFS-060 defects 3 and 4: the folder name was 0 px wide and the path column clipped the file name; Vitest and Playwright only asserted the text was in the DOM, and "build green, e2e 8/8" was reported for a fix that had not fixed it. Two implement reopens, about 165 turns.
+- Recurrences: 1 (DFS-060)
+- Recommendation: apply, no automated gate could see these defects.
+- Decision:
+
+### DFS-060.L-2: Hit-test hidden-until-hover controls at a narrow and a wide viewport
+
+- Status: proposed
+- Impact: local
+- Target: component archetype `test-guide.md` and the verifier checklist item 11
+- Change: for components with `opacity: 0` or hover-revealed controls, require an `elementFromPoint` hit-test of the row centre at one viewport under 960 px and one wide viewport, and a Playwright flow that repeats one row click at the narrow viewport.
+- Evidence: DFS-060 defect 5: below 960 px the invisible pin's Material touch target covered every folder row, so a click pinned instead of selecting; found only at the done gate. `opacity: 0` does not remove an element from hit-testing, and the e2e flows run only at desktop width.
+- Recurrences: 1 (DFS-060)
+- Recommendation: apply, it cost a third implement pass and was caught late.
+- Decision:
+
+### DFS-060.L-3: A "never throws" scenario must call the function bare under the red gate
+
+- Status: proposed
+- Impact: local
+- Target: component archetype `test-guide.md`
+- Change: state that a "never throws" scenario calls the function bare and asserts on an observable afterwards; `expect(() => stub()).not.toThrow()` turns the stub's error into an AssertionError and fails the red gate.
+- Evidence: DFS-060 defect 1: tests attempt 1 failed the gate on `result-density.spec.ts` AC-9 and was retried on opus.
+- Recurrences: 1 (DFS-060)
+- Recommendation: apply, it cost a failed attempt and a model escalation.
+- Decision:
+
+### DFS-060.L-4: Expected breakage misses routed-constructor stubs and BrowserFlowTest selectors
+
+- Status: proposed
+- Impact: local
+- Target: component archetype design checklist item 3 and the architect's design template
+- Change: say that a stub reached from a lazily routed component's constructor shows up in `app.routes.spec.ts` as a timeout, so that spec goes under Expected breakage (or the stub moves to a template-evaluated method), and have the architect grep `BrowserFlowTest` for every selector and text the decisions replace.
+- Evidence: DFS-060: `app.routes.spec.ts` timed out instead of failing with the stub's error (tests phase); the design's list omitted DFS-053.AC-6 `pinCompareAndUnpin` (implement defect 2), and DFS-053.AC-7 was also affected.
+- Recurrences: 1 (DFS-060)
+- Recommendation: apply, the same gap caused a defect in two phases.
+- Decision:
