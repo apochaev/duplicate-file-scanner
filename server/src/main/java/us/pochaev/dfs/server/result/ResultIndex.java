@@ -125,7 +125,23 @@ final class ResultIndex {
      * @param size  1 to 500
      */
     SetPage sets(Path under, int page, int size) {
-        throw new UnsupportedOperationException("not implemented: DFS-059");
+        List<DuplicateSetView> matching = new ArrayList<>();
+        long reclaimable = 0;
+        long files = 0;
+        long bytes = 0;
+        for (IndexedSet s : sets) {
+            if (under == null || s.paths.stream().anyMatch(p -> p.startsWith(under))) {
+                matching.add(s.view);
+                reclaimable += s.view.reclaimableBytes();
+                files += s.paths.size();
+                bytes += s.view.size() * s.view.copies().size();
+            }
+        }
+        long from = (long) page * size;
+        List<DuplicateSetView> items = from >= matching.size()
+                ? List.of()
+                : List.copyOf(matching.subList((int) from, (int) Math.min(matching.size(), from + size)));
+        return new SetPage(items, page, size, matching.size(), files, bytes, reclaimable);
     }
 
     /**
@@ -135,7 +151,21 @@ final class ResultIndex {
      * {@code duplicateBytes <= bytes} hold for every node. Runs once, while the index is built.
      */
     private static void addDuplicateTotals(Map<Path, Node> nodes, List<Path> roots, List<DuplicateSet> sets) {
-        throw new UnsupportedOperationException("not implemented: DFS-059");
+        for (DuplicateSet set : sets) {
+            if (set.copies().size() < 2) {
+                continue;
+            }
+            for (var file : set.files()) {
+                for (Path p = file.path().getParent(); p != null; p = p.getParent()) {
+                    if (!inside(roots, p)) {
+                        break;
+                    }
+                    Node n = node(nodes, p);
+                    n.duplicateFiles += 1;
+                    n.duplicateBytes += set.size();
+                }
+            }
+        }
     }
 
     private static boolean inside(List<Path> roots, Path path) {

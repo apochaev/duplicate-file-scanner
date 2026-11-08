@@ -12,3 +12,7 @@
 
 - Added 7 DFS-059 tests to ResultApiTest (AC-1 x2, AC-2 x2, AC-3 x2, AC-4 x1) and test-plan.md. All fail only with `not implemented: DFS-059` (existing DFS-047 tests fail the same way, as the design expected).
 - Expected commit: `test(server): duplicate totals in the result API [DFS-059]`.
+
+## Implement
+
+Implemented ResultIndex.addDuplicateTotals and ResultIndex.sets totals; updated CLAUDE.md and docs/design/ui.md. ./gradlew build green. Expected commit: feat(server): add duplicate totals to the result API [DFS-059].
