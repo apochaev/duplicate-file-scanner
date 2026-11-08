@@ -179,7 +179,7 @@ final class CatchUpSelfTest {
             write(main.resolve("docs/tickets/backlog/DFS-061-b/DFS-061-ticket.md"),
                     "---\nid: DFS-061\nlane: backend\narchetype: pipeline-stage\n---\nSecret ticket text\n");
             write(main.resolve("docs/tickets/backlog/CCW-062-h/CCW-062-ticket.md"),
-                    "---\nid: CCW-062\nlane: harness\narchetype: pipeline-stage\n---\nSecret ticket text\n");
+                    "---\nid: CCW-062\nlane: harness\narchetype: none\n---\nSecret ticket text\n");
             git(main, "add", "-A");
             git(main, "commit", "-q", "--no-verify", "-m", "base");
             String gate = """
@@ -197,7 +197,7 @@ final class CatchUpSelfTest {
             String text = session.text();
             expect(problems, "CCW-026.AC-8 a ticket-named session sees every lane with launch lines", true,
                     text.contains("- DFS-061 ../repo-DFS-061-b: plan awaiting-approval at the gate after design; next: "
-                            + "claude -n DFS-061 --permission-mode auto \"/story approve DFS-061\"")
+                            + "claude -n DFS-061 --model sonnet --permission-mode auto \"/story approve DFS-061\"")
                     && text.contains("- CCW-062 ../repo-CCW-062-h: plan blocked in phase tests; next: "
                             + "claude -n CCW-062 --permission-mode auto \"/story run CCW-062\"")
                     && session.exit() == 0);

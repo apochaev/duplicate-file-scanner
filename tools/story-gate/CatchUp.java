@@ -103,9 +103,10 @@ final class CatchUp {
         }
     }
 
-    /** {@code claude -n CCW-026 --permission-mode auto "/story run CCW-026"}: the line a new terminal starts a ticket's session from. */
-    static String launchLine(String id, String command) {
-        return "claude -n " + id + " --permission-mode auto \"" + command + "\"";
+    /** {@code claude -n CCW-026 --model sonnet --permission-mode auto "/story run CCW-026"}: the line a new terminal starts a ticket's session from; no {@code --model} when the archetype is {@code none}. */
+    static String launchLine(String id, String archetype, String command) {
+        boolean pipeline = archetype != null && !archetype.isBlank() && !archetype.equals("none");
+        return "claude -n " + id + (pipeline ? " --model sonnet" : "") + " --permission-mode auto \"" + command + "\"";
     }
 
     /** {@code CCW-022 ../repo-CCW-022-x: plan awaiting-approval at the gate after design; next: claude -n CCW-022 ...}. */
@@ -113,7 +114,7 @@ final class CatchUp {
             boolean learnings) {
         String state = planText == null ? "no plan.json" : planState(planText);
         String next = nextCommand(id, planText, archetype, status, learnings);
-        return id + " " + path + ": " + state + "; next: " + (next.startsWith("/") ? launchLine(id, next) : next);
+        return id + " " + path + ": " + state + "; next: " + (next.startsWith("/") ? launchLine(id, archetype, next) : next);
     }
 
     /**

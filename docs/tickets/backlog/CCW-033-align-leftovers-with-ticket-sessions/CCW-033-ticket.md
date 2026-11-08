@@ -1,7 +1,7 @@
 ---
 id: CCW-033
 title: Align archetypes and the launch model with sessions per ticket
-status: ready
+status: in-review
 type: docs
 scope: [docs]
 archetype: none
@@ -121,11 +121,11 @@ Feature: Harness leftovers follow sessions per ticket
 
 ## Definition of done
 
-- [ ] Every scenario above checked as marked (mechanical or read), with the evidence noted beside this item
-- [ ] `tools/story-gate/story-gate selftest` passes
-- [ ] The old-form search repeated before `review` (CCW-018.L-1): `claude -n`, `permission-mode auto`, `--model`, `dfs-backend`, `dfs-frontend`, `dfs-harness`, `lane that owns`, `request to the` over `.claude/`, `CLAUDE.md`, `docs/design/`, `docs/tickets/lanes.md`, `tools/story-gate/`; the search and its hits recorded in `verification.md`
-- [ ] `verification.md` opens with the `## Product owner review` section (`.claude/agents/verifier.md`)
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above checked as marked (mechanical or read), with the evidence noted beside this item
+- [x] `tools/story-gate/story-gate selftest` passes
+- [x] The old-form search repeated before `review` (CCW-018.L-1): `claude -n`, `permission-mode auto`, `--model`, `dfs-backend`, `dfs-frontend`, `dfs-harness`, `lane that owns`, `request to the` over `.claude/`, `CLAUDE.md`, `docs/design/`, `docs/tickets/lanes.md`, `tools/story-gate/`; the search and its hits recorded in `verification.md`
+- [x] `verification.md` opens with the `## Product owner review` section (`.claude/agents/verifier.md`)
+- [x] No files changed outside the paths listed under Touches
 
 ## Decisions
 

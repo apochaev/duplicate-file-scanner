@@ -16,7 +16,7 @@ models:
 Applies to a ticket that adds or changes HTTP endpoints under `/api` in the `server` subproject: controllers, the API's own request and response records, their error codes, a Server-Sent Events stream, state the server keeps next to the core (such as a registry of scans), and the resulting change to the committed OpenAPI spec. Example: DFS-040, the scan API (start, list, get, cancel, progress stream).
 
 It does not apply to:
-- a new core use case or its service (`use-case`); a ticket that needs one *and* exposes it is two tickets, the `use-case` one first, or a request to the backend lane;
+- a new core use case or its service (`use-case`); a ticket that needs one *and* exposes it is two tickets, the `use-case` one first, or a draft in the backend lane added to the ticket's `depends_on`;
 - Spring wiring or a composition root (`wiring`);
 - an Angular screen (`component`, CCW-020); a ticket that only regenerates the client for a screen is part of that screen's ticket;
 - the security rules themselves (DFS-036 built them by hand; changing them is its own ticket).

@@ -16,7 +16,7 @@ models:
 Applies to a ticket that adds or changes an Angular screen or component in `server/frontend`: standalone components with their templates and styles, the services and small wrappers they need, client-side formatting and validation, and their Vitest tests. Example: DFS-041, the scan screen (a form with folder chips and settings, a live list of scans, a stream wrapper).
 
 It does not apply to:
-- an HTTP endpoint or a change to the API's records (`endpoint`); a screen that needs a new or changed endpoint is two tickets, the endpoint first, or a request to the lane that owns it. Regenerating the client for an endpoint that already exists is part of the screen's ticket;
+- an HTTP endpoint or a change to the API's records (`endpoint`); a screen that needs a new or changed endpoint is two tickets, the endpoint first, or a draft in the endpoint's lane added to the screen ticket's `depends_on`. Regenerating the client for an endpoint that already exists is part of the screen's ticket;
 - a core use case (`use-case`) or Spring wiring (`wiring`);
 - the security rules (DFS-036: `SecurityConfiguration`, `HostOriginFilter`, the token exchange) or how the server serves the page (the `ng build` output as static resources, DFS-037);
 - the frontend build itself (`angular.json`, the Gradle tasks): a build ticket built by hand, like DFS-044. A runtime package of the same Angular release that a screen needs (for example `@angular/router`, DFS-049 decision 7) may be added to `package.json` and `package-lock.json` in a component ticket that lists them in `touches`; any other dependency or build change is a build ticket.
