@@ -1,7 +1,7 @@
 ---
 id: CCW-031
 title: Run the story pipeline's routine phases on cheaper models
-status: ready
+status: in-review
 type: chore
 scope: [docs]
 archetype: none
@@ -114,12 +114,12 @@ Feature: Routine pipeline phases run on cheaper models
 
 ## Definition of done
 
-- [ ] Every scenario above is checked (mechanically or by reading, as recorded per scenario)
-- [ ] `tools/story-gate/story-gate selftest` passes
-- [ ] No files changed outside the paths listed under Touches
-- [ ] A search of `.claude/`, `CLAUDE.md` and `docs/design/` for the old `architect: {model: opus` form is recorded in `verification.md`, each remaining hit explained
-- [ ] `verification.md` opens with the `## Product owner review` section
-- [ ] After the first Sonnet-driven story, a note records whether its gates and notifications fired as the `story` skill specifies (an unverified assumption, decision 3)
+- [x] Every scenario above is checked (mechanically or by reading, as recorded per scenario) — verification.md, per criterion
+- [x] `tools/story-gate/story-gate selftest` passes — PASS, 126 cases
+- [x] No files changed outside the paths listed under Touches — `git diff main --stat`: three archetypes, lanes.md, the ticket's own folder
+- [x] A search of `.claude/`, `CLAUDE.md` and `docs/design/` for the old `architect: {model: opus` form is recorded in `verification.md`, each remaining hit explained
+- [x] `verification.md` opens with the `## Product owner review` section
+- [x] After the first Sonnet-driven story, a note records whether its gates and notifications fired as the `story` skill specifies (an unverified assumption, decision 3) — deferred to a follow-up by the user's say-so (2026-11-08): checked on the first Sonnet-driven story after merge
 
 ## Open questions
 

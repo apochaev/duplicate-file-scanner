@@ -4,7 +4,7 @@ version: 4
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
-  architect: {model: opus, effort: high, maxTurns: 25}
+  architect: {model: sonnet, effort: high, maxTurns: 25}
   verifier: {model: opus, effort: medium, maxTurns: 20}
   implementer: {model: sonnet, effort: medium, maxTurns: 40}
   test-author: {model: sonnet, effort: medium, maxTurns: 40}
