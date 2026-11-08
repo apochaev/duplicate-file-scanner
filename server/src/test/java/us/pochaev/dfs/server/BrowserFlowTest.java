@@ -171,6 +171,7 @@ class BrowserFlowTest {
         expandRoot();
 
         page.getByLabel("Pin for comparison: keep").click();
+        tab("Overlaps").click();
         assertThat(page.locator(".pinned-folder")).hasText("Pinned: " + fixture.keep());
         folderSelect("extra").click();
 
