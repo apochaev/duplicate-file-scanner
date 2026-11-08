@@ -458,6 +458,173 @@ class ResultApiTest {
         }
     }
 
+    // ---- DFS-059: duplicate totals ----
+
+    /** DFS-059's background tree: A, B, C (with deep) share contents; D holds one lone file. */
+    static Path totalsTree(Path tmp) throws IOException {
+        Path t = Files.createDirectories(tmp.resolve("tot")).toRealPath();
+        write(t.resolve("A/song.mp3"), ScanApiTest.bytes(3000, 21));
+        write(t.resolve("B/song.mp3"), ScanApiTest.bytes(3000, 21));
+        write(t.resolve("B/photo.jpg"), ScanApiTest.bytes(2000, 22));
+        write(t.resolve("C/photo.jpg"), ScanApiTest.bytes(2000, 22));
+        write(t.resolve("C/deep/photo-copy.jpg"), ScanApiTest.bytes(2000, 22));
+        write(t.resolve("C/unique.txt"), ScanApiTest.bytes(500, 23));
+        write(t.resolve("D/lone.bin"), ScanApiTest.bytes(700, 24));
+        return t;
+    }
+
+    static void link(Path link, Path existing) throws IOException {
+        try {
+            Files.createLink(link, existing);
+        } catch (IOException | UnsupportedOperationException | SecurityException e) {
+            Assumptions.abort("hard links cannot be created here: " + e);
+        }
+    }
+
+    static void assertDuplicates(JsonNode folder, long files, long bytes) {
+        assertEquals(files, folder.path("duplicateFiles").asLong(), folder.toString());
+        assertEquals(bytes, folder.path("duplicateBytes").asLong(), folder.toString());
+    }
+
+    @Test
+    @DisplayName("DFS-059.AC-1 Folders carry their duplicate numbers")
+    void foldersCarryDuplicateNumbers(@TempDir Path tmp, CapturedOutput output) throws Exception {
+        Path t = totalsTree(tmp);
+        try (TestServer server = TestServer.start()) {
+            String cookie = server.login(server.token(output.getOut()));
+            String id = completedScan(server, cookie, t);
+
+            JsonNode level = ok(server.get("/api/scans/" + id + "/folders?parent=" + q(t), cookie));
+
+            assertDuplicates(byName(level, "A"), 1, 3000);
+            assertDuplicates(byName(level, "B"), 2, 5000);
+            JsonNode c = byName(level, "C");
+            assertDuplicates(c, 2, 4000);
+            assertEquals(3, c.path("files").asLong());
+            assertEquals(4500, c.path("bytes").asLong());
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-059.AC-1 The root, a subfolder, and a folder without duplicates")
+    void rootAndFolderWithoutDuplicates(@TempDir Path tmp, CapturedOutput output) throws Exception {
+        Path t = totalsTree(tmp);
+        try (TestServer server = TestServer.start()) {
+            String cookie = server.login(server.token(output.getOut()));
+            String id = completedScan(server, cookie, t);
+
+            JsonNode roots = ok(server.get("/api/scans/" + id + "/folders", cookie));
+            assertDuplicates(roots.get(0), 5, 12000);
+
+            JsonNode inC = ok(server.get("/api/scans/" + id + "/folders?parent=" + q(t.resolve("C")), cookie));
+            assertDuplicates(byName(inC, "deep"), 1, 2000);
+
+            JsonNode level = ok(server.get("/api/scans/" + id + "/folders?parent=" + q(t), cookie));
+            assertDuplicates(byName(level, "D"), 0, 0);
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-059.AC-2 Hard links alone are not duplicates")
+    void hardLinksAloneAreNotDuplicates(@TempDir Path tmp, CapturedOutput output) throws Exception {
+        Path t = totalsTree(tmp);
+        write(t.resolve("E/a.bin"), ScanApiTest.bytes(900, 25));
+        link(t.resolve("E/b.bin"), t.resolve("E/a.bin"));
+        try (TestServer server = TestServer.start()) {
+            String cookie = server.login(server.token(output.getOut()));
+            String id = completedScan(server, cookie, t);
+
+            JsonNode level = ok(server.get("/api/scans/" + id + "/folders?parent=" + q(t), cookie));
+
+            assertDuplicates(byName(level, "E"), 0, 0);
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-059.AC-2 A hard-linked copy with another copy counts like files counts it")
+    void hardLinkedCopyWithAnotherCopy(@TempDir Path tmp, CapturedOutput output) throws Exception {
+        Path t = totalsTree(tmp);
+        link(t.resolve("B/song-link.mp3"), t.resolve("B/song.mp3"));
+        try (TestServer server = TestServer.start()) {
+            String cookie = server.login(server.token(output.getOut()));
+            String id = completedScan(server, cookie, t);
+
+            JsonNode level = ok(server.get("/api/scans/" + id + "/folders?parent=" + q(t), cookie));
+
+            JsonNode b = byName(level, "B");
+            assertEquals(b.path("files").asLong(), b.path("duplicateFiles").asLong(), b.toString());
+            assertEquals(b.path("bytes").asLong(), b.path("duplicateBytes").asLong(), b.toString());
+            assertEquals(3, b.path("duplicateFiles").asLong());
+
+            List<JsonNode> all = new ArrayList<>();
+            ok(server.get("/api/scans/" + id + "/folders", cookie)).forEach(all::add);
+            level.forEach(all::add);
+            ok(server.get("/api/scans/" + id + "/folders?parent=" + q(t.resolve("C")), cookie)).forEach(all::add);
+            for (JsonNode n : all) {
+                assertTrue(n.path("duplicateFiles").asLong() <= n.path("files").asLong(), n.toString());
+                assertTrue(n.path("duplicateBytes").asLong() <= n.path("bytes").asLong(), n.toString());
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-059.AC-3 Set totals over every page")
+    void setTotalsOverEveryPage(@TempDir Path tmp, CapturedOutput output) throws Exception {
+        Path t = totalsTree(tmp);
+        try (TestServer server = TestServer.start()) {
+            String cookie = server.login(server.token(output.getOut()));
+            String id = completedScan(server, cookie, t);
+
+            JsonNode page = ok(server.get("/api/scans/" + id + "/sets?page=0&size=1", cookie));
+
+            assertEquals(1, page.path("items").size(), page.toString());
+            assertEquals(2, page.path("totalItems").asLong());
+            assertEquals(5, page.path("totalFiles").asLong());
+            assertEquals(12000, page.path("totalBytes").asLong());
+            assertEquals(7000, page.path("totalReclaimableBytes").asLong());
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-059.AC-3 Set totals under a folder")
+    void setTotalsUnderAFolder(@TempDir Path tmp, CapturedOutput output) throws Exception {
+        Path t = totalsTree(tmp);
+        try (TestServer server = TestServer.start()) {
+            String cookie = server.login(server.token(output.getOut()));
+            String id = completedScan(server, cookie, t);
+
+            JsonNode page = ok(server.get("/api/scans/" + id + "/sets?under=" + q(t.resolve("A")), cookie));
+
+            assertEquals(1, page.path("totalItems").asLong());
+            assertEquals(2, page.path("totalFiles").asLong());
+            assertEquals(6000, page.path("totalBytes").asLong());
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-059.AC-4 Refusals are unchanged: 409 for a scan not completed, 400 for a relative path")
+    void refusalsAreUnchanged(@TempDir Path tmp, CapturedOutput output) throws Exception {
+        Path t = totalsTree(tmp);
+        try (TestServer server = TestServer.start(new Class<?>[]{HoldingExecutorConfiguration.class})) {
+            String cookie = server.login(server.token(output.getOut()));
+            String id = ScanApiTest.start(server, cookie, ScanApiTest.startBody(t));
+            for (String endpoint : List.of("folders", "sets")) {
+                HttpResponse<String> r = server.get("/api/scans/" + id + "/" + endpoint, cookie);
+                assertEquals(409, r.statusCode(), r.body());
+                assertEquals("SCAN_NOT_COMPLETED", ScanApiTest.body(r).path("code").asString(), r.body());
+            }
+        }
+        try (TestServer server = TestServer.start()) {
+            String cookie = server.login(server.token(output.getOut()));
+            String id = completedScan(server, cookie, t);
+
+            HttpResponse<String> r = server.get("/api/scans/" + id + "/sets?under=relative/path", cookie);
+
+            assertEquals(400, r.statusCode(), r.body());
+            assertEquals("RELATIVE_PATH", ScanApiTest.body(r).path("code").asString(), r.body());
+        }
+    }
+
     /** The text of a ui.md section, from its heading to the next heading of level 2 or 3. */
     private static String section(String markdown, String heading) {
         int start = markdown.indexOf(heading);

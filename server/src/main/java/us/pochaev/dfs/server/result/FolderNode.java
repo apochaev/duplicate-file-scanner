@@ -10,6 +10,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * {@code files} and {@code bytes} count the whole subtree; {@code directFiles} and {@code directBytes} only the
  * folder's own files (0 for a folder that holds only subfolders). Totals count paths as walked, so two hard links
  * count twice, as in {@code FolderTotal}.
+ * <p>
+ * {@code duplicateFiles} and {@code duplicateBytes} (DFS-059 decision 1) count, over the whole subtree, the counted
+ * files whose content has at least two physical copies in the scan, the way {@code files} and {@code bytes} count
+ * (each link path once), so {@code duplicateFiles <= files} and {@code duplicateBytes <= bytes} always hold. Hard
+ * links of one physical file with no other copy are not duplicates and count 0.
  */
 @Schema(name = "FolderNode")
 public record FolderNode(
@@ -23,6 +28,13 @@ public record FolderNode(
         long files,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Their summed size in bytes")
         long bytes,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+                description = "Counted files in the whole subtree whose content has at least two physical copies in"
+                        + " the scan, each link path once, as files counts; at most files")
+        long duplicateFiles,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+                description = "Their summed size in bytes; at most bytes")
+        long duplicateBytes,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Counted files directly in this folder")
         long directFiles,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Their summed size in bytes")

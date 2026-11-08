@@ -62,6 +62,7 @@ final class ResultIndex {
                 n.bytes += total.bytes();
             }
         }
+        addDuplicateTotals(nodes, roots, result.sets());
         for (Node n : nodes.values()) {
             // Link each node to its parent node (a root's parent is not a node unless roots are nested).
             Path parent = n.path.getParent();
@@ -115,7 +116,9 @@ final class ResultIndex {
 
     /**
      * One page of the sets with at least one link inside {@code under} (every set when {@code under} is null), each set
-     * with all its copies; the totals cover every matching set.
+     * with all its copies; the totals cover every matching set: {@code totalItems}, {@code totalFiles} (the link paths
+     * of the matching sets), {@code totalBytes} (each one's size times its physical copies) and
+     * {@code totalReclaimableBytes} (DFS-059 decision 2). Matching and paging are unchanged from DFS-047.
      *
      * @param under absolute, normalized and inside a root, or null
      * @param page  0 or more
@@ -124,17 +127,45 @@ final class ResultIndex {
     SetPage sets(Path under, int page, int size) {
         List<DuplicateSetView> matching = new ArrayList<>();
         long reclaimable = 0;
+        long files = 0;
+        long bytes = 0;
         for (IndexedSet s : sets) {
             if (under == null || s.paths.stream().anyMatch(p -> p.startsWith(under))) {
                 matching.add(s.view);
                 reclaimable += s.view.reclaimableBytes();
+                files += s.paths.size();
+                bytes += s.view.size() * s.view.copies().size();
             }
         }
         long from = (long) page * size;
         List<DuplicateSetView> items = from >= matching.size()
                 ? List.of()
                 : List.copyOf(matching.subList((int) from, (int) Math.min(matching.size(), from + size)));
-        return new SetPage(items, page, size, matching.size(), reclaimable);
+        return new SetPage(items, page, size, matching.size(), files, bytes, reclaimable);
+    }
+
+    /**
+     * Adds to every node from a link's folder up to its scan root (as the file totals roll up) one duplicate file and
+     * the set's size in duplicate bytes, for each link path of each set with at least two physical copies (DFS-059
+     * decision 1). A set whose links are all one physical file adds nothing, so {@code duplicateFiles <= files} and
+     * {@code duplicateBytes <= bytes} hold for every node. Runs once, while the index is built.
+     */
+    private static void addDuplicateTotals(Map<Path, Node> nodes, List<Path> roots, List<DuplicateSet> sets) {
+        for (DuplicateSet set : sets) {
+            if (set.copies().size() < 2) {
+                continue;
+            }
+            for (var file : set.files()) {
+                for (Path p = file.path().getParent(); p != null; p = p.getParent()) {
+                    if (!inside(roots, p)) {
+                        break;
+                    }
+                    Node n = node(nodes, p);
+                    n.duplicateFiles += 1;
+                    n.duplicateBytes += set.size();
+                }
+            }
+        }
     }
 
     private static boolean inside(List<Path> roots, Path path) {
@@ -179,6 +210,8 @@ final class ResultIndex {
         long bytes;
         long directFiles;
         long directBytes;
+        long duplicateFiles;
+        long duplicateBytes;
 
         Node(Path path) {
             this.path = path;
@@ -186,7 +219,8 @@ final class ResultIndex {
         }
 
         FolderNode view() {
-            return new FolderNode(path.toString(), name, files, bytes, directFiles, directBytes, !children.isEmpty());
+            return new FolderNode(path.toString(), name, files, bytes, duplicateFiles, duplicateBytes,
+                    directFiles, directBytes, !children.isEmpty());
         }
     }
 }

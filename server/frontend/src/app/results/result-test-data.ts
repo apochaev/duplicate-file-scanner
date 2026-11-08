@@ -38,7 +38,7 @@ export function scanEntry(id: string, update: Partial<ScanProgress> = {}, locati
 
 export function folder(path: string, update: Partial<FolderNode> = {}): FolderNode {
   const name = path.split(/[\\/]/).filter((part) => part.length > 0).pop() ?? path;
-  return { path, name, bytes: 900, files: 2, directBytes: 900, directFiles: 2, hasChildren: false, ...update };
+  return { path, name, bytes: 900, files: 2, directBytes: 900, directFiles: 2, hasChildren: false, duplicateFiles: 0, duplicateBytes: 0, ...update };
 }
 
 /** A set whose copies each list their links; the first link of a copy is the copy line. */
@@ -52,7 +52,7 @@ export function duplicateSet(copies: string[][], size = 2097152, digest = 'DIGES
 }
 
 export function setPage(items: DuplicateSetView[], update: Partial<SetPage> = {}): SetPage {
-  return { items, page: 0, size: 50, totalItems: items.length, totalReclaimableBytes: 0, ...update };
+  return { items, page: 0, size: 50, totalItems: items.length, totalReclaimableBytes: 0, totalFiles: 0, totalBytes: 0, ...update };
 }
 
 export const NOT_COMPLETED = { code: 'SCAN_NOT_COMPLETED', message: 'The scan has not completed' };

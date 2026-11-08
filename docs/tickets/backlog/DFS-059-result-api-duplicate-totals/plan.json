@@ -1,0 +1,124 @@
+{
+  "ticket": "DFS-059",
+  "archetype": {
+    "name": "endpoint",
+    "version": 4
+  },
+  "branch": "tickets/DFS-059-result-api-duplicate-totals",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-059-result-api-duplicate-totals",
+  "state": "done",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "high",
+          "turns": 34,
+          "wallClockSeconds": 568,
+          "outcome": "passed",
+          "note": "touches widened to result-test-data.ts with the user's approval, then checked: PASS touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/design.md",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/learnings.md",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/plan.json",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/progress.md",
+        "server/frontend/openapi.json",
+        "server/frontend/src/app/results/result-test-data.ts",
+        "server/src/main/java/us/pochaev/dfs/server/result/FolderNode.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/ResultIndex.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/SetPage.java"
+      ],
+      "commit": "4a92e6d7211282a8c99d6f39a94b1b422e2b1f7b"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 15,
+          "wallClockSeconds": 85,
+          "outcome": "passed",
+          "note": "touches: PASS; test-phase: PASS; red: 7 story tests fail with stubs, 45 other tests fail on the ticket's stub, 0 fail in declared classes, 853 other tests pass; traceability: 4 criteria traced through 7 scenarios"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/progress.md",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/test-plan.md",
+        "server/src/test/java/us/pochaev/dfs/server/ResultApiTest.java"
+      ],
+      "commit": "1f344a25a0d81c368ea9d940e77667c506a0620c"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 10,
+          "wallClockSeconds": 132,
+          "outcome": "passed",
+          "note": "green: 902 passed, 3 skipped; disabled, freeze, touches, stubs, traceability (4 criteria, 7 scenarios), consistency: PASS"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/progress.md",
+        "server/src/main/java/us/pochaev/dfs/server/result/ResultIndex.java"
+      ],
+      "commit": "737f147ecc2f52dd69ed41fbd77355c75a498c1a"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 20,
+          "wallClockSeconds": 112,
+          "outcome": "passed",
+          "note": "touches, consistency: PASS"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/DFS-059-ticket.md",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/learnings.md",
+        "docs/tickets/backlog/DFS-059-result-api-duplicate-totals/verification.md"
+      ],
+      "commit": "ca81a914f4b9692b7d526e6f2867c791f7e86020"
+    }
+  ],
+  "gates": [
+    {
+      "after": "done",
+      "status": "approved"
+    }
+  ],
+  "defects": []
+}

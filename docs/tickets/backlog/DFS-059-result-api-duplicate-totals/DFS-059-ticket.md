@@ -1,7 +1,7 @@
 ---
 id: DFS-059
 title: Duplicate totals for folders and sets in the result API
-status: ready
+status: in-review
 type: feature
 scope: []
 archetype: endpoint
@@ -16,6 +16,7 @@ touches:
   - server/frontend/openapi.json
   - CLAUDE.md
   - docs/design/ui.md
+  - server/frontend/src/app/results/result-test-data.ts
 blocked_reason:
 created: 2026-11-07
 updated: 2026-11-07
@@ -133,13 +134,13 @@ Feature: Duplicate totals in the result API
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] Each test's `@DisplayName` starts with its criterion ID (`DFS-059.AC-n`)
-- [ ] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
-- [ ] Every endpoint-archetype checklist item is addressed or marked not applicable with a reason
-- [ ] The committed `openapi.json` lists the four new fields as required integers (`int64`), and the frontend still compiles against the regenerated client
-- [ ] `CLAUDE.md` and `docs/design/ui.md` name the new fields (the verifier reads them)
-- [ ] No files changed outside the paths listed under Touches
+- [x] Every scenario above is an automated test and passes
+- [x] Each test's `@DisplayName` starts with its criterion ID (`DFS-059.AC-n`)
+- [x] `./gradlew build` is green (includes the ArchUnit tests, `OpenApiSpecTest` and the Vitest tests)
+- [x] Every endpoint-archetype checklist item is addressed or marked not applicable with a reason
+- [x] The committed `openapi.json` lists the four new fields as required integers (`int64`), and the frontend still compiles against the regenerated client
+- [x] `CLAUDE.md` and `docs/design/ui.md` name the new fields (the verifier reads them)
+- [x] No files changed outside the paths listed under Touches
 
 ## Open questions
 
