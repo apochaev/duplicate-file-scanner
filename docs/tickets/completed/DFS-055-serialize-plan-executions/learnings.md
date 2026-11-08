@@ -64,14 +64,14 @@ In `PlanExecutionServiceTest.lockIsHeldUntilTheRunIsRecordedTerminal` (Ending.FA
 
 ### DFS-055.L-13: Port exposure, POSIX file locks and race-scenario wording
 
-- Status: proposed
+- Status: parked
 - Impact: shared (the `tickets` skill's `refine`, `use-case` archetype)
 - Target: `.claude/skills/tickets/SKILL.md`, `refine`; `.claude/archetypes/use-case/impl-guide.md`
 - Change: three items. (a) Refinement checks that a port meant to be replaceable from an app has its type in an exported package (or is replaced through the use-case bean). (b) An adapter holding an OS file lock is the only code in the JVM that opens that file and never opens a second channel on it. (c) Race scenarios are worded by observable outcome, not by which thread runs what.
 - Evidence: L-1 (architect), L-7 and L-8 (verifier) above.
 - Recurrences: 1 (DFS-055)
 - Recommendation: park, since each happened once; apply item (a) if a ticket asks for a port bean again.
-- Decision:
+- Decision: parked 2026-11-07 by the user
 
 ### DFS-055.L-14: A test defect sent implement back before it had a commit
 
