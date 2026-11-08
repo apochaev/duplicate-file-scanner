@@ -43,6 +43,8 @@ Reported by the product owner on 2026-11-08: a scan listed files under `$RECYCLE
 
 4. **A scan root is always walked; only folders found below it are matched** (2026-11-08). `scan D:\$RECYCLE.BIN` or a path inside it is an explicit request, so the root itself and its parents are never tested against the names; a matching folder below the root is still skipped. No new error code, unlike `LOCATION_IN_QUARANTINE` (DFS-052), which exists because quarantined files would break the deletion invariants. Rejected: refusing such a location with a new error (a new code and exit path, lifted by `--no-default-excludes`, blocking the legitimate use of seeing what a recycle bin holds).
 
+5. **Only folders in this ticket** (2026-11-08). `Thumbs.db`, `ehthumbs.db`, `desktop.ini` and `.localized` stay deferred, as DFS-027 left them: a name filter in `application` is a second mechanism, DFS-027's condition for them (seeing them in a real scan) is not met, and a real `desktop.ini` can carry a user's folder settings. They get their own ticket if a scan shows them.
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
@@ -72,7 +74,9 @@ Feature: Known system folders are skipped
 - <to be refined>
 
 **Out of scope:**
-- <to be refined>
+- Further file names (`Thumbs.db`, `ehthumbs.db`, `desktop.ini`, `.localized`) (decision 5).
+- Deleting or quarantining anything in these folders.
+- A user-defined skip list (`--exclude=<glob>`), still deferred by DFS-027 decision 2.
 
 ## Definition of done
 
@@ -83,5 +87,4 @@ Feature: Known system folders are skipped
 
 ## Open questions
 
-- Whether the file names deferred by DFS-027 (`Thumbs.db`, `desktop.ini`, ...) join this ticket.
 - Archetype and gates.
