@@ -1,7 +1,7 @@
 ---
 id: DFS-059
 title: Duplicate totals for folders and sets in the result API
-status: in-review
+status: done
 type: feature
 scope: []
 archetype: endpoint
@@ -20,7 +20,7 @@ touches:
 blocked_reason:
 created: 2026-11-07
 updated: 2026-11-07
-completed:
+completed: 2026-11-07
 ---
 
 # DFS-059: Duplicate totals for folders and sets in the result API
