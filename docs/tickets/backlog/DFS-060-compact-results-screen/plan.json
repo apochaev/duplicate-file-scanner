@@ -113,6 +113,15 @@
           "wallClockSeconds": 592,
           "outcome": "passed",
           "note": "green: 973 passed, 3 skipped; disabled, freeze, touches, stubs, traceability (10 criteria, 14 scenarios), consistency: PASS; e2eTest 8/8 after the test fix"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "reopened for two layout defects found by the verifier's live check (folder name 0 px wide, path column narrower than the budget); CSS only; build green, e2eTest 8/8; visual recheck left to the verifier"
         }
       ],
       "artifacts": [
@@ -127,9 +136,10 @@
         "server/frontend/src/app/results/result-format.ts",
         "server/frontend/src/app/results/result-path.ts",
         "server/frontend/src/app/results/result-screen.ts",
+        "server/frontend/src/app/results/sets-tab.css",
         "server/frontend/src/app/results/sets-tab.ts"
       ],
-      "commit": "6d5d7ffba1892d966d56a642b8eb13bd7e2348f7"
+      "commit": "90dadf887763790fb676fe499b1fa5dafe11ee0e"
     },
     {
       "id": "verify",
@@ -166,6 +176,13 @@
       "phase": "implement",
       "route": "test-author",
       "summary": "e2e flow DFS-053.AC-6 asserted the Pinned label before opening the Overlaps tab",
+      "status": "closed"
+    },
+    {
+      "id": 3,
+      "phase": "verify",
+      "route": "implementer",
+      "summary": "live check: folder names invisible (0 px column), path column narrower than the 62-char budget; no automated test checked visibility",
       "status": "closed"
     }
   ]
