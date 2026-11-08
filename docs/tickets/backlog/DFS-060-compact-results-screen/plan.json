@@ -122,6 +122,15 @@
           "wallClockSeconds": 0,
           "outcome": "passed",
           "note": "reopened for two layout defects found by the verifier's live check (folder name 0 px wide, path column narrower than the budget); CSS only; build green, e2eTest 8/8; visual recheck left to the verifier"
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "high",
+          "turns": 81,
+          "wallClockSeconds": 884,
+          "outcome": "passed",
+          "note": "second reopen for layout (folder name 0 px; sets table overflow); resumed once after the 40-turn cap; screenshot of the built jar viewed by the orchestrator; green 973 passed; e2eTest 8/8; all gate checks PASS"
         }
       ],
       "artifacts": [
@@ -130,16 +139,19 @@
         "docs/tickets/backlog/DFS-060-compact-results-screen/learnings.md",
         "docs/tickets/backlog/DFS-060-compact-results-screen/progress.md",
         "server/frontend/src/app/results/folder-tree.css",
+        "server/frontend/src/app/results/folder-tree.html",
         "server/frontend/src/app/results/folder-tree.ts",
         "server/frontend/src/app/results/path-copy.ts",
         "server/frontend/src/app/results/result-density.ts",
         "server/frontend/src/app/results/result-format.ts",
         "server/frontend/src/app/results/result-path.ts",
+        "server/frontend/src/app/results/result-screen.css",
         "server/frontend/src/app/results/result-screen.ts",
         "server/frontend/src/app/results/sets-tab.css",
+        "server/frontend/src/app/results/sets-tab.html",
         "server/frontend/src/app/results/sets-tab.ts"
       ],
-      "commit": "90dadf887763790fb676fe499b1fa5dafe11ee0e"
+      "commit": "d4c1e745af9eb8171ea1b85069ecb7e84df6d295"
     },
     {
       "id": "verify",
@@ -183,6 +195,13 @@
       "phase": "verify",
       "route": "implementer",
       "summary": "live check: folder names invisible (0 px column), path column narrower than the 62-char budget; no automated test checked visibility",
+      "status": "closed"
+    },
+    {
+      "id": 4,
+      "phase": "verify",
+      "route": "implementer",
+      "summary": "first layout fix left folder names at 0 px and made the sets table scroll sideways, hiding Reclaimable",
       "status": "closed"
     }
   ]
