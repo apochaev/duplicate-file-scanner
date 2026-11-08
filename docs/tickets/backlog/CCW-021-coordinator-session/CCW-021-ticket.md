@@ -19,7 +19,7 @@ touches:
   - tools/story-gate
 blocked_reason:
 created: 2026-11-01
-updated: 2026-11-02
+updated: 2026-11-07
 completed:
 ---
 
@@ -230,14 +230,14 @@ Feature: Coordinator session
 
 ## Definition of done
 
-- [ ] Every scenario above is checked as marked (`[run]` exercised for real, `[read]` read) and recorded in `verification.md`, with the commands, messages and shas of each `[run]`
-- [ ] The CCW-018.L-1 search for every mention of the old message rule ("three moments", "exactly three", "no others", "only when a request is filed", and spelled-out counts such as "three" near "message") is recorded in `verification.md` with its hits
-- [ ] `tools/story-gate/story-gate selftest` passes
-- [ ] Whether the SessionStart hook's input carries the session's name is checked against the installed Claude Code and recorded in `verification.md`, with the route taken (hook input or `DFS_SESSION`)
-- [ ] The catch-up's run time and its output size (lines) at a real session start are recorded in `verification.md`
-- [ ] Message 3 sent to every running session listed in `lanes.md` when the branch merges
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `verification.md` opens with the `## Product owner review` section
+- [x] Every scenario above is checked as marked (`[run]` exercised for real, `[read]` read) and recorded in `verification.md`, with the commands, messages and shas of each `[run]` (verification.md: 11 run, 4 read, and AC-6, AC-13 and AC-14 from live use after the merge, checked 2026-11-07)
+- [x] The CCW-018.L-1 search for every mention of the old message rule ("three moments", "exactly three", "no others", "only when a request is filed", and spelled-out counts such as "three" near "message") is recorded in `verification.md` with its hits (verification.md, "AC-8 and the CCW-018.L-1 search")
+- [x] `tools/story-gate/story-gate selftest` passes (126 cases, run on c89a9d9 before the merge)
+- [x] Whether the SessionStart hook's input carries the session's name is checked against the installed Claude Code and recorded in `verification.md`, with the route taken (hook input or `DFS_SESSION`) (hook input's `session_title`; dfs-product's `/clear` printed the catch-up with `DFS_SESSION` unset, Claude Code 2.1.316)
+- [x] The catch-up's run time and its output size (lines) at a real session start are recorded in `verification.md` (3.65 s, 6 lines at a real start against main)
+- [x] Message 3 sent to every running session listed in `lanes.md` when the branch merges (dfs-backend, dfs-frontend, dfs-product after `c818603` and again after `f70f45b`)
+- [x] No files changed outside the paths listed under Touches (verification.md, "Touches": `git diff --name-only 5a7cb79 27caec0`)
+- [x] `verification.md` opens with the `## Product owner review` section
 
 ## Open questions
 
