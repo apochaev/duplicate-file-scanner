@@ -6,7 +6,6 @@ type: feature
 scope: []
 archetype: component
 gates: [design, done]
-autorun: true
 priority: high
 lane: frontend
 depends_on: [DFS-059]

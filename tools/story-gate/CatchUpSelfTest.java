@@ -21,8 +21,6 @@ final class CatchUpSelfTest {
             # Lanes
 
             ```
-            dfs-backend: backend
-            dfs-frontend: frontend,harness
             dfs-product: coordinator
             ```
             """;
@@ -38,9 +36,9 @@ final class CatchUpSelfTest {
                         "dfs-backend"));
         expect(problems, "AC-12 name from DFS_SESSION when the input has no title", "dfs-product",
                 CatchUp.sessionName("{\"session_id\":\"x\",\"source\":\"startup\"}", "dfs-product"));
-        expect(problems, "AC-12 lane map roles", "coordinator|frontend, harness|null",
-                CatchUp.roleOf(LANES, "dfs-product") + "|" + CatchUp.roleOf(LANES, "dfs-frontend") + "|"
-                        + CatchUp.roleOf(LANES, "dfs-other"));
+        expect(problems, "AC-12 lane map roles", "coordinator|null|backend, frontend",
+                CatchUp.roleOf(LANES, "dfs-product") + "|" + CatchUp.roleOf(LANES, "CCW-099") + "|"
+                        + CatchUp.roleOf("```\ndfs-x: backend,frontend\n```\n", "dfs-x"));
         CatchUp.Outcome none = CatchUp.run(Path.of("nowhere"), null, true, "{\"source\":\"clear\"}", null);
         expect(problems, "AC-15 no session name: no output, exit 0", "''/0", "'" + none.text() + "'/" + none.exit());
 
@@ -144,8 +142,8 @@ final class CatchUpSelfTest {
             write(tree.resolve("docs/tickets/backlog/DFS-051-x/DFS-051-ticket.md"),
                     "---\nid: DFS-051\nstatus: in-progress\n---\nSecret ticket text\n");
 
-            CatchUp.Outcome lane = CatchUp.run(tree, "dfs-backend", false, null, null);
-            expect(problems, "AC-12 a lane session prints nothing", "''/0", "'" + lane.text() + "'/" + lane.exit());
+            CatchUp.Outcome lane = CatchUp.run(tree, "CCW-099", false, null, null);
+            expect(problems, "CCW-026.AC-7 a ticket session prints nothing from the hook view", "''/0", "'" + lane.text() + "'/" + lane.exit());
 
             CatchUp.Outcome out = CatchUp.run(tree, null, true, "{\"session_title\":\"dfs-product\"}", null);
             String text = out.text().replaceAll("main at [0-9a-f]+", "main at <sha>");
@@ -167,8 +165,8 @@ final class CatchUpSelfTest {
     }
 
     /**
-     * CCW-022.AC-8 on a real repository: a backend ticket and a frontend ticket each have a worktree with a plan
-     * awaiting approval; dfs-backend sees only its own, the coordinator and an unlisted name see nothing.
+     * CCW-026.AC-8 on a real repository: a backend ticket at a gate and a harness ticket that is blocked each have a
+     * worktree; a ticket-named session sees both with a launch line, the coordinator and no name see nothing.
      */
     private static List<String> laneCase() {
         List<String> problems = new ArrayList<>();
@@ -180,35 +178,38 @@ final class CatchUpSelfTest {
             write(main.resolve("docs/tickets/lanes.md"), LANES);
             write(main.resolve("docs/tickets/backlog/DFS-061-b/DFS-061-ticket.md"),
                     "---\nid: DFS-061\nlane: backend\narchetype: pipeline-stage\n---\nSecret ticket text\n");
-            write(main.resolve("docs/tickets/backlog/DFS-062-f/DFS-062-ticket.md"),
-                    "---\nid: DFS-062\nlane: frontend\narchetype: pipeline-stage\n---\nSecret ticket text\n");
+            write(main.resolve("docs/tickets/backlog/CCW-062-h/CCW-062-ticket.md"),
+                    "---\nid: CCW-062\nlane: harness\narchetype: pipeline-stage\n---\nSecret ticket text\n");
             git(main, "add", "-A");
             git(main, "commit", "-q", "--no-verify", "-m", "base");
-            String plan = """
+            String gate = """
                     {"state": "awaiting-approval", "phases": [{"id": "design", "status": "done"}],
                      "gates": [{"after": "design", "status": "pending"}]}""";
-            for (String[] t : new String[][] {{"DFS-061", "b"}, {"DFS-062", "f"}}) {
+            String blocked = """
+                    {"state": "blocked", "phases": [{"id": "design", "status": "done"}, {"id": "tests", "status": "pending"}],
+                     "gates": []}""";
+            for (String[] t : new String[][] {{"DFS-061", "b", gate}, {"CCW-062", "h", blocked}}) {
                 Path tree = tmp.resolve("repo-" + t[0] + "-" + t[1]);
                 git(main, "worktree", "add", "-q", "-b", "tickets/" + t[0] + "-" + t[1], tree.toString());
-                write(tree.resolve("docs/tickets/backlog/" + t[0] + "-" + t[1] + "/plan.json"), plan);
+                write(tree.resolve("docs/tickets/backlog/" + t[0] + "-" + t[1] + "/plan.json"), t[2]);
             }
-            CatchUp.Outcome backend = CatchUp.runLanes(main, "dfs-backend", null);
-            expect(problems, "CCW-022.AC-8 a lane session sees its own worktree and not another lane's", String.join("\n",
-                    "Catch-up for dfs-backend (lanes: backend):",
-                    "started tickets in your lanes:",
-                    "- DFS-061 ../repo-DFS-061-b: plan awaiting-approval at the gate after design; next: "
-                            + "/story approve DFS-061", "") + "/0", backend.text() + "/" + backend.exit());
-            if (backend.text().contains("DFS-062") || backend.text().contains("Secret")) {
-                problems.add("CCW-022.AC-8 the lane view shows another lane's ticket or ticket content");
-            }
-            CatchUp.Outcome frontend = CatchUp.runLanes(main, "dfs-frontend", null);
-            if (!frontend.text().contains("DFS-062") || frontend.text().contains("DFS-061")) {
-                problems.add("CCW-022.AC-8 the frontend lane view is wrong: " + frontend.text());
-            }
+            CatchUp.Outcome session = CatchUp.runLanes(main, "CCW-099", null);
+            String text = session.text();
+            expect(problems, "CCW-026.AC-8 a ticket-named session sees every lane with launch lines", true,
+                    text.contains("- DFS-061 ../repo-DFS-061-b: plan awaiting-approval at the gate after design; next: "
+                            + "claude -n DFS-061 --permission-mode auto \"/story approve DFS-061\"")
+                    && text.contains("- CCW-062 ../repo-CCW-062-h: plan blocked in phase tests; next: "
+                            + "claude -n CCW-062 --permission-mode auto \"/story run CCW-062\"")
+                    && session.exit() == 0);
+            if (text.contains("Secret")) problems.add("CCW-026.AC-8 the view shows ticket content");
             CatchUp.Outcome coordinator = CatchUp.runLanes(main, "dfs-product", null);
-            CatchUp.Outcome stranger = CatchUp.runLanes(main, "dfs-other", null);
-            expect(problems, "CCW-022.AC-8 the coordinator and an unlisted name get nothing", "''|''",
-                    "'" + coordinator.text() + "'|'" + stranger.text() + "'");
+            CatchUp.Outcome nameless = CatchUp.runLanes(main, null, null);
+            expect(problems, "CCW-026.AC-8 the coordinator and no name get nothing", "''|''",
+                    "'" + coordinator.text() + "'|'" + nameless.text() + "'");
+            CatchUp.Outcome hook = CatchUp.run(main, null, true, "{\"session_title\":\"dfs-product\"}", null);
+            CatchUp.Outcome hookOther = CatchUp.run(main, null, true, "{\"session_title\":\"CCW-099\"}", null);
+            expect(problems, "CCW-026.AC-7 the hook prints for the coordinator and nothing for a ticket name", true,
+                    hook.text().startsWith("Catch-up for dfs-product (coordinator)") && hookOther.text().isEmpty());
         } catch (IOException | RuntimeException e) {
             problems.add("the lane case failed to run: " + e.getClass().getSimpleName() + ": " + e.getMessage());
         } finally {
