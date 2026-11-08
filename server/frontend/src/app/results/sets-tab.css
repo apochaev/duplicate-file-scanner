@@ -1,48 +1,130 @@
-.sets-summary {
+.sets-filter {
   margin: 8px 0;
 }
 
-.duplicate-set {
-  margin: 12px 0;
+.sets-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
 }
 
-.set-copies {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.sets-table th,
+.sets-table td {
+  padding: 2px 8px;
+  text-align: left;
+  vertical-align: middle;
+  overflow: hidden;
 }
 
-.physical-copy {
-  padding: 4px 0;
+.density-comfortable .sets-table th,
+.density-comfortable .sets-table td {
+  padding: 8px;
 }
 
-.file-link {
+.col-file {
+  width: auto;
+}
+
+.col-modified {
+  width: 6.5rem;
+}
+
+.col-reclaimable {
+  width: 10rem;
+}
+
+.col-copy {
+  width: 5rem;
+}
+
+thead th {
+  font-weight: normal;
+  color: var(--mat-sys-on-surface-variant, #555);
+  border-bottom: 1px solid var(--mat-sys-outline-variant, #ccc);
+}
+
+.set-header {
+  background: var(--mat-sys-surface-container, #f3edf7);
+}
+
+.set-title {
+  font-weight: normal;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.set-name {
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.set-count,
+.set-size,
+time,
+.path-folders {
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.set-count::after {
+  content: ' ·';
+}
+
+.reclaimable-cell {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  padding: 2px 4px;
 }
 
-.file-path {
+.bar {
+  flex: 1;
+  max-width: 6rem;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--mat-sys-surface-variant, #e7e0ec);
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--mat-sys-primary, #6750a4);
+}
+
+.set-reclaimable-bytes {
+  font-weight: 500;
+}
+
+.copy-path {
+  white-space: nowrap;
+}
+
+.short-path {
   font-family: monospace;
-  overflow-wrap: anywhere;
 }
 
-.hard-link {
-  margin-left: 24px;
-  padding-left: 12px;
-  border-left: 2px solid var(--mat-sys-outline-variant, #ccc);
+.path-name {
+  font-weight: 500;
+}
+
+.badge {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--mat-sys-outline-variant, #ccc);
+  border-radius: 8px;
+  font-size: 0.8em;
 }
 
 .in-selected-folder {
   background: var(--mat-sys-secondary-container, #e8def8);
 }
 
-time,
-.hard-link-label,
-.selected-label {
-  color: var(--mat-sys-on-surface-variant, #555);
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
 .sets-error {

@@ -1,0 +1,15 @@
+{
+  "ticket": "DFS-060",
+  "archetype": {"name": "component", "version": 4},
+  "branch": "tickets/DFS-060-compact-results-screen",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-060-compact-results-screen",
+  "state": "running",
+  "phases": [
+    {"id": "design", "agent": "architect", "after": [], "status": "pending", "runs": [], "artifacts": [], "commit": null},
+    {"id": "tests", "agent": "test-author", "after": ["design"], "status": "pending", "runs": [], "artifacts": [], "commit": null},
+    {"id": "implement", "agent": "implementer", "after": ["tests"], "status": "pending", "runs": [], "artifacts": [], "commit": null},
+    {"id": "verify", "agent": "verifier", "after": ["implement"], "status": "pending", "runs": [], "artifacts": [], "commit": null}
+  ],
+  "gates": [{"after": "design", "status": "pending"}, {"after": "done", "status": "pending"}],
+  "defects": []
+}

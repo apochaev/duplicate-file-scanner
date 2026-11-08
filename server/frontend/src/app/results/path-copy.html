@@ -1,10 +1,10 @@
-<button mat-button type="button" class="copy-folder" [attr.aria-label]="'Copy folder path of ' + path()" (click)="copy()">
-  Copy folder path
+<button mat-button type="button" class="copy-path-button" [attr.aria-label]="'Copy path of ' + path()" (click)="copy()">
+  Copy
 </button>
 @if (copied()) {
-  <span class="copy-success" role="status">Folder path copied</span>
+  <span class="copy-success" role="status">Copied</span>
 }
 @if (failure(); as message) {
   <span class="copy-error" role="alert">{{ message }}</span>
-  <code class="copy-fallback" tabindex="0" aria-label="Folder path to copy by hand">{{ folder() }}</code>
+  <code class="copy-fallback" tabindex="0" aria-label="Path to copy by hand">{{ path() }}</code>
 }

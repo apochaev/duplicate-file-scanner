@@ -1,7 +1,7 @@
 ---
 id: DFS-060
 title: Compact read-only results screen
-status: ready
+status: in-progress
 type: feature
 scope: []
 archetype: component
