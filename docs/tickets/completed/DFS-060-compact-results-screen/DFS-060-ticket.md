@@ -1,7 +1,7 @@
 ---
 id: DFS-060
 title: Compact read-only results screen
-status: in-review
+status: done
 type: feature
 scope: []
 archetype: component
@@ -17,7 +17,7 @@ touches:
 blocked_reason:
 created: 2026-11-07
 updated: 2026-11-08
-completed:
+completed: 2026-11-08
 ---
 
 # DFS-060: Compact read-only results screen
