@@ -1,7 +1,7 @@
 ---
 id: CCW-028
 title: Apply the read-before-edit rule to the implementer, test-author and verifier
-status: in-progress
+status: in-review
 type: chore
 scope: [docs]
 archetype: none
