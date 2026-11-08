@@ -1,7 +1,7 @@
 ---
 id: CCW-025
 title: Drop the coordinator's ready hand-off message
-status: draft
+status: cancelled
 type: chore
 scope: [docs]
 archetype:
@@ -14,8 +14,8 @@ depends_on: [CCW-021]
 touches: []
 blocked_reason:
 created: 2026-11-07
-updated: 2026-11-07
-completed:
+updated: 2026-11-08
+completed: 2026-11-08
 ---
 
 # CCW-025: Drop the coordinator's ready hand-off message
@@ -74,3 +74,7 @@ Feature: The coordinator does not message on ready
 - Should an owner's session start print its lane's dispatchable tickets, so a ready ticket is seen without a message?
 - CCW-021 is in progress in `dfs-harness`'s worktree: fold this into it, or land after it (`depends_on`)?
 - Archetype (`none` likely, as CCW-017, CCW-018, CCW-021).
+
+## Resolution
+
+Cancelled 2026-11-08, superseded by CCW-026: its decision 3 removes lane ownership, messages 1 to 3 and the coordinator's ready hand-off, and decisions 1, 5 and 6 replace them with printed `claude -n` launch lines, which also answers this ticket's open question. Until CCW-026 lands, the coordinator sends no ready hand-offs and names the command for the user.
