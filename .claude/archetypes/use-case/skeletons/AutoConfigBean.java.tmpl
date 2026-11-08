@@ -1,0 +1,8 @@
+    // In ScannerAutoConfiguration (scanner-spring). Written for real at design, NOT stubbed.
+    // The bean calls the factory and nothing else; an app's own bean wins.
+    /** <One line: what the bean is and that an app's own bean replaces it.> */
+    @Bean
+    @ConditionalOnMissingBean
+    public <PortName> <beanName>() {
+        return ScannerFactories.<factoryMethod>();
+    }

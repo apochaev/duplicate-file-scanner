@@ -1,0 +1,17 @@
+package us.pochaev.dfs.scanner.domain.usecases.query;
+
+import us.pochaev.dfs.scanner.domain.model.Result;
+
+/**
+ * <One-line purpose.> Stateless and synchronous: runs on the caller's thread, writes nothing
+ * (say so in the Javadoc, as DFS-034's VerifyPlanContent does).
+ */
+public interface <PortName> {
+
+    /**
+     * @param <arg> <meaning>
+     * @return <what Success carries, and which Failure codes an expected outcome maps to>
+     * @throws NullPointerException if any argument is null
+     */
+    Result<<ValueType>> <method>(<ArgType> <arg>);
+}

@@ -1,6 +1,6 @@
 ---
 name: use-case
-version: 10
+version: 11
 phases: [design, test, implement, verify]
 gates: [design, done]
 models:
@@ -15,7 +15,7 @@ models:
 
 Applies to a ticket that adds or changes a use case (a command or query port in `domain.usecases`, CLAUDE.md's CQS split) and the `application` service that implements it, including a service that composes other parts (for example the scan pipeline) and runs work asynchronously on a caller-supplied executor. It does not apply to a stage of the detection pipeline: those use `pipeline-stage`. CLI and server wiring get their own archetypes as they come up (D4).
 
-Written from what refining DFS-018 (track scans asynchronously) surfaced (CCW-011). DFS-018 is the first ticket to carry `archetype: use-case`. It has no `skeletons/` yet; a second use-case ticket will show what they should look like.
+Written from what refining DFS-018 (track scans asynchronously) surfaced (CCW-011). DFS-018 is the first ticket to carry `archetype: use-case`. `skeletons/` holds a stateless synchronous query (the shape DFS-022, DFS-032, DFS-033 and DFS-034 share): the port, the service, the factory method and the auto-configuration bean; an asynchronous command has none yet. The architect reads them (DFS-034.L-1).
 
 ## Where files go
 
@@ -51,6 +51,9 @@ Work through every item that applies to this use case; skip and say why for one 
 12. **Retention.** How long is per-request state kept, and is removing or evicting it in scope? If not, is it named under Out of scope with the reason and the ticket or condition that will need it? (DFS-018 decision 9: kept until the process exits; eviction deferred to a long-running server.)
 13. **Testability.** Can every state and transition be pinned without timing? A manual executor for queued states, fakes that block on a latch for running and stopping states, races tested by applying the transitions in both orders, one real-thread test with a bounded timeout, and no `Thread.sleep`. Does a composed collaborator that is hard to drive from its own ports (a `final` class built from several ports) get a package-private seam, and does the ticket name the one-line change to that collaborator in `touches`? Name the seam method after the collaborator's existing method (for example `scan`, not `run`), so the collaborator needs no delegating stub. (DFS-018 decisions 10, 12.)
 14. **Exported surface.** Which new or changed types does a caller see (ports, results, snapshots, status and error enums), and are they all in already exported packages? If a new package is exported, is `module-info.java` listed in `touches` explicitly (a package entry does not cover it; CCW-003)? Which first-slice types does the ticket replace, and does it say so?
+15. **Port fakes.** Before adding an abstract method to a port, search the test tree for `implements <Port>` and list each fake in `design.md` for the test-author, or use a default method where the semantics allow. (DFS-055.L-12a)
+16. **Held resources.** For a resource held per request (a lock, an open file), `design.md` lists its release on every way a run can end, and tests end every request, since Windows cannot delete a locked file in a `@TempDir`. (DFS-055.L-12b)
+17. **Side-effect order.** An ordering decision places every existing side effect of the operation (manifest creation, records), not only the new steps. (DFS-055.L-12c)
 
 ## Extra done-items
 

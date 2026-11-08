@@ -30,6 +30,8 @@ How to build the fixtures each criterion needs (files in a `@TempDir`, records b
 
 ## State and transitions
 
+Synchronous use case: say so and write "None" here and under "Concurrency and atomicity" (DFS-034).
+
 The states a request goes through, the legal transitions and what triggers each, and which states are terminal. A table is enough:
 
 | From | Event | To |
@@ -71,7 +73,7 @@ One line per item of `archetype.md`'s edge-case checklist: how this use case add
 
 ## Expected breakage
 
-Existing test classes (not this ticket's story tests) that the stubs will make fail without the stub in the failure or its root cause, for example a CLI or end-to-end test that reduces the stub to an exit code, a FAILED status or an empty result. One bullet per class, `` - `<SimpleClassName>`: <one-line reason> ``, with the class's simple name only (no package). The red gate reads only bullets under this exact heading and accepts every failure in a declared class; each of those tests must still pass at `green`. A test that fails directly on this ticket's stub needs no entry. "None." if no such class exists.
+Existing test classes (not this ticket's story tests) that the stubs will make fail without the stub in the failure or its root cause, for example a CLI or end-to-end test that reduces the stub to an exit code, a FAILED status or an empty result. One bullet per class, `` - `<SimpleClassName>`: <one-line reason> ``, with the class's simple name only (no package). The red gate reads only bullets under this exact heading and accepts every failure in a declared class; each of those tests must still pass at `green`. A test that fails directly on this ticket's stub needs no entry. "None." if no such class exists. When a stub sits on an existing happy path (for example a method an existing service now delegates to), every existing test that runs it fails with the stub's exception: list those classes here as expected red; "None." is wrong in that case (DFS-055.L-11).
 
 ## Open design notes (as of the design phase)
 

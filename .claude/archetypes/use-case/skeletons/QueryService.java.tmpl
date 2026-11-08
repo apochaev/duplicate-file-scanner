@@ -1,0 +1,27 @@
+package us.pochaev.dfs.scanner.application;
+
+import us.pochaev.dfs.scanner.domain.model.Result;
+import us.pochaev.dfs.scanner.domain.usecases.query.<PortName>;
+
+import java.util.Objects;
+
+/**
+ * <One-line purpose.> Its only fields are secondary ports (checklist item 6): no per-call
+ * state in fields, so concurrent calls share nothing.
+ */
+public final class <ServiceName> implements <PortName> {
+
+    private final <SecondaryPort> <field>;
+
+    public <ServiceName>(<SecondaryPort> <field>) {
+        throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+        // implementer: `this.<field> = Objects.requireNonNull(<field>, "<field>");`
+        // (a stub that throws first keeps a null-argument test red, DFS-004.L-1).
+    }
+
+    @Override
+    public Result<<ValueType>> <method>(<ArgType> <arg>) {
+        throw new UnsupportedOperationException("not implemented: <TICKET-ID>");
+        // implementer: `Objects.requireNonNull(<arg>, "<arg>");` as the first line.
+    }
+}

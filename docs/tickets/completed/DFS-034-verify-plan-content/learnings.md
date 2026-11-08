@@ -12,14 +12,14 @@
 
 ### DFS-034.L-1: use-case archetype has no skeletons for the stateless synchronous query
 
-- Status: proposed
+- Status: applied
 - Impact: shared (touches `.claude/archetypes/`, read by the architect on every use-case ticket)
 - Target: `.claude/archetypes/use-case/skeletons/` (new)
 - Change: add a skeleton set for a stateless synchronous query: the port in `domain.usecases.query`, a service in `application` whose fields are ports only, the `ScannerFactories` method, and the `@ConditionalOnMissingBean` bean that calls it; update `archetype.md`'s "It has no `skeletons/` yet" line.
 - Evidence: DFS-034 learnings.md (architect note): DFS-022, DFS-032, DFS-033 and DFS-034 share this shape; `archetype.md` says "a second use-case ticket will show what they should look like". Only `pipeline-stage` and `wiring` have `skeletons/` today.
 - Recurrences: 1 (DFS-034)
 - Recommendation: apply; four tickets have settled the shape, and the architect spent 28 turns partly rebuilding it.
-- Decision:
+- Decision: applied 2026-11-07 by the user; commit `docs: apply DFS-055.L-9, DFS-055.L-10, DFS-055.L-11, DFS-055.L-12, DFS-055.L-14, DFS-034.L-1`
 
 ### DFS-034.L-2: a chunked compare checks cancel before end-of-file and drops a finished entry
 
