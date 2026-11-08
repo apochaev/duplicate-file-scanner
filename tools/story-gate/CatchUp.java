@@ -22,15 +22,16 @@ import java.util.stream.Stream;
  * </pre>
  *
  * It prints only when the name maps to {@code coordinator} in {@code docs/tickets/lanes.md}; in any other session, or
- * with no name, it prints nothing and exits 0, so the hook is silent in lane sessions. In hook mode it always exits 0
+ * with no name, it prints nothing and exits 0, so the hook is silent in ticket sessions. In hook mode it always exits 0
  * (a failure is one line the coordinator can read); otherwise a failure exits 2.
  *
  * <pre>
- * story-gate catch-up --session &lt;name&gt; --lanes   a lane session's /tickets list (CCW-022): only the worktrees of
- *                                                tickets in that session's own lanes, each with its next command
+ * story-gate catch-up --session &lt;name&gt; --lanes   any other session's /tickets list (CCW-022, CCW-026): the
+ *                                                worktrees of every started ticket in every lane, each with its
+ *                                                next command as a launch line
  * </pre>
  *
- * A name that maps to lanes gets that view; the coordinator, an unlisted name or no name gets nothing.
+ * Every name except the coordinator's gets that view; the coordinator or no name gets nothing.
  */
 final class CatchUp {
 
@@ -73,8 +74,9 @@ final class CatchUp {
     }
 
     /**
-     * A lane session's view (CCW-022): the worktrees of tickets whose {@code lane} is one of the session's lanes, each
-     * with its {@code plan.json} state and next command. Empty text for the coordinator, an unlisted name or no name.
+     * The view of every session that is not the coordinator (CCW-022, CCW-026): all started tickets of every lane,
+     * each with its worktree, {@code plan.json} state and next command as a launch line. Empty text for the
+     * coordinator or no name; any other name, listed in {@code lanes.md} or not, gets the view.
      */
     static Outcome runLanes(Path root, String sessionArg, String envName) {
         String name = sessionArg != null ? sessionArg : sessionName(null, envName);
@@ -82,32 +84,36 @@ final class CatchUp {
         try {
             Path main = mainTree(root);
             String lanesText = readOrNull(main.resolve("docs/tickets/lanes.md"));
-            String role = lanesText == null ? null : roleOf(lanesText, name);
-            if (role == null || ROLE.equals(role)) return new Outcome("", 0);
-            List<String> lanes = List.of(role.split(", "));
+            if (lanesText != null && ROLE.equals(roleOf(lanesText, name))) return new Outcome("", 0);
             List<String> lines = new ArrayList<>();
             for (Worktree t : worktrees(Git.run(main, "worktree", "list", "--porcelain", "-z"))) {
                 Path path = Path.of(t.path());
                 String id = ticketOf(t.branch());
                 if (id == null || samePath(path, main)) continue;
                 String ticket = ticketTextOrNull(path, id);
-                if (ticket == null || !lanes.contains(frontValue(ticket, "lane"))) continue;
+                if (ticket == null) continue;
                 lines.add(laneLine(id, relative(main, path), planTextOrNull(path, id), frontValue(ticket, "archetype"),
                         frontValue(ticket, "status"), learningsNonEmpty(path, id)));
             }
-            StringBuilder out = new StringBuilder("Catch-up for " + name + " (lanes: " + role + "):\n");
-            section(out, "started tickets in your lanes", lines, "none");
+            StringBuilder out = new StringBuilder("Catch-up for " + name + " (started tickets, every lane):\n");
+            section(out, "started tickets", lines, "none");
             return new Outcome(out.toString(), 0);
         } catch (RuntimeException e) {
             return new Outcome("catch-up could not run: " + e.getMessage() + "\n", 2);
         }
     }
 
-    /** {@code CCW-022 ../repo-CCW-022-x: plan awaiting-approval at the gate after design; next: /story approve CCW-022}. */
+    /** {@code claude -n CCW-026 --permission-mode auto "/story run CCW-026"}: the line a new terminal starts a ticket's session from. */
+    static String launchLine(String id, String command) {
+        return "claude -n " + id + " --permission-mode auto \"" + command + "\"";
+    }
+
+    /** {@code CCW-022 ../repo-CCW-022-x: plan awaiting-approval at the gate after design; next: claude -n CCW-022 ...}. */
     static String laneLine(String id, String path, String planText, String archetype, String status,
             boolean learnings) {
         String state = planText == null ? "no plan.json" : planState(planText);
-        return id + " " + path + ": " + state + "; next: " + nextCommand(id, planText, archetype, status, learnings);
+        String next = nextCommand(id, planText, archetype, status, learnings);
+        return id + " " + path + ": " + state + "; next: " + (next.startsWith("/") ? launchLine(id, next) : next);
     }
 
     /**

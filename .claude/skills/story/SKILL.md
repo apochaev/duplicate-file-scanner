@@ -1,6 +1,6 @@
 ---
 name: story
-description: Advance a ready ticket through the story pipeline (architect, test-author, implementer, verifier, retro), launching each phase's agent, stopping at human gates, and resuming from plan.json. Run by the user, or started by Claude only through the tickets skill's autonomous launch for an autorun ticket.
+description: Advance a ready ticket through the story pipeline (architect, test-author, implementer, verifier, retro), launching each phase's agent, stopping at human gates, and resuming from plan.json. Run by the user, in the session named after the ticket.
 argument-hint: run|status|approve|learn <ID> [feedback]
 disable-model-invocation: false
 ---
@@ -9,7 +9,7 @@ disable-model-invocation: false
 
 The orchestrator for the story pipeline (`docs/design/story-orchestration.md`, D1–D12). It runs in the main session, launches the phase agents (`.claude/agents/architect.md`, `test-author.md`, `implementer.md`, `verifier.md`, `retro.md`) as subagents, and stops at every human gate and at `blocked`. Every invocation either advances to the next stop and shows it, or refuses and says why — never a bare status (D12).
 
-Usage: `/story <mode> <ID> [args]`. Modes: `run`, `status`, `approve`, `learn`. This skill is `disable-model-invocation: false` so that the `tickets` skill can start it, but it is not Claude's to launch on its own judgement — a run spends real tokens, makes real commits, and can flip a ticket's status. Claude may start `run <ID>` only through the `tickets` skill's "Autonomous launch" (CCW-017): right after `refine`'s ready commit, after `done` closes the ticket's last dependency, or on another session's unblock message (CCW-018), for a ticket in this session's own lanes with `autorun: true` that passed the launch check. Every other `run`, and every `approve`, `status` and `learn`, happens only when the user types it. `approve` is never invoked by Claude: the gates are the user's.
+Usage: `/story <mode> <ID> [args]`. Modes: `run`, `status`, `approve`, `learn`. This skill is `disable-model-invocation: false` but it is not Claude's to launch on its own judgement — a run spends real tokens, makes real commits, and can flip a ticket's status. Each ticket runs in a session of its own, named after the ticket and started by the user from a printed `claude -n <ID> --permission-mode auto "<command>"` line (CCW-026); no session starts another's story. `run`, `approve`, `status` and `learn` happen only when the user types them or starts a session whose first prompt is one of them. `approve` is never invoked by Claude: the gates are the user's.
 
 ## Story folder and `plan.json`
 
@@ -111,7 +111,7 @@ A stop is a human gate, `blocked`, or the finish. As the last step before showin
 
 1. **Commit the bookkeeping.** Stage `plan.json` and any other story-folder file this skill wrote (`progress.md`) in the worktree, by name, and commit as `docs: record <ID> <stop> in plan.json [<ID>]` (`<stop>` is `gate`, `blocked` or `done`), another deliberate, narrow exception to "commits only when asked". Skip it only when there is nothing to commit. Afterwards `git -C <worktree> status --porcelain` prints nothing unless a phase agent left uncommitted work.
 2. **Write down what only the chat holds.** A decision agreed in conversation goes to the ticket's Decisions section, a note for the next phase to `progress.md`, an open question to the ticket, and is committed with step 1 when it is a story-folder file. Gate feedback is never kept in chat: it is passed as `/story approve <ID> <feedback>`.
-3. **End with the clear line**, after the stop's own text: `safe to /clear; resume with <command>`. When files of the session's own are uncommitted (listed by `git status --porcelain` in the worktree and the repo checkout), list them as information, not as a blocker: `safe to /clear (uncommitted, on disk: <files>); resume with <command>`. Files in the working tree survive `/clear`; only the conversation is lost. The command is `/story approve <ID>` at a gate, `/story run <ID>` after `blocked`, and at the finish `/story learn <ID>` when there is something to learn, otherwise `/tickets done <ID>`. Withhold the line only while step 2 has not been done.
+3. **End with the launch line** (CCW-026), after the stop's own text: `claude -n <ID> --permission-mode auto "<command>"`, which the user can paste into a new terminal to continue the ticket in a fresh session (the session name is the ticket ID). When files of the session's own are uncommitted (listed by `git status --porcelain` in the worktree and the repo checkout), list them after it as information, not as a blocker: `(uncommitted, on disk: <files>)`. Files in the working tree survive a new session; only the conversation is lost. The command is `/story approve <ID>` at a gate, `/story run <ID>` after `blocked`, and at the finish `/story learn <ID>` when there is something to learn, otherwise `/tickets done <ID>`. Withhold the line only while step 2 has not been done.
 
 For the middle of a ticket, where the conversation still matters, use `/compact` with the template in the `tickets` skill's "Context hygiene" section, not this skill.
 
@@ -122,16 +122,15 @@ Shown once, whenever step 10 above stops the run (after "Every stop"'s commit):
 - At the `design` gate: the architect's `## Summary` section from `design.md`, verbatim.
 - At the `done` gate (the product-owner review, CCW-017): the verifier's `## Product owner review` section from `verification.md`, verbatim; when `verification.md` has no such section (written before CCW-017), its `## Summary` instead. Nothing else in the file is read for this purpose.
 - Ends with the exact command: `/story approve <TICKET-ID>` (approve and continue), and a one-line reminder that feedback instead of approval is given as `/story approve <TICKET-ID> <feedback>`, so it survives a `/clear`.
-- Then the clear line (see "Every stop") and the stop's notification (see "Notifications").
+- Then the launch line (see "Every stop") and the stop's notification (see "Notifications").
 
 ## Notifications (CCW-017)
 
-At every stop that needs the user — a human gate, `blocked`, and a refused autonomous launch (the `tickets` skill's launch check) — send exactly one notification with the `PushNotification` tool, `status: "proactive"`. It is a deferred tool: load it first with `ToolSearch` (`select:PushNotification`) if its schema is not yet loaded. The message is one line under 200 characters, no markdown, starting with the ticket ID and what the user should act on and ending with the exact next command, for example:
+At every stop that needs the user — a human gate, `blocked` and the finish — send exactly one notification with the `PushNotification` tool, `status: "proactive"`. It is a deferred tool: load it first with `ToolSearch` (`select:PushNotification`) if its schema is not yet loaded. The message is one line under 200 characters, no markdown, starting with the ticket ID and what the user should act on and ending with the exact next command, for example:
 
 - `CCW-018 ready for your review: 7/7 criteria met — /story approve CCW-018`
 - `DFS-031 design ready for review — /story approve DFS-031`
 - `DFS-031 blocked in implement: green failed twice — /story status DFS-031`
-- `DFS-032 not launched: ticket changed after approval — re-confirm with /tickets refine DFS-032`
 
 The tool skips itself when the user is at the terminal and may report "not sent"; that is expected, never an error, and changes nothing about the stop. Send none for routine progress (a phase finishing, a retry).
 
@@ -140,7 +139,7 @@ The tool skips itself when the user is at the terminal and may report "not sent"
 Shown once, whenever step 9 above sets state `blocked`:
 
 - Names the phase, the open defect's summary, and the concrete options (D12): retry — fix whatever the defect names, then plain `/story run <TICKET-ID>` (step 3 above reconciles or re-attempts fresh, attempt counter reset); edit the ticket or `design.md` by hand and resume the same way; or cancel via `/tickets cancel <TICKET-ID>` — a cancelled ticket is never `ready`/`in-progress`, so a later `run` refuses it on its own, with no separate `/story cancel`.
-- Then the clear line with `/story run <TICKET-ID>` (see "Every stop") and the stop's notification (see "Notifications").
+- Then the launch line with `/story run <TICKET-ID>` (see "Every stop") and the stop's notification (see "Notifications").
 
 ## Finishing
 
@@ -149,7 +148,7 @@ When step 4 finds every phase `done`: run the `tickets` skill's `review <ID>` fi
 - If `learnings.md` is non-empty, or `plan.json` has any defect (open or closed): end with the exact command `/story learn <TICKET-ID>`.
 - Otherwise: state plainly that there is nothing to learn.
 
-The finish is a stop: do "Every stop" (commit `plan.json` as `docs: record <ID> done in plan.json [<ID>]`, then the clear line), which ends with `safe to /clear; resume with /story learn <TICKET-ID>` in the first case and `safe to /clear; resume with /tickets done <TICKET-ID>` in the second.
+The finish is a stop: do "Every stop" (commit `plan.json` as `docs: record <ID> done in plan.json [<ID>]`, then the launch line), which ends with the launch line for `/story learn <TICKET-ID>` in the first case and for `/tickets done <TICKET-ID>` in the second.
 
 Setting the ticket all the way to `done` is not this skill's job — that stays a separate, human `/tickets done <ID>` once the user is satisfied with the result; `done` merges the branch into the repo checkout's `main` and offers to remove the worktree. D3's "before done" gate is about the pipeline's own finish line, not the ticket lifecycle's terminal state.
 
