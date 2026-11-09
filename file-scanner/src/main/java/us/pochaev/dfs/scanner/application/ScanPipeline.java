@@ -109,7 +109,8 @@ public final class ScanPipeline implements ScanRunner {
 
         FolderCounter folderCounter = new FolderCounter(config.minSize());
 
-        walkLocations(kept, excludeFilter, sizeIndex, folderCounter, sink, listener, stopSignal);
+        walkLocations(kept, config.defaultExcludes(), excludeFilter, sizeIndex, folderCounter, sink, listener,
+                stopSignal);
 
         List<CandidateGroup> initialGroups = sizeIndex.groups();
         PartialHashFilter partialHashFilter = new PartialHashFilter(hasher, config.sampleSize(),
@@ -140,11 +141,12 @@ public final class ScanPipeline implements ScanRunner {
      * {@code excludeFilter} and, if kept, into {@code sizeIndex} (name check before size check,
      * DFS-027 decision 7). A file goes into {@code folderCounter} exactly when it is kept and at
      * least {@link ScanConfig#minSize()}, the point where it enters the {@code SizeIndex} (DFS-030
-     * decision 9).
+     * decision 9). {@code skipSystemFolders} is {@link ScanConfig#defaultExcludes()}, handed to the
+     * walker, which alone can prune a folder's subtree (DFS-061 decisions 3 and 6).
      */
-    private void walkLocations(List<Path> kept, DefaultExcludeFilter excludeFilter, SizeIndex sizeIndex,
-                               FolderCounter folderCounter, Consumer<WalkEvent.Skipped> sink, ScanListener listener,
-                               BooleanSupplier stopSignal) throws IOException {
+    private void walkLocations(List<Path> kept, boolean skipSystemFolders, DefaultExcludeFilter excludeFilter,
+                               SizeIndex sizeIndex, FolderCounter folderCounter, Consumer<WalkEvent.Skipped> sink,
+                               ScanListener listener, BooleanSupplier stopSignal) throws IOException {
         listener.onEvent(new ScanEvent.PhaseStarted(ScanPhase.WALK));
         AtomicLong count = new AtomicLong();
         AtomicLong bytes = new AtomicLong();
@@ -152,7 +154,7 @@ public final class ScanPipeline implements ScanRunner {
         AtomicBoolean stopped = new AtomicBoolean();
         for (Path root : kept) {
             try {
-                walker.walk(root, event -> {
+                walker.walk(root, skipSystemFolders, event -> {
                     if (stopSignal.getAsBoolean()) {
                         stopped.set(true);
                         return false;

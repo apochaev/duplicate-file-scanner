@@ -28,6 +28,18 @@ public final class NioFileTreeWalker implements FileTreeWalker {
     /** The detail of the {@code Skipped(dir, QUARANTINE, ...)} event for a pruned quarantine folder (DFS-052). */
     static final String QUARANTINE_DETAIL = "quarantine folder, not scanned";
 
+    /** The detail of the {@code Skipped(dir, SYSTEM_FOLDER, ...)} event for a pruned operating-system folder (DFS-061 decision 6). */
+    static final String SYSTEM_FOLDER_DETAIL = "operating-system folder, not scanned";
+
+    @Override
+    public void walk(Path root, boolean skipSystemFolders, WalkListener listener) throws IOException {
+        throw new UnsupportedOperationException("not implemented: DFS-061");
+        // implementer: resolve the root and walk with a Visitor that carries skipSystemFolders; check
+        // SystemFolderNames.matches beside isQuarantine, after it, plain directories below the root only;
+        // then delete the two-argument override below so the port's default (skip on) applies.
+    }
+
+    /** Pre-DFS-061 walk, kept until the implementer moves its body into the three-argument walk (design.md). */
     @Override
     public void walk(Path root, WalkListener listener) throws IOException {
         Path start = resolveRoot(root);
