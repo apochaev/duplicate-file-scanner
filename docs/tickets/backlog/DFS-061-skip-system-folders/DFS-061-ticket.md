@@ -1,7 +1,7 @@
 ---
 id: DFS-061
 title: Skip known operating-system folders in scans
-status: ready
+status: in-progress
 type: feature
 scope: [file-scanner, cli]
 archetype: use-case
@@ -217,10 +217,10 @@ Feature: Known system folders are skipped
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `CLAUDE.md` names the skipped folders and `--no-default-excludes`'s extra effect (the verifier reads it)
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No files changed outside the paths listed under Touches
+- [x] `CLAUDE.md` names the skipped folders and `--no-default-excludes`'s extra effect (the verifier reads it)
 - [ ] Started by hand once on Windows: a scan of a drive root such as `D:\` lists `D:\$RECYCLE.BIN` as a `SYSTEM_FOLDER` skipped line, and no `$R...` file appears in a set
 
 ## Open questions
