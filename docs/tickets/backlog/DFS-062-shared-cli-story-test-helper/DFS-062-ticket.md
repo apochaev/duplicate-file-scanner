@@ -1,14 +1,15 @@
 ---
 id: DFS-062
 title: Extract a shared CLI story-test helper
-status: draft
+status: ready
 type: test
-scope: [cli, docs]
-archetype:
+scope: [cli]
+archetype: none
 priority: low
 lane: backend
 depends_on: []
-touches: []
+touches:
+  - cli/src/test/java/us/pochaev/dfs/cli
 blocked_reason:
 created: 2026-11-09
 updated: 2026-11-09
@@ -31,30 +32,71 @@ DFS-061.L-7 (`docs/tickets/completed/DFS-061-skip-system-folders/learnings.md`),
 
 DFS-061.L-7 stays `proposed` until this helper exists. When it does, `/learn apply DFS-061.L-7` adds a pointer to the helper in `.claude/archetypes/use-case/test-guide.md` (and bumps that archetype's `version`).
 
+## Decisions
+
+1. (2026-11-09) Shape: a static method on the output texts, `StubFailures.rethrow(String out, String err)`, in the `cli` test package. It matches the generic prefix `not implemented:` (the one `RedCheck` keys off), with no ticket ID argument, and throws `UnsupportedOperationException` carrying the stub's line. A test class that wants a one-call shape keeps a one-line local wrapper around its own `scan`. `Run` and `scan` stay private to `ScanCommandTest`.
+
+2. (2026-11-09) `sysScan` in `ScanCommandTest` is deleted and its 10 call sites become `scan(...)`, so no DFS-061 scaffolding is left. The DFS-061 tests keep passing unchanged in meaning; nothing else in `ScanCommandTest` changes. DFS-062 cannot be checked against a live stub, so its own tests use plain strings (AC-1, AC-2).
+
+3. (2026-11-09) Archetype `none`: a hand-implemented test-tree refactor, so no `gates:`. Launch: `/tickets start DFS-062 --worktree`.
+
 ## Acceptance criteria
 
 The full ID of each criterion is `DFS-062.AC-<n>`.
 
-- **AC-1** <to be refined>
+- **AC-1** `StubFailures.rethrow` throws `UnsupportedOperationException` whose message is the first line from the `not implemented:` marker to its end, when that marker is in the `err` text or in the `out` text.
+- **AC-2** `StubFailures.rethrow` returns normally, throwing nothing, when neither text contains `not implemented:`.
 
 ## Scenarios
 
-<!-- To be refined. -->
+Run mechanically: all three are plain JUnit tests in `StubFailuresTest` (`@DisplayName` starts with the criterion ID).
+
+```gherkin
+Feature: Shared CLI story-test helper
+
+  @AC-1
+  Scenario: The stub text is in stderr
+    Given err is "error: scan failed: not implemented: DFS-999
+" and out is ""
+    When StubFailures.rethrow(out, err) is called
+    Then it throws UnsupportedOperationException with message "not implemented: DFS-999"
+
+  @AC-1
+  Scenario: The stub text is in stdout only
+    Given out is "line one
+report: not implemented: DFS-998 extra
+line three
+" and err is ""
+    When StubFailures.rethrow(out, err) is called
+    Then it throws UnsupportedOperationException with message "not implemented: DFS-998 extra"
+
+  @AC-2
+  Scenario: No stub text anywhere
+    Given out is "{\"type\":\"summary\"}
+" and err is "Report written
+"
+    When StubFailures.rethrow(out, err) is called
+    Then it returns without throwing
+```
 
 ## Scope
 
-**Touches:** to be refined. Expected: `cli/src/test/java/us/pochaev/dfs/cli/` (new helper; `ScanCommandTest` moves onto it); `.claude/archetypes/use-case/test-guide.md` via `/learn apply DFS-061.L-7`, after this ticket closes.
+**Touches:**
+- `cli/src/test/java/us/pochaev/dfs/cli`: new `StubFailures` and `StubFailuresTest`; `ScanCommandTest` loses `sysScan` and its 10 calls become `scan(...)`.
 
 **Out of scope:**
 - Changing `RedCheck` or `tools/story-gate`.
+- The pointer in `.claude/archetypes/use-case/test-guide.md`: `/learn apply DFS-061.L-7` adds it after this ticket closes.
+- Moving `Run`, `scan` or `run` out of `ScanCommandTest`.
 
 ## Definition of done
 
 - [ ] `./gradlew build` is green
+- [ ] `sysScan` no longer exists in `ScanCommandTest`, and its 10 call sites call `scan(...)` (`grep -c sysScan` prints 0)
 - [ ] No files changed outside the paths listed under Touches
+- [ ] `verification.md` written with the product-owner review (hand-implemented ticket)
+- [ ] Post-close: the user runs `/learn apply DFS-061.L-7` (the guide pointer); recorded in that entry's Decision line
 
 ## Open questions
 
-- Archetype: probably `none` (a test-tree refactor), to be decided in refine.
-- The helper's shape: how it takes the stub marker (`not implemented: <ID>`), and whether it wraps `scan(...)` or takes a `Run`.
-- Whether `sysScan` is removed from `ScanCommandTest` here or kept as a thin call.
+None.
