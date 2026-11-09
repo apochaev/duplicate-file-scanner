@@ -1,7 +1,7 @@
 ---
 id: DFS-061
 title: Skip known operating-system folders in scans
-status: in-review
+status: done
 type: feature
 scope: [file-scanner, cli]
 archetype: use-case
@@ -20,7 +20,7 @@ touches:
 blocked_reason:
 created: 2026-11-08
 updated: 2026-11-09
-completed:
+completed: 2026-11-09
 ---
 
 # DFS-061: Skip known operating-system folders in scans
