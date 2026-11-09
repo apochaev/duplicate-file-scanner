@@ -1,0 +1,154 @@
+{
+   "ticket": "DFS-061",
+   "archetype": {
+      "name": "use-case",
+      "version": 11
+   },
+   "branch": "tickets/DFS-061-skip-system-folders",
+   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-061-skip-system-folders",
+   "state": "awaiting-approval",
+   "phases": [
+      {
+         "id": "design",
+         "agent": "architect",
+         "after": [],
+         "status": "done",
+         "runs": [
+            {
+               "attempt": 1,
+               "model": "opus",
+               "effort": "high",
+               "turns": 38,
+               "wallClockSeconds": 623,
+               "outcome": "passed",
+               "note": "PASS touches DFS-061: 10 changed files, all inside touches"
+            }
+         ],
+         "artifacts": [
+            "docs/tickets/backlog/DFS-061-skip-system-folders/design.md",
+            "docs/tickets/backlog/DFS-061-skip-system-folders/learnings.md",
+            "docs/tickets/backlog/DFS-061-skip-system-folders/progress.md",
+            "file-scanner/src/main/java/us/pochaev/dfs/scanner/application/ScanPipeline.java",
+            "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/SkipReason.java",
+            "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileTreeWalker.java",
+            "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/SystemFolderNames.java",
+            "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/FileTreeWalker.java"
+         ],
+         "commit": "dd0dd9ea2e7809ad7e9be41082b2288e2dcac89a"
+      },
+      {
+         "id": "tests",
+         "agent": "test-author",
+         "after": [
+            "design"
+         ],
+         "status": "done",
+         "runs": [
+            {
+               "attempt": 1,
+               "model": "sonnet",
+               "effort": "medium",
+               "turns": 42,
+               "wallClockSeconds": 194,
+               "outcome": "failed-gate"
+            },
+            {
+               "attempt": 2,
+               "model": "sonnet",
+               "effort": "medium",
+               "turns": 6,
+               "wallClockSeconds": 27,
+               "outcome": "passed",
+               "note": "resumed same agent after design.md breakage amended by architect; PASS test-phase: red: 76 story tests fail with stubs, 3 other tests fail on the ticket's stub, 136 fail in declared classes, 837 other tests pass (3 skipped); traceability: 6 criteria traced through 14 scenarios"
+            }
+         ],
+         "artifacts": [
+            "cli/src/test/java/us/pochaev/dfs/cli/ScanCommandTest.java",
+            "docs/tickets/backlog/DFS-061-skip-system-folders/design.md",
+            "docs/tickets/backlog/DFS-061-skip-system-folders/learnings.md",
+            "docs/tickets/backlog/DFS-061-skip-system-folders/progress.md",
+            "docs/tickets/backlog/DFS-061-skip-system-folders/test-plan.md",
+            "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanFolderTotalsTest.java",
+            "file-scanner/src/test/java/us/pochaev/dfs/scanner/application/ScanPipelineTest.java",
+            "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/SystemFolderEndToEndTest.java",
+            "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/SystemFolderWalkerTest.java"
+         ],
+         "commit": "aab7d13b6dbf9d8e1c3fc0c9d10b47b4dc3a19e9"
+      },
+      {
+         "id": "implement",
+         "agent": "implementer",
+         "after": [
+            "tests"
+         ],
+         "status": "done",
+         "runs": [
+            {
+               "attempt": 1,
+               "model": "sonnet",
+               "effort": "medium",
+               "turns": 9,
+               "wallClockSeconds": 164,
+               "outcome": "passed",
+               "note": "PASS green: 1049 passed, 3 skipped; disabled, freeze, touches, stubs, traceability, consistency PASS"
+            }
+         ],
+         "artifacts": [
+            "CLAUDE.md",
+            "docs/tickets/backlog/DFS-061-skip-system-folders/progress.md",
+            "file-scanner/src/main/java/us/pochaev/dfs/scanner/domain/model/ScanConfig.java",
+            "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/NioFileTreeWalker.java",
+            "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/SystemFolderNames.java",
+            "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/FileTreeWalker.java"
+         ],
+         "commit": "594a9d5a88b429d22328a7cb719c21de89fb907f"
+      },
+      {
+         "id": "verify",
+         "agent": "verifier",
+         "after": [
+            "implement"
+         ],
+         "status": "done",
+         "runs": [
+            {
+               "attempt": 1,
+               "model": "opus",
+               "effort": "medium",
+               "turns": 18,
+               "wallClockSeconds": 159,
+               "outcome": "passed",
+               "note": "consistency PASS"
+            }
+         ],
+         "artifacts": [
+            "docs/tickets/backlog/DFS-061-skip-system-folders/DFS-061-ticket.md",
+            "docs/tickets/backlog/DFS-061-skip-system-folders/learnings.md",
+            "docs/tickets/backlog/DFS-061-skip-system-folders/verification.md"
+         ],
+         "commit": "2863b652e90789f9866861fe2cda178593324d81"
+      }
+   ],
+   "gates": [
+      {
+         "after": "done",
+         "status": "pending"
+      }
+   ],
+   "defects": [
+      {
+         "id": 1,
+         "phase": "tests",
+         "route": "architect",
+         "summary": "red: CliApplicationTest, LaunchScriptTest, OverlapApiTest, PlanApiTest, ResultApiTest fail on assertions, not declared in Expected breakage",
+         "status": "closed"
+      },
+      {
+         "id": 2,
+         "phase": "tests",
+         "route": "test-author",
+         "summary": "red: 10 new ScanCommandTest story tests failed with AssertionFailedError, not the stub type",
+         "status": "closed"
+      }
+   ]
+}
