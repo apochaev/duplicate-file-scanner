@@ -221,7 +221,7 @@ Feature: Known system folders are skipped
 - [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
 - [x] No files changed outside the paths listed under Touches
 - [x] `CLAUDE.md` names the skipped folders and `--no-default-excludes`'s extra effect (the verifier reads it)
-- [ ] Started by hand once on Windows: a scan of a drive root such as `D:\` lists `D:\$RECYCLE.BIN` as a `SYSTEM_FOLDER` skipped line, and no `$R...` file appears in a set
+- [ ] Started by hand once on Windows: a scan of a drive root such as `D:\` lists `D:\$RECYCLE.BIN` as a `SYSTEM_FOLDER` skipped line, and no `$R...` file appears in a set (closed without, at the user's say-so, 2026-11-09)
 
 ## Open questions
 

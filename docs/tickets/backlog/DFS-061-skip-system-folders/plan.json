@@ -34,7 +34,7 @@
             "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/SystemFolderNames.java",
             "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/FileTreeWalker.java"
          ],
-         "commit": "dd0dd9ea2e7809ad7e9be41082b2288e2dcac89a"
+         "commit": "2f3b129ac48ba4f9a52222925eb26f3e3bb173f3"
       },
       {
          "id": "tests",
@@ -73,7 +73,7 @@
             "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/SystemFolderEndToEndTest.java",
             "file-scanner/src/test/java/us/pochaev/dfs/scanner/infra/adapter/SystemFolderWalkerTest.java"
          ],
-         "commit": "aab7d13b6dbf9d8e1c3fc0c9d10b47b4dc3a19e9"
+         "commit": "2ef09f0f8c789409684cdb2ed5c6d4cb19b6f931"
       },
       {
          "id": "implement",
@@ -101,7 +101,7 @@
             "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/adapter/SystemFolderNames.java",
             "file-scanner/src/main/java/us/pochaev/dfs/scanner/infra/port/FileTreeWalker.java"
          ],
-         "commit": "594a9d5a88b429d22328a7cb719c21de89fb907f"
+         "commit": "3dd95353b2e120ef4396e4fb69e5b8338daf4559"
       },
       {
          "id": "verify",
@@ -126,7 +126,7 @@
             "docs/tickets/backlog/DFS-061-skip-system-folders/learnings.md",
             "docs/tickets/backlog/DFS-061-skip-system-folders/verification.md"
          ],
-         "commit": "2863b652e90789f9866861fe2cda178593324d81"
+         "commit": "ae5cc41daadf57bfb14c09140a610f78e2b454ce"
       }
    ],
    "gates": [
