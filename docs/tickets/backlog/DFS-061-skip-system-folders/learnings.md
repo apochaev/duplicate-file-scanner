@@ -9,25 +9,25 @@
 
 ### DFS-061.L-5: Checklist note for port-signature changes on the scan's hot path
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/use-case/archetype.md` (edge-case checklist and "where files go")
 - Change: add a note for a ticket that changes an existing secondary port's signature on the scan's hot path: the stub sits on the walk, the one-line consumer wiring is written at design (an exception to "leave the consumer untouched"), and the affected test classes are declared under `## Expected breakage`.
 - Evidence: DFS-061 note L-1: 173 existing tests went red, 7 classes were declared, and the "leave the consumer untouched" rule (DFS-032.L-2) would have let AC-3's tests pass at red.
 - Recurrences: 1
 - Recommendation: apply. Any port change on the main path hits the same conflict.
-- Decision:
+- Decision: applied 2026-11-09 by the user; commit `docs: apply DFS-061.L-5, DFS-061.L-6`
 
 ### DFS-061.L-6: Standard transition for adding an abstract port method
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/use-case/archetype.md` (checklist item 15)
 - Change: document the pattern: the new method is a stub `default` on the port, the old method becomes a `default` delegating to it, and the implementer makes the new method abstract. Also tell the architect to check each declared class's failure type and root cause (not only that the message contains the stub text) before listing Expected breakage.
 - Evidence: DFS-061 note L-2; plan.json defect 1: the tests phase failed the red gate because CliApplicationTest, LaunchScriptTest, OverlapApiTest, PlanApiTest and ResultApiTest were not declared, and the test-author's 42-turn first attempt was wasted.
 - Recurrences: 1 (related: DFS-055.L-12a, which only says to list fakes)
 - Recommendation: apply. It would have prevented the defect 1 round trip.
-- Decision:
+- Decision: applied 2026-11-09 by the user; commit `docs: apply DFS-061.L-5, DFS-061.L-6`
 
 ### DFS-061.L-7: Shared test helper for CLI-level story tests under the red gate
 
@@ -38,4 +38,4 @@
 - Evidence: DFS-061 notes L-3 and L-4; plan.json defect 2: 10 new ScanCommandTest story tests failed with AssertionFailedError, then `sysScan` was added and stays as dead scaffolding that the freeze stops the implementer removing.
 - Recurrences: 1
 - Recommendation: apply, as the smaller change and one that leaves the gate alone.
-- Decision:
+- Decision: held 2026-11-09 by the user (option 2): stays proposed until the shared helper exists in the `cli` test tree, so the guide never points at something missing.
