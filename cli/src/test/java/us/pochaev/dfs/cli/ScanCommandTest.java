@@ -1168,6 +1168,205 @@ class ScanCommandTest {
         assertEquals("", run.out);
     }
 
+    // --- DFS-061: operating-system folders
+
+    private static final String SYSTEM_DETAIL = "operating-system folder, not scanned";
+
+    /**
+     * Runs the scan, and rethrows the stub's failure as itself: the CLI turns it into an
+     * "error: scan failed" line (exit 1), which would otherwise surface as an assertion failure.
+     * A no-op once the feature is implemented.
+     */
+    private Run sysScan(String... args) {
+        Run run = scan(args);
+        for (String text : new String[]{run.err, run.out}) {
+            int at = text.indexOf("not implemented: DFS-061");
+            if (at >= 0) {
+                throw new UnsupportedOperationException(text.substring(at).lines().findFirst().orElseThrow());
+            }
+        }
+        return run;
+    }
+
+    private static Path put(Path file, String content) throws IOException {
+        Files.createDirectories(file.getParent());
+        return write(file, content);
+    }
+
+    /** drive/docs/photo.jpg, a copy in drive/$RECYCLE.BIN/S-1-5-21-1/ and an unrelated $I file. */
+    private Path driveTree() throws IOException {
+        Path drive = Files.createDirectories(tmp.resolve("drive"));
+        put(drive.resolve("docs/photo.jpg"), DUP);
+        Files.createDirectories(drive.resolve("$RECYCLE.BIN/S-1-5-21-1"));
+        put(drive.resolve("$RECYCLE.BIN/S-1-5-21-1/$R5Y7A3U.ARQ"), DUP);
+        put(drive.resolve("$RECYCLE.BIN/S-1-5-21-1/$I5Y7A3U.ARQ"), "I");
+        return drive.toRealPath();
+    }
+
+    private static List<JsonNode> ofType(Run run, String type) {
+        return run.jsonLines().stream().filter(l -> l.get("type").asString().equals(type)).toList();
+    }
+
+    @Test
+    @DisplayName("DFS-061.AC-1, DFS-061.AC-2 A recycle bin copy is not reported as a duplicate")
+    void aRecycleBinCopyIsNotReportedAsADuplicate() throws IOException {
+        Path drive = driveTree();
+
+        Run run = sysScan(drive.toString());
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals(List.of(), ofType(run, "set"));
+        List<JsonNode> skipped = ofType(run, "skipped");
+        assertEquals(1, skipped.size(), run.out);
+        assertEquals(drive.resolve("$RECYCLE.BIN").toString(), skipped.getFirst().get("path").asString());
+        assertEquals("SYSTEM_FOLDER", skipped.getFirst().get("reason").asString());
+        assertEquals(SYSTEM_DETAIL, skipped.getFirst().get("detail").asString());
+        assertEquals(1, ofType(run, "summary").getFirst().get("skipped").asInt());
+    }
+
+    @Test
+    @DisplayName("DFS-061.AC-2 The text report lists the skipped folder")
+    void theTextReportListsTheSkippedSystemFolder() throws IOException {
+        Path drive = driveTree();
+
+        Run run = sysScan(drive.toString(), "--format=text");
+
+        assertEquals(0, run.exitCode, run.err);
+        List<String> lines = run.textBody();
+        assertTrue(lines.stream().anyMatch(l -> l.startsWith("    " + drive.resolve("$RECYCLE.BIN")
+                + "  SYSTEM_FOLDER  ")), run.out);
+        assertTrue(lines.getLast().endsWith(", 1 skipped, 0 excluded"), run.out);
+    }
+
+    @Test
+    @DisplayName("DFS-061.AC-2 Files under a skipped folder are not counted as found")
+    void filesUnderASkippedSystemFolderAreNotCountedAsFound() throws IOException {
+        Path drive = driveTree();
+
+        Run run = sysScan(drive.toString(), "--progress=log");
+
+        assertEquals(0, run.exitCode, run.err);
+        List<String> walking = run.err.lines().filter(l -> l.startsWith("Walking:")).toList();
+        assertTrue(walking.getLast().contains(" 1 files, 15 B found"), run.err);
+    }
+
+    @Test
+    @DisplayName("DFS-061.AC-1 A known folder is skipped at any depth and look-alikes are scanned")
+    void aKnownFolderIsSkippedAtAnyDepth() throws IOException {
+        Path drive = Files.createDirectories(tmp.resolve("drive")).toRealPath();
+        put(drive.resolve("deep/er/.Trashes/x.bin"), DUP);
+        put(drive.resolve("docs/x.bin"), DUP);
+        put(drive.resolve("my.Trash/y.bin"), "other");
+        put(drive.resolve("docs/y.bin"), "other");
+
+        Run run = sysScan(drive.toString());
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals(List.of(drive.resolve("deep/er/.Trashes").toString()),
+                ofType(run, "skipped").stream().map(s -> s.get("path").asString()).toList());
+        List<JsonNode> sets = ofType(run, "set");
+        assertEquals(1, sets.size(), run.out);
+        assertEquals(List.of(drive.resolve("docs/y.bin").toString(), drive.resolve("my.Trash/y.bin").toString()),
+                setPaths(sets.getFirst()).stream().sorted().toList());
+    }
+
+    @Test
+    @DisplayName("DFS-061.AC-3 With --no-default-excludes the folders are scanned")
+    void noDefaultExcludesScansTheSystemFolders() throws IOException {
+        Path drive = driveTree();
+
+        Run run = sysScan(drive.toString(), "--no-default-excludes");
+
+        assertEquals(0, run.exitCode, run.err);
+        List<JsonNode> sets = ofType(run, "set");
+        assertEquals(1, sets.size(), run.out);
+        assertEquals(List.of(drive.resolve("$RECYCLE.BIN/S-1-5-21-1/$R5Y7A3U.ARQ").toString(),
+                        drive.resolve("docs/photo.jpg").toString()),
+                setPaths(sets.getFirst()).stream().sorted().toList());
+        assertEquals(List.of(), ofType(run, "skipped"));
+    }
+
+    @Test
+    @DisplayName("DFS-061.AC-4 A location inside a system folder is walked")
+    void aLocationInsideASystemFolderIsWalked() throws IOException {
+        Path drive = driveTree();
+        put(drive.resolve("$RECYCLE.BIN/S-1-5-21-1/copy/$R5Y7A3U.ARQ"), DUP);
+
+        Run run = sysScan(drive.resolve("$RECYCLE.BIN/S-1-5-21-1").toString());
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals(1, ofType(run, "set").size(), run.out);
+        assertEquals(List.of(), ofType(run, "skipped"));
+    }
+
+    @Test
+    @DisplayName("DFS-061.AC-4 A location named like a system folder is walked, folders below it are skipped")
+    void aLocationNamedLikeASystemFolderIsWalked() throws IOException {
+        Path drive = driveTree();
+        put(drive.resolve("$RECYCLE.BIN/System Volume Information/x.bin"), "xx");
+        put(drive.resolve("$RECYCLE.BIN/S-1-5-21-1/x.bin"), "xx");
+        put(drive.resolve("$RECYCLE.BIN/S-1-5-21-1/y.bin"), "xx");
+
+        Run run = sysScan(drive.resolve("$RECYCLE.BIN").toString());
+
+        assertEquals(0, run.exitCode, run.err);
+        assertEquals(List.of(drive.resolve("$RECYCLE.BIN/System Volume Information").toString()),
+                ofType(run, "skipped").stream().map(s -> s.get("path").asString()).toList());
+        assertEquals(1, ofType(run, "set").size(), run.out);
+    }
+
+    @Test
+    @DisplayName("DFS-061.AC-5 The quarantine folder keeps reason QUARANTINE with or without default excludes")
+    void quarantineKeepsItsReason() throws IOException {
+        Path quarantine = quarantineTree();
+
+        for (String[] args : new String[][]{{tmp.toString()}, {tmp.toString(), "--no-default-excludes"}}) {
+            Run run = sysScan(args);
+
+            assertEquals(0, run.exitCode, run.err);
+            List<JsonNode> skipped = ofType(run, "skipped");
+            assertEquals(1, skipped.size(), run.out);
+            assertEquals(quarantine.toString(), skipped.getFirst().get("path").asString());
+            assertEquals("QUARANTINE", skipped.getFirst().get("reason").asString());
+        }
+    }
+
+    @Test
+    @DisplayName("DFS-061.AC-6 A regular file with a known name is scanned")
+    void aRegularFileWithAKnownNameIsScanned() throws IOException {
+        Path drive = Files.createDirectories(tmp.resolve("drive")).toRealPath();
+        put(drive.resolve("a/lost+found"), DUP);
+        put(drive.resolve("b/lost+found"), DUP);
+
+        Run run = sysScan(drive.toString());
+
+        assertEquals(0, run.exitCode, run.err);
+        List<JsonNode> sets = ofType(run, "set");
+        assertEquals(1, sets.size(), run.out);
+        assertEquals(2, setPaths(sets.getFirst()).size());
+        assertEquals(List.of(), ofType(run, "skipped"));
+    }
+
+    @Test
+    @DisplayName("DFS-061.AC-6 A symbolic link with a known name keeps its SYMLINK reason")
+    void aSymlinkWithAKnownNameKeepsItsReason() throws IOException {
+        Path drive = driveTree();
+        Path link = drive.resolve(".Trashes");
+        try {
+            Files.createSymbolicLink(link, drive.resolve("docs"));
+        } catch (UnsupportedOperationException | IOException e) {
+            abort("symbolic links are not available here: " + e.getMessage());
+        }
+
+        Run run = sysScan(drive.toString());
+
+        assertEquals(0, run.exitCode, run.err);
+        List<JsonNode> skipped = ofType(run, "skipped");
+        JsonNode linkLine = skipped.stream().filter(s -> s.get("path").asString().equals(link.toString()))
+                .findFirst().orElseThrow();
+        assertEquals("SYMLINK", linkLine.get("reason").asString());
+    }
+
     // --- helpers
 
     private Run scan(String... args) {

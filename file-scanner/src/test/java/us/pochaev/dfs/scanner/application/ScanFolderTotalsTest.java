@@ -219,7 +219,7 @@ class ScanFolderTotalsTest {
         final Map<Path, List<WalkEvent>> events = new HashMap<>();
 
         @Override
-        public void walk(Path root, WalkListener listener) {
+        public void walk(Path root, boolean skipSystemFolders, WalkListener listener) {
             for (WalkEvent event : events.getOrDefault(root, List.of())) {
                 if (!listener.onEvent(event)) {
                     return;

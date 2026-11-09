@@ -824,7 +824,7 @@ class ScanPipelineTest {
         }
 
         @Override
-        public void walk(Path root, WalkListener listener) throws IOException {
+        public void walk(Path root, boolean skipSystemFolders, WalkListener listener) throws IOException {
             synchronized (walkedRoots) {
                 walkedRoots.add(root);
             }

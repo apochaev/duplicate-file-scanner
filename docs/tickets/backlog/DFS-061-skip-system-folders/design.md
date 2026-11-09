@@ -15,7 +15,7 @@ Placement: `SkipReason.SYSTEM_FOLDER` in `domain.model` (already exported); `Fil
 
 Checklist items not applicable: 1-5, 8-12, 16 (no IDs, results, validation, lifecycle, callbacks, executor or held resources change), and 7 (no new progress event).
 
-Expected breakage (every scan, through the real walker or the old fakes, now hits the stub; 173 existing tests red): `ScanCommandTest`, `ScanRunnerTest`, `ScanServiceRealThreadTest`, `ScanProgressSnapshotTest`, `ScannerFactoriesTest`, `ScannerAutoConfigurationTest`, `ScanApiTest`. The other red classes (`ScanPipelineTest`, `ScanFolderTotalsTest`, `ScanPipelineEndToEndTest`, `ScanQuarantineEndToEndTest`, `CliApplicationTest`, `LaunchScriptTest`, `OverlapApiTest`, `PlanApiTest`, `ResultApiTest`) fail with the stub message directly.
+Expected breakage (every scan, through the real walker or the old fakes, now hits the stub; 173 existing tests red): `ScanCommandTest`, `ScanRunnerTest`, `ScanServiceRealThreadTest`, `ScanProgressSnapshotTest`, `ScannerFactoriesTest`, `ScannerAutoConfigurationTest`, `ScanApiTest`, `CliApplicationTest`, `LaunchScriptTest`, `OverlapApiTest`, `PlanApiTest`, `ResultApiTest`. Only `ScanPipelineTest`, `ScanFolderTotalsTest`, `ScanPipelineEndToEndTest` and `ScanQuarantineEndToEndTest` fail with the stub's `UnsupportedOperationException` itself.
 
 Look closely at: the port keeps a two-argument default (skip on) so the existing `NioFileTreeWalkerTest` stays as it is; the test-author must call the three-argument overload in every new walker test, and the AC-3 pipeline test must use the real walker, not a fake (see "For the test-author").
 
@@ -108,6 +108,11 @@ Not applicable: synchronous, stateless walk. The switch is a per-call argument; 
 - `ScannerFactoriesTest`: scans through the factories end FAILED.
 - `ScannerAutoConfigurationTest`: scans through the auto-configured beans end FAILED.
 - `ScanApiTest`: server scans end FAILED, so status, stream and settings assertions fail.
+- `CliApplicationTest`: the CLI catches the stub, prints "scan failed" and exits 1, so the exit-code and output assertions fail.
+- `LaunchScriptTest`: the installed `dfs` launcher's scan fails on the stub and exits 1, so the exit-code assertion fails.
+- `OverlapApiTest`: the setup scan ends FAILED instead of COMPLETED, so the overlaps API cannot be reached.
+- `PlanApiTest`: the setup scan ends FAILED instead of COMPLETED, so the plan API cannot be reached.
+- `ResultApiTest`: the setup scan ends FAILED instead of COMPLETED, so the result API cannot be reached.
 
 ## Open design notes (as of the design phase)
 
