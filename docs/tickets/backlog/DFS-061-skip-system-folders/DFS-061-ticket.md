@@ -1,7 +1,7 @@
 ---
 id: DFS-061
 title: Skip known operating-system folders in scans
-status: in-progress
+status: in-review
 type: feature
 scope: [file-scanner, cli]
 archetype: use-case
@@ -19,7 +19,7 @@ touches:
   - CLAUDE.md
 blocked_reason:
 created: 2026-11-08
-updated: 2026-11-08
+updated: 2026-11-09
 completed:
 ---
 
