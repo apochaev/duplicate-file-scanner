@@ -26,11 +26,7 @@ public interface FileTreeWalker {
      * @throws java.nio.file.NotDirectoryException if {@code root} is not a directory
      * @throws IOException                          if {@code root} cannot be read
      */
-    default void walk(Path root, boolean skipSystemFolders, WalkListener listener) throws IOException {
-        throw new UnsupportedOperationException("not implemented: DFS-061");
-        // implementer: make this method abstract (drop the default body) once the test-author has
-        // moved the two test fakes onto it (design.md, "Public API").
-    }
+    void walk(Path root, boolean skipSystemFolders, WalkListener listener) throws IOException;
 
     /**
      * Walks {@code root} with the default setting: operating-system folders skipped, as with

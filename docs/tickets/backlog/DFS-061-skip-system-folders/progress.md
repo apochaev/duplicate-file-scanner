@@ -12,3 +12,8 @@
 - New: `SystemFolderWalkerTest` and `SystemFolderEndToEndTest` (file-scanner, infra.adapter), 66 tests, all red with `not implemented: DFS-061`. New DFS-061 section in `ScanCommandTest` (10 tests); they fail with `AssertionFailedError` carrying the stub message in the CLI's `error: scan failed` line (declared breakage: the CLI reports the stub as exit 1).
 - Edited the two fakes (`ScanPipelineTest`, `ScanFolderTotalsTest`) to the three-argument `walk`; they now pass.
 - Expected commit: `test(file-scanner): add system-folder skip tests [DFS-061]`.
+
+## implement (implementer, 2026-11-08)
+
+- Implemented `SystemFolderNames.matches`, `NioFileTreeWalker` three-argument walk (Visitor carries the switch; check after quarantine), removed its two-argument override, made `FileTreeWalker.walk(Path, boolean, WalkListener)` abstract. Updated `ScanConfig.defaultExcludes` Javadoc and CLAUDE.md (safety invariants, Commands comment, Current state).
+- Expected commit: `feat(file-scanner): skip operating-system folders in scans [DFS-061]`.

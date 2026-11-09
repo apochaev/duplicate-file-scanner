@@ -11,7 +11,10 @@ package us.pochaev.dfs.scanner.domain.model;
  * @param defaultExcludes      whether the built-in list of operating-system metadata names
  *                             ({@code .DS_Store} and {@code ._*}, matched case-sensitively) is left
  *                             out of the scan and counted in {@link ScanResult#excluded()} (DFS-027);
- *                             the names themselves live with the filter in {@code application}
+ *                             the names themselves live with the filter in {@code application}; also
+ *                             whether the walker skips the operating-system folders ({@code $RECYCLE.BIN},
+ *                             {@code .Trashes}, {@code lost+found} and the like) below a scan root,
+ *                             reporting each as skipped with {@code SYSTEM_FOLDER} (DFS-061)
  */
 public record ScanConfig(long minSize, int sampleSize, long partialHashThreshold, boolean defaultExcludes) {
 

@@ -33,17 +33,8 @@ public final class NioFileTreeWalker implements FileTreeWalker {
 
     @Override
     public void walk(Path root, boolean skipSystemFolders, WalkListener listener) throws IOException {
-        throw new UnsupportedOperationException("not implemented: DFS-061");
-        // implementer: resolve the root and walk with a Visitor that carries skipSystemFolders; check
-        // SystemFolderNames.matches beside isQuarantine, after it, plain directories below the root only;
-        // then delete the two-argument override below so the port's default (skip on) applies.
-    }
-
-    /** Pre-DFS-061 walk, kept until the implementer moves its body into the three-argument walk (design.md). */
-    @Override
-    public void walk(Path root, WalkListener listener) throws IOException {
         Path start = resolveRoot(root);
-        Files.walkFileTree(start, new Visitor(start, listener));
+        Files.walkFileTree(start, new Visitor(start, listener, skipSystemFolders));
     }
 
     private static Path resolveRoot(Path root) throws IOException {
@@ -63,10 +54,12 @@ public final class NioFileTreeWalker implements FileTreeWalker {
 
         private final Path root;
         private final WalkListener listener;
+        private final boolean skipSystemFolders;
 
-        Visitor(Path root, WalkListener listener) {
+        Visitor(Path root, WalkListener listener, boolean skipSystemFolders) {
             this.root = root;
             this.listener = listener;
+            this.skipSystemFolders = skipSystemFolders;
         }
 
         @Override
@@ -78,7 +71,15 @@ public final class NioFileTreeWalker implements FileTreeWalker {
             if (!dir.equals(root) && isQuarantine(dir)) {
                 return emit(skipped(dir, SkipReason.QUARANTINE, QUARANTINE_DETAIL), FileVisitResult.SKIP_SUBTREE);
             }
+            if (skipSystemFolders && !dir.equals(root) && isSystemFolder(dir)) {
+                return emit(skipped(dir, SkipReason.SYSTEM_FOLDER, SYSTEM_FOLDER_DETAIL), FileVisitResult.SKIP_SUBTREE);
+            }
             return emit(new WalkEvent.DirectoryEntered(dir), FileVisitResult.CONTINUE);
+        }
+
+        private static boolean isSystemFolder(Path dir) {
+            Path name = dir.getFileName();
+            return name != null && SystemFolderNames.matches(name.toString());
         }
 
         /**

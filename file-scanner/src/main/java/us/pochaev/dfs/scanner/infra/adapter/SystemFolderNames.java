@@ -1,5 +1,9 @@
 package us.pochaev.dfs.scanner.infra.adapter;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+
 /**
  * The names of the operating system's own folders that a scan leaves out (DFS-061 decision 1), decided from the
  * name alone:
@@ -15,6 +19,14 @@ package us.pochaev.dfs.scanner.infra.adapter;
  */
 final class SystemFolderNames {
 
+    private static final List<String> CASE_INSENSITIVE =
+            List.of("$RECYCLE.BIN", "System Volume Information", "Recycled", "RECYCLER");
+
+    private static final Set<String> EXACT = Set.of(".Trashes", ".Spotlight-V100", ".fseventsd", ".TemporaryItems",
+            ".DocumentRevisions-V100", ".Trash", "lost+found");
+
+    private static final String TRASH_PREFIX = ".Trash-";
+
     private SystemFolderNames() {
     }
 
@@ -24,6 +36,24 @@ final class SystemFolderNames {
      * @throws NullPointerException if {@code name} is null
      */
     static boolean matches(String name) {
-        throw new UnsupportedOperationException("not implemented: DFS-061");
+        Objects.requireNonNull(name, "name");
+        for (String n : CASE_INSENSITIVE) {
+            if (name.equalsIgnoreCase(n)) {
+                return true;
+            }
+        }
+        if (EXACT.contains(name)) {
+            return true;
+        }
+        if (name.startsWith(TRASH_PREFIX) && name.length() > TRASH_PREFIX.length()) {
+            for (int i = TRASH_PREFIX.length(); i < name.length(); i++) {
+                char c = name.charAt(i);
+                if (c < '0' || c > '9') {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }
