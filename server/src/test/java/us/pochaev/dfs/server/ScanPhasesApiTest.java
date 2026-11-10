@@ -90,6 +90,27 @@ class ScanPhasesApiTest {
         }
     }
 
+    @Test
+    @DisplayName("DFS-064.AC-2 A real scan's hash phases keep their files and bytes and have no groups")
+    void aRealScansHashPhasesKeepTheirTotals(@TempDir Path tmp, CapturedOutput output) throws Exception {
+        Path t = fixture(tmp);
+        try (TestServer server = TestServer.start()) {
+            String cookie = server.login(server.token(output.getOut()));
+            String id = start(server, cookie, startBody(t));
+
+            JsonNode done = awaitTerminal(server, cookie, id);
+
+            JsonNode phases = done.path("progress").path("phases");
+            assertEquals("COMPLETED", done.path("progress").path("status").asString(), done.toString());
+            for (int i : new int[]{1, 2}) {
+                JsonNode p = phases.path(i);
+                assertTrue(p.path("files").asLong() >= 3, "files of " + p);
+                assertTrue(p.path("bytes").asLong() >= 3L * KB300, "bytes of " + p);
+                assertEquals(0, p.path("groups").asLong(), "groups of " + p);
+            }
+        }
+    }
+
     /** The first "progress" event of the stream, then the stream is closed (a queued scan never ends). */
     private static JsonNode firstEvent(TestServer server, String cookie, String id) throws Exception {
         HttpRequest request = HttpRequest.newBuilder(URI.create(server.base() + "/api/scans/" + id + "/events"))

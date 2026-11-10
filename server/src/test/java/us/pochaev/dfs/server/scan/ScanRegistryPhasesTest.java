@@ -221,6 +221,36 @@ class ScanRegistryPhasesTest {
     }
 
     @Test
+    @DisplayName("DFS-064.AC-2 GroupDone in a hash phase leaves that phase's files and bytes alone and its groups 0, as the core sends it")
+    void groupDoneInHashPhasesKeepsFilesAndBytes() {
+        Fixture f = started("10:00:00");
+        f.core.emit(new ScanEvent.PhaseStarted(ScanPhase.WALK));
+        f.core.walk(2, 5, 100);
+        f.core.emit(new ScanEvent.PhaseStarted(ScanPhase.PARTIAL_HASH));
+        f.core.emit(new ScanEvent.HashProgress(ScanPhase.PARTIAL_HASH, 0, 5, 0, 500));
+        f.core.emit(new ScanEvent.HashProgress(ScanPhase.PARTIAL_HASH, 3, 5, 300, 500));
+        f.core.emit(new ScanEvent.GroupDone(ScanPhase.PARTIAL_HASH, 1, 2));
+        f.core.emit(new ScanEvent.HashProgress(ScanPhase.PARTIAL_HASH, 5, 5, 500, 500));
+        f.core.emit(new ScanEvent.GroupDone(ScanPhase.PARTIAL_HASH, 2, 2));
+        f.core.emit(new ScanEvent.PhaseStarted(ScanPhase.FULL_HASH));
+        f.core.emit(new ScanEvent.HashProgress(ScanPhase.FULL_HASH, 0, 2, 0, 200));
+        f.core.emit(new ScanEvent.HashProgress(ScanPhase.FULL_HASH, 2, 2, 200, 200));
+        f.core.emit(new ScanEvent.GroupDone(ScanPhase.FULL_HASH, 1, 1));
+
+        List<PhaseTotals> phases = progress(f).phases();
+
+        assertEquals(new PhaseTotals("PARTIAL_HASH", true, 0, 5, 500, 0), phases.get(1), phases.toString());
+        assertEquals(new PhaseTotals("FULL_HASH", false, 0, 2, 200, 0), phases.get(2), phases.toString());
+
+        f.core.emit(new ScanEvent.PhaseStarted(ScanPhase.HARD_LINKS));
+        f.core.emit(new ScanEvent.GroupDone(ScanPhase.HARD_LINKS, 1, 1));
+
+        phases = progress(f).phases();
+        assertEquals(new PhaseTotals("FULL_HASH", true, 0, 2, 200, 0), phases.get(2), phases.toString());
+        assertEquals(new PhaseTotals("HARD_LINKS", false, 0, 0, 0, 1), phases.get(3), phases.toString());
+    }
+
+    @Test
     @DisplayName("DFS-064.AC-2 Only started phases are listed")
     void onlyStartedPhasesAreListed() {
         Fixture f = started("10:00:00");
