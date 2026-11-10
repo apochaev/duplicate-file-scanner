@@ -41,13 +41,20 @@ Rules the canvas sets:
 
 The current row is `scan-row.ts`/`.html`/`.css` with helpers `scan-phase.ts`, `scan-eta.ts` and `scan-format.ts` (DFS-041, DFS-057, with specs). The ETA helper already uses a 30 s rate and an injectable clock.
 
+**Where the numbers come from** (DFS-064, `ScanProgress`): each finished section's totals line reads `phases` (walk folders, files, bytes; compare's "files in" and "→ candidates" from the compare and hash entries; hash files and bytes; hard links' `groups`), and the last line's "→ N duplicate groups" reads the flat `groupsTotal`, which is the sets count on a COMPLETED scan. "Finishing" is derived on the page: `phase` FULL_HASH with `hashedBytes` equal to `hashBytesTotal` (no server field, DFS-064 decision 1). The scan's duration is `finishedAt` minus `startedAt` on the entry. Row sample text in the canvas: "38886 files · 902.9 GB / found in 4120 folders", "29594 compared / → 13845 candidates", "13845 hashed · 17.1 GB / → 3104 matching groups", "3104 groups checked / → 2987 duplicate groups"; step line "Step 3 of 4 · Hashing files"; failure text "Scan failed while hashing. <message>".
+
+## Decisions
+
+1. **QUEUED and CANCELLING look the way the scan is, not the nearest canvas stage** (2026-11-09). The canvas has eight stages and neither status. QUEUED: all four sections "not started" (dashed), overall "—", the line "Waiting to start", Cancel enabled. CANCELLING: the running section keeps its look, the overall percentage freezes at the last value shown, the status word "Cancelling…" shows and Cancel is disabled; it becomes the "stopped" look (grey hatch, "when stopped") only when the status turns CANCELLED. Rejected: showing CANCELLING as already stopped (claims it while the scan still works) and QUEUED as a striped walk (nothing runs yet).
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
 
 The full ID of each criterion is `DFS-063.AC-<n>`.
 
-- **AC-1** <to be refined>
+- **AC-1** A QUEUED scan's row shows the four sections as not started, the overall percentage as "—", the text "Waiting to start" and an enabled Cancel button.
+- **AC-2** A CANCELLING scan's row keeps its running section's look, holds the overall percentage at the last value it showed, shows "Cancelling…" and a disabled Cancel button; once the scan is CANCELLED the section shows as stopped.
 
 ## Scenarios
 
@@ -55,10 +62,24 @@ The full ID of each criterion is `DFS-063.AC-<n>`.
 Feature: Scan progress row
 
   @AC-1
-  Scenario: <to be refined>
-    Given <concrete state>
-    When <action>
-    Then <observable outcome>
+  Scenario: A queued scan
+    Given a scan entry with status QUEUED and no phase
+    When the row renders
+    Then it shows four sections labelled not started, the overall percentage "—" and the text "Waiting to start"
+    And the Cancel button is enabled
+
+  @AC-2
+  Scenario: A scan being cancelled keeps its last percentage
+    Given a RUNNING scan in the hashing phase showing 47%
+    When its status becomes CANCELLING and the bytes hashed grow further
+    Then the row still shows 47%, the text "Cancelling…" and a disabled Cancel button
+    And the hashing section is still shown as running
+
+  @AC-2
+  Scenario: A cancelled scan shows its stopped section
+    Given the scan above
+    When its status becomes CANCELLED
+    Then the hashing section is shown as stopped and the percentage is labelled "when stopped"
 ```
 
 ## Scope
@@ -82,6 +103,6 @@ Feature: Scan progress row
 - Save the canvas as screenshots under `docs/design/mockups/` (as DFS-060 did), so the ticket does not depend on an external link?
 - The overall-percentage and time-left calculations as pure helpers with their own specs (the canvas's worked examples, such as 12 + 0.10 × 18 = 13%, become test cases).
 - Walk-phase section: striped with "—", plus growing counts; what the totals line shows once the walk ends.
-- Behaviour on a CANCELLING, CANCELLED or FAILED scan: which section freezes and where the failure message sits.
+- CANCELLED and FAILED details beyond decision 1: follow the canvas (stopped section hatched, failed adds a red outline and the message); to be written as criteria.
 - Phone-width layout details; one frame per state or generic rules.
 - Archetype (`component`), gates, and whether the by-hand run needs the design-gate.
