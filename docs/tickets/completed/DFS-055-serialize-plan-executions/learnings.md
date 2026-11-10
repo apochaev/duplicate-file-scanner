@@ -47,7 +47,7 @@ In `PlanExecutionServiceTest.lockIsHeldUntilTheRunIsRecordedTerminal` (Ending.FA
 - Target: `.claude/archetypes/use-case/design.md.tmpl`, section "Expected breakage"
 - Change: when a stub sits on an existing happy path, every existing test that runs it fails with the stub's exception; the architect lists those tests there as expected red.
 - Evidence: L-6 above; `design.md` said "none", yet 32 existing DFS-051 tests failed on the stub (the tests-phase note in `plan.json`).
-- Recurrences: 1 (DFS-055)
+- Recurrences: 2 (DFS-055; DFS-064: the stub on `Counters.phases`, read by every progress build, failed 108 existing tests across four API classes, found by the architect's per-class report check (2026-11-09))
 - Recommendation: apply.
 - Decision: applied 2026-11-07 by the user; commit `docs: apply DFS-055.L-9, DFS-055.L-10, DFS-055.L-11, DFS-055.L-12, DFS-055.L-14, DFS-034.L-1`
 
