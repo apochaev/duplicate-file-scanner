@@ -1,7 +1,7 @@
 ---
 id: DFS-064
 title: Keep each scan phase's totals and the finish time in the progress stream
-status: in-review
+status: done
 type: feature
 scope: [build]
 archetype: endpoint
@@ -20,7 +20,7 @@ touches:
 blocked_reason:
 created: 2026-11-09
 updated: 2026-11-09
-completed:
+completed: 2026-11-09
 ---
 
 # DFS-064: Keep each scan phase's totals and the finish time in the progress stream
