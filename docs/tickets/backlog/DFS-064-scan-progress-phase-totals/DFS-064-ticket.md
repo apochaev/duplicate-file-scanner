@@ -39,6 +39,8 @@ Any change to `ScanProgress` is a spec change (`./gradlew :server:updateOpenApi`
 
 1. **No `finishing` field** (2026-11-09). `HashProgress.bytesDone` reaches `bytesTotal` only when the last file ends, and the phase stays `FULL_HASH` until `HARD_LINKS` starts, so the page derives "finishing" from `phase == FULL_HASH && hashedBytes == hashBytesTotal`. A test pins that sequence in `ScanProgress`. The old bar's long stay at 100% is explained by this gap plus the hard-link work and result assembly; that is a hypothesis, confirmed by a by-hand run on a large drive (Definition of done). If the run shows a silent gap with no phase change, a field comes in a follow-up. Rejected: a `finishing` boolean (the server would need a core event or a guess to flip it) and a spike first (blocks DFS-063 on a long manual run).
 
+2. **A `phases` list in `ScanProgress`; the flat fields stay** (2026-11-09). One entry per phase that has started, in run order (`WALK`, `PARTIAL_HASH`, `FULL_HASH`, `HARD_LINKS`), each with `phase`, `finished`, and its own totals: walk `directories`, `files`, `bytes` found; each hash phase `files` and `bytes` of its input (the `HashProgress` totals); hard links `groups`. A phase finishes when the next one starts, or when the scan reaches COMPLETED. An entry keeps its totals after the next phase starts, which the flat hash fields do not (the registry resets them at `PhaseStarted`). The registry's `Counters` fills the list; the core is unchanged. A hash phase that has started but sent no `HashProgress` yet has totals 0, which the page reads as unknown. The architect names the fields that do not apply to a phase (nullable or 0). The flat fields remain so the DFS-057 row works until DFS-063 replaces it; a later ticket may drop them. Rejected: flat per-phase fields (about eight new names beside `hashFilesTotal`, no place for timing) and replacing the flat fields now (breaks the DFS-057 page, forcing DFS-063 into this change).
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
@@ -46,6 +48,8 @@ Any change to `ScanProgress` is a spec change (`./gradlew :server:updateOpenApi`
 The full ID of each criterion is `DFS-064.AC-<n>`.
 
 - **AC-1** After the last file of the full-hash phase is hashed and before the hard-link phase starts, `ScanProgress` reports `phase` `FULL_HASH` with `hashedBytes` equal to `hashBytesTotal` and `hashedFiles` equal to `hashFilesTotal`; it never reports more than `hashBytesTotal`.
+- **AC-2** `ScanProgress.phases` lists each phase that has started, in run order, and a phase's entry keeps its totals after the next phase starts: the walk's directories, files and bytes found; each hash phase's input files and bytes; the hard-link phase's groups. Entries of earlier phases have `finished` true, and the current phase's entry `finished` false.
+- **AC-3** The flat fields `ScanProgress` already has keep their values and meaning (the walk counts, the current hash phase's counters, `groupsDone` and `groupsTotal`).
 
 ## Scenarios
 
@@ -60,6 +64,35 @@ Feature: Phase totals in the progress stream
     When the HARD_LINKS phase starts
     Then the progress shows phase "HARD_LINKS"
 ```
+
+  @AC-2
+  Scenario: Finished phases keep their totals
+    Given a scan that found 3 folders and 5 files of 500 bytes, compared 5 files, hashed 2 candidate files of 200 bytes, and checked 1 group of hard links
+    When the HARD_LINKS phase is running
+    Then phases lists WALK with 3 folders, 5 files and 500 bytes, finished
+    And PARTIAL_HASH with 5 files and 500 bytes, finished
+    And FULL_HASH with 2 files and 200 bytes, finished
+    And HARD_LINKS with finished false
+
+  @AC-2
+  Scenario: Only started phases are listed
+    Given a scan whose partial-hash phase is running
+    Then phases lists WALK finished and PARTIAL_HASH not finished, and no FULL_HASH or HARD_LINKS entry
+
+  @AC-2
+  Scenario: A phase that has sent no hash progress yet has totals 0
+    Given the PARTIAL_HASH phase has started and no HashProgress has arrived
+    Then its entry has files 0 and bytes 0 and finished false
+
+  @AC-2
+  Scenario: A completed scan finishes every entry
+    Given a scan that reaches COMPLETED
+    Then every entry in phases has finished true and keeps its totals
+
+  @AC-3
+  Scenario: The flat fields are unchanged
+    Given the same scan as in "Finished phases keep their totals"
+    Then directories, files, bytes, hashedFiles, hashFilesTotal, hashedBytes, hashBytesTotal, groupsDone and groupsTotal have the values they had before this ticket
 
 ## Scope
 
@@ -80,8 +113,6 @@ Feature: Phase totals in the progress stream
 
 ## Open questions
 
-- Which totals per finished phase: walk (folders, files, bytes), compare (files in, files out), hash (files, bytes), hard links (groups)?
-- Shape: a list of finished phases in `ScanProgress`, or fields per phase.
 - Does a COMPLETED scan keep them (DFS-063 shows them in the collapsed row, with duration)? Is a duration (start and finish time) sent, since the API has no finish time today?
 - Archetype (`endpoint`) and gates.
 - The by-hand run on a large drive (Definition of done): who runs it and where the result is recorded.
