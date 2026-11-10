@@ -1,7 +1,7 @@
 ---
 id: DFS-062
 title: Extract a shared CLI story-test helper
-status: ready
+status: in-review
 type: test
 scope: [cli]
 archetype: none
@@ -91,10 +91,10 @@ line three
 
 ## Definition of done
 
-- [ ] `./gradlew build` is green
-- [ ] `sysScan` no longer exists in `ScanCommandTest`, and its 10 call sites call `scan(...)` (`grep -c sysScan` prints 0)
-- [ ] No files changed outside the paths listed under Touches
-- [ ] `verification.md` written with the product-owner review (hand-implemented ticket)
+- [x] `./gradlew build` is green (full build exit 0, incl. 3 StubFailuresTest tests and the Vitest run)
+- [x] `sysScan` no longer exists in `ScanCommandTest`, and its 10 call sites call `scan(...)` (`grep -c sysScan` prints 0; verified, prints 0)
+- [x] No files changed outside the paths listed under Touches
+- [x] `verification.md` written with the product-owner review (hand-implemented ticket)
 - [ ] Post-close: the user runs `/learn apply DFS-061.L-7` (the guide pointer); recorded in that entry's Decision line
 
 ## Open questions

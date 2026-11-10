@@ -1172,22 +1172,6 @@ class ScanCommandTest {
 
     private static final String SYSTEM_DETAIL = "operating-system folder, not scanned";
 
-    /**
-     * Runs the scan, and rethrows the stub's failure as itself: the CLI turns it into an
-     * "error: scan failed" line (exit 1), which would otherwise surface as an assertion failure.
-     * A no-op once the feature is implemented.
-     */
-    private Run sysScan(String... args) {
-        Run run = scan(args);
-        for (String text : new String[]{run.err, run.out}) {
-            int at = text.indexOf("not implemented: DFS-061");
-            if (at >= 0) {
-                throw new UnsupportedOperationException(text.substring(at).lines().findFirst().orElseThrow());
-            }
-        }
-        return run;
-    }
-
     private static Path put(Path file, String content) throws IOException {
         Files.createDirectories(file.getParent());
         return write(file, content);
@@ -1212,7 +1196,7 @@ class ScanCommandTest {
     void aRecycleBinCopyIsNotReportedAsADuplicate() throws IOException {
         Path drive = driveTree();
 
-        Run run = sysScan(drive.toString());
+        Run run = scan(drive.toString());
 
         assertEquals(0, run.exitCode, run.err);
         assertEquals(List.of(), ofType(run, "set"));
@@ -1229,7 +1213,7 @@ class ScanCommandTest {
     void theTextReportListsTheSkippedSystemFolder() throws IOException {
         Path drive = driveTree();
 
-        Run run = sysScan(drive.toString(), "--format=text");
+        Run run = scan(drive.toString(), "--format=text");
 
         assertEquals(0, run.exitCode, run.err);
         List<String> lines = run.textBody();
@@ -1243,7 +1227,7 @@ class ScanCommandTest {
     void filesUnderASkippedSystemFolderAreNotCountedAsFound() throws IOException {
         Path drive = driveTree();
 
-        Run run = sysScan(drive.toString(), "--progress=log");
+        Run run = scan(drive.toString(), "--progress=log");
 
         assertEquals(0, run.exitCode, run.err);
         List<String> walking = run.err.lines().filter(l -> l.startsWith("Walking:")).toList();
@@ -1259,7 +1243,7 @@ class ScanCommandTest {
         put(drive.resolve("my.Trash/y.bin"), "other");
         put(drive.resolve("docs/y.bin"), "other");
 
-        Run run = sysScan(drive.toString());
+        Run run = scan(drive.toString());
 
         assertEquals(0, run.exitCode, run.err);
         assertEquals(List.of(drive.resolve("deep/er/.Trashes").toString()),
@@ -1275,7 +1259,7 @@ class ScanCommandTest {
     void noDefaultExcludesScansTheSystemFolders() throws IOException {
         Path drive = driveTree();
 
-        Run run = sysScan(drive.toString(), "--no-default-excludes");
+        Run run = scan(drive.toString(), "--no-default-excludes");
 
         assertEquals(0, run.exitCode, run.err);
         List<JsonNode> sets = ofType(run, "set");
@@ -1292,7 +1276,7 @@ class ScanCommandTest {
         Path drive = driveTree();
         put(drive.resolve("$RECYCLE.BIN/S-1-5-21-1/copy/$R5Y7A3U.ARQ"), DUP);
 
-        Run run = sysScan(drive.resolve("$RECYCLE.BIN/S-1-5-21-1").toString());
+        Run run = scan(drive.resolve("$RECYCLE.BIN/S-1-5-21-1").toString());
 
         assertEquals(0, run.exitCode, run.err);
         assertEquals(1, ofType(run, "set").size(), run.out);
@@ -1307,7 +1291,7 @@ class ScanCommandTest {
         put(drive.resolve("$RECYCLE.BIN/S-1-5-21-1/x.bin"), "xx");
         put(drive.resolve("$RECYCLE.BIN/S-1-5-21-1/y.bin"), "xx");
 
-        Run run = sysScan(drive.resolve("$RECYCLE.BIN").toString());
+        Run run = scan(drive.resolve("$RECYCLE.BIN").toString());
 
         assertEquals(0, run.exitCode, run.err);
         assertEquals(List.of(drive.resolve("$RECYCLE.BIN/System Volume Information").toString()),
@@ -1321,7 +1305,7 @@ class ScanCommandTest {
         Path quarantine = quarantineTree();
 
         for (String[] args : new String[][]{{tmp.toString()}, {tmp.toString(), "--no-default-excludes"}}) {
-            Run run = sysScan(args);
+            Run run = scan(args);
 
             assertEquals(0, run.exitCode, run.err);
             List<JsonNode> skipped = ofType(run, "skipped");
@@ -1338,7 +1322,7 @@ class ScanCommandTest {
         put(drive.resolve("a/lost+found"), DUP);
         put(drive.resolve("b/lost+found"), DUP);
 
-        Run run = sysScan(drive.toString());
+        Run run = scan(drive.toString());
 
         assertEquals(0, run.exitCode, run.err);
         List<JsonNode> sets = ofType(run, "set");
@@ -1358,7 +1342,7 @@ class ScanCommandTest {
             abort("symbolic links are not available here: " + e.getMessage());
         }
 
-        Run run = sysScan(drive.toString());
+        Run run = scan(drive.toString());
 
         assertEquals(0, run.exitCode, run.err);
         List<JsonNode> skipped = ofType(run, "skipped");
