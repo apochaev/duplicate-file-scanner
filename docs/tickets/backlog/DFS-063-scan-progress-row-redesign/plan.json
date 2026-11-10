@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-063-scan-progress-row-redesign",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-063-scan-progress-row-redesign",
-  "state": "awaiting-approval",
+  "state": "running",
   "phases": [
     {
       "id": "design",
@@ -44,10 +44,40 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 35,
+          "wallClockSeconds": 392,
+          "outcome": "passed",
+          "note": "red: 96 story tests fail with stubs, 50 other tests fail on the ticket's stub, 0 fail in declared classes, 1030 other tests pass (3 skipped); traceability: 14 criteria traced through 24 scenarios to tests and test-plan.md"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 7,
+          "wallClockSeconds": 58,
+          "outcome": "passed",
+          "note": "reopened for defect 1 (AC-15 regex); verified with green (npmTest 270 tests pass), not test-phase, since src already carries the implementation"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-063-scan-progress-row-redesign/learnings.md",
+        "docs/tickets/backlog/DFS-063-scan-progress-row-redesign/progress.md",
+        "docs/tickets/backlog/DFS-063-scan-progress-row-redesign/test-plan.md",
+        "server/frontend/src/app/scans/scan-eta.spec.ts",
+        "server/frontend/src/app/scans/scan-format.spec.ts",
+        "server/frontend/src/app/scans/scan-phase.spec.ts",
+        "server/frontend/src/app/scans/scan-row.spec.ts",
+        "server/frontend/src/app/scans/scan-screen.spec.ts",
+        "server/frontend/src/app/scans/scan-sections.spec.ts",
+        "server/frontend/src/app/scans/scan-test-data.ts"
+      ],
+      "commit": "1ff4faec39976076cff0fdca98994441882d496f"
     },
     {
       "id": "implement",
@@ -55,10 +85,40 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 44,
+          "wallClockSeconds": 375,
+          "outcome": "failed-gate",
+          "note": "green: 269 of 270 pass; the AC-15 test in scan-row.spec.ts has a regex that matches 'animation: none' (test defect, confirmed by the orchestrator); implementation left uncommitted in the worktree"
+        },
+        {
+          "attempt": 2,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "battery run on the working tree after the tests rework (defect 1): green 1136 passed; disabled, freeze, touches, stubs, traceability, consistency pass; no implementer relaunch"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-063-scan-progress-row-redesign/learnings.md",
+        "docs/tickets/backlog/DFS-063-scan-progress-row-redesign/progress.md",
+        "server/frontend/src/app/scans/scan-eta.ts",
+        "server/frontend/src/app/scans/scan-format.ts",
+        "server/frontend/src/app/scans/scan-phase.ts",
+        "server/frontend/src/app/scans/scan-row.css",
+        "server/frontend/src/app/scans/scan-row.ts",
+        "server/frontend/src/app/scans/scan-sections.ts"
+      ],
+      "commit": "d2c586d43b99da348c4e3246eec8f8517eb68800"
     },
     {
       "id": "verify",
@@ -75,12 +135,20 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
       "status": "pending"
     }
   ],
-  "defects": []
+  "defects": [
+    {
+      "id": 1,
+      "phase": "implement",
+      "route": "test-author",
+      "summary": "AC-15 test regex in scan-row.spec.ts wrongly matches 'animation: none' (backtracking \\s* before (?!none))",
+      "status": "closed"
+    }
+  ]
 }
