@@ -37,7 +37,7 @@ Rules the canvas sets:
 - **Section states readable without colour:** done (solid, check), running (outlined, fill, bold, "now"), total unknown (pale moving stripes), finishing (full, moving stripes), not started (dashed, grey), stopped or failed (grey hatch; failed adds a red outline and the error message).
 - Each finished section keeps a short totals line (replaces DFS-057's "Found:" line).
 - A COMPLETED row collapses to one line: a thin strip, the narrowing totals, the duration and the Open results link.
-- Cancel stays the only control on a running row. Counts without thousands separators ("48210 files", "307.3 GB"). Stacked layout at phone width. Reduced-motion users get no stripe animation.
+- Cancel stays the only control on a running row. Counts without thousands separators ("48210 files", "307.3 GB"). The canvas's phone layout is not built (decision 6). Reduced-motion users get no stripe animation.
 
 The current row is `scan-row.ts`/`.html`/`.css` with helpers `scan-phase.ts`, `scan-eta.ts` and `scan-format.ts` (DFS-041, DFS-057, with specs). The ETA helper already uses a 30 s rate and an injectable clock.
 
@@ -55,7 +55,7 @@ The current row is `scan-row.ts`/`.html`/`.css` with helpers `scan-phase.ts`, `s
 
 5. **Only a COMPLETED scan collapses** (2026-11-09). The collapsed row is the canvas's one line: a tick, the scan's folders (as the DFS-057 row shows them) with "Completed · started HH:MM", a thin four-part strip over the narrowing-totals line "N files · SIZE found → N compared → N hashed · SIZE → N duplicate groups", "100%" with "of whole scan", "took <duration>" over "finished HH:MM" (from `finishedAt`, DFS-064), and the "Open results" link. The duration is a pure helper in `scan-format.ts`: under a minute "42 s", under an hour "14 min 38 s", from an hour "1 h 05 min" (whole minutes, minutes zero-padded). CANCELLED and FAILED rows stay expanded, since the stopped section's counts and the failure message are what they show. Rejected: collapsing them too (hides the message or squeezes it into one line) and never collapsing (a long list of finished scans gets tall, and the canvas collapses it).
 
-6. **The canvas source is kept in the repo; phone and motion are one criterion each** (2026-11-09). `docs/design/mockups/scan-progress-row-2026-11-08/` holds the canvas files `Main.dc.html` (rules) and `Row.dc.html` (row markup and per-state data), committed with this refinement, so the design does not depend on the external link (the DFS-060 mock-ups are PNGs; these are the design's own source, which also carries the numbers). Below 600 px the row stacks its sections one per line with the strip above them; under `prefers-reduced-motion` no stripe animates. Vitest and jsdom cannot judge layout, so both are tested as "this class applies at this width" and "the stylesheet has no animation under the media query"; the real look is checked in the by-hand run against the canvas. Rejected: no kept copy (the by-hand comparison loses its reference) and one scenario per phone frame (layout a unit test cannot verify).
+6. **The canvas source is kept in the repo; phone and motion are one criterion each** (2026-11-09). `docs/design/mockups/scan-progress-row-2026-11-08/` holds the canvas files `Main.dc.html` (rules) and `Row.dc.html` (row markup and per-state data), committed with this refinement, so the design does not depend on the external link (the DFS-060 mock-ups are PNGs; these are the design's own source, which also carries the numbers). Under `prefers-reduced-motion` no stripe animates; the stylesheet is tested for no animation under the media query, and the real look is checked in the by-hand run against the canvas. **The phone layout is dropped:** the page is for desktop use (user, 2026-11-09), so AC-14 is retired and the canvas's phone frames are not built. Rejected: no kept copy of the canvas (the by-hand comparison loses its reference).
 
 ## Acceptance criteria
 
@@ -76,7 +76,7 @@ The full ID of each criterion is `DFS-063.AC-<n>`.
 - **AC-11** A FAILED scan's failing section is tagged "failed" and its row shows "Scan failed while <activity>. <failureMessage>", with the activity "finding files", "comparing samples", "hashing files" or "checking hard links" for the phase the scan was in.
 - **AC-12** A COMPLETED scan's row collapses to one line: the scan's folders with "Completed · started HH:MM", a four-part strip, "N files · SIZE found → N compared → N hashed · SIZE → N duplicate groups", "100%", "took <duration>" over "finished HH:MM", and the "Open results" link to the scan's results; a CANCELLED or FAILED row does not collapse.
 - **AC-13** A duration reads "42 s" under a minute, "14 min 38 s" under an hour and "1 h 05 min" from an hour, rounded down to the second below an hour and to the minute from there.
-- **AC-14** Below 600 px of width the row stacks its four sections one per line with the strip above them; at 600 px and wider they sit side by side under the strip.
+- **AC-14 (retired)** Below 600 px of width the row stacks its four sections one per line with the strip above them. Retired 2026-11-09: the page is for desktop use, so the phone layout is not built.
 - **AC-15** With `prefers-reduced-motion: reduce` the striped sections (walk running, hashing finishing) show their stripes without animation; otherwise the stripes move.
 
 ## Scenarios
@@ -246,16 +246,6 @@ Feature: Scan progress row
       | 3900    | 1 h 05 min   |
       | 7230    | 2 h 00 min   |
 
-  @AC-14
-  Scenario Outline: Stacked on a phone, side by side on a desktop
-    Given a running scan row in a viewport <width> px wide
-    Then the sections are laid out <layout>
-
-    Examples:
-      | width | layout                      |
-      | 599   | one per line, strip above   |
-      | 600   | side by side under the strip |
-
   @AC-15
   Scenario: Reduced motion stops the stripes
     Given the walk section is running, shown with moving stripes
@@ -270,6 +260,7 @@ Feature: Scan progress row
 **Out of scope:**
 - The server's progress fields (DFS-064).
 - Plan controls and the results screen.
+- The canvas's phone layout (retired AC-14).
 
 ## Definition of done
 
