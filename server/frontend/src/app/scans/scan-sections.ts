@@ -1,5 +1,13 @@
 import { ScanProgress } from '../api/models';
-import { ScanPhase } from './scan-format';
+import {
+  ScanPhase,
+  finishedLines,
+  noBytesLeft,
+  notStartedLines,
+  phaseLabel,
+  runningLines,
+  stoppedLines,
+} from './scan-format';
 
 /**
  * The four fixed sections of a scan row's bar, in run order (DFS-063 decision 2): the phases of `ScanProgress.phase`.
@@ -52,12 +60,23 @@ export interface SectionView {
  * value of the phase it stopped in. The CANCELLING hold (the last value shown) is the component's, not this function's.
  */
 export function overallPercent(progress: ScanProgress): number | null {
-  throw new Error('not implemented: DFS-063');
+  if (progress.status === 'COMPLETED') {
+    return 100;
+  }
+  const index = progress.phase ? phaseIndex(progress.phase) : -1;
+  if (progress.status === 'QUEUED' || index <= 0) {
+    return null;
+  }
+  const before = SECTIONS.slice(0, index).reduce((sum, s) => sum + s.weight, 0);
+  return Math.min(99, Math.floor(before + SECTIONS[index].weight * ownProgress(progress, SECTIONS[index].phase)));
 }
 
 /** The small text under the overall percentage: "of whole scan", "when stopped" (CANCELLED, FAILED) or "total not known yet" (walk, QUEUED) (DFS-063.AC-2). */
 export function overallCaption(progress: ScanProgress): string {
-  throw new Error('not implemented: DFS-063');
+  if (progress.status === 'CANCELLED' || progress.status === 'FAILED') {
+    return 'when stopped';
+  }
+  return overallPercent(progress) === null ? 'total not known yet' : 'of whole scan';
 }
 
 /**
@@ -68,7 +87,39 @@ export function overallCaption(progress: ScanProgress): string {
  * `scan-format.ts` (`runningLines`, `finishedLines`, `stoppedLines`, `notStartedLines`).
  */
 export function sectionViews(progress: ScanProgress): SectionView[] {
-  throw new Error('not implemented: DFS-063');
+  const status = progress.status;
+  const stoppedStatus = status === 'CANCELLED' || status === 'FAILED';
+  const at = progress.phase ? phaseIndex(progress.phase) : -1;
+  return SECTIONS.map(({ phase }, i): SectionView => {
+    const base = { phase, step: i + 1, title: `${i + 1} · ${phaseLabel(phase)}` };
+    const view = (state: SectionState, tag: string | null, fill: number, striped: boolean, lines: [string, string]): SectionView => ({
+      ...base,
+      state,
+      tag,
+      fill,
+      striped,
+      line1: lines[0],
+      line2: lines[1],
+    });
+    if (status === 'COMPLETED' || (at >= 0 && i < at)) {
+      return view('done', 'done', 100, false, finishedLines(progress, phase));
+    }
+    if (i === at && status !== 'QUEUED') {
+      const walk = phase === 'WALK';
+      if (status === 'CANCELLED') {
+        return view('stopped', 'stopped', walk ? 100 : ownProgress(progress, phase) * 100, false, stoppedLines(progress, phase));
+      }
+      if (status === 'FAILED') {
+        return view('failed', 'failed', walk ? 100 : ownProgress(progress, phase) * 100, false, stoppedLines(progress, phase));
+      }
+      if (phase === 'FULL_HASH' && noBytesLeft(progress)) {
+        return view('finishing', 'finishing', 100, true, runningLines(progress, phase));
+      }
+      return view('running', 'now', walk ? 100 : ownProgress(progress, phase) * 100, walk, runningLines(progress, phase));
+    }
+    const notRun = stoppedStatus;
+    return view(notRun ? 'not-run' : 'not-started', null, 0, false, notStartedLines(phase, notRun));
+  });
 }
 
 /**
@@ -77,5 +128,37 @@ export function sectionViews(progress: ScanProgress): SectionView[] {
  * files"; '' for a COMPLETED scan (its row is collapsed) (DFS-063.AC-1).
  */
 export function stepLine(progress: ScanProgress): string {
-  throw new Error('not implemented: DFS-063');
+  if (progress.status === 'QUEUED') {
+    return 'Waiting to start';
+  }
+  if (progress.status === 'COMPLETED' || !progress.phase) {
+    return '';
+  }
+  const step = phaseIndex(progress.phase) + 1;
+  const label = phaseLabel(progress.phase);
+  switch (progress.status) {
+    case 'CANCELLED':
+      return `Cancelled during step ${step} · ${label}`;
+    case 'FAILED':
+      return `Failed during step ${step} · ${label}`;
+    default:
+      return `Step ${step} of 4 · ${label}${progress.phase === 'FULL_HASH' && noBytesLeft(progress) ? ', finishing…' : ''}`;
+  }
+}
+
+function phaseIndex(phase: ScanPhase): number {
+  return SECTIONS.findIndex((s) => s.phase === phase);
+}
+
+/** The running section's own progress from 0 to 1; a zero total counts as none, never NaN. */
+function ownProgress(progress: ScanProgress, phase: ScanPhase): number {
+  const [done, total] =
+    phase === 'PARTIAL_HASH'
+      ? [progress.hashedFiles, progress.hashFilesTotal]
+      : phase === 'FULL_HASH'
+        ? [progress.hashedBytes, progress.hashBytesTotal]
+        : phase === 'HARD_LINKS'
+          ? [progress.groupsDone, progress.groupsTotal]
+          : [0, 0];
+  return total > 0 ? Math.min(1, Math.max(0, done / total)) : 0;
 }

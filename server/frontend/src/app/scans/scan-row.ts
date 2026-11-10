@@ -6,9 +6,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { ScanEntry } from '../api/models';
 import { ScansService } from '../api/services';
 import { ScanEventsService } from './scan-events.service';
-import { collapsedTotals, failureLine, isTerminal, statusLabel } from './scan-format';
+import { collapsedTotals, failureLine, formatDuration, isTerminal, statusLabel } from './scan-format';
 import { CLOCK, EtaEstimator } from './scan-eta';
-import { overallCaption, sectionViews, stepLine } from './scan-sections';
+import { overallCaption, overallPercent, sectionViews, stepLine } from './scan-sections';
 
 /**
  * One scan in the list (DFS-041.AC-5 to AC-9, redesigned in DFS-063): its folders, start time and status, and
@@ -46,6 +46,19 @@ export class ScanRow implements OnInit {
   protected readonly collapsed = computed(() => this.status() === 'COMPLETED');
   /** The four sections of the strip, in run order (DFS-063.AC-1 to AC-3, AC-7 to AC-11). */
   protected readonly sections = computed(() => sectionViews(this.progress()));
+
+  /**
+   * The overall percentage text; while the status is CANCELLING it keeps the value it had just before, however far the
+   * progress moves (DFS-063.AC-2), a pure `linkedSignal` so no write happens during rendering.
+   */
+  private readonly overall = linkedSignal<{ status: string; label: string }, string>({
+    source: () => {
+      const percent = overallPercent(this.progress());
+      return { status: this.status(), label: percent === null ? '—' : `${percent}%` };
+    },
+    computation: (source, previous) =>
+      source.status === 'CANCELLING' && previous ? previous.value : source.label,
+  });
 
   protected readonly statusLabel = statusLabel;
   /** The caption under the percentage, `overallCaption` (DFS-063.AC-2). */
@@ -100,11 +113,11 @@ export class ScanRow implements OnInit {
   /**
    * The overall percentage as the row shows it: "47%", or "—" when `overallPercent` is null (DFS-063.AC-1, AC-3). While
    * the status is CANCELLING it holds the last value shown before it, however far the progress moves (DFS-063.AC-2);
-   * once CANCELLED it shows the percentage of the progress again, labelled "when stopped". How the last value is kept
-   * (an `effect` or a `linkedSignal`) is the implementation's choice; this method only reads signals.
+   * once CANCELLED it shows the percentage of the progress again, labelled "when stopped". The last value is kept by a
+   * `linkedSignal`; this method only reads signals.
    */
   protected overallLabel(): string {
-    throw new Error('not implemented: DFS-063');
+    return this.overall();
   }
 
   /**
@@ -112,7 +125,11 @@ export class ScanRow implements OnInit {
    * seconds from `entry().startedAt` to `entry().finishedAt`; '' while `finishedAt` is null.
    */
   protected duration(): string {
-    throw new Error('not implemented: DFS-063');
+    const finishedAt = this.entry().finishedAt;
+    if (!finishedAt) {
+      return '';
+    }
+    return formatDuration((Date.parse(finishedAt) - Date.parse(this.entry().startedAt)) / 1000);
   }
 
   /**

@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { ScanProgress } from '../api/models';
+import { noBytesLeft } from './scan-format';
 
 /**
  * The page's clock in milliseconds, read when a progress update arrives (DFS-057 decision 2); a spec provides a fake
@@ -29,6 +30,7 @@ const FINISHING = 'finishing…';
 export class EtaEstimator {
   private window: { time: number; done: number }[] = [];
   private phaseStart = 0;
+  private phase: string | null = null;
 
   constructor(private readonly now: () => number) {}
 
@@ -42,7 +44,38 @@ export class EtaEstimator {
    * The 30 s warm-up is counted from the phase's own start (the first update of that phase this estimator saw).
    */
   record(progress: ScanProgress): string | null {
-    throw new Error('not implemented: DFS-063');
+    const now = this.now();
+    const phase = progress.phase;
+    const active = progress.status === 'RUNNING' || progress.status === 'CANCELLING';
+    if (!active || (phase !== 'FULL_HASH' && phase !== 'HARD_LINKS')) {
+      this.window = [];
+      this.phase = null;
+      return null;
+    }
+    if (phase !== this.phase) {
+      this.phase = phase;
+      this.window = [];
+      this.phaseStart = now;
+    }
+    const hashing = phase === 'FULL_HASH';
+    const done = hashing ? progress.hashedBytes : progress.groupsDone;
+    const total = hashing ? progress.hashBytesTotal : progress.groupsTotal;
+    this.window = this.window.filter((w) => w.time >= now - WINDOW_MS);
+    this.window.push({ time: now, done });
+    if (hashing && noBytesLeft(progress)) {
+      return FINISHING;
+    }
+    if (now - this.phaseStart < WARM_UP_MS || this.window.length < 2) {
+      return ESTIMATING;
+    }
+    const first = this.window[0];
+    const seconds = (now - first.time) / 1000;
+    const rate = seconds > 0 ? (done - first.done) / seconds : 0;
+    if (rate <= 0) {
+      return ESTIMATING;
+    }
+    const left = total - done;
+    return left <= 0 ? FINISHING : formatEta(left / rate);
   }
 }
 
