@@ -49,6 +49,8 @@ The current row is `scan-row.ts`/`.html`/`.css` with helpers `scan-phase.ts`, `s
 
 2. **The calculations are pure helpers with their own specs** (2026-11-09). One new helper file in `scans/` holds the overall percentage and the four section states, taking a `ScanProgress` and returning plain values; `scan-eta.ts` gains the hard-link and finishing cases; `scan-format.ts` gains the totals lines. The row component only renders what they return. The canvas's worked cases are test cases (compare 2954 of 29594 files is 13%, hashing 5.1 of 17.1 GB is 47%, nothing left to read is 90%, hard links 1242 of 3104 groups is 94%). The 30 s rate logic stays in `scan-eta.ts` only; the clock stays injectable (`CLOCK` token), so no test waits on real time. Rejected: calculations in the component's signals (tested through the DOM, a failing rule is hard to find) and one helper replacing `scan-eta.ts` and `scan-phase.ts` (rewrites tested DFS-057 code for no new behaviour).
 
+3. **Time left follows the canvas, not DFS-057's 3 s warm-up** (2026-11-09). "estimating…" for the first 30 s of the phase (DFS-057 used 3 s; `WARM_UP_MS` in `scan-eta.ts` becomes 30 s, and the `DFS-057.AC-6` cases in `scan-eta.spec.ts` that assume 3 s change with it, which is why the spec is in `touches`). The rate window (the last 30 s) and the wording (`formatEta`: "about 45 s left", "about 4 min left", "about 1 h 20 min left") stay. Hashing: bytes left over bytes per second. Hard links: groups left over groups per second, same window, same 30 s warm-up counted from that phase's start, same words. "finishing…" replaces the time whenever the hashing phase has no bytes left to read, even inside the first 30 s. Walk and compare show no time left. Rejected: keeping 3 s (drops the canvas rule; the earliest estimate is the least accurate).
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
@@ -58,6 +60,9 @@ The full ID of each criterion is `DFS-063.AC-<n>`.
 - **AC-1** A QUEUED scan's row shows the four sections as not started, the overall percentage as "—", the text "Waiting to start" and an enabled Cancel button.
 - **AC-2** A CANCELLING scan's row keeps its running section's look, holds the overall percentage at the last value it showed, shows "Cancelling…" and a disabled Cancel button; once the scan is CANCELLED the section shows as stopped.
 - **AC-3** The overall percentage is the finished sections' weights (walk 12, compare 18, hash 60, hard links 10) plus the running section's weight times its progress, rounded down: compare by files done over files in, hashing by bytes done over bytes in, hard links by groups done over groups. It reads "—" during the walk, is at most 99 until the scan is COMPLETED, and is 100 only then.
+- **AC-4** In the hashing phase the time left reads "estimating…" until the phase has run 30 s with bytes hashed and while the rate over the last 30 s is 0, then "about N min left" (words as `formatEta`) from the bytes left over that rate; the walk and compare phases show no time left.
+- **AC-5** In the hard-link phase the time left is the groups left over the groups-per-second rate of the last 30 s, with the same words and the same "estimating…" for the first 30 s of that phase.
+- **AC-6** When the hashing phase has no bytes left to read, the time left reads "finishing…" instead of a time, also inside the first 30 s of the phase.
 
 ## Scenarios
 
@@ -111,6 +116,43 @@ Feature: Scan progress row
     Given a scan comparing with 29594 of 29594 files done, reading "30%"
     When the hashing phase starts and its totals are still 0
     Then the overall percentage still reads "30%" and is not "NaN%"
+
+  @AC-4
+  Scenario: Hashing waits 30 s, then follows the rate
+    Given a hashing scan with 2600 MB to read and a fake clock
+    And the phase's first update at 0 s has 0 MB read
+    When an update at 29 s has 290 MB read
+    Then the time left reads "estimating…"
+    When an update at 30 s has 300 MB read
+    Then it reads "about 4 min left"
+
+  @AC-4
+  Scenario: A stalled rate keeps estimating
+    Given a hashing scan 90 s in, 500 MB read at 60 s and still 500 MB at 90 s
+    Then the time left reads "estimating…"
+
+  @AC-4
+  Scenario: Walk and compare show no time left
+    Given a scan in the walk, then one comparing samples
+    Then neither row shows a time left
+
+  @AC-5
+  Scenario: Hard links follow the groups rate
+    Given a hard-link phase with 3000 groups and a fake clock, 0 done at its start
+    When an update at 29 s has 580 done
+    Then the time left reads "estimating…"
+    When an update at 30 s has 600 done
+    Then it reads "about 2 min left"
+
+  @AC-6
+  Scenario: Nothing left to read is finishing
+    Given a hashing scan with 17.1 of 17.1 GB read after 20 min
+    Then the time left reads "finishing…"
+
+  @AC-6
+  Scenario: A tiny scan finishes inside the warm-up
+    Given a hashing scan with 5 of 5 MB read 4 s after the phase started
+    Then the time left reads "finishing…", not "estimating…"
 
 ## Scope
 
