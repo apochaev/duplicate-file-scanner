@@ -70,7 +70,7 @@ Feature: <name>
 
 - [ ] Every scenario above is an automated test and passes
 - [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No files changed outside the paths listed under Touches
+- [ ] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
 - [ ] <ticket-specific check>
 
 ## Open questions

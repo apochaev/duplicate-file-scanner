@@ -15,11 +15,11 @@
 
 ### DFS-062.L-2: Done-item "No files changed outside Touches" is ticked although the ticket's own files change
 
-- Status: proposed
-- Impact: local
+- Status: applied
+- Impact: shared (touches a skill: `.claude/skills/tickets/TEMPLATE.md`)
 - Target: `.claude/skills/tickets/TEMPLATE.md` (Definition of done wording), or each `archetype: none` ticket's own done-item
 - Change: reword the item to "no source files changed outside Touches (the ticket folder's own files excepted)", or list the ticket folder under Touches for `archetype: none` tickets.
 - Evidence: commit `dad315b` changed `ScanCommandTest.java`, `StubFailures.java` and `StubFailuresTest.java`, plus the ticket and `verification.md` under `docs/tickets/`; Touches lists only `cli/src/test/java/us/pochaev/dfs/cli`, yet the item was ticked under its literal wording.
 - Recurrences: 1
 - Recommendation: park. Low impact: it caused no harm here, and the fix is a one-line wording change.
-- Decision:
+- Decision: applied 2026-11-09 by the user; commit `docs: apply DFS-062.L-2`
