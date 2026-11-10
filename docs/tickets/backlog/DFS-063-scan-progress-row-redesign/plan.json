@@ -44,7 +44,7 @@
       "after": [
         "design"
       ],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -63,6 +63,15 @@
           "wallClockSeconds": 58,
           "outcome": "passed",
           "note": "reopened for defect 1 (AC-15 regex); verified with green (npmTest 270 tests pass), not test-phase, since src already carries the implementation"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 11,
+          "wallClockSeconds": 73,
+          "outcome": "passed",
+          "note": "reopened for defect 2 (AC-12 completed-while-open); verified by running npmTest: the one new test fails on an assertion about the empty duration text, 270 others pass (red check not usable, src already implemented)"
         }
       ],
       "artifacts": [
@@ -77,7 +86,7 @@
         "server/frontend/src/app/scans/scan-sections.spec.ts",
         "server/frontend/src/app/scans/scan-test-data.ts"
       ],
-      "commit": "1ff4faec39976076cff0fdca98994441882d496f"
+      "commit": "b3b92425212cc4017aec69dab76688afd01d3079"
     },
     {
       "id": "implement",
@@ -163,7 +172,7 @@
     {
       "id": 2,
       "phase": "verify",
-      "route": "test-author",
+      "route": "implementer",
       "summary": "AC-12: a row that turns COMPLETED through the progress stream shows empty .scan-duration and .scan-finished until reload; no test drives the stream to COMPLETED",
       "status": "open"
     }
