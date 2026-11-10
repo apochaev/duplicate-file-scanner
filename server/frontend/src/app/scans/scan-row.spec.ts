@@ -7,6 +7,7 @@ import { provideRouter, withHashLocation } from '@angular/router';
 import { ScanEntry, ScanProgress } from '../api/models';
 import { provideStubSurfacing, settle } from '../../testing/stub-surfacing';
 import { progress, scanEntry } from '../results/result-test-data';
+import { answerFinishFetches } from '../../testing/scan-finish';
 import { EVENT_SOURCE } from './scan-events.service';
 import { CLOCK } from './scan-eta';
 import { ScanRow } from './scan-row';
@@ -59,7 +60,11 @@ describe('ScanRow', () => {
     }).compileComponents();
   });
 
-  afterEach(() => TestBed.inject(HttpTestingController).verify());
+  afterEach(() => {
+    const http = TestBed.inject(HttpTestingController);
+    answerFinishFetches(http);
+    http.verify();
+  });
 
   async function renderEntry(entry: ScanEntry): Promise<void> {
     fixture = TestBed.createComponent(ScanRow);
@@ -347,6 +352,25 @@ describe('ScanRow', () => {
     expect(sectionText('FULL_HASH', '.section-tag')).toBe('failed');
     expect(section('FULL_HASH')?.classList.contains('section-failed')).toBe(true);
     expect(text('.scan-failure')).toBe('Scan failed while hashing files. disk read failed');
+  });
+
+  it('DFS-063.AC-12 fetches the entry when the stream turns COMPLETED and fills the duration and finish time', async () => {
+    await renderEntry({ ...scanEntry('s-1'), startedAt: '2026-11-01T14:02:30', progress: hashingHalf() });
+    expect(el.querySelector('.scan-duration')).toBeNull();
+
+    await send(completed());
+    const request = TestBed.inject(HttpTestingController).expectOne('/api/scans/s-1');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      ...scanEntry('s-1'),
+      startedAt: '2026-11-01T14:02:30',
+      finishedAt: '2026-11-01T14:17:08',
+      progress: completed(),
+    });
+    await settle(fixture);
+
+    expect(text('.scan-duration')).toBe('took 14 min 38 s');
+    expect(text('.scan-finished')).toBe('finished 14:17');
   });
 
   it('DFS-063.AC-12 collapses a COMPLETED scan to one line with its totals, duration and the results link', async () => {

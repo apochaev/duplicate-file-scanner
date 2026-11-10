@@ -12,6 +12,7 @@ import { MatExpansionPanelHarness } from '@angular/material/expansion/testing';
 import { MatInputHarness } from '@angular/material/input/testing';
 import { ScanEntry, ScanProgress } from '../api/models';
 import { provideStubSurfacing, settle as settleFixture } from '../../testing/stub-surfacing';
+import { answerFinishFetches } from '../../testing/scan-finish';
 import { EVENT_SOURCE } from './scan-events.service';
 import { ScanScreen } from './scan-screen';
 
@@ -112,7 +113,10 @@ describe('ScanScreen', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    answerFinishFetches(http);
+    http.verify();
+  });
 
   /** Lets the generated client's Promises and the signals settle, then renders (DFS-038's Promise timing). */
   async function settle(): Promise<void> {
