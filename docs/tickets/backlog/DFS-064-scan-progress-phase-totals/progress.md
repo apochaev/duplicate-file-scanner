@@ -10,3 +10,8 @@
 ## Design gate (orchestrator note)
 
 Design approved without feedback. So AC-5 is read as decision 3 has it: `phases` is in the progress event, `GET /api/scans/{id}` and `GET /api/scans`; `finishedAt` is on `ScanEntry` only (the two GETs), not in the event stream. Write the AC-5 test accordingly.
+
+## Test phase
+
+- Wrote `server/src/test/java/us/pochaev/dfs/server/scan/ScanRegistryPhasesTest.java` (10 invocations, registry with fake ports and clock) and `server/src/test/java/us/pochaev/dfs/server/ScanPhasesApiTest.java` (2 tests over HTTP), and `test-plan.md`.
+- Run: 12 of 12 fail, each with `UnsupportedOperationException: not implemented: DFS-064`. Not committed; the orchestrator commits (expected: `test(server): phase totals and finishedAt tests [DFS-064]`).
