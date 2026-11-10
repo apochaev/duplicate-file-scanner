@@ -429,8 +429,8 @@ describe('ScanRow', () => {
     const outside = css.slice(0, open) + css.slice(end + 1);
 
     expect(outside).toMatch(/@keyframes/);
-    expect(outside).toMatch(/animation(-name)?\s*:\s*(?!none)/);
+    expect(outside).toMatch(/animation(-name)?\s*:(?!\s*none)/);
     expect(reduced).toMatch(/animation(-name)?\s*:\s*none/);
-    expect(reduced).not.toMatch(/animation(-name)?\s*:\s*(?!none)/);
+    expect(reduced).not.toMatch(/animation(-name)?\s*:(?!\s*none)/);
   });
 });
