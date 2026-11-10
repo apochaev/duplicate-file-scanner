@@ -47,22 +47,22 @@
 
 ### DFS-063.L-4: By-hand check tips for slow progress and CDP navigation
 
-- Status: proposed
+- Status: parked
 - Impact: shared (an agent prompt)
 - Target: .claude/agents/verifier.md
 - Change: add two notes: use a slower or larger fixture so short states (finishing, hard links) are observable, since progress arrived about every 3 s in roughly 800 MB steps; and use CDP `Page.reload`, not `Page.navigate` to a hash-only change, which does not reload.
 - Evidence: DFS-063 verify attempts 1 and 2: a 500 ms sampler missed the finishing and hard-link states on a 16 GB scan; a scan started through the API never appeared after a hash-only navigate. Verify attempt 1 used 38 turns and hit the cap. Related: DFS-057 notes, bullet 6 (fixture of a few large files; a different cause) and DFS-060 notes (CDP script tips, port reuse).
 - Recurrences: 1 (DFS-063); related notes in DFS-057 and DFS-060 are not counted
 - Recommendation: park; by-hand tips for one UI story type, so confirm they recur before touching a shared prompt.
-- Decision:
+- Decision: parked 2026-11-10 by the user
 
 ### DFS-063.L-5: Test helpers need a home inside `touches`
 
-- Status: proposed
+- Status: parked
 - Impact: local
 - Target: .claude/archetypes/component/archetype.md (touches skeleton)
 - Change: suggest including a `testing/` folder in the default `touches` for frontend stories, so a helper such as `scan-finish.ts` does not sit in the production folder under a non-spec name.
 - Evidence: DFS-063 gate: `touches` failed on `src/testing/scan-finish.ts`; the helper moved to `src/app/scans/scan-finish.ts` (not bundled, like `scan-test-data.ts`).
 - Recurrences: 1 (DFS-063)
 - Recommendation: park; cosmetic, the helper is not bundled.
-- Decision:
+- Decision: parked 2026-11-10 by the user
