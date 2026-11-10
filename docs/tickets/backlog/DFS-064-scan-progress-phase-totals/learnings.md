@@ -1,0 +1,6 @@
+# DFS-064 learnings
+
+- **Endpoint archetype, spec order trap.** `:server:updateOpenApi` runs on the test classpath, which includes the frontend build, so it fails (`TS2561` and `TS2353` on literals) when frontend literals already carry the new fields the old spec lacks. Step order for a changed record: write the stubs, run `updateOpenApi` with the old frontend literals, then add the literals. `archetype.md` checklist item 7 and `design.md.tmpl` say the design fixes the frontend, but not in which order.
+- **Endpoint archetype, red-gate blast radius.** When the stub sits on the read path of a shared record (here every `ScanProgress` build), most existing API test classes fail red with the stub. They pass the gate on their own (the stub is in each failure), but the architect has to check each class's report to say so; a one-line shell loop counting `<failure` against the stub message did it.
+- **Ticket gap.** AC-5 says the progress events include `finishedAt`, but decision 3 puts `finishedAt` on `ScanEntry` and the stream sends `ScanProgress`. Raised in `design.md` under Open design notes for the design gate.
+- **Ticket gap.** The core sends no event when a scan ends, so decision 3's "stamp when the scan ends" cannot be a callback inside `server`; the design uses a 50 ms sweep plus a read-time stamp.

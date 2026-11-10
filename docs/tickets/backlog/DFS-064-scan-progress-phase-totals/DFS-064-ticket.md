@@ -1,7 +1,7 @@
 ---
 id: DFS-064
 title: Keep each scan phase's totals and the finish time in the progress stream
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: endpoint

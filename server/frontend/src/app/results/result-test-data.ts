@@ -28,12 +28,13 @@ export function progress(update: Partial<ScanProgress> = {}): ScanProgress {
     groupsDone: 0,
     groupsTotal: 0,
     failureMessage: null,
+    phases: [],
     ...update,
   };
 }
 
 export function scanEntry(id: string, update: Partial<ScanProgress> = {}, locations = ['C:\\Photos']): ScanEntry {
-  return { id, locations, startedAt: '2026-11-01T10:00:00Z', progress: progress(update) };
+  return { id, locations, startedAt: '2026-11-01T10:00:00Z', finishedAt: null, progress: progress(update) };
 }
 
 export function folder(path: string, update: Partial<FolderNode> = {}): FolderNode {

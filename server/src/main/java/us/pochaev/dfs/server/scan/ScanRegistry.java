@@ -1,5 +1,7 @@
 package us.pochaev.dfs.server.scan;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import us.pochaev.dfs.scanner.domain.model.Result;
 import us.pochaev.dfs.scanner.domain.model.ScanConfig;
@@ -15,6 +17,7 @@ import us.pochaev.dfs.scanner.domain.usecases.query.GetScanResult;
 import us.pochaev.dfs.scanner.domain.usecases.query.GetScanStatus;
 
 import java.nio.file.Path;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -25,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
@@ -42,20 +46,44 @@ public class ScanRegistry {
     private final CancelScan cancelScan;
     private final GetScanStatus getScanStatus;
     private final GetScanResult getScanResult;
+    private final Clock clock;
     private final Map<UUID, Tracked> scans = new ConcurrentHashMap<>();
     private final AtomicLong sequence = new AtomicLong();
 
-    ScanRegistry(StartScan startScan, CancelScan cancelScan, GetScanStatus getScanStatus, GetScanResult getScanResult) {
+    /**
+     * The Spring constructor (DFS-064 decision 3): the {@link Clock} bean when the application context has one (a
+     * test supplies a fake), else the system UTC clock.
+     */
+    @Autowired
+    ScanRegistry(StartScan startScan, CancelScan cancelScan, GetScanStatus getScanStatus, GetScanResult getScanResult,
+                 ObjectProvider<Clock> clock) {
+        this(startScan, cancelScan, getScanStatus, getScanResult, clock.getIfAvailable(Clock::systemUTC));
+    }
+
+    /** Built with an explicit clock, for a test that drives the clock itself. */
+    ScanRegistry(StartScan startScan, CancelScan cancelScan, GetScanStatus getScanStatus, GetScanResult getScanResult,
+                 Clock clock) {
         this.startScan = startScan;
         this.cancelScan = cancelScan;
         this.getScanStatus = getScanStatus;
         this.getScanResult = getScanResult;
+        this.clock = clock;
+    }
+
+    /**
+     * Stamps {@code finishedAt} on every scan that has ended and has none yet, from the registry's clock (DFS-064
+     * decision 3). The core sends no event when a scan ends, so the registry looks: a scheduled call every 50 ms
+     * (the implementation starts a daemon scheduler, shut down in a {@code @PreDestroy}) and, as a safety net, every
+     * read of an entry. The first caller to see a terminal status wins, so the instant is fixed. Never throws.
+     */
+    void sweep() {
+        throw new UnsupportedOperationException("not implemented: DFS-064");
     }
 
     /** Starts a scan through the core; the folders are recorded as the caller gave them. */
     Result<ScanEntry> start(List<String> locations, List<Path> paths, ScanConfig config) {
         Counters counters = new Counters();
-        Instant startedAt = Instant.now();
+        Instant startedAt = clock.instant();
         long seq = sequence.incrementAndGet();
         return switch (startScan.start(paths, config, counters)) {
             case Result.Failure<ScanId> f -> new Result.Failure<>(f.code(), f.message());
@@ -175,7 +203,17 @@ public class ScanRegistry {
     }
 
     private ScanEntry entry(Tracked t) {
-        return new ScanEntry(t.id().value().toString(), t.locations(), t.startedAt(), progress(t));
+        ScanProgress p = progress(t);
+        return new ScanEntry(t.id().value().toString(), t.locations(), t.startedAt(), finishedAt(t, p.status()), p);
+    }
+
+    /**
+     * The instant the scan ended: null while {@code status} is not terminal; otherwise the value kept in
+     * {@code t.finished()}, set once (compare-and-set from null) to the clock's instant, never earlier than
+     * {@code startedAt}, so every later read returns the same one.
+     */
+    private Instant finishedAt(Tracked t, String status) {
+        throw new UnsupportedOperationException("not implemented: DFS-064");
     }
 
     private ScanProgress progress(Tracked t) {
@@ -191,14 +229,14 @@ public class ScanRegistry {
         }
         return new ScanProgress(s.status().name(), s.phase() == null ? null : s.phase().name(),
                 c.directories, c.files, c.bytes, c.hashedFiles, c.hashFilesTotal, c.hashedBytes, c.hashBytesTotal,
-                groupsDone, groupsTotal, s.failureMessage());
+                groupsDone, groupsTotal, s.failureMessage(), c.phases(s.status()));
     }
 
     private record Tracked(ScanId id, List<String> locations, Instant startedAt, long sequence, Counters counters,
-                           Map<Class<?>, CompletableFuture<?>> state) {
+                           AtomicReference<Instant> finished, Map<Class<?>, CompletableFuture<?>> state) {
 
         Tracked(ScanId id, List<String> locations, Instant startedAt, long sequence, Counters counters) {
-            this(id, locations, startedAt, sequence, counters, new ConcurrentHashMap<>());
+            this(id, locations, startedAt, sequence, counters, new AtomicReference<>(), new ConcurrentHashMap<>());
         }
 
         int setCount(GetScanResult results) {
@@ -223,6 +261,18 @@ public class ScanRegistry {
         volatile long hashedBytes;
         volatile long hashBytesTotal;
         volatile int sets = -1;
+
+        /**
+         * One {@link PhaseTotals} per phase that has started, in run order (DFS-064 decision 2). The implementation
+         * keeps each phase's own totals here, written by the scanning thread in {@code onEvent}: {@code PhaseStarted}
+         * opens an entry (the walk's directories, files and bytes are copied in as they arrive), {@code HashProgress}
+         * sets the open hash entry's files and bytes totals, {@code GroupDone} the open hard-link entry's groups. An
+         * entry is finished when a later one exists, or when {@code status} is COMPLETED. The returned list is a
+         * snapshot, safe to read from any thread, and empty before the first {@code PhaseStarted}.
+         */
+        List<PhaseTotals> phases(ScanStatus status) {
+            throw new UnsupportedOperationException("not implemented: DFS-064");
+        }
 
         @Override
         public void onEvent(ScanEvent event) {
