@@ -12,33 +12,44 @@
 
 ### DFS-064.L-1: Endpoint archetype: spec regeneration order for a changed record
 
-- Status: proposed
+- Status: applied
 - Impact: local (`endpoint` archetype)
 - Target: `.claude/archetypes/endpoint/archetype.md`, edge-case checklist item 7, and `design.md.tmpl`
 - Change: add the step order for a changed record: write the stubs, run `:server:updateOpenApi` while the frontend literals still lack the new fields, then add the literals. `updateOpenApi` runs on the test classpath, which includes the frontend build, so it fails (TS2561, TS2353) if the literals already carry fields the old spec lacks.
 - Evidence: DFS-064 design phase: the architect hit the failure, reverted and reapplied its own literal edits (first note in this file).
 - Recurrences: 1 (DFS-064)
 - Recommendation: apply, a one-line ordering note prevents a repeatable failure.
-- Decision:
+- Decision: applied 2026-11-10 by the user; commit `docs: apply DFS-064.L-1, DFS-064.L-2, DFS-064.L-3`
 
 ### DFS-064.L-2: Test-author: fakes must replay the core's real event order
 
-- Status: proposed
+- Status: applied
 - Impact: shared (agent prompt `test-author.md`)
 - Target: `.claude/agents/test-author.md`, and `.claude/archetypes/endpoint/test-guide.md`
 - Change: when a fake stands in for the core's listener events, its sequence is copied from the core (for example `ScanPipeline`), or the story adds one real-scan HTTP assertion on every field the criterion names, not only the first phase's.
 - Evidence: DFS-064 `plan.json` defect 1: `ScanRegistryPhasesTest`'s fake sent `GroupDone` only in HARD_LINKS, the core sends it after every group of every stage, so the implementation zeroed both hash phases' totals while every test passed. Found only by the by-hand run; it cost a second tests run (15 turns), a second implement (7 turns) and a second verify (22 turns).
 - Recurrences: 1 (DFS-064)
 - Recommendation: apply, the defect escaped every automated gate.
-- Decision:
+- Decision: applied 2026-11-10 by the user; commit `docs: apply DFS-064.L-1, DFS-064.L-2, DFS-064.L-3`
 
 ### DFS-064.L-3: Verifier: use a fixture of about 1 GB to observe progress change
 
-- Status: proposed
+- Status: applied
 - Impact: shared (agent prompt `verifier.md`)
 - Target: `.claude/agents/verifier.md`
 - Change: when a done-item asks to see progress change, use a fixture of about 1 GB (three identical 400 MB files), because a scan of under 1 MB finishes before the first poll or stream event.
 - Evidence: DFS-064 verify attempt 1 could not see `phases` growing on a small fixture; attempt 2 with about 1.2 GB gave about 4 s of FULL_HASH and showed it.
 - Recurrences: 1 (DFS-064)
 - Recommendation: apply, cheap and repeatable.
-- Decision:
+- Decision: applied 2026-11-10 by the user; commit `docs: apply DFS-064.L-1, DFS-064.L-2, DFS-064.L-3`
+
+### DFS-064.L-4: Gherkin fence closes after the first scenario
+
+- Status: parked
+- Impact: shared (touches a skill or the archetype ticket template)
+- Target: `.claude/skills/tickets` (refine), or a `story-gate` lint
+- Change: add a refine-time check that every `@AC-n` scenario sits inside the Gherkin fence, which closes only after the last scenario.
+- Evidence: DFS-064 ticket: the "```gherkin" block opens at line 68 and closes at line 78, after the first scenario; the `@AC-2` to `@AC-5` scenarios (lines 80-133) sit outside the fence. Unchanged since the ready commit 92c6584, through design, tests and review.
+- Recurrences: 1 (DFS-064)
+- Recommendation: park, one occurrence and cosmetic; it would matter if a tool parses scenarios from the fenced block.
+- Decision: parked 2026-11-10 by the user
