@@ -4,14 +4,14 @@
 
 ### DFS-062.L-1: Draft ID collision, two different tickets drafted as DFS-062
 
-- Status: proposed
+- Status: parked
 - Impact: shared (touches a skill: `.claude/skills/tickets/SKILL.md`)
 - Target: `.claude/skills/tickets/SKILL.md` (the `new` step that picks the next ID)
 - Change: make `/tickets new` take the next ID from the highest ID across `backlog/` and `completed/` on every branch and worktree, or check for a duplicate ID before the draft commit.
 - Evidence: commit `e7f2899` ("docs: draft DFS-062, DFS-063") created `backlog/DFS-062-scan-progress-phase-totals`; commit `bf67179` ("docs: draft DFS-062") drafted this ticket under the same ID; commit `626d9fe` ("docs: renumber draft DFS-062 to DFS-064, ID was already used") fixed it afterwards.
 - Recurrences: 1
 - Recommendation: park. One occurrence, and the cause (parallel sessions drafting at once) is not confirmed from the files; a fix needs a decision on what "every branch" means for the skill.
-- Decision:
+- Decision: parked 2026-11-09 by the user
 
 ### DFS-062.L-2: Done-item "No files changed outside Touches" is ticked although the ticket's own files change
 
