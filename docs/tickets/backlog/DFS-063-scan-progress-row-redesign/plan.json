@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-063-scan-progress-row-redesign",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-063-scan-progress-row-redesign",
-  "state": "awaiting-approval",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -200,7 +200,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": [
