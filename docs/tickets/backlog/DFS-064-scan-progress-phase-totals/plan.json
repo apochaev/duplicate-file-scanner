@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-064-scan-progress-phase-totals",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-064-scan-progress-phase-totals",
-  "state": "running",
+  "state": "awaiting-approval",
   "phases": [
     {
       "id": "design",
@@ -114,7 +114,7 @@
       "after": [
         "implement"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -124,10 +124,23 @@
           "wallClockSeconds": 191,
           "outcome": "failed-gate",
           "note": "verifier found AC-2 not met on a real scan; sent back to tests then implement"
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 22,
+          "wallClockSeconds": 160,
+          "outcome": "passed",
+          "note": "PASS consistency; all 5 criteria met, by-hand run done"
         }
       ],
-      "artifacts": [],
-      "commit": null
+      "artifacts": [
+        "docs/tickets/backlog/DFS-064-scan-progress-phase-totals/DFS-064-ticket.md",
+        "docs/tickets/backlog/DFS-064-scan-progress-phase-totals/learnings.md",
+        "docs/tickets/backlog/DFS-064-scan-progress-phase-totals/verification.md"
+      ],
+      "commit": "adce48e04b7a2d5f52b3fd0351201de51c7565f7"
     }
   ],
   "gates": [
