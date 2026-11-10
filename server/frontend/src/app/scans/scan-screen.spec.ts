@@ -10,8 +10,8 @@ import { MatCheckboxHarness } from '@angular/material/checkbox/testing';
 import { MatChipGridHarness, MatChipInputHarness } from '@angular/material/chips/testing';
 import { MatExpansionPanelHarness } from '@angular/material/expansion/testing';
 import { MatInputHarness } from '@angular/material/input/testing';
-import { MatProgressBarHarness } from '@angular/material/progress-bar/testing';
 import { ScanEntry, ScanProgress } from '../api/models';
+import { provideStubSurfacing, settle as settleFixture } from '../../testing/stub-surfacing';
 import { EVENT_SOURCE } from './scan-events.service';
 import { ScanScreen } from './scan-screen';
 
@@ -74,6 +74,14 @@ function progress(update: Partial<ScanProgress> = {}): ScanProgress {
   };
 }
 
+/** The totals of a finished scan, for the COMPLETED rows' narrowing line. */
+const DONE_PHASES: ScanProgress['phases'] = [
+  { phase: 'WALK', finished: true, directories: 3, files: 1200, bytes: 5242880, groups: 0 },
+  { phase: 'PARTIAL_HASH', finished: true, directories: 0, files: 1200, bytes: 5242880, groups: 0 },
+  { phase: 'FULL_HASH', finished: true, directories: 0, files: 40, bytes: 2097152, groups: 0 },
+  { phase: 'HARD_LINKS', finished: true, directories: 0, files: 0, bytes: 0, groups: 9 },
+];
+
 function entry(
   id: string,
   update: Partial<ScanProgress>,
@@ -97,6 +105,7 @@ describe('ScanScreen', () => {
         provideHttpClientTesting(),
         // A COMPLETED row holds an "Open results" link (DFS-049): it needs a router.
         provideRouter([], withHashLocation()),
+        provideStubSurfacing(),
         { provide: EVENT_SOURCE, useValue: (url: string) => new FakeEventSource(url) as unknown as EventSource },
       ],
     }).compileComponents();
@@ -107,9 +116,7 @@ describe('ScanScreen', () => {
 
   /** Lets the generated client's Promises and the signals settle, then renders (DFS-038's Promise timing). */
   async function settle(): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve));
-    await fixture.whenStable();
-    fixture.detectChanges();
+    await settleFixture(fixture);
   }
 
   /** Renders the screen and answers its GET /api/scans with the given entries. */
@@ -295,14 +302,19 @@ describe('ScanScreen', () => {
 
   it("DFS-041.AC-5 DFS-041.AC-8 lists this server run's scans in the server's order with their outcomes", async () => {
     await render([
-      entry('s-3', { status: 'COMPLETED', files: 1200, bytes: 5242880, groupsTotal: 7 }, ['C:/a'], '2026-11-01T10:30:00Z'),
+      entry(
+        's-3',
+        { status: 'COMPLETED', files: 1200, bytes: 5242880, groupsTotal: 7, phases: DONE_PHASES },
+        ['C:/a'],
+        '2026-11-01T10:30:00Z',
+      ),
       entry(
         's-2',
-        { status: 'FAILED', failureMessage: 'Disk not readable' },
+        { status: 'FAILED', phase: 'WALK', failureMessage: 'Disk not readable' },
         ['C:/b', 'D:/c'],
         '2026-11-01T10:20:00Z',
       ),
-      entry('s-1', { status: 'CANCELLED', files: 10, bytes: 100 }, ['C:/d'], '2026-11-01T10:10:00Z'),
+      entry('s-1', { status: 'CANCELLED', phase: 'WALK', files: 10, bytes: 100 }, ['C:/d'], '2026-11-01T10:10:00Z'),
     ]);
 
     const [s3, s2, s1] = rows();
@@ -316,9 +328,8 @@ describe('ScanScreen', () => {
     expect(s1.querySelector('time')?.getAttribute('datetime')).toBe('2026-11-01T10:10:00Z');
 
     expect(s3.querySelector('.scan-status')?.textContent?.trim()).toBe('Completed');
-    expect(s3.textContent).toContain('1200 files');
-    expect(s3.textContent).toContain('5.0 MB');
-    expect(s3.textContent).toContain('7 duplicate sets');
+    expect(s3.textContent).toContain('1200 files · 5.0 MB found');
+    expect(s3.textContent).toContain('7 duplicate groups');
     expect(s2.querySelector('.scan-status')?.textContent?.trim()).toBe('Failed');
     expect(s2.textContent).toContain('Disk not readable');
     expect(s1.querySelector('.scan-status')?.textContent?.trim()).toBe('Cancelled');
@@ -335,10 +346,9 @@ describe('ScanScreen', () => {
 
     stream.send({ status: 'RUNNING', phase: 'WALK', directories: 12, files: 340, bytes: 1572864 });
     await settle();
-    expect(rows()[0].querySelector('.scan-phase')?.textContent?.trim()).toBe('Finding files');
-    expect(rows()[0].textContent).toContain('12 folders');
-    expect(rows()[0].textContent).toContain('340 files');
-    expect(rows()[0].textContent).toContain('1.5 MB');
+    expect(rows()[0].querySelector('.scan-step')?.textContent?.trim()).toBe('Step 1 of 4 · Finding files');
+    expect(rows()[0].textContent).toContain('340 files · 1.5 MB found');
+    expect(rows()[0].textContent).toContain('in 12 folders');
 
     stream.send({
       status: 'RUNNING',
@@ -348,15 +358,21 @@ describe('ScanScreen', () => {
       bytes: 1572864,
       hashedBytes: 262144,
       hashBytesTotal: 1048576,
+      phases: [
+        { phase: 'WALK', finished: true, directories: 12, files: 340, bytes: 1572864, groups: 0 },
+        { phase: 'PARTIAL_HASH', finished: true, directories: 0, files: 340, bytes: 1572864, groups: 0 },
+        { phase: 'FULL_HASH', finished: false, directories: 0, files: 20, bytes: 1048576, groups: 0 },
+      ],
     });
     await settle();
-    expect(rows()[0].querySelector('.scan-phase')?.textContent?.trim()).toBe('Hashing files');
-    expect(await (await loader.getHarness(MatProgressBarHarness)).getValue()).toBe(25);
+    expect(rows()[0].querySelector('.scan-step')?.textContent?.trim()).toBe('Step 3 of 4 · Hashing files');
+    // Walk and compare done (30%), a quarter of the hashing's 60%.
+    expect(rows()[0].querySelector('.scan-overall-value')?.textContent?.trim()).toBe('45%');
 
-    stream.send({ status: 'COMPLETED', files: 340, bytes: 1572864, groupsTotal: 3 });
+    stream.send({ status: 'COMPLETED', files: 340, bytes: 1572864, groupsTotal: 3, phases: DONE_PHASES });
     await settle();
     expect(rows()[0].querySelector('.scan-status')?.textContent?.trim()).toBe('Completed');
-    expect(rows()[0].textContent).toContain('3 duplicate sets');
+    expect(rows()[0].textContent).toContain('3 duplicate groups');
     expect(stream.closed).toBe(true);
     expect(FakeEventSource.opened).toHaveLength(1);
   });
@@ -375,7 +391,7 @@ describe('ScanScreen', () => {
     await settle();
     expect(rows()[0].querySelector('.scan-status')?.textContent?.trim()).toBe('Cancelling');
 
-    stream.send({ status: 'CANCELLED' });
+    stream.send({ status: 'CANCELLED', phase: 'WALK' });
     await settle();
     expect(rows()[0].querySelector('.scan-status')?.textContent?.trim()).toBe('Cancelled');
     expect(stream.closed).toBe(true);
