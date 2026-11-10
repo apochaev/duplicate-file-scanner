@@ -44,7 +44,7 @@
       "after": [
         "design"
       ],
-      "status": "done",
+      "status": "pending",
       "runs": [
         {
           "attempt": 1,
@@ -94,7 +94,7 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "runs": [
         {
           "attempt": 1,
@@ -113,6 +113,15 @@
           "wallClockSeconds": 0,
           "outcome": "passed",
           "note": "battery run on the working tree after the tests rework (defect 1): green 1136 passed; disabled, freeze, touches, stubs, traceability, consistency pass; no implementer relaunch"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "failed-gate",
+          "note": "defect 2 rework: scan-row.ts refetches GET /api/scans/{id} on a stream COMPLETED; green red because existing specs that reach COMPLETED through the stream do not flush that request (afterEach http.verify), cascading; test-side defect, implementation left uncommitted"
         }
       ],
       "artifacts": [
@@ -174,6 +183,13 @@
       "phase": "verify",
       "route": "implementer",
       "summary": "AC-12: a row that turns COMPLETED through the progress stream shows empty .scan-duration and .scan-finished until reload; no test drives the stream to COMPLETED",
+      "status": "open"
+    },
+    {
+      "id": 3,
+      "phase": "implement",
+      "route": "test-author",
+      "summary": "existing specs (scan-row AC-3, scan-screen DFS-041.AC-6 and others) reach COMPLETED via the stream without flushing the new GET /api/scans/{id}; afterEach http.verify fails and cascades",
       "status": "open"
     }
   ]
