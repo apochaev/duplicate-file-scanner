@@ -1,7 +1,7 @@
 ---
 id: DFS-058
 title: Show each finished scan phase's totals
-status: draft
+status: cancelled
 type: feature
 scope: [build]
 archetype:
@@ -13,8 +13,8 @@ depends_on: [DFS-057]
 touches: []
 blocked_reason:
 created: 2026-11-07
-updated: 2026-11-08
-completed:
+updated: 2026-11-10
+completed: 2026-11-10
 ---
 
 # DFS-058: Show each finished scan phase's totals
@@ -70,3 +70,7 @@ Feature: Finished phase history
 - Whether to do this at all, after DFS-057 is seen on a real scan.
 - Which totals per phase, and whether a COMPLETED scan's row keeps showing them.
 - Archetype (`endpoint` plus the component, or two tickets) and gates.
+
+## Resolution
+
+Cancelled 2026-11-10: folded into DFS-063 (the scan progress row redesign) and DFS-064 (per-phase totals in `ScanProgress`), both done. Finished phases now keep their totals in the progress strip.
