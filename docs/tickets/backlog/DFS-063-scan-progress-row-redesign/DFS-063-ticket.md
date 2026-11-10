@@ -1,7 +1,7 @@
 ---
 id: DFS-063
 title: Redesign the scan progress row as one four-section bar
-status: ready
+status: in-review
 type: feature
 scope: [build]
 archetype: component
@@ -16,7 +16,7 @@ touches:
   - CLAUDE.md
 blocked_reason:
 created: 2026-11-09
-updated: 2026-11-09
+updated: 2026-11-10
 completed:
 ---
 
@@ -270,13 +270,13 @@ Feature: Scan progress row
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the Vitest tests)
-- [ ] No test this ticket adds waits on real time (the clock is faked)
-- [ ] The production build prints no budget warning
-- [ ] `CLAUDE.md` and `docs/design/ui.md` describe the new row (the verifier reads them)
-- [ ] Started by hand once on the built jar with a real scan of a large folder (several GB): the row's sections, percentage, time left and collapsed Completed row are read from the page's DOM and compared with the canvas source (desktop only); `verification.md` records it
-- [ ] The same run records whether the bar sat still after the last file was read with no phase change (the stall DFS-064 decision 1 explains); if it did, a follow-up ticket is filed with `new`
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the Vitest tests)
+- [x] No test this ticket adds waits on real time (the clock is faked)
+- [x] The production build prints no budget warning (initial total 704.59 kB)
+- [x] `CLAUDE.md` and `docs/design/ui.md` describe the new row (the verifier reads them)
+- [x] Started by hand once on the built jar with a real scan of a large folder (several GB): the row's sections, percentage, time left and collapsed Completed row are read from the page's DOM and compared with the canvas source (desktop only); `verification.md` records it
+- [x] The same run records whether the bar sat still after the last file was read with no phase change (the stall DFS-064 decision 1 explains); if it did, a follow-up ticket is filed with `new`
 
 ## Open questions
 

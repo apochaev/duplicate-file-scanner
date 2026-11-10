@@ -3,25 +3,29 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ScanEntry } from '../api/models';
 import { ScansService } from '../api/services';
 import { ScanEventsService } from './scan-events.service';
-import { formatBytes, isTerminal, plural, statusLabel } from './scan-format';
+import { collapsedTotals, failureLine, formatDuration, isTerminal, statusLabel } from './scan-format';
 import { CLOCK, EtaEstimator } from './scan-eta';
-import { phaseView } from './scan-phase';
+import { overallCaption, overallPercent, sectionViews, stepLine } from './scan-sections';
 
 /**
- * One scan in the list (DFS-041.AC-5 to AC-9): its folders, start time and status; while it is not finished, its live
- * progress from the stream and a Cancel button; once finished, its totals or failure, and for a COMPLETED scan an
- * "Open results" link to its result screen (DFS-049.AC-2).
+ * One scan in the list (DFS-041.AC-5 to AC-9, redesigned in DFS-063): its folders, start time and status, and
  *
- * While unfinished, the progress is the current phase's line, a bar and, after WALK, the found totals (DFS-057.AC-1
- * to AC-5), plus the ETA in FULL_HASH (DFS-057.AC-6) from an estimator handed every progress the row holds.
+ * - while it is QUEUED, RUNNING or CANCELLING, or after it was CANCELLED or FAILED: the expanded row, a step line, the
+ *   overall percentage with its caption, the time left (hashing and hard links only), Cancel while it can be cancelled,
+ *   one strip of four fixed sections and, under each, its state and two lines of text (`sectionViews`); a FAILED row
+ *   adds the failure line (DFS-063.AC-1, AC-2, AC-7 to AC-11);
+ * - once COMPLETED: the collapsed one-line row, with the narrowing totals, "100%", the duration and the "Open results"
+ *   link (DFS-063.AC-12, DFS-049.AC-2).
+ *
+ * The calculations are the pure helpers in `scan-sections.ts`, `scan-format.ts` and `scan-eta.ts`; this component only
+ * renders what they return and holds the CANCELLING percentage (DFS-063 decisions 1 and 2).
  */
 @Component({
   selector: 'app-scan-row',
-  imports: [DatePipe, RouterLink, MatButtonModule, MatProgressBarModule],
+  imports: [DatePipe, RouterLink, MatButtonModule],
   templateUrl: './scan-row.html',
   styleUrl: './scan-row.css',
   host: { class: 'scan-row' },
@@ -30,20 +34,43 @@ export class ScanRow implements OnInit {
   readonly entry = input.required<ScanEntry>();
 
   protected readonly progress = linkedSignal(() => this.entry().progress);
+  /** The finish time: the entry's, or the one fetched once the stream reported a terminal status (DFS-063.AC-12). */
+  protected readonly finishedAt = linkedSignal(() => this.entry().finishedAt);
   protected readonly lost = signal(false);
   protected readonly cancelRequested = signal(false);
-  /** The ETA text of the latest progress, or null outside FULL_HASH (DFS-057.AC-6). */
+  /** The time-left text of the latest progress, or null where none is shown (DFS-063.AC-4 to AC-6). */
   protected readonly eta = signal<string | null>(null);
 
   protected readonly status = computed(() => this.progress().status);
   protected readonly finished = computed(() => isTerminal(this.status()));
   protected readonly cancellable = computed(() => this.status() === 'QUEUED' || this.status() === 'RUNNING');
-  /** The phase line, found line and bar value; read only while the scan is unfinished (DFS-057.AC-1 to AC-5). */
-  protected readonly view = computed(() => phaseView(this.progress()));
+  /** Only a COMPLETED scan collapses; CANCELLED and FAILED rows stay expanded (DFS-063 decision 5). */
+  protected readonly collapsed = computed(() => this.status() === 'COMPLETED');
+  /** The four sections of the strip, in run order (DFS-063.AC-1 to AC-3, AC-7 to AC-11). */
+  protected readonly sections = computed(() => sectionViews(this.progress()));
+
+  /**
+   * The overall percentage text; while the status is CANCELLING it keeps the value it had just before, however far the
+   * progress moves (DFS-063.AC-2), a pure `linkedSignal` so no write happens during rendering.
+   */
+  private readonly overall = linkedSignal<{ status: string; label: string }, string>({
+    source: () => {
+      const percent = overallPercent(this.progress());
+      return { status: this.status(), label: percent === null ? '—' : `${percent}%` };
+    },
+    computation: (source, previous) =>
+      source.status === 'CANCELLING' && previous ? previous.value : source.label,
+  });
 
   protected readonly statusLabel = statusLabel;
-  protected readonly formatBytes = formatBytes;
-  protected readonly plural = plural;
+  /** The caption under the percentage, `overallCaption` (DFS-063.AC-2). */
+  protected readonly caption = computed(() => overallCaption(this.progress()));
+  /** The step line, `stepLine` (DFS-063.AC-1). */
+  protected readonly step = computed(() => stepLine(this.progress()));
+  /** The collapsed row's narrowing totals, `collapsedTotals` (DFS-063.AC-12). */
+  protected readonly totals = computed(() => collapsedTotals(this.progress()));
+  /** The failure line of a FAILED row, `failureLine` (DFS-063.AC-11). */
+  protected readonly failure = computed(() => failureLine(this.progress()));
 
   private readonly scans = inject(ScansService);
   private readonly events = inject(ScanEventsService);
@@ -63,7 +90,10 @@ export class ScanRow implements OnInit {
   ngOnInit(): void {
     if (!this.finished()) {
       this.stream = this.events.progress(this.entry().id).subscribe({
-        next: (progress) => this.progress.set(progress),
+        next: (progress) => {
+          this.progress.set(progress);
+          void this.refreshFinish();
+        },
         error: () => this.lost.set(true),
       });
     }
@@ -79,10 +109,46 @@ export class ScanRow implements OnInit {
       }
       if (this.finished()) {
         this.stream?.unsubscribe();
+        void this.refreshFinish();
       }
     } catch {
       this.cancelRequested.set(false);
     }
+  }
+
+  /** Once the status is terminal and the finish time unknown, fetches the entry for its `finishedAt` (AC-12). */
+  private async refreshFinish(): Promise<void> {
+    if (this.status() !== 'COMPLETED' || this.finishedAt()) {
+      return;
+    }
+    try {
+      const entry = await this.scans.getScan({ id: this.entry().id });
+      this.finishedAt.set(entry.finishedAt);
+    } catch {
+      // The row simply keeps no duration.
+    }
+  }
+
+  /**
+   * The overall percentage as the row shows it: "47%", or "—" when `overallPercent` is null (DFS-063.AC-1, AC-3). While
+   * the status is CANCELLING it holds the last value shown before it, however far the progress moves (DFS-063.AC-2);
+   * once CANCELLED it shows the percentage of the progress again, labelled "when stopped". The last value is kept by a
+   * `linkedSignal`; this method only reads signals.
+   */
+  protected overallLabel(): string {
+    return this.overall();
+  }
+
+  /**
+   * The scan's duration for the collapsed row, "14 min 38 s" (DFS-063.AC-12, AC-13): `formatDuration` of the whole
+   * seconds from `entry().startedAt` to `entry().finishedAt`; '' while `finishedAt` is null.
+   */
+  protected duration(): string {
+    const finishedAt = this.finishedAt();
+    if (!finishedAt) {
+      return '';
+    }
+    return formatDuration((Date.parse(finishedAt) - Date.parse(this.entry().startedAt)) / 1000);
   }
 
   /**
