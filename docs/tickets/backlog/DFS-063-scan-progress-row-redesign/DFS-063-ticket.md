@@ -4,13 +4,16 @@ title: Redesign the scan progress row as one four-section bar
 status: draft
 type: feature
 scope: [build]
-archetype:
+archetype: component
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
-# gates: [done]        # pipeline tickets: decided in refine, required from ready on
+gates: [design, done]
 priority: medium
 lane: frontend
 depends_on: [DFS-064]
-touches: []
+touches:
+  - server/frontend/src/app/scans
+  - docs/design/ui.md
+  - CLAUDE.md
 blocked_reason:
 created: 2026-11-09
 updated: 2026-11-09
@@ -255,7 +258,10 @@ Feature: Scan progress row
 ## Scope
 
 **Touches:**
-- <to be refined; likely `server/frontend/src/app/scans`, `CLAUDE.md`, `docs/design/ui.md`>
+- `server/frontend/src/app/scans`: `scan-row.ts`/`.html`/`.css` are rebuilt (the sections, the strip, the collapsed row); a new helper file for the overall percentage and section states; `scan-eta.ts` (30 s warm-up, hard links, finishing) and `scan-format.ts` (totals lines, duration) with their specs; `scan-phase.ts` and its spec go if the new helpers replace them; `scan-screen` specs change only where they read the old row text.
+- `docs/design/ui.md`: the scan screen's section describes the new row.
+- `CLAUDE.md`: the `server` entry's description of the scan row (DFS-057's per-phase lines) is replaced.
+- Already committed with this refinement: the canvas source under `docs/design/mockups/scan-progress-row-2026-11-08/`.
 
 **Out of scope:**
 - The server's progress fields (DFS-064).
@@ -267,8 +273,11 @@ Feature: Scan progress row
 - [ ] Every scenario above is an automated test and passes
 - [ ] `./gradlew build` is green (includes the Vitest tests)
 - [ ] No test this ticket adds waits on real time (the clock is faked)
-- [ ] <ticket-specific check, including a by-hand run on a real scan compared with the canvas>
+- [ ] The production build prints no budget warning
+- [ ] `CLAUDE.md` and `docs/design/ui.md` describe the new row (the verifier reads them)
+- [ ] Started by hand once on the built jar with a real scan of a large folder (several GB): the row's sections, percentage, time left and collapsed Completed row are read from the page's DOM and compared with the canvas source (desktop only); `verification.md` records it
+- [ ] The same run records whether the bar sat still after the last file was read with no phase change (the stall DFS-064 decision 1 explains); if it did, a follow-up ticket is filed with `new`
 
 ## Open questions
 
-- Archetype (`component`), gates, and whether the by-hand run needs the design-gate.
+None.
