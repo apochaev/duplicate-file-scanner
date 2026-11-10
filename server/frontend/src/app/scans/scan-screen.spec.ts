@@ -69,6 +69,7 @@ function progress(update: Partial<ScanProgress> = {}): ScanProgress {
     groupsDone: 0,
     groupsTotal: 0,
     failureMessage: null,
+    phases: [],
     ...update,
   };
 }
@@ -79,7 +80,7 @@ function entry(
   locations = ['C:/a'],
   startedAt = '2026-11-01T10:00:00Z',
 ): ScanEntry {
-  return { id, locations, startedAt, progress: progress(update) };
+  return { id, locations, startedAt, finishedAt: null, progress: progress(update) };
 }
 
 describe('ScanScreen', () => {

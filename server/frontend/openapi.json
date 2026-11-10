@@ -967,6 +967,35 @@
         },
         "required" : [ "locations" ]
       },
+      "PhaseTotals" : {
+        "type" : "object",
+        "properties" : {
+          "phase" : {
+            "type" : "string",
+            "enum" : [ "WALK", "PARTIAL_HASH", "FULL_HASH", "HARD_LINKS" ]
+          },
+          "finished" : {
+            "type" : "boolean"
+          },
+          "directories" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "files" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "bytes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "groups" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "bytes", "directories", "files", "finished", "groups", "phase" ]
+      },
       "ScanEntry" : {
         "type" : "object",
         "properties" : {
@@ -983,11 +1012,15 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "finishedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
           "progress" : {
             "$ref" : "#/components/schemas/ScanProgress"
           }
         },
-        "required" : [ "id", "locations", "progress", "startedAt" ]
+        "required" : [ "finishedAt", "id", "locations", "progress", "startedAt" ]
       },
       "ScanProgress" : {
         "type" : "object",
@@ -1038,9 +1071,16 @@
           },
           "failureMessage" : {
             "type" : [ "string", "null" ]
+          },
+          "phases" : {
+            "type" : "array",
+            "description" : "One entry per phase that has started, in run order, keeping its totals after the next phase starts (DFS-064); empty before the first phase starts",
+            "items" : {
+              "$ref" : "#/components/schemas/PhaseTotals"
+            }
           }
         },
-        "required" : [ "bytes", "directories", "files", "groupsDone", "groupsTotal", "hashBytesTotal", "hashFilesTotal", "hashedBytes", "hashedFiles", "status" ]
+        "required" : [ "bytes", "directories", "files", "groupsDone", "groupsTotal", "hashBytesTotal", "hashFilesTotal", "hashedBytes", "hashedFiles", "phases", "status" ]
       },
       "ApiError" : {
         "type" : "object",
