@@ -50,14 +50,14 @@ Migrated from `docs/learnings/log.md` (2026-09-23, CCW-010) — see that file fo
 
 ### CCW-001.L-5: A `cd` in a shell command moves the session's working directory
 
-- Status: parked
-- Impact: local (working habit)
+- Status: applied
+- Impact: shared (touches CLAUDE.md)
 - Target: `CLAUDE.md`, "Commands" (or agent prompts)
 - Change: use `git -C <dir>` or a subshell `(cd <dir> && ...)` instead of a bare `cd`, and prefer absolute paths, because the primary working directory of the session changes and later relative commands run somewhere else.
 - Evidence: during the DFS-008 work, the session reported its primary working directory changing after a command that started with `cd` into `docs/tickets/backlog` (three times).
-- Recurrences: 2 (DFS-008: three times in one session, counted once; DFS-014 refinement: a `cd` into `docs/tickets/backlog` moved the working directory again, several times)
-- Recommendation: park. It caused no failure, only environment notices, and it is behaviour of the tool rather than the project. Revisit if it causes a wrong-directory error.
-- Decision: parked 2026-09-21 by the user, as recommended.
+- Recurrences: 3 (DFS-008: three times in one session, counted once; DFS-014 refinement: a `cd` into `docs/tickets/backlog` moved the working directory again, several times); /learn review session, no ticket: a `cd` into `docs/tickets` moved the primary working directory again, so every later command ran from there until the next `cd` (2026-11-09)
+- Recommendation: apply. A third occurrence, in a session with no ticket, so it is not tied to one workflow; the move is silent and later relative commands run elsewhere. The fix is a short rule in `CLAUDE.md`, "Commands": no bare `cd`, use absolute paths or `git -C`.
+- Decision: (earlier, as history) parked 2026-09-21 by the user, as recommended; re-proposed 2026-11-09 on a third recurrence; applied 2026-11-09 by the user; commit `docs: apply CCW-001.L-5`
 
 ### CCW-001.L-6: Scenarios about instructions are only read, not run
 

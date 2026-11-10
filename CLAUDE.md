@@ -13,7 +13,7 @@ Four Gradle subprojects (Java 25, Gradle 9.6 wrapper, group `us.pochaev.dfs`):
 
 ## Commands
 
-Run from the repo root (`./gradlew` works in Git Bash; use `gradlew.bat` in cmd/PowerShell).
+Run from the repo root (`./gradlew` works in Git Bash; use `gradlew.bat` in cmd/PowerShell). In shell commands, never start with a bare `cd <dir>`: it moves the session's primary working directory and every later relative command runs from there. Use absolute paths, `git -C <dir>`, or a subshell `(cd <dir> && ...)`.
 
 ```
 ./gradlew build                                   # compile + test everything
