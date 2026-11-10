@@ -44,7 +44,7 @@
       "after": [
         "design"
       ],
-      "status": "done",
+      "status": "pending",
       "runs": [
         {
           "attempt": 1,
@@ -85,7 +85,7 @@
       "after": [
         "tests"
       ],
-      "status": "done",
+      "status": "pending",
       "runs": [
         {
           "attempt": 1,
@@ -127,7 +127,17 @@
         "implement"
       ],
       "status": "pending",
-      "runs": [],
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 38,
+          "wallClockSeconds": 900,
+          "outcome": "failed-gate",
+          "note": "verdict: AC-12 partially met; a scan completing while the page is open collapses with empty took/finished (stream has no finishedAt, nothing refetches the entry); resumed once after the turn cap"
+        }
+      ],
       "artifacts": [],
       "commit": null
     }
@@ -149,6 +159,13 @@
       "route": "test-author",
       "summary": "AC-15 test regex in scan-row.spec.ts wrongly matches 'animation: none' (backtracking \\s* before (?!none))",
       "status": "closed"
+    },
+    {
+      "id": 2,
+      "phase": "verify",
+      "route": "test-author",
+      "summary": "AC-12: a row that turns COMPLETED through the progress stream shows empty .scan-duration and .scan-finished until reload; no test drives the stream to COMPLETED",
+      "status": "open"
     }
   ]
 }
