@@ -14,36 +14,36 @@
 
 ### DFS-063.L-1: A module the ticket retires cannot be deleted by the architect
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: .claude/archetypes/component/archetype.md (architect guidance)
 - Change: add a line: "A module the ticket retires stays until the test-author deletes its spec; the implementer then deletes it", since one broken import fails the whole Vitest bundle.
 - Evidence: DFS-063 design.md open note 1 and learnings: `scan-phase.ts` and `scan-phase.spec.ts` could not be deleted by the architect; the test-author deleted the spec and the implementer the module.
 - Recurrences: 1 (DFS-063)
 - Recommendation: apply; a concrete rule that avoids a bundle-wide failure.
-- Decision:
+- Decision: applied 2026-11-10 by the user; commit `docs: apply DFS-063.L-1, DFS-063.L-2, DFS-063.L-3`
 
 ### DFS-063.L-2: The component guides have no pattern for a CSS-only criterion, and a regex trap cost a rework loop
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: .claude/archetypes/component/test-guide.md and checklist item 3 of archetype.md
 - Change: add the pattern: render a component that reaches a stub first (the red gate rejects a test that reaches none), then read the `<style>` elements from `document`, which keep the media block under Angular's test builder. Warn that a negative lookahead after `\s*` backtracks, so use `/animation(-name)?\s*:(?!\s*none)/`, not `/animation(-name)?\s*:\s*(?!none)/`.
 - Evidence: DFS-063 AC-15 test in `scan-row.spec.ts`: the first regex matched `animation: none` and could never pass (plan.json defect 1; implement attempt 1 `failed-gate`, tests reopened).
 - Recurrences: 1 (DFS-063)
 - Recommendation: apply; the pattern is proven at green and a defect cost a rework loop.
-- Decision:
+- Decision: applied 2026-11-10 by the user; commit `docs: apply DFS-063.L-1, DFS-063.L-2, DFS-063.L-3`
 
 ### DFS-063.L-3: Tests must reach each terminal status through the stream, and existing specs must answer a new request
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: .claude/archetypes/component/test-guide.md
 - Change: add a rule: when a row's fields come from both the entry and the stream, tests drive the stream to every terminal status, not only an entry that starts terminal. When a change adds a request, every existing spec that reaches that state through the stream must answer it (a shared helper), or `afterEach` `http.verify()` fails and cascades.
 - Evidence: DFS-063 defects 2 and 3: AC-12's tests rendered only an already-COMPLETED entry, so a row completing in view showed "took" empty (found only by the by-hand run); the refetch then left an unanswered request in existing specs (about 33 cascading failures). Related but different: DFS-057.L-1 (grep for replaced selectors).
 - Recurrences: 1 (DFS-063)
 - Recommendation: apply; it caused two defects and three extra phase runs including a verifier rerun.
-- Decision:
+- Decision: applied 2026-11-10 by the user; commit `docs: apply DFS-063.L-1, DFS-063.L-2, DFS-063.L-3`
 
 ### DFS-063.L-4: By-hand check tips for slow progress and CDP navigation
 

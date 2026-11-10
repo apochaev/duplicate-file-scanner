@@ -53,6 +53,10 @@ A spec rendering a component with a `routerLink`, or the routes themselves, prov
 
 A wrapper's token gets a fake in the providers (`{ provide: EVENT_SOURCE, useValue: (url) => new FakeEventSource(url) }`), and the test drives it step by step: open, one event, a reconnect, a failure for good (DFS-041's `FakeEventSource`, with `readyState` following the real one). Assert what the fake was asked (the URL, that it was closed).
 
+## A criterion about CSS only (DFS-063.L-2)
+
+Render a component that reaches a stub first (the red gate rejects a test that reaches none), then read the `<style>` elements from `document`: Angular's test builder keeps the `@media` block there. To assert "no animation" use `/animation(-name)?\s*:(?!\s*none)/`. Do not use `/animation(-name)?\s*:\s*(?!none)/`: the `\s*` backtracks, so it matches `animation: none` and the test can never pass.
+
 ## Cover, per scenario in the ticket
 
 - The happy path and every stated edge case, exactly as the scenarios describe them. Do not invent scenarios; report a gap instead.
@@ -60,6 +64,8 @@ A wrapper's token gets a fake in the providers (`{ provide: EVENT_SOURCE, useVal
 - The requests: method, URL, body (an untouched optional field absent), and that nothing else was sent (`http.verify()`).
 - A "nothing is shown" criterion (no link on a RUNNING row) reaches no stub on its own: put its assertions in a test that first renders the positive case, which does reach one (DFS-049).
 - A component with an `opacity: 0` or hover-revealed control gets a Playwright flow that repeats one row click at a viewport under 960 px, since `opacity: 0` does not remove an element from hit-testing and the other flows run at desktop width (DFS-060.L-2).
+- **Drive the stream to every terminal status.** When a row's fields come from both the entry and the stream, tests drive the stream to each terminal status, not only an entry that starts terminal (DFS-063.L-3: a row completing in view showed an empty duration that only the by-hand run caught).
+- **A new request must be answered everywhere.** When a change adds a request, every existing spec that reaches that state through the stream must answer it (a shared helper), or `afterEach` `http.verify()` fails and cascades (about 33 failures in DFS-063).
 
 ## What not to do
 
