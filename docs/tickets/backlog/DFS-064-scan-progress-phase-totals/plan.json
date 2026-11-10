@@ -45,10 +45,25 @@
       "after": [
         "design"
       ],
-      "status": "in-progress",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "pending",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 19,
+          "wallClockSeconds": 130,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-064: red and traceability pass; red: 12 story tests fail with stubs, 108 other tests fail on the ticket's stub, 0 fail in declared classes, 947 other tests pass (3 skipped); traceability: 5 criteria traced through 10 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-064-scan-progress-phase-totals/progress.md",
+        "docs/tickets/backlog/DFS-064-scan-progress-phase-totals/test-plan.md",
+        "server/src/test/java/us/pochaev/dfs/server/ScanPhasesApiTest.java",
+        "server/src/test/java/us/pochaev/dfs/server/scan/ScanRegistryPhasesTest.java"
+      ],
+      "commit": "c43c95f4f940950fc77467c5490a00a36b886f35"
     },
     {
       "id": "implement",
@@ -57,9 +72,23 @@
         "tests"
       ],
       "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 21,
+          "wallClockSeconds": 186,
+          "outcome": "passed",
+          "note": "PASS green: 1064 passed, 3 skipped; disabled; freeze; touches: 16 changed files; stubs: none in 227 files; traceability: 5 criteria through 10 scenarios; consistency"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/tickets/backlog/DFS-064-scan-progress-phase-totals/progress.md",
+        "server/src/main/java/us/pochaev/dfs/server/scan/ScanRegistry.java"
+      ],
+      "commit": "930cfa682088664454d962755ba7580406caa1ee"
     },
     {
       "id": "verify",
@@ -68,7 +97,17 @@
         "implement"
       ],
       "status": "pending",
-      "runs": [],
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 29,
+          "wallClockSeconds": 191,
+          "outcome": "failed-gate",
+          "note": "verifier found AC-2 not met on a real scan; sent back to tests then implement"
+        }
+      ],
       "artifacts": [],
       "commit": null
     }
@@ -83,5 +122,13 @@
       "status": "pending"
     }
   ],
-  "defects": []
+  "defects": [
+    {
+      "id": 1,
+      "phase": "verify",
+      "route": "test-author",
+      "summary": "AC-2: GroupDone in a hash phase (ScanRegistry.java:378) zeroes that phase's files and bytes totals; tests missed it (fake core sends GroupDone only in HARD_LINKS; real-scan test checks only WALK)",
+      "status": "open"
+    }
+  ]
 }

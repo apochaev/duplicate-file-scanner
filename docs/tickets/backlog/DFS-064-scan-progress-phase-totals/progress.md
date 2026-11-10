@@ -19,3 +19,9 @@ Design approved without feedback. So AC-5 is read as decision 3 has it: `phases`
 ## Implementation phase
 
 - Implemented `Counters.phases` (volatile immutable entry list, `finished` derived at read), `finishedAt` (compare-and-set stamp) and `sweep()` with a 50 ms daemon scheduler and `@PreDestroy shutdown()` in `ScanRegistry`; edited the `server` entry of `CLAUDE.md`. `./gradlew build` green. Not committed; expected: `feat(server): phase totals and finishedAt [DFS-064]`.
+
+## Verify found a defect (orchestrator note)
+
+AC-2 is not met on a real scan: `ScanRegistry.Counters.onEvent`'s `GroupDone` branch (around line 378) rewrites the open entry as `new PhaseTotals(phase, false, 0, 0, 0, total)` for every phase. The core sends `GroupDone` after each group of every stage (`ScanPipeline.java:196`), so PARTIAL_HASH and FULL_HASH end with `files` 0, `bytes` 0 and a non-zero `groups` (seen by hand: `{"phase":"PARTIAL_HASH","finished":true,"directories":0,"files":0,"bytes":0,"groups":2}`, expected 2 files of 300000 bytes). design.md: only `GroupDone(HARD_LINKS, ...)` sets `groups`, the other fields stay as they were.
+
+For the test-author: add tests that fail on this defect, with a real assertion failure, not a stub message: a registry test whose fake core sends `GroupDone` in PARTIAL_HASH and FULL_HASH after `HashProgress`, in the core's real event order, and checks the hash entries keep their `files` and `bytes` with `groups` 0; and have the real-scan test in `ScanPhasesApiTest` check the hash phases' files and bytes too (fixture of known sizes, at least 2 identical files over the sample threshold). Do not edit src/main. Keep existing tests unchanged.
