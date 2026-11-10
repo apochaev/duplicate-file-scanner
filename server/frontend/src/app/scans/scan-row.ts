@@ -34,6 +34,8 @@ export class ScanRow implements OnInit {
   readonly entry = input.required<ScanEntry>();
 
   protected readonly progress = linkedSignal(() => this.entry().progress);
+  /** The finish time: the entry's, or the one fetched once the stream reported a terminal status (DFS-063.AC-12). */
+  protected readonly finishedAt = linkedSignal(() => this.entry().finishedAt);
   protected readonly lost = signal(false);
   protected readonly cancelRequested = signal(false);
   /** The time-left text of the latest progress, or null where none is shown (DFS-063.AC-4 to AC-6). */
@@ -88,7 +90,10 @@ export class ScanRow implements OnInit {
   ngOnInit(): void {
     if (!this.finished()) {
       this.stream = this.events.progress(this.entry().id).subscribe({
-        next: (progress) => this.progress.set(progress),
+        next: (progress) => {
+          this.progress.set(progress);
+          void this.refreshFinish();
+        },
         error: () => this.lost.set(true),
       });
     }
@@ -104,9 +109,23 @@ export class ScanRow implements OnInit {
       }
       if (this.finished()) {
         this.stream?.unsubscribe();
+        void this.refreshFinish();
       }
     } catch {
       this.cancelRequested.set(false);
+    }
+  }
+
+  /** Once the status is terminal and the finish time unknown, fetches the entry for its `finishedAt` (AC-12). */
+  private async refreshFinish(): Promise<void> {
+    if (this.status() !== 'COMPLETED' || this.finishedAt()) {
+      return;
+    }
+    try {
+      const entry = await this.scans.getScan({ id: this.entry().id });
+      this.finishedAt.set(entry.finishedAt);
+    } catch {
+      // The row simply keeps no duration.
     }
   }
 
@@ -125,7 +144,7 @@ export class ScanRow implements OnInit {
    * seconds from `entry().startedAt` to `entry().finishedAt`; '' while `finishedAt` is null.
    */
   protected duration(): string {
-    const finishedAt = this.entry().finishedAt;
+    const finishedAt = this.finishedAt();
     if (!finishedAt) {
       return '';
     }
