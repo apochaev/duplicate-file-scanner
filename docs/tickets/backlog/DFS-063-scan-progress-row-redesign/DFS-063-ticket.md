@@ -47,6 +47,8 @@ The current row is `scan-row.ts`/`.html`/`.css` with helpers `scan-phase.ts`, `s
 
 1. **QUEUED and CANCELLING look the way the scan is, not the nearest canvas stage** (2026-11-09). The canvas has eight stages and neither status. QUEUED: all four sections "not started" (dashed), overall "—", the line "Waiting to start", Cancel enabled. CANCELLING: the running section keeps its look, the overall percentage freezes at the last value shown, the status word "Cancelling…" shows and Cancel is disabled; it becomes the "stopped" look (grey hatch, "when stopped") only when the status turns CANCELLED. Rejected: showing CANCELLING as already stopped (claims it while the scan still works) and QUEUED as a striped walk (nothing runs yet).
 
+2. **The calculations are pure helpers with their own specs** (2026-11-09). One new helper file in `scans/` holds the overall percentage and the four section states, taking a `ScanProgress` and returning plain values; `scan-eta.ts` gains the hard-link and finishing cases; `scan-format.ts` gains the totals lines. The row component only renders what they return. The canvas's worked cases are test cases (compare 2954 of 29594 files is 13%, hashing 5.1 of 17.1 GB is 47%, nothing left to read is 90%, hard links 1242 of 3104 groups is 94%). The 30 s rate logic stays in `scan-eta.ts` only; the clock stays injectable (`CLOCK` token), so no test waits on real time. Rejected: calculations in the component's signals (tested through the DOM, a failing rule is hard to find) and one helper replacing `scan-eta.ts` and `scan-phase.ts` (rewrites tested DFS-057 code for no new behaviour).
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
@@ -55,6 +57,7 @@ The full ID of each criterion is `DFS-063.AC-<n>`.
 
 - **AC-1** A QUEUED scan's row shows the four sections as not started, the overall percentage as "—", the text "Waiting to start" and an enabled Cancel button.
 - **AC-2** A CANCELLING scan's row keeps its running section's look, holds the overall percentage at the last value it showed, shows "Cancelling…" and a disabled Cancel button; once the scan is CANCELLED the section shows as stopped.
+- **AC-3** The overall percentage is the finished sections' weights (walk 12, compare 18, hash 60, hard links 10) plus the running section's weight times its progress, rounded down: compare by files done over files in, hashing by bytes done over bytes in, hard links by groups done over groups. It reads "—" during the walk, is at most 99 until the scan is COMPLETED, and is 100 only then.
 
 ## Scenarios
 
@@ -81,6 +84,33 @@ Feature: Scan progress row
     When its status becomes CANCELLED
     Then the hashing section is shown as stopped and the percentage is labelled "when stopped"
 ```
+
+  @AC-3
+  Scenario Outline: The overall percentage follows the canvas
+    Given a RUNNING scan <state>
+    When the row renders
+    Then the overall percentage reads "<overall>"
+
+    Examples:
+      | state                                                          | overall |
+      | in the walk, 38886 files found so far                          | —       |
+      | comparing, 2954 of 29594 files done                            | 13%     |
+      | hashing, 5.1 of 17.1 GB read (6210 of 13845 files)             | 47%     |
+      | hashing, 17.1 of 17.1 GB read, nothing left                    | 90%     |
+      | checking hard links, 1242 of 3104 groups                       | 94%     |
+      | checking hard links, 3104 of 3104 groups, not yet COMPLETED    | 99%     |
+
+  @AC-3
+  Scenario: Only a completed scan reads 100%
+    Given the scan above
+    When its status becomes COMPLETED
+    Then the overall percentage reads "100%"
+
+  @AC-3
+  Scenario: The percentage is the same on both sides of a phase change
+    Given a scan comparing with 29594 of 29594 files done, reading "30%"
+    When the hashing phase starts and its totals are still 0
+    Then the overall percentage still reads "30%" and is not "NaN%"
 
 ## Scope
 
