@@ -51,6 +51,8 @@ The current row is `scan-row.ts`/`.html`/`.css` with helpers `scan-phase.ts`, `s
 
 3. **Time left follows the canvas, not DFS-057's 3 s warm-up** (2026-11-09). "estimating…" for the first 30 s of the phase (DFS-057 used 3 s; `WARM_UP_MS` in `scan-eta.ts` becomes 30 s, and the `DFS-057.AC-6` cases in `scan-eta.spec.ts` that assume 3 s change with it, which is why the spec is in `touches`). The rate window (the last 30 s) and the wording (`formatEta`: "about 45 s left", "about 4 min left", "about 1 h 20 min left") stay. Hashing: bytes left over bytes per second. Hard links: groups left over groups per second, same window, same 30 s warm-up counted from that phase's start, same words. "finishing…" replaces the time whenever the hashing phase has no bytes left to read, even inside the first 30 s. Walk and compare show no time left. Rejected: keeping 3 s (drops the canvas rule; the earliest estimate is the least accurate).
 
+4. **Section text per state** (2026-11-09). The canvas's lines, plus one invented: the running walk uses the shape of its finished line, so a section never changes layout when it completes. Walk running "N files · SIZE found" over "in N folders"; compare "A of B files" over "C left"; hash "A of B GB · C GB left" over "X of Y files · Z left", finishing "B of B GB · nothing left to read" over "Y of Y files · finishing…"; hard links "A of B groups" over "C left"; not started "not started" over "total known after step N" (N the step before it; the walk has none); stopped or failed the running section's counts ("5.1 of 17.1 GB read", "6210 of 13845 files"); sections after a stopped one "not run". Done sections show their totals line (AC-8). Sizes use `scan-format.ts`; no thousands separators. Rejected: a one-line walk text with folders first (the row would change height when the walk ends).
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
@@ -63,6 +65,11 @@ The full ID of each criterion is `DFS-063.AC-<n>`.
 - **AC-4** In the hashing phase the time left reads "estimating…" until the phase has run 30 s with bytes hashed and while the rate over the last 30 s is 0, then "about N min left" (words as `formatEta`) from the bytes left over that rate; the walk and compare phases show no time left.
 - **AC-5** In the hard-link phase the time left is the groups left over the groups-per-second rate of the last 30 s, with the same words and the same "estimating…" for the first 30 s of that phase.
 - **AC-6** When the hashing phase has no bytes left to read, the time left reads "finishing…" instead of a time, also inside the first 30 s of the phase.
+- **AC-7** A running section shows its two lines: walk "N files · SIZE found" over "in N folders"; compare "A of B files" over "C left"; hashing "A of B <size> · C <size> left" over "X of Y files · Z left", or, when no bytes are left, "B of B <size> · nothing left to read" over "Y of Y files · finishing…"; hard links "A of B groups" over "C left".
+- **AC-8** A finished section shows its totals from `phases`: walk "N files · SIZE" over "found in N folders"; compare "C compared" over "→ N candidates" (the hash entry's files); hashing "N hashed · SIZE" over "→ N matching groups" (the hard-link entry's groups); hard links "N groups checked" over "→ N duplicate groups" (`groupsTotal` of the COMPLETED scan). A "→" line appears once its number is known.
+- **AC-9** A section not yet started shows "not started" over "total known after step N" (N is the step before it; the walk has none); after a stopped section the later ones show "not run" over nothing; a stopped or failed section shows the counts it reached ("5.1 of 17.1 GB read" over "6210 of 13845 files").
+- **AC-10** Every section carries its state as text, readable without colour: done with a check, running with "now", not started, stopped with "stopped", failed with "failed"; a section whose total is unknown (the walk) has no percentage.
+- **AC-11** A FAILED scan's failing section is tagged "failed" and its row shows "Scan failed while <activity>. <failureMessage>", with the activity "finding files", "comparing samples", "hashing files" or "checking hard links" for the phase the scan was in.
 
 ## Scenarios
 
@@ -153,6 +160,57 @@ Feature: Scan progress row
   Scenario: A tiny scan finishes inside the warm-up
     Given a hashing scan with 5 of 5 MB read 4 s after the phase started
     Then the time left reads "finishing…", not "estimating…"
+
+  @AC-7
+  Scenario: The running walk
+    Given a RUNNING scan in the walk with 38886 files, 902.9 GB and 4120 folders found
+    Then the walk section reads "38886 files · 902.9 GB found" over "in 4120 folders"
+
+  @AC-7
+  Scenario Outline: A running section shows its counts
+    Given a RUNNING scan <state>
+    Then the running section reads "<line 1>" over "<line 2>"
+
+    Examples:
+      | state                                              | line 1                                   | line 2                            |
+      | comparing, 2954 of 29594 files                     | 2954 of 29594 files                      | 26640 left                        |
+      | hashing, 5.1 of 17.1 GB, 6210 of 13845 files       | 5.1 of 17.1 GB · 12.0 GB left            | 6210 of 13845 files · 7635 left   |
+      | hashing, 17.1 of 17.1 GB, 13845 of 13845 files     | 17.1 of 17.1 GB · nothing left to read   | 13845 of 13845 files · finishing… |
+      | checking hard links, 1242 of 3104 groups           | 1242 of 3104 groups                      | 1862 left                         |
+
+  @AC-8
+  Scenario: A completed scan's totals lines
+    Given a COMPLETED scan whose phases hold 38886 files, 902.9 GB and 4120 folders (walk), 29594 files (compare), 13845 files and 17.1 GB (hash), 3104 groups (hard links), with groupsTotal 2987
+    Then the four sections read "38886 files · 902.9 GB" over "found in 4120 folders", "29594 compared" over "→ 13845 candidates", "13845 hashed · 17.1 GB" over "→ 3104 matching groups" and "3104 groups checked" over "→ 2987 duplicate groups"
+
+  @AC-8
+  Scenario: A finished section waits for the number its arrow needs
+    Given a scan whose hashing is finished and whose phases have no hard-link entry yet
+    Then the hashing section reads "13845 hashed · 17.1 GB" with no second line
+
+  @AC-9
+  Scenario: Sections not started
+    Given a scan in the compare phase
+    Then the hashing section reads "not started" over "total known after step 2"
+    And the hard-link section reads "not started" over "total known after step 3"
+
+  @AC-9
+  Scenario: A cancelled scan
+    Given a CANCELLED scan stopped while hashing with 5.1 of 17.1 GB and 6210 of 13845 files
+    Then the hashing section reads "5.1 of 17.1 GB read" over "6210 of 13845 files"
+    And the hard-link section reads "not run"
+    And the walk and compare sections show their totals lines
+
+  @AC-10
+  Scenario: States are readable without colour
+    Given one row for each of: a finished section, the running one, one not started, a stopped one, a failed one
+    Then each section's text says done, now, not started, stopped or failed respectively, and the walk section while it runs shows no percentage
+
+  @AC-11
+  Scenario: A failed scan
+    Given a FAILED scan in the hashing phase with the message "disk read failed"
+    Then the hashing section is tagged "failed"
+    And the row shows "Scan failed while hashing files. disk read failed"
 
 ## Scope
 
