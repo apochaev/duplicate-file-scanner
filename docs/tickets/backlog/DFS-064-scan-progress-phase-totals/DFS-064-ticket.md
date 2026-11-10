@@ -41,6 +41,8 @@ Any change to `ScanProgress` is a spec change (`./gradlew :server:updateOpenApi`
 
 2. **A `phases` list in `ScanProgress`; the flat fields stay** (2026-11-09). One entry per phase that has started, in run order (`WALK`, `PARTIAL_HASH`, `FULL_HASH`, `HARD_LINKS`), each with `phase`, `finished`, and its own totals: walk `directories`, `files`, `bytes` found; each hash phase `files` and `bytes` of its input (the `HashProgress` totals); hard links `groups`. A phase finishes when the next one starts, or when the scan reaches COMPLETED. An entry keeps its totals after the next phase starts, which the flat hash fields do not (the registry resets them at `PhaseStarted`). The registry's `Counters` fills the list; the core is unchanged. A hash phase that has started but sent no `HashProgress` yet has totals 0, which the page reads as unknown. The architect names the fields that do not apply to a phase (nullable or 0). The flat fields remain so the DFS-057 row works until DFS-063 replaces it; a later ticket may drop them. Rejected: flat per-phase fields (about eight new names beside `hashFilesTotal`, no place for timing) and replacing the flat fields now (breaks the DFS-057 page, forcing DFS-063 into this change).
 
+3. **`phases` stays on a COMPLETED scan; `ScanEntry` gets one `finishedAt`** (2026-11-09). The collapsed Completed row needs the totals and the duration, and the page may open after the scan ended, so the duration cannot be measured in the browser. `finishedAt` is null until the scan reaches COMPLETED, CANCELLED or FAILED, then fixed. The core has no finish time (`ScanSnapshot`, `ScanResult` and the events carry no instant, and the CLI stamps its own), so the server stamps it from an injectable `Clock` in `ScanRegistry` (today `Instant.now()` at `ScanRegistry.java:58`). The stamp is taken when the scan ends, not when someone first reads it; the architect chooses the hook. Rejected: per-phase start and finish times (the canvas shows only a total duration; add them when a screen needs them) and a duration measured by the page (wrong when the page opens late).
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
@@ -50,6 +52,7 @@ The full ID of each criterion is `DFS-064.AC-<n>`.
 - **AC-1** After the last file of the full-hash phase is hashed and before the hard-link phase starts, `ScanProgress` reports `phase` `FULL_HASH` with `hashedBytes` equal to `hashBytesTotal` and `hashedFiles` equal to `hashFilesTotal`; it never reports more than `hashBytesTotal`.
 - **AC-2** `ScanProgress.phases` lists each phase that has started, in run order, and a phase's entry keeps its totals after the next phase starts: the walk's directories, files and bytes found; each hash phase's input files and bytes; the hard-link phase's groups. Entries of earlier phases have `finished` true, and the current phase's entry `finished` false.
 - **AC-3** The flat fields `ScanProgress` already has keep their values and meaning (the walk counts, the current hash phase's counters, `groupsDone` and `groupsTotal`).
+- **AC-4** A scan entry's `finishedAt` is null while the scan is RUNNING or CANCELLING, and holds the time the scan ended once it is COMPLETED, CANCELLED or FAILED, not before `startedAt` and the same on every later read; a COMPLETED scan's entry still lists `phases` with their totals.
 
 ## Scenarios
 
@@ -94,6 +97,29 @@ Feature: Phase totals in the progress stream
     Given the same scan as in "Finished phases keep their totals"
     Then directories, files, bytes, hashedFiles, hashFilesTotal, hashedBytes, hashBytesTotal, groupsDone and groupsTotal have the values they had before this ticket
 
+  @AC-4
+  Scenario: finishedAt is set when the scan ends
+    Given a registry with a fake clock at 10:00:00 and a scan started then
+    When the clock reads 10:41:00 as the scan completes
+    And the clock moves to 11:30:00 before anyone reads the entry
+    Then GET /api/scans/{id} shows startedAt 10:00:00 and finishedAt 10:41:00
+    And a second read shows the same finishedAt
+
+  @AC-4
+  Scenario: A running scan has no finishedAt
+    Given a scan in its FULL_HASH phase
+    Then its entry has finishedAt null
+
+  @AC-4
+  Scenario Outline: A scan that ends any other way has a finishedAt
+    Given a scan that ends <how> at 10:05:00
+    Then its entry has status <status> and finishedAt 10:05:00
+
+    Examples:
+      | how                       | status    |
+      | when the user cancels it  | CANCELLED |
+      | with a read error in core | FAILED    |
+
 ## Scope
 
 **Touches:**
@@ -113,6 +139,5 @@ Feature: Phase totals in the progress stream
 
 ## Open questions
 
-- Does a COMPLETED scan keep them (DFS-063 shows them in the collapsed row, with duration)? Is a duration (start and finish time) sent, since the API has no finish time today?
 - Archetype (`endpoint`) and gates.
 - The by-hand run on a large drive (Definition of done): who runs it and where the result is recorded.
