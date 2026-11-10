@@ -8,7 +8,7 @@ archetype:
 # models: {architect: {model: opus, effort: high, maxTurns: 25}}
 # gates: [done]        # pipeline tickets: decided in refine, required from ready on
 priority: medium
-lane: frontend
+lane: backend
 depends_on: []
 touches: []
 blocked_reason:
@@ -43,6 +43,8 @@ Any change to `ScanProgress` is a spec change (`./gradlew :server:updateOpenApi`
 
 3. **`phases` stays on a COMPLETED scan; `ScanEntry` gets one `finishedAt`** (2026-11-09). The collapsed Completed row needs the totals and the duration, and the page may open after the scan ended, so the duration cannot be measured in the browser. `finishedAt` is null until the scan reaches COMPLETED, CANCELLED or FAILED, then fixed. The core has no finish time (`ScanSnapshot`, `ScanResult` and the events carry no instant, and the CLI stamps its own), so the server stamps it from an injectable `Clock` in `ScanRegistry` (today `Instant.now()` at `ScanRegistry.java:58`). The stamp is taken when the scan ends, not when someone first reads it; the architect chooses the hook. Rejected: per-phase start and finish times (the canvas shows only a total duration; add them when a screen needs them) and a duration measured by the page (wrong when the page opens late).
 
+4. **The new fields are required in the spec** (2026-11-09). `ScanProgress.phases` is always present (an empty list before the first phase starts) and `ScanEntry.finishedAt` is required and nullable (`requiredMode = REQUIRED`, `nullable`). The generated client types then say what the server does, and the frontend literals that build a `ScanProgress` or `ScanEntry` (`scan-row.spec.ts`, `scan-screen.spec.ts`, `scan-eta.spec.ts`, `scan-phase.spec.ts`, `scan-events.service` users, `result-screen.spec.ts`, `result-test-data.ts`) gain both fields in this ticket, so the frontend build stays green. Overlap with DFS-063 is safe because DFS-063 depends on this ticket. Rejected: optional fields (every reader checks for a case the server never produces).
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
@@ -53,6 +55,7 @@ The full ID of each criterion is `DFS-064.AC-<n>`.
 - **AC-2** `ScanProgress.phases` lists each phase that has started, in run order, and a phase's entry keeps its totals after the next phase starts: the walk's directories, files and bytes found; each hash phase's input files and bytes; the hard-link phase's groups. Entries of earlier phases have `finished` true, and the current phase's entry `finished` false.
 - **AC-3** The flat fields `ScanProgress` already has keep their values and meaning (the walk counts, the current hash phase's counters, `groupsDone` and `groupsTotal`).
 - **AC-4** A scan entry's `finishedAt` is null while the scan is RUNNING or CANCELLING, and holds the time the scan ended once it is COMPLETED, CANCELLED or FAILED, not before `startedAt` and the same on every later read; a COMPLETED scan's entry still lists `phases` with their totals.
+- **AC-5** `GET /api/scans/{id}`, `GET /api/scans` and the progress events always include `phases` (an empty list for a scan that has not started a phase) and `finishedAt` (null until the scan ends).
 
 ## Scenarios
 
@@ -119,6 +122,12 @@ Feature: Phase totals in the progress stream
       | how                       | status    |
       | when the user cancels it  | CANCELLED |
       | with a read error in core | FAILED    |
+
+  @AC-5
+  Scenario: A queued scan has an empty phases list and no finishedAt
+    Given a scan that is QUEUED because the executor is held
+    When the client reads GET /api/scans/{id}, GET /api/scans and the first progress event
+    Then each shows "phases": [] and "finishedAt": null, not a missing field
 
 ## Scope
 
