@@ -53,6 +53,8 @@ The current row is `scan-row.ts`/`.html`/`.css` with helpers `scan-phase.ts`, `s
 
 4. **Section text per state** (2026-11-09). The canvas's lines, plus one invented: the running walk uses the shape of its finished line, so a section never changes layout when it completes. Walk running "N files · SIZE found" over "in N folders"; compare "A of B files" over "C left"; hash "A of B GB · C GB left" over "X of Y files · Z left", finishing "B of B GB · nothing left to read" over "Y of Y files · finishing…"; hard links "A of B groups" over "C left"; not started "not started" over "total known after step N" (N the step before it; the walk has none); stopped or failed the running section's counts ("5.1 of 17.1 GB read", "6210 of 13845 files"); sections after a stopped one "not run". Done sections show their totals line (AC-8). Sizes use `scan-format.ts`; no thousands separators. Rejected: a one-line walk text with folders first (the row would change height when the walk ends).
 
+5. **Only a COMPLETED scan collapses** (2026-11-09). The collapsed row is the canvas's one line: a tick, the scan's folders (as the DFS-057 row shows them) with "Completed · started HH:MM", a thin four-part strip over the narrowing-totals line "N files · SIZE found → N compared → N hashed · SIZE → N duplicate groups", "100%" with "of whole scan", "took <duration>" over "finished HH:MM" (from `finishedAt`, DFS-064), and the "Open results" link. The duration is a pure helper in `scan-format.ts`: under a minute "42 s", under an hour "14 min 38 s", from an hour "1 h 05 min" (whole minutes, minutes zero-padded). CANCELLED and FAILED rows stay expanded, since the stopped section's counts and the failure message are what they show. Rejected: collapsing them too (hides the message or squeezes it into one line) and never collapsing (a long list of finished scans gets tall, and the canvas collapses it).
+
 ## Acceptance criteria
 
 <!-- Filled during refinement. -->
@@ -70,6 +72,8 @@ The full ID of each criterion is `DFS-063.AC-<n>`.
 - **AC-9** A section not yet started shows "not started" over "total known after step N" (N is the step before it; the walk has none); after a stopped section the later ones show "not run" over nothing; a stopped or failed section shows the counts it reached ("5.1 of 17.1 GB read" over "6210 of 13845 files").
 - **AC-10** Every section carries its state as text, readable without colour: done with a check, running with "now", not started, stopped with "stopped", failed with "failed"; a section whose total is unknown (the walk) has no percentage.
 - **AC-11** A FAILED scan's failing section is tagged "failed" and its row shows "Scan failed while <activity>. <failureMessage>", with the activity "finding files", "comparing samples", "hashing files" or "checking hard links" for the phase the scan was in.
+- **AC-12** A COMPLETED scan's row collapses to one line: the scan's folders with "Completed · started HH:MM", a four-part strip, "N files · SIZE found → N compared → N hashed · SIZE → N duplicate groups", "100%", "took <duration>" over "finished HH:MM", and the "Open results" link to the scan's results; a CANCELLED or FAILED row does not collapse.
+- **AC-13** A duration reads "42 s" under a minute, "14 min 38 s" under an hour and "1 h 05 min" from an hour, rounded down to the second below an hour and to the minute from there.
 
 ## Scenarios
 
@@ -212,6 +216,32 @@ Feature: Scan progress row
     Then the hashing section is tagged "failed"
     And the row shows "Scan failed while hashing files. disk read failed"
 
+  @AC-12
+  Scenario: A completed scan collapses
+    Given a COMPLETED scan started at 14:02 and finished at 14:17 (14 min 38 s), with the totals of AC-8
+    Then its row has one line reading "Completed · started 14:02", "38886 files · 902.9 GB found → 29594 compared → 13845 hashed · 17.1 GB → 2987 duplicate groups", "100%", "took 14 min 38 s" and "finished 14:17"
+    And an "Open results" link to the scan's results
+    And no per-section text and no Cancel button
+
+  @AC-12
+  Scenario: Cancelled and failed rows stay expanded
+    Given a CANCELLED scan and a FAILED scan
+    Then each row still shows its four sections, and the failed row its message
+
+  @AC-13
+  Scenario Outline: A duration in words
+    Given a scan that took <seconds> seconds
+    Then the row reads "took <text>"
+
+    Examples:
+      | seconds | text         |
+      | 42      | 42 s         |
+      | 59      | 59 s         |
+      | 878     | 14 min 38 s  |
+      | 3599    | 59 min 59 s  |
+      | 3900    | 1 h 05 min   |
+      | 7230    | 2 h 00 min   |
+
 ## Scope
 
 **Touches:**
@@ -232,7 +262,6 @@ Feature: Scan progress row
 
 - Save the canvas as screenshots under `docs/design/mockups/` (as DFS-060 did), so the ticket does not depend on an external link?
 - The overall-percentage and time-left calculations as pure helpers with their own specs (the canvas's worked examples, such as 12 + 0.10 × 18 = 13%, become test cases).
-- Walk-phase section: striped with "—", plus growing counts; what the totals line shows once the walk ends.
 - CANCELLED and FAILED details beyond decision 1: follow the canvas (stopped section hatched, failed adds a red outline and the message); to be written as criteria.
 - Phone-width layout details; one frame per state or generic rules.
 - Archetype (`component`), gates, and whether the by-hand run needs the design-gate.
