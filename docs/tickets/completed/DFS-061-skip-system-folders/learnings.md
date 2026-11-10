@@ -31,11 +31,11 @@
 
 ### DFS-061.L-7: Shared test helper for CLI-level story tests under the red gate
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/use-case/test-guide.md` and a shared helper in the `cli` test tree
 - Change: option (a), chosen by the user 2026-11-09: provide one shared helper that rethrows the stub text found in CLI output as `UnsupportedOperationException`, so CLI-level story tests meet the red gate without a per-ticket copy left behind after green. `RedCheck` and `tools/story-gate` stay unchanged.
 - Evidence: DFS-061 notes L-3 and L-4; plan.json defect 2: 10 new ScanCommandTest story tests failed with AssertionFailedError, then `sysScan` was added and stays as dead scaffolding that the freeze stops the implementer removing.
 - Recurrences: 1
 - Recommendation: apply, as the smaller change and one that leaves the gate alone.
-- Decision: held 2026-11-09 by the user (option 2): stays proposed until the shared helper exists in the `cli` test tree, so the guide never points at something missing.
+- Decision: held 2026-11-09 by the user (option 2): stays proposed until the shared helper exists in the `cli` test tree, so the guide never points at something missing. Then applied 2026-11-09 by the user; commit `docs: apply DFS-061.L-7`.
