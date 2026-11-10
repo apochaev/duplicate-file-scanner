@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How the scan bar works</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes dcmove{from{background-position:0 0}to{background-position:16px 0}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important}}
+</style>
+</helmet>
+<div style="width: 1440px; height: 720px; box-sizing: border-box; padding: 44px 64px; background: #FFFFFF; font-family: Roboto, Arial, sans-serif; color: #1F1F1F; display: flex; flex-direction: column; gap: 32px; font-variant-numeric: tabular-nums">
+<div>
+<h1 style="margin: 0 0 6px; font-size: 26px; line-height: 34px; font-weight: 500">Scan progress: one bar, four fixed sections</h1>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #5F6368; max-width: 960px">Each phase owns a fixed share of the bar from the first second. Sections never move or resize while a scan runs: a finished section stays exactly where it was, and the bar only grows left to right.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; font-weight: 500; color: #5F6368; letter-spacing: 0.04em; text-transform: uppercase">Section widths</div>
+<div style="display: grid; grid-template-columns: minmax(0, 12fr) minmax(0, 18fr) minmax(0, 60fr) minmax(0, 10fr); column-gap: 3px">
+<div style="height: 28px; border-radius: 3px; background: #3949AB; color: #FFFFFF; font-size: 13px; font-weight: 500; display: flex; align-items: center; padding: 0 10px">12%</div>
+<div style="height: 28px; border-radius: 3px; background: #3949AB; color: #FFFFFF; font-size: 13px; font-weight: 500; display: flex; align-items: center; padding: 0 10px">18%</div>
+<div style="height: 28px; border-radius: 3px; background: #3949AB; color: #FFFFFF; font-size: 13px; font-weight: 500; display: flex; align-items: center; padding: 0 10px">60%</div>
+<div style="height: 28px; border-radius: 3px; background: #3949AB; color: #FFFFFF; font-size: 13px; font-weight: 500; display: flex; align-items: center; padding: 0 10px">10%</div>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 12fr) minmax(0, 18fr) minmax(0, 60fr) minmax(0, 10fr); column-gap: 3px; font-size: 12px; line-height: 17px">
+<div style="padding-right: 10px"><div style="font-weight: 700">1 · Finding files</div><div style="color: #3C4043">overall 0 → 12</div><div style="color: #5F6368">Total unknown while it runs: striped, overall shows —</div></div>
+<div style="padding-right: 10px"><div style="font-weight: 700">2 · Comparing samples</div><div style="color: #3C4043">overall 12 → 30</div><div style="color: #5F6368">Driven by files: one small sample read per candidate</div></div>
+<div style="padding-right: 10px"><div style="font-weight: 700">3 · Hashing files</div><div style="color: #3C4043">overall 30 → 90</div><div style="color: #5F6368">Driven by bytes, not files, because file sizes vary enormously. The only phase with a time-left estimate.</div></div>
+<div><div style="font-weight: 700">4 · Hard links</div><div style="color: #3C4043">overall 90 → 100</div><div style="color: #5F6368">Driven by groups. Usually seconds.</div></div>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr); column-gap: 48px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 500; color: #5F6368; letter-spacing: 0.04em; text-transform: uppercase">Overall percentage</div>
+<p style="margin: 0; font-size: 13px; line-height: 19px">Overall = finished sections + the running section × its own progress.</p>
+<div style="display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 4px; font-size: 13px; line-height: 19px">
+<span style="color: #5F6368">Comparing, 10%</span><span>12 + 0.10 × 18 = <b style="font-weight: 500">13%</b></span>
+<span style="color: #5F6368">Hashing, 5.1 of 17.1 GB</span><span>30 + 0.30 × 60 = <b style="font-weight: 500">47%</b></span>
+<span style="color: #5F6368">Hashing, finishing…</span><span>30 + 60 = <b style="font-weight: 500">90%</b></span>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 19px; color: #3C4043">Rounded down and held at 99% or lower until Checking hard links ends. 100% appears only on a completed scan.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 500; color: #5F6368; letter-spacing: 0.04em; text-transform: uppercase">Time left (right of the percentage)</div>
+<div style="display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 6px; font-size: 13px; line-height: 19px">
+<span style="color: #5F6368">Steps 1 and 2</span><span>not yet</span>
+<span style="color: #5F6368">Hashing, first 30 s</span><span>estimating…</span>
+<span style="color: #5F6368">Hashing</span><span>about 6 min left · bytes left ÷ bytes per second over the last 30 s</span>
+<span style="color: #5F6368">Nothing left to read</span><span>finishing… · section stripes keep moving</span>
+<span style="color: #5F6368">Hard links</span><span>under 1 min left · groups left ÷ groups per second</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 500; color: #5F6368; letter-spacing: 0.04em; text-transform: uppercase">Section states (shape, icon and words, not colour alone)</div>
+<div style="display: grid; grid-template-columns: 96px 16px minmax(0, 1fr); column-gap: 10px; row-gap: 9px; align-items: center; font-size: 13px; line-height: 18px">
+<div style="height: 12px; border-radius: 3px; background: #3949AB"></div>
+<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#3949AB"></circle><path d="M4.8 8.2l2.1 2.1 4.3-4.4" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span><b style="font-weight: 500">Done</b> · solid, keeps one line of totals</span>
+<div style="height: 12px; box-sizing: border-box; border-radius: 3px; overflow: hidden; background: #E4E7F6; border: 1.5px solid #3949AB"><div style="height: 100%; width: 40%; background: #3949AB"></div></div>
+<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#3949AB" stroke-width="1.5"></circle><circle cx="8" cy="8" r="3" fill="#3949AB"></circle></svg>
+<span><b style="font-weight: 700">Running</b> · outlined, fills to progress, bold label, “now”</span>
+<div style="height: 12px; box-sizing: border-box; border-radius: 3px; overflow: hidden; background: #E4E7F6; border: 1.5px solid #3949AB"><div style="height: 100%; width: 100%; background-image: linear-gradient(-45deg, #B3BBE5 25%, #E4E7F6 25%, #E4E7F6 50%, #B3BBE5 50%, #B3BBE5 75%, #E4E7F6 75%); background-size: 16px 16px; animation: dcmove 0.9s linear infinite"></div></div>
+<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#3949AB" stroke-width="1.5"></circle><circle cx="8" cy="8" r="3" fill="#3949AB"></circle></svg>
+<span><b style="font-weight: 700">Running, total unknown</b> · pale moving stripes</span>
+<div style="height: 12px; box-sizing: border-box; border-radius: 3px; overflow: hidden; background: #E4E7F6; border: 1.5px solid #3949AB"><div style="height: 100%; width: 100%; background-color: #3949AB; background-image: linear-gradient(-45deg, rgba(255,255,255,0.32) 25%, rgba(255,255,255,0) 25%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.32) 50%, rgba(255,255,255,0.32) 75%, rgba(255,255,255,0) 75%); background-size: 16px 16px; animation: dcmove 0.9s linear infinite"></div></div>
+<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#3949AB" stroke-width="1.5"></circle><circle cx="8" cy="8" r="3" fill="#3949AB"></circle></svg>
+<span><b style="font-weight: 700">Finishing</b> · full, stripes still moving, “finishing”</span>
+<div style="height: 12px; box-sizing: border-box; border-radius: 3px; background: #FFFFFF; border: 1px dashed #9AA0A6"></div>
+<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#9AA0A6" stroke-width="1.5" stroke-dasharray="2.5 2"></circle></svg>
+<span style="color: #5F6368">Not started · dashed outline, grey label</span>
+<div style="height: 12px; box-sizing: border-box; border-radius: 3px; overflow: hidden; background: #EEEFF1; border: 1.5px solid #5F6368"><div style="height: 100%; width: 40%; background-color: #5F6368; background-image: linear-gradient(-45deg, rgba(255,255,255,0.28) 25%, rgba(255,255,255,0) 25%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.28) 50%, rgba(255,255,255,0.28) 75%, rgba(255,255,255,0) 75%); background-size: 16px 16px"></div></div>
+<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#5F6368" stroke-width="1.5"></circle><rect x="5.5" y="5.5" width="5" height="5" rx="0.5" fill="#5F6368"></rect></svg>
+<span><b style="font-weight: 700">Stopped / failed</b> · grey hatch, frozen; failed adds a red outline and ✕</span>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

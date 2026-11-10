@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scan progress row</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes dcmove{from{background-position:0 0}to{background-position:16px 0}}
+@keyframes dcspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important}}
+</style>
+</helmet>
+<div style="font-family: Roboto, Arial, sans-serif; color: #1F1F1F; background: #FFFFFF; font-variant-numeric: tabular-nums">
+
+<sc-if value="{{isFull}}" hint-placeholder-val="{{ true }}">
+<div style="padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #E0E0E0">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 96px 220px 88px; column-gap: 24px; align-items: center">
+<div style="display: flex; align-items: center; gap: 12px; min-width: 0">
+<sc-if value="{{isRun}}" hint-placeholder-val="{{ true }}"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="flex: none; animation: dcspin 1s linear infinite"><circle cx="10" cy="10" r="8" fill="none" stroke="#E4E7F6" stroke-width="2.5"></circle><path d="M10 2a8 8 0 0 1 8 8" fill="none" stroke="#3949AB" stroke-width="2.5" stroke-linecap="round"></path></svg></sc-if>
+<sc-if value="{{isCancel}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><circle cx="8" cy="8" r="6.75" fill="none" stroke="#5F6368" stroke-width="1.5"></circle><rect x="5.5" y="5.5" width="5" height="5" rx="0.5" fill="#5F6368"></rect></svg></sc-if>
+<sc-if value="{{isFail}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><circle cx="8" cy="8" r="7" fill="#C5221F"></circle><path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round"></path></svg></sc-if>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<div style="display: flex; align-items: baseline; gap: 10px; min-width: 0">
+<span style="font-size: 14px; line-height: 20px; font-weight: 500">D:\ (Data)</span>
+<span style="font-size: 12px; line-height: 16px; color: #5F6368">{{started}}</span>
+</div>
+<div style="font-size: 12px; line-height: 16px; color: #3C4043">{{step}}</div>
+</div>
+</div>
+<div style="text-align: right">
+<div style="font-size: 20px; line-height: 26px; font-weight: 500">{{overall}}</div>
+<div style="font-size: 11px; line-height: 14px; color: #5F6368">{{overallSub}}</div>
+</div>
+<div>
+<div style="font-size: 13px; line-height: 18px; font-weight: 500">{{eta}}</div>
+<div style="font-size: 11px; line-height: 14px; color: #5F6368">{{etaSub}}</div>
+</div>
+<div style="display: flex; justify-content: flex-end">
+<sc-if value="{{showCancel}}" hint-placeholder-val="{{ true }}"><button type="button" style="height: 32px; padding: 0 12px; border: 0; border-radius: 4px; background: transparent; color: #3949AB; font-family: Roboto, Arial, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.01em; cursor: pointer">Cancel</button></sc-if>
+<sc-if value="{{hasStatusWord}}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; font-weight: 500; {{statusCss}}">{{statusWord}}</span></sc-if>
+</div>
+</div>
+<div role="progressbar" aria-label="Overall scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{pct}}" style="display: grid; grid-template-columns: minmax(0, 12fr) minmax(0, 18fr) minmax(0, 60fr) minmax(0, 10fr); column-gap: 3px">
+<sc-for list="{{segs}}" as="s" hint-placeholder-count="4">
+<div style="height: 12px; box-sizing: border-box; border-radius: 3px; overflow: hidden; {{s.segCss}}"><div style="height: 100%; {{s.fillCss}}"></div></div>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 12fr) minmax(0, 18fr) minmax(0, 60fr) minmax(0, 10fr); column-gap: 3px">
+<sc-for list="{{segs}}" as="s" hint-placeholder-count="4">
+<div style="min-width: 0; padding-right: 10px; display: flex; flex-direction: column; gap: 1px">
+<div style="display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 16px; {{s.labelCss}}">
+<span style="flex: none; display: flex; padding-top: 1px">
+<sc-if value="{{s.isDone}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#3949AB"></circle><path d="M4.8 8.2l2.1 2.1 4.3-4.4" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+<sc-if value="{{s.isCur}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#3949AB" stroke-width="1.5"></circle><circle cx="8" cy="8" r="3" fill="#3949AB"></circle></svg></sc-if>
+<sc-if value="{{s.isTodo}}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#9AA0A6" stroke-width="1.5" stroke-dasharray="2.5 2"></circle></svg></sc-if>
+<sc-if value="{{s.isStop}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#5F6368" stroke-width="1.5"></circle><rect x="5.5" y="5.5" width="5" height="5" rx="0.5" fill="#5F6368"></rect></svg></sc-if>
+<sc-if value="{{s.isFail}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#C5221F"></circle><path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round"></path></svg></sc-if>
+</span>
+<span style="min-width: 0">{{s.title}}</span>
+<sc-if value="{{s.hasTag}}" hint-placeholder-val="{{ false }}"><span style="flex: none; font-size: 11px; line-height: 15px; padding: 0 5px; border-radius: 3px; font-weight: 500; {{s.tagCss}}">{{s.tag}}</span></sc-if>
+</div>
+<div style="font-size: 12px; line-height: 16px; padding-left: 20px; {{s.l1Css}}">{{s.l1}}</div>
+<div style="font-size: 12px; line-height: 16px; padding-left: 20px; color: #5F6368">{{s.l2}}</div>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{hasError}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; background: #FCE8E6; border-radius: 4px; font-size: 13px; line-height: 18px; color: #1F1F1F">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="8" cy="8" r="7" fill="#C5221F"></circle><path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round"></path></svg>
+<div><span style="font-weight: 500; color: #A50E0E">Scan failed while hashing.</span> {{error}}</div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{isCompact}}" hint-placeholder-val="{{ false }}">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 96px 220px 88px; column-gap: 24px; align-items: center; padding: 10px 16px; border-bottom: 1px solid #E0E0E0">
+<div style="display: flex; align-items: center; gap: 24px; min-width: 0">
+<div style="display: flex; align-items: center; gap: 12px; flex: 0 0 200px; min-width: 0">
+<svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><circle cx="8" cy="8" r="7" fill="#3949AB"></circle><path d="M4.8 8.2l2.1 2.1 4.3-4.4" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 14px; line-height: 20px; font-weight: 500">D:\ (Data)</span>
+<span style="font-size: 12px; line-height: 16px; color: #5F6368">Completed · started 14:02</span>
+</div>
+</div>
+<div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<div aria-hidden="true" style="display: grid; grid-template-columns: minmax(0, 12fr) minmax(0, 18fr) minmax(0, 60fr) minmax(0, 10fr); column-gap: 2px">
+<div style="height: 4px; border-radius: 2px; background: #3949AB"></div>
+<div style="height: 4px; border-radius: 2px; background: #3949AB"></div>
+<div style="height: 4px; border-radius: 2px; background: #3949AB"></div>
+<div style="height: 4px; border-radius: 2px; background: #3949AB"></div>
+</div>
+<div style="font-size: 12px; line-height: 16px; color: #3C4043"><span style="font-weight: 500; color: #1F1F1F">38886 files · 902.9 GB</span> found  →  <span style="font-weight: 500; color: #1F1F1F">29594</span> compared  →  <span style="font-weight: 500; color: #1F1F1F">13845</span> hashed · 17.1 GB  →  <span style="font-weight: 500; color: #1F1F1F">2987 duplicate groups</span></div>
+</div>
+</div>
+<div style="text-align: right">
+<div style="font-size: 20px; line-height: 26px; font-weight: 500">100%</div>
+<div style="font-size: 11px; line-height: 14px; color: #5F6368">of whole scan</div>
+</div>
+<div>
+<div style="font-size: 13px; line-height: 18px; font-weight: 500">took 14 min 38 s</div>
+<div style="font-size: 11px; line-height: 14px; color: #5F6368">finished 14:17</div>
+</div>
+<div style="display: flex; justify-content: flex-end">
+<a href="#" style="font-size: 14px; font-weight: 500; color: #3949AB; text-decoration: none; white-space: nowrap">Open results</a>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isPhone}}" hint-placeholder-val="{{ false }}">
+<div style="padding: 14px 16px 8px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #E0E0E0">
+<div style="display: flex; align-items: center; gap: 10px">
+<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="flex: none; animation: dcspin 1s linear infinite"><circle cx="10" cy="10" r="8" fill="none" stroke="#E4E7F6" stroke-width="2.5"></circle><path d="M10 2a8 8 0 0 1 8 8" fill="none" stroke="#3949AB" stroke-width="2.5" stroke-linecap="round"></path></svg>
+<div style="flex: 1 1 auto; min-width: 0">
+<div style="font-size: 15px; line-height: 20px; font-weight: 500">D:\ (Data)</div>
+<div style="font-size: 12px; line-height: 16px; color: #5F6368">{{started}}</div>
+</div>
+<button type="button" style="height: 44px; padding: 0 12px; border: 0; border-radius: 4px; background: transparent; color: #3949AB; font-family: Roboto, Arial, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer">Cancel</button>
+</div>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+<div>
+<div style="font-size: 28px; line-height: 32px; font-weight: 500">{{overall}}</div>
+<div style="font-size: 11px; line-height: 14px; color: #5F6368">{{overallSub}}</div>
+</div>
+<div style="text-align: right">
+<div style="font-size: 14px; line-height: 18px; font-weight: 500">{{eta}}</div>
+<div style="font-size: 11px; line-height: 14px; color: #5F6368">{{etaSub}}</div>
+</div>
+</div>
+<div role="progressbar" aria-label="Overall scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{pct}}" style="display: grid; grid-template-columns: minmax(0, 12fr) minmax(0, 18fr) minmax(0, 60fr) minmax(0, 10fr); column-gap: 3px">
+<sc-for list="{{segs}}" as="s" hint-placeholder-count="4">
+<div style="height: 12px; box-sizing: border-box; border-radius: 3px; overflow: hidden; {{s.segCss}}"><div style="height: 100%; {{s.fillCss}}"></div></div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column">
+<sc-for list="{{segs}}" as="s" hint-placeholder-count="4">
+<div style="display: grid; grid-template-columns: 14px minmax(0, 1fr); column-gap: 10px; padding: 8px 0; border-top: 1px solid #F1F3F4">
+<span style="display: flex; padding-top: 2px">
+<sc-if value="{{s.isDone}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#3949AB"></circle><path d="M4.8 8.2l2.1 2.1 4.3-4.4" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+<sc-if value="{{s.isCur}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#3949AB" stroke-width="1.5"></circle><circle cx="8" cy="8" r="3" fill="#3949AB"></circle></svg></sc-if>
+<sc-if value="{{s.isTodo}}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#9AA0A6" stroke-width="1.5" stroke-dasharray="2.5 2"></circle></svg></sc-if>
+</span>
+<div style="min-width: 0">
+<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; {{s.labelCss}}"><span>{{s.title}}</span><sc-if value="{{s.hasTag}}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; line-height: 15px; padding: 0 5px; border-radius: 3px; font-weight: 500; {{s.tagCss}}">{{s.tag}}</span></sc-if></div>
+<div style="font-size: 12px; line-height: 16px; {{s.l1Css}}">{{s.l1}}</div>
+<div style="font-size: 12px; line-height: 16px; color: #5F6368">{{s.l2}}</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"stage":{"editor":"enum","options":["walk","compare","hash","finishing","links","done","cancelled","failed"],"default":"hash"},"layout":{"editor":"enum","options":["desktop","phone"],"default":"desktop"},"$preview":{"width":1392,"height":200}}'>
+class Component extends DCLogic {
+renderVals() {
+var stage = this.props.stage ?? 'hash';
+var layout = this.props.layout ?? 'desktop';
+var IND = '#3949AB', IND_D = '#283593', TINT = '#E4E7F6', GREY = '#5F6368', LINE = '#9AA0A6', RED = '#C5221F';
+function stripes(a, b) {
+return 'background-image: linear-gradient(-45deg, ' + a + ' 25%, ' + b + ' 25%, ' + b + ' 50%, ' + a + ' 50%, ' + a + ' 75%, ' + b + ' 75%); background-size: 16px 16px;';
+}
+var MOVE = ' animation: dcmove 0.9s linear infinite;';
+var PH = [
+{ label: 'Finding files', done: ['38886 files · 902.9 GB', 'found in 4120 folders'], todo: '' },
+{ label: 'Comparing samples', done: ['29594 compared', '→ 13845 candidates'], todo: 'total known after step 1' },
+{ label: 'Hashing files', done: ['13845 hashed · 17.1 GB', '→ 3104 matching groups'], todo: 'total known after step 2' },
+{ label: 'Checking hard links', done: ['3104 groups checked', '→ 2987 duplicate groups'], todo: 'total known after step 3' }
+];
+var C = {
+walk: { st: ['cur', 'todo', 'todo', 'todo'], mode: 'indet', frac: 0, lines: ['212 folders · 1840 files', '36.4 GB found so far'], overall: '—', overallSub: 'total not known yet', pct: 0, step: 'Step 1 of 4 · Finding files', started: 'Started 14:02 · 0:41 elapsed', eta: 'not yet', etaSub: 'shown once hashing starts', head: 'run' },
+compare: { st: ['done', 'cur', 'todo', 'todo'], mode: 'det', frac: 0.1, lines: ['2954 of 29594 files', '26640 left'], overall: '13%', overallSub: 'of whole scan', pct: 13, step: 'Step 2 of 4 · Comparing samples', started: 'Started 14:02 · 2:15 elapsed', eta: 'not yet', etaSub: 'shown once hashing starts', head: 'run' },
+hash: { st: ['done', 'done', 'cur', 'todo'], mode: 'det', frac: 0.298, lines: ['5.1 of 17.1 GB · 12.0 GB left', '6210 of 13845 files · 7635 left'], overall: '47%', overallSub: 'of whole scan', pct: 47, step: 'Step 3 of 4 · Hashing files', started: 'Started 14:02 · 7:48 elapsed', eta: 'about 6 min left', etaSub: '34.2 MB/s over the last 30 s', head: 'run' },
+finishing: { st: ['done', 'done', 'cur', 'todo'], mode: 'fin', frac: 1, lines: ['17.1 of 17.1 GB · nothing left to read', '13845 of 13845 files · finishing…'], overall: '90%', overallSub: 'of whole scan', pct: 90, step: 'Step 3 of 4 · Hashing files, finishing…', started: 'Started 14:02 · 13:55 elapsed', eta: 'finishing…', etaSub: 'all files read, wrapping up', head: 'run' },
+links: { st: ['done', 'done', 'done', 'cur'], mode: 'det', frac: 0.4, lines: ['1242 of 3104 groups', '1862 left'], overall: '94%', overallSub: 'of whole scan', pct: 94, step: 'Step 4 of 4 · Checking hard links', started: 'Started 14:02 · 14:20 elapsed', eta: 'under 1 min left', etaSub: '1862 groups to go', head: 'run' },
+cancelled: { st: ['done', 'done', 'stop', 'todo'], mode: 'stop', frac: 0.298, lines: ['5.1 of 17.1 GB read', '6210 of 13845 files'], overall: '47%', overallSub: 'when stopped', pct: 47, step: 'Cancelled during step 3 · Hashing files', started: 'Started 14:02', eta: 'ran 7 min 52 s', etaSub: 'cancelled 14:10', head: 'cancel' },
+failed: { st: ['done', 'done', 'fail', 'todo'], mode: 'fail', frac: 0.667, lines: ['11.4 of 17.1 GB read', '9020 of 13845 files'], overall: '70%', overallSub: 'when stopped', pct: 70, step: 'Failed during step 3 · Hashing files', started: 'Started 14:02', eta: 'ran 10 min 3 s', etaSub: 'failed 14:12', head: 'fail', error: 'Could not read D:\\Photos\\2019\\IMG_4471.CR2: the device is not ready. The drive may have been disconnected.' },
+done: { st: ['done', 'done', 'done', 'done'], mode: 'det', frac: 1, lines: ['', ''], overall: '100%', overallSub: 'of whole scan', pct: 100, step: '', started: 'Started 14:02', eta: '', etaSub: '', head: 'done' }
+};
+var c = C[stage] || C.hash;
+var stopped = c.head === 'cancel' || c.head === 'fail';
+var segs = PH.map(function (p, i) {
+var st = c.st[i];
+var segCss, fillCss = 'width: 0;', lines, labelCss, l1Css = 'color: #1F1F1F;', tag = '', tagCss = '';
+if (st === 'done') {
+segCss = 'background: ' + IND + ';';
+lines = p.done;
+labelCss = 'color: #1F1F1F; font-weight: 500;';
+} else if (st === 'cur') {
+segCss = 'background: ' + TINT + '; border: 1.5px solid ' + IND + ';';
+lines = c.lines;
+labelCss = 'color: ' + IND_D + '; font-weight: 700;';
+l1Css = 'color: #1F1F1F; font-weight: 500;';
+tagCss = 'background: ' + TINT + '; color: ' + IND_D + ';';
+if (c.mode === 'indet') {
+fillCss = 'width: 100%; ' + stripes('#B3BBE5', TINT) + MOVE;
+tag = 'now';
+} else if (c.mode === 'fin') {
+fillCss = 'width: 100%; background-color: ' + IND + '; ' + stripes('rgba(255,255,255,0.32)', 'rgba(255,255,255,0)') + MOVE;
+tag = 'finishing';
+} else {
+fillCss = 'width: ' + (c.frac * 100).toFixed(1) + '%; background: ' + IND + ';';
+tag = 'now';
+}
+} else if (st === 'stop' || st === 'fail') {
+var f = st === 'fail';
+segCss = 'background: ' + (f ? '#FCE8E6' : '#EEEFF1') + '; border: 1.5px solid ' + (f ? RED : GREY) + ';';
+fillCss = 'width: ' + (c.frac * 100).toFixed(1) + '%; background-color: ' + GREY + '; ' + stripes('rgba(255,255,255,0.28)', 'rgba(255,255,255,0)');
+lines = c.lines;
+labelCss = 'color: ' + (f ? RED : '#3C4043') + '; font-weight: 700;';
+tag = f ? 'failed' : 'stopped';
+tagCss = f ? 'background: #FCE8E6; color: #A50E0E;' : 'background: #EEEFF1; color: #3C4043;';
+} else {
+segCss = 'background: #FFFFFF; border: 1px dashed ' + LINE + ';';
+lines = stopped ? ['not run', ''] : ['not started', p.todo];
+labelCss = 'color: ' + GREY + '; font-weight: 400;';
+l1Css = 'color: ' + GREY + ';';
+}
+return {
+title: (i + 1) + ' · ' + p.label, segCss: segCss, fillCss: fillCss, labelCss: labelCss, l1Css: l1Css,
+l1: lines[0], l2: lines[1], tag: tag, tagCss: tagCss, hasTag: !!tag,
+isDone: st === 'done', isCur: st === 'cur', isTodo: st === 'todo', isStop: st === 'stop', isFail: st === 'fail'
+};
+});
+var phone = layout === 'phone';
+return {
+segs: segs,
+isFull: !phone && c.head !== 'done',
+isCompact: !phone && c.head === 'done',
+isPhone: phone,
+isRun: c.head === 'run',
+isCancel: c.head === 'cancel',
+isFail: c.head === 'fail',
+showCancel: c.head === 'run',
+hasStatusWord: stopped,
+statusWord: c.head === 'fail' ? 'Failed' : 'Cancelled',
+statusCss: c.head === 'fail' ? 'color: ' + RED + ';' : 'color: ' + GREY + ';',
+overall: c.overall, overallSub: c.overallSub, pct: c.pct,
+step: c.step, started: c.started, eta: c.eta, etaSub: c.etaSub,
+hasError: !!c.error, error: c.error || ''
+};
+}
+}
+</script>
+</body>
+</html>
