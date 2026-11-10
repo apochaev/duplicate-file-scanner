@@ -374,8 +374,9 @@ public class ScanRegistry {
                     }
                 }
                 case ScanEvent.GroupDone e -> {
-                    if (lastIs(e.phase().name())) {
-                        updateLast(p -> new PhaseTotals(p.phase(), false, 0, 0, 0, e.total()));
+                    if (lastIs("HARD_LINKS") && e.phase().name().equals("HARD_LINKS")) {
+                        updateLast(p -> new PhaseTotals(p.phase(), false, p.directories(), p.files(), p.bytes(),
+                                e.total()));
                     }
                 }
                 default -> {
