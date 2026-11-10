@@ -44,7 +44,7 @@
       "after": [
         "design"
       ],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -72,6 +72,15 @@
           "wallClockSeconds": 73,
           "outcome": "passed",
           "note": "reopened for defect 2 (AC-12 completed-while-open); verified by running npmTest: the one new test fails on an assertion about the empty duration text, 270 others pass (red check not usable, src already implemented)"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "reopened for defect 3; verified with npmTest green against the working-tree implementation (272 tests)"
         }
       ],
       "artifacts": [
@@ -84,9 +93,10 @@
         "server/frontend/src/app/scans/scan-row.spec.ts",
         "server/frontend/src/app/scans/scan-screen.spec.ts",
         "server/frontend/src/app/scans/scan-sections.spec.ts",
-        "server/frontend/src/app/scans/scan-test-data.ts"
+        "server/frontend/src/app/scans/scan-test-data.ts",
+        "server/frontend/src/app/scans/scan-finish.ts"
       ],
-      "commit": "b3b92425212cc4017aec69dab76688afd01d3079"
+      "commit": "8744a78dbdec94521b613778b91451d80eb80cee"
     },
     {
       "id": "implement",
@@ -94,7 +104,7 @@
       "after": [
         "tests"
       ],
-      "status": "in-progress",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -122,6 +132,15 @@
           "wallClockSeconds": 0,
           "outcome": "failed-gate",
           "note": "defect 2 rework: scan-row.ts refetches GET /api/scans/{id} on a stream COMPLETED; green red because existing specs that reach COMPLETED through the stream do not flush that request (afterEach http.verify), cascading; test-side defect, implementation left uncommitted"
+        },
+        {
+          "attempt": 2,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 0,
+          "wallClockSeconds": 0,
+          "outcome": "passed",
+          "note": "battery run on the working tree after the tests rework (defects 2, 3): green 1138 passed; disabled, freeze, touches, stubs, traceability, consistency pass"
         }
       ],
       "artifacts": [
@@ -134,9 +153,10 @@
         "server/frontend/src/app/scans/scan-phase.ts",
         "server/frontend/src/app/scans/scan-row.css",
         "server/frontend/src/app/scans/scan-row.ts",
-        "server/frontend/src/app/scans/scan-sections.ts"
+        "server/frontend/src/app/scans/scan-sections.ts",
+        "server/frontend/src/app/scans/scan-row.html"
       ],
-      "commit": "d2c586d43b99da348c4e3246eec8f8517eb68800"
+      "commit": "7e25ac3958e4f8f3374cd53fc07d5ec11e89ccf0"
     },
     {
       "id": "verify",
@@ -183,14 +203,14 @@
       "phase": "verify",
       "route": "implementer",
       "summary": "AC-12: a row that turns COMPLETED through the progress stream shows empty .scan-duration and .scan-finished until reload; no test drives the stream to COMPLETED",
-      "status": "open"
+      "status": "closed"
     },
     {
       "id": 3,
       "phase": "implement",
       "route": "test-author",
       "summary": "existing specs (scan-row AC-3, scan-screen DFS-041.AC-6 and others) reach COMPLETED via the stream without flushing the new GET /api/scans/{id}; afterEach http.verify fails and cascades",
-      "status": "open"
+      "status": "closed"
     }
   ]
 }
