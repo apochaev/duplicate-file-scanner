@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-064-scan-progress-phase-totals",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-064-scan-progress-phase-totals",
-  "state": "awaiting-approval",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -150,7 +150,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": [
