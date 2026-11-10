@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-063-scan-progress-row-redesign",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-063-scan-progress-row-redesign",
-  "state": "running",
+  "state": "awaiting-approval",
   "phases": [
     {
       "id": "design",
@@ -164,7 +164,7 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -174,10 +174,23 @@
           "wallClockSeconds": 900,
           "outcome": "failed-gate",
           "note": "verdict: AC-12 partially met; a scan completing while the page is open collapses with empty took/finished (stream has no finishedAt, nothing refetches the entry); resumed once after the turn cap"
+        },
+        {
+          "attempt": 2,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 39,
+          "wallClockSeconds": 322,
+          "outcome": "passed",
+          "note": "second pass after defects 2 and 3: AC-1..13 and AC-15 met, e2eTest 8 flows pass, by-hand re-run shows took/finished filled without reload; consistency passes"
         }
       ],
-      "artifacts": [],
-      "commit": null
+      "artifacts": [
+        "docs/tickets/backlog/DFS-063-scan-progress-row-redesign/DFS-063-ticket.md",
+        "docs/tickets/backlog/DFS-063-scan-progress-row-redesign/learnings.md",
+        "docs/tickets/backlog/DFS-063-scan-progress-row-redesign/verification.md"
+      ],
+      "commit": "fc95893b2abed4478ccde0372c84db0acfafa2f4"
     }
   ],
   "gates": [
