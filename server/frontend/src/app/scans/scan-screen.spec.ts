@@ -377,6 +377,31 @@ describe('ScanScreen', () => {
     expect(FakeEventSource.opened).toHaveLength(1);
   });
 
+  it('DFS-063.AC-12 fills the duration and finish time of a scan that completes while the page is open', async () => {
+    await render([entry('s-1', { status: 'RUNNING', phase: 'WALK' }, ['C:/a'], '2026-11-01T10:00:00Z')]);
+    const stream = FakeEventSource.opened[0];
+
+    // The stream's terminal status carries no finishedAt; the screen must fetch the entry from the API.
+    stream.send({ status: 'COMPLETED', files: 340, bytes: 1572864, groupsTotal: 3, phases: DONE_PHASES });
+    await settle();
+    for (const request of http.match('/api/scans/s-1')) {
+      expect(request.request.method).toBe('GET');
+      request.flush({
+        ...entry('s-1', { status: 'COMPLETED', files: 340, bytes: 1572864, groupsTotal: 3, phases: DONE_PHASES }, [
+          'C:/a',
+        ], '2026-11-01T10:00:00Z'),
+        finishedAt: '2026-11-01T10:14:38Z',
+      });
+    }
+    await settle();
+
+    const row = rows()[0];
+    expect(row.querySelector('.scan-collapsed')).not.toBeNull();
+    expect(row.querySelector('.scan-duration')?.textContent?.trim()).toBe('took 14 min 38 s');
+    expect(row.querySelector('.scan-finished')?.textContent?.trim()).toMatch(/^finished \d\d:\d\d$/);
+    expect(row.querySelector('.scan-finished time')?.getAttribute('datetime')).toBe('2026-11-01T10:14:38Z');
+  });
+
   it('DFS-041.AC-7 cancels a running scan once and follows it to Cancelled', async () => {
     await render([entry('s-1', { status: 'RUNNING', phase: 'WALK' })]);
     const stream = FakeEventSource.opened[0];

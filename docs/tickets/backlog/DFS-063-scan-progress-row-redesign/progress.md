@@ -8,3 +8,4 @@
 
 - Implement phase: filled every stub (scan-sections.ts, scan-format.ts, scan-eta.ts, ScanRow.overallLabel via a linkedSignal hold and duration), wrote scan-row.css (4 kB component budget: icons are CSS glyphs, no budget warning), deleted scan-phase.ts, rewrote the scan-row text in docs/design/ui.md and the CLAUDE.md server entry. Vitest: 269 of 270 pass; the one red test is the AC-15 spec, whose last assertion cannot pass (see learnings.md).
 - Expected commit: `feat(server): four-section scan progress row [DFS-063]`.
+- Rework (defect 2): added scan-screen.spec.ts 'DFS-063.AC-12 fills the duration and finish time of a scan that completes while the page is open'; red until the screen refetches GET /api/scans/{id} on a terminal status. Expected commit: test(server): completed-while-open duration test [DFS-063].
