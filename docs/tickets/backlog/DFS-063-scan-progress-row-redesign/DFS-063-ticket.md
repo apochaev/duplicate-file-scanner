@@ -9,7 +9,7 @@ archetype:
 # gates: [done]        # pipeline tickets: decided in refine, required from ready on
 priority: medium
 lane: frontend
-depends_on: [DFS-062]
+depends_on: [DFS-064]
 touches: []
 blocked_reason:
 created: 2026-11-09
@@ -27,7 +27,7 @@ So that I can see which phases are done, how far the whole scan has got, and how
 
 ## Context
 
-Design: https://claude.ai/artifact/EuSd18FxAYTobP38cx3JF3 (Claude Design, 2026-11-08; `project/Main.dc.html` rules, `project/Row.dc.html` row markup and per-state data). It is a mock-up; the page is rebuilt with Angular Material in `server/frontend/src/app/scans/`. It replaces DFS-057's per-phase lines. DFS-058 is cancelled; its finished-phase totals come from DFS-062.
+Design: https://claude.ai/artifact/EuSd18FxAYTobP38cx3JF3 (Claude Design, 2026-11-08; `project/Main.dc.html` rules, `project/Row.dc.html` row markup and per-state data). It is a mock-up; the page is rebuilt with Angular Material in `server/frontend/src/app/scans/`. It replaces DFS-057's per-phase lines. DFS-058 is cancelled; its finished-phase totals come from DFS-064.
 
 Rules the canvas sets:
 
@@ -67,7 +67,7 @@ Feature: Scan progress row
 - <to be refined; likely `server/frontend/src/app/scans`, `CLAUDE.md`, `docs/design/ui.md`>
 
 **Out of scope:**
-- The server's progress fields (DFS-062).
+- The server's progress fields (DFS-064).
 - Plan controls and the results screen.
 
 ## Definition of done

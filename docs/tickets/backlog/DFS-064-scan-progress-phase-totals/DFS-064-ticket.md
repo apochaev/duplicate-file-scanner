@@ -1,5 +1,5 @@
 ---
-id: DFS-062
+id: DFS-064
 title: Report each scan phase's totals and finishing state in the progress stream
 status: draft
 type: feature
@@ -17,7 +17,7 @@ updated: 2026-11-09
 completed:
 ---
 
-# DFS-062: Report each scan phase's totals and finishing state in the progress stream
+# DFS-064: Report each scan phase's totals and finishing state in the progress stream
 
 ## Story
 
@@ -27,7 +27,7 @@ So that the redesigned progress row (DFS-063) can keep one totals line per finis
 
 ## Context
 
-The product owner redesigned the scan progress row in Claude Design on 2026-11-08 after a real scan of a 900 GB drive: the bar and percentage restarted in every phase, and sat at 100% for a long time while files were still being hashed. The design canvas is https://claude.ai/artifact/EuSd18FxAYTobP38cx3JF3 (`project/Main.dc.html` holds the rules). It replaces DFS-057's per-phase lines and absorbs DFS-058's finished-phase history (DFS-058 is cancelled in favour of DFS-062 and DFS-063).
+The product owner redesigned the scan progress row in Claude Design on 2026-11-08 after a real scan of a 900 GB drive: the bar and percentage restarted in every phase, and sat at 100% for a long time while files were still being hashed. The design canvas is https://claude.ai/artifact/EuSd18FxAYTobP38cx3JF3 (`project/Main.dc.html` holds the rules). It replaces DFS-057's per-phase lines and absorbs DFS-058's finished-phase history (DFS-058 is cancelled in favour of DFS-064 and DFS-063).
 
 **What the stream already sends** (`ScanProgress`, `us.pochaev.dfs.server.scan`, DFS-040 decision 3): `phase`, walk counts (`directories`, `files`, `bytes`), the current hashing phase's `hashedFiles`/`hashFilesTotal` and `hashedBytes`/`hashBytesTotal`, and `groupsDone`/`groupsTotal`. The 30-second bytes rate and the ETA are computed in the browser (DFS-057 decision 2), so no rate is needed on the server.
 
@@ -39,7 +39,7 @@ Any change to `ScanProgress` is a spec change (`./gradlew :server:updateOpenApi`
 
 <!-- Filled during refinement. -->
 
-The full ID of each criterion is `DFS-062.AC-<n>`.
+The full ID of each criterion is `DFS-064.AC-<n>`.
 
 - **AC-1** <to be refined>
 
