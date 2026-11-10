@@ -1,48 +1,102 @@
-@let p = progress();
-<div class="head">
-  <span [class]="'scan-status status-' + p.status.toLowerCase()">{{ statusLabel(p.status) }}</span>
-  <time [attr.datetime]="entry().startedAt">{{ entry().startedAt | date: 'medium' }}</time>
-  @if (cancellable() || status() === 'CANCELLING') {
-    <button mat-stroked-button type="button" [disabled]="cancelRequested() || !cancellable()" (click)="cancel()">
-      Cancel
-    </button>
-  }
-</div>
-<ul class="scan-folders">
-  @for (location of entry().locations; track $index) {
-    <li>{{ location }}</li>
-  }
-</ul>
-@switch (p.status) {
-  @case ('COMPLETED') {
-    <div class="scan-done">
-      <p class="scan-counts">
-        {{ plural(p.files, 'file') }} · {{ formatBytes(p.bytes) }} · {{ plural(p.groupsTotal, 'duplicate set') }}
-      </p>
+@if (collapsed()) {
+  <div class="scan-collapsed">
+    <div class="scan-collapsed-main">
+      <div class="scan-heading">
+        <ul class="scan-folders">
+          @for (location of entry().locations; track $index) {
+            <li>{{ location }}</li>
+          }
+        </ul>
+        <p class="scan-started">
+          <span class="scan-status status-completed">{{ statusLabel('COMPLETED') }}</span> · started
+          <time [attr.datetime]="entry().startedAt">{{ entry().startedAt | date: 'HH:mm' }}</time>
+        </p>
+      </div>
+      <div class="scan-collapsed-body">
+        <div class="scan-strip scan-strip-thin" aria-hidden="true">
+          @for (s of sections(); track s.phase) {
+            <div class="scan-segment segment-done"></div>
+          }
+        </div>
+        <p class="scan-totals">{{ totals() }}</p>
+      </div>
+    </div>
+    <div class="scan-overall">
+      <div class="scan-overall-value">100%</div>
+      <div class="scan-overall-caption">of whole scan</div>
+    </div>
+    <div class="scan-took">
+      <div class="scan-duration">took {{ duration() }}</div>
+      <div class="scan-finished">
+        finished <time [attr.datetime]="entry().finishedAt">{{ entry().finishedAt | date: 'HH:mm' }}</time>
+      </div>
+    </div>
+    <div class="scan-actions">
       <a mat-button class="open-results" [routerLink]="resultLink()">Open results</a>
     </div>
-  }
-  @case ('FAILED') {
-    <p class="scan-failure">{{ p.failureMessage }}</p>
-  }
-  @case ('CANCELLED') {}
-  @default {
-    @if (view(); as v) {
-      <p class="scan-phase-line"><span class="scan-phase">{{ v.label }}</span>: {{ v.detail }}</p>
-      @if (eta(); as e) {
-        <p class="scan-eta">{{ e }}</p>
+  </div>
+} @else {
+  <div class="scan-expanded">
+    <div class="scan-top">
+      <div class="scan-heading">
+        <div class="scan-title">
+          <span [class]="'scan-status status-' + status().toLowerCase()">{{ statusLabel(status()) }}</span>
+          <time [attr.datetime]="entry().startedAt">{{ entry().startedAt | date: 'medium' }}</time>
+        </div>
+        <ul class="scan-folders">
+          @for (location of entry().locations; track $index) {
+            <li>{{ location }}</li>
+          }
+        </ul>
+        <p class="scan-step">{{ step() }}</p>
+      </div>
+      <div class="scan-overall">
+        <div class="scan-overall-value">{{ overallLabel() }}</div>
+        <div class="scan-overall-caption">{{ caption() }}</div>
+      </div>
+      <div class="scan-time">
+        @if (status() === 'CANCELLING') {
+          <div class="scan-cancelling">Cancelling…</div>
+        }
+        @if (eta(); as e) {
+          <div class="scan-time-left">{{ e }}</div>
+        }
+      </div>
+      <div class="scan-actions">
+        @if (cancellable() || status() === 'CANCELLING') {
+          <button mat-stroked-button type="button" [disabled]="cancelRequested() || !cancellable()" (click)="cancel()">
+            Cancel
+          </button>
+        }
+      </div>
+    </div>
+    <div class="scan-strip" role="progressbar" aria-label="Overall scan progress" aria-valuemin="0" aria-valuemax="100">
+      @for (s of sections(); track s.phase) {
+        <div [class]="'scan-segment segment-' + s.state" [class.striped]="s.striped">
+          <div class="scan-segment-fill" [style.width.%]="s.fill"></div>
+        </div>
       }
-      @if (v.percent === null) {
-        <mat-progress-bar mode="indeterminate" aria-label="Scan progress" />
-      } @else {
-        <mat-progress-bar mode="determinate" [value]="v.percent" aria-label="Scan progress" />
+    </div>
+    <ol class="scan-sections" aria-label="Scan sections">
+      @for (s of sections(); track s.phase) {
+        <li [class]="'scan-section section-' + s.state" [attr.data-phase]="s.phase">
+          <div class="section-head">
+            <span class="section-icon" aria-hidden="true"></span>
+            <span class="section-title">{{ s.title }}</span>
+            @if (s.tag) {
+              <span class="section-tag">{{ s.tag }}</span>
+            }
+          </div>
+          <div class="section-line1">{{ s.line1 }}</div>
+          <div class="section-line2">{{ s.line2 }}</div>
+        </li>
       }
-      @if (v.found) {
-        <p class="scan-found">{{ v.found }}</p>
-      }
+    </ol>
+    @if (status() === 'FAILED') {
+      <p class="scan-failure" role="alert">{{ failure() }}</p>
     }
-    @if (lost()) {
+    @if (lost() && !finished()) {
       <p class="stream-lost" role="alert">Live progress lost; reload the page</p>
     }
-  }
+  </div>
 }

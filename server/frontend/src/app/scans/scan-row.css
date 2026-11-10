@@ -1,51 +1,18 @@
+/*
+ * DFS-063 stub: the real styles are written in the implement phase from the canvas source in
+ * docs/design/mockups/scan-progress-row-2026-11-08/ (Row.dc.html). Class contract, final:
+ *   expanded: .scan-expanded .scan-top .scan-heading .scan-title .scan-status .status-<status> .scan-folders .scan-step
+ *     .scan-overall .scan-overall-value .scan-overall-caption .scan-time .scan-cancelling .scan-time-left .scan-actions
+ *     .scan-strip .scan-segment .segment-<state> .striped .scan-segment-fill .scan-sections .scan-section
+ *     .section-<state> .section-head .section-icon .section-title .section-tag .section-line1 .section-line2
+ *     .scan-failure .stream-lost
+ *   collapsed: .scan-collapsed .scan-collapsed-main .scan-collapsed-body .scan-strip-thin .scan-started .scan-totals
+ *     .scan-took .scan-duration .scan-finished .open-results
+ * with <state> one of done, running, finishing, not-started, not-run, stopped, failed. Stripe animation only outside
+ * `@media (prefers-reduced-motion: reduce)` (DFS-063.AC-15).
+ */
 :host {
   display: block;
   padding: 12px 0;
   border-bottom: 1px solid var(--mat-sys-outline-variant, #ccc);
-}
-
-.head {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.head button {
-  margin-left: auto;
-}
-
-.scan-status {
-  font-weight: 500;
-}
-
-.status-failed,
-.scan-failure,
-.stream-lost {
-  color: var(--mat-sys-error, #b3261e);
-}
-
-.scan-folders {
-  margin: 4px 0;
-  padding-left: 20px;
-  font-family: monospace;
-}
-
-.scan-done {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
-}
-
-.scan-counts,
-.scan-phase-line,
-.scan-eta,
-.scan-found,
-.scan-failure,
-.stream-lost {
-  margin: 4px 0;
-}
-
-.scan-found {
-  color: var(--mat-sys-on-surface-variant, #555);
 }

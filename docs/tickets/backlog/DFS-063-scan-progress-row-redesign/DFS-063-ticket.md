@@ -1,7 +1,7 @@
 ---
 id: DFS-063
 title: Redesign the scan progress row as one four-section bar
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: component
