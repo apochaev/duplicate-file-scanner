@@ -15,3 +15,7 @@ Design approved without feedback. So AC-5 is read as decision 3 has it: `phases`
 
 - Wrote `server/src/test/java/us/pochaev/dfs/server/scan/ScanRegistryPhasesTest.java` (10 invocations, registry with fake ports and clock) and `server/src/test/java/us/pochaev/dfs/server/ScanPhasesApiTest.java` (2 tests over HTTP), and `test-plan.md`.
 - Run: 12 of 12 fail, each with `UnsupportedOperationException: not implemented: DFS-064`. Not committed; the orchestrator commits (expected: `test(server): phase totals and finishedAt tests [DFS-064]`).
+
+## Implementation phase
+
+- Implemented `Counters.phases` (volatile immutable entry list, `finished` derived at read), `finishedAt` (compare-and-set stamp) and `sweep()` with a 50 ms daemon scheduler and `@PreDestroy shutdown()` in `ScanRegistry`; edited the `server` entry of `CLAUDE.md`. `./gradlew build` green. Not committed; expected: `feat(server): phase totals and finishedAt [DFS-064]`.

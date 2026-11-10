@@ -1,5 +1,9 @@
 package us.pochaev.dfs.server.scan;
 
+import jakarta.annotation.PreDestroy;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -49,6 +53,7 @@ public class ScanRegistry {
     private final Clock clock;
     private final Map<UUID, Tracked> scans = new ConcurrentHashMap<>();
     private final AtomicLong sequence = new AtomicLong();
+    private final ScheduledExecutorService sweeper;
 
     /**
      * The Spring constructor (DFS-064 decision 3): the {@link Clock} bean when the application context has one (a
@@ -68,6 +73,12 @@ public class ScanRegistry {
         this.getScanStatus = getScanStatus;
         this.getScanResult = getScanResult;
         this.clock = clock;
+        this.sweeper = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread th = new Thread(r, "scan-registry-sweep");
+            th.setDaemon(true);
+            return th;
+        });
+        sweeper.scheduleWithFixedDelay(this::sweep, 50, 50, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -77,7 +88,23 @@ public class ScanRegistry {
      * read of an entry. The first caller to see a terminal status wins, so the instant is fixed. Never throws.
      */
     void sweep() {
-        throw new UnsupportedOperationException("not implemented: DFS-064");
+        try {
+            for (Tracked t : scans.values()) {
+                if (t.finished().get() == null) {
+                    if (getScanStatus.status(t.id()) instanceof Result.Success<ScanSnapshot> ok) {
+                        finishedAt(t, ok.value().status().name());
+                    }
+                }
+            }
+        } catch (RuntimeException e) {
+            // never throws: a failed sweep must not stop the schedule
+        }
+    }
+
+    /** Stops the sweep scheduler when the application context closes. */
+    @PreDestroy
+    void shutdown() {
+        sweeper.shutdownNow();
     }
 
     /** Starts a scan through the core; the folders are recorded as the caller gave them. */
@@ -213,7 +240,14 @@ public class ScanRegistry {
      * {@code startedAt}, so every later read returns the same one.
      */
     private Instant finishedAt(Tracked t, String status) {
-        throw new UnsupportedOperationException("not implemented: DFS-064");
+        boolean ended = status.equals("COMPLETED") || status.equals("CANCELLED") || status.equals("FAILED");
+        if (!ended) {
+            return null;
+        }
+        Instant now = clock.instant();
+        Instant stamp = now.isBefore(t.startedAt()) ? t.startedAt() : now;
+        t.finished().compareAndSet(null, stamp);
+        return t.finished().get();
     }
 
     private ScanProgress progress(Tracked t) {
@@ -261,6 +295,7 @@ public class ScanRegistry {
         volatile long hashedBytes;
         volatile long hashBytesTotal;
         volatile int sets = -1;
+        private volatile List<PhaseTotals> entries = List.of();
 
         /**
          * One {@link PhaseTotals} per phase that has started, in run order (DFS-064 decision 2). The implementation
@@ -271,28 +306,77 @@ public class ScanRegistry {
          * snapshot, safe to read from any thread, and empty before the first {@code PhaseStarted}.
          */
         List<PhaseTotals> phases(ScanStatus status) {
-            throw new UnsupportedOperationException("not implemented: DFS-064");
+            List<PhaseTotals> open = entries;
+            boolean all = status == ScanStatus.COMPLETED;
+            List<PhaseTotals> out = new java.util.ArrayList<>(open.size());
+            for (int i = 0; i < open.size(); i++) {
+                PhaseTotals p = open.get(i);
+                boolean finished = all || i < open.size() - 1;
+                out.add(new PhaseTotals(p.phase(), finished, p.directories(), p.files(), p.bytes(), p.groups()));
+            }
+            return List.copyOf(out);
+        }
+
+        /** Replaces the last entry; the scanning thread is the only writer. */
+        private void updateLast(Function<PhaseTotals, PhaseTotals> change) {
+            List<PhaseTotals> cur = entries;
+            if (cur.isEmpty()) {
+                return;
+            }
+            List<PhaseTotals> next = new java.util.ArrayList<>(cur);
+            int last = next.size() - 1;
+            next.set(last, change.apply(next.get(last)));
+            entries = List.copyOf(next);
+        }
+
+        private boolean lastIs(String phase) {
+            List<PhaseTotals> cur = entries;
+            return !cur.isEmpty() && cur.get(cur.size() - 1).phase().equals(phase);
         }
 
         @Override
         public void onEvent(ScanEvent event) {
             switch (event) {
-                case ScanEvent.DirectoryWalked e -> directories = e.directoriesSoFar();
+                case ScanEvent.DirectoryWalked e -> {
+                    directories = e.directoriesSoFar();
+                    if (lastIs("WALK")) {
+                        updateLast(p -> new PhaseTotals(p.phase(), false, e.directoriesSoFar(), p.files(), p.bytes(), 0));
+                    }
+                }
                 case ScanEvent.FileWalked e -> {
                     files = e.filesSoFar();
                     bytes = e.bytesSoFar();
+                    if (lastIs("WALK")) {
+                        updateLast(p -> new PhaseTotals(p.phase(), false, p.directories(), e.filesSoFar(),
+                                e.bytesSoFar(), 0));
+                    }
                 }
                 case ScanEvent.PhaseStarted e -> {
                     hashedFiles = 0;
                     hashFilesTotal = 0;
                     hashedBytes = 0;
                     hashBytesTotal = 0;
+                    List<PhaseTotals> next = new java.util.ArrayList<>(entries);
+                    PhaseTotals opened = new PhaseTotals(e.phase().name(), false, 0, 0, 0, 0);
+                    if (e.phase().name().equals("WALK")) {
+                        opened = new PhaseTotals("WALK", false, directories, files, bytes, 0);
+                    }
+                    next.add(opened);
+                    entries = List.copyOf(next);
                 }
                 case ScanEvent.HashProgress e -> {
                     hashedFiles = e.filesDone();
                     hashFilesTotal = e.filesTotal();
                     hashedBytes = e.bytesDone();
                     hashBytesTotal = e.bytesTotal();
+                    if (lastIs(e.phase().name())) {
+                        updateLast(p -> new PhaseTotals(p.phase(), false, 0, e.filesTotal(), e.bytesTotal(), 0));
+                    }
+                }
+                case ScanEvent.GroupDone e -> {
+                    if (lastIs(e.phase().name())) {
+                        updateLast(p -> new PhaseTotals(p.phase(), false, 0, 0, 0, e.total()));
+                    }
                 }
                 default -> {
                 }
