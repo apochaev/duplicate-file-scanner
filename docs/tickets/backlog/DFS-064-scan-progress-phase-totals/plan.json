@@ -1,0 +1,87 @@
+{
+  "ticket": "DFS-064",
+  "archetype": {
+    "name": "endpoint",
+    "version": 4
+  },
+  "branch": "tickets/DFS-064-scan-progress-phase-totals",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-064-scan-progress-phase-totals",
+  "state": "awaiting-approval",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "high",
+          "turns": 60,
+          "wallClockSeconds": 584,
+          "outcome": "passed",
+          "note": "PASS touches DFS-064: 12 changed files, all inside touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-064-scan-progress-phase-totals/DFS-064-ticket.md",
+        "docs/tickets/backlog/DFS-064-scan-progress-phase-totals/design.md",
+        "docs/tickets/backlog/DFS-064-scan-progress-phase-totals/learnings.md",
+        "docs/tickets/backlog/DFS-064-scan-progress-phase-totals/progress.md",
+        "server/frontend/openapi.json",
+        "server/frontend/src/app/results/result-test-data.ts",
+        "server/frontend/src/app/scans/scan-screen.spec.ts",
+        "server/src/main/java/us/pochaev/dfs/server/scan/PhaseTotals.java",
+        "server/src/main/java/us/pochaev/dfs/server/scan/ScanEntry.java",
+        "server/src/main/java/us/pochaev/dfs/server/scan/ScanProgress.java",
+        "server/src/main/java/us/pochaev/dfs/server/scan/ScanRegistry.java"
+      ],
+      "commit": "1be15135476377c8c6b5d9f5afcfc1881c479c79"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "pending",
+      "runs": [],
+      "artifacts": [],
+      "commit": null
+    }
+  ],
+  "gates": [
+    {
+      "after": "design",
+      "status": "pending"
+    },
+    {
+      "after": "done",
+      "status": "pending"
+    }
+  ],
+  "defects": []
+}
