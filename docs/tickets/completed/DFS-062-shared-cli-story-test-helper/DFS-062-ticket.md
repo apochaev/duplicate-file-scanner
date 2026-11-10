@@ -1,7 +1,7 @@
 ---
 id: DFS-062
 title: Extract a shared CLI story-test helper
-status: in-review
+status: done
 type: test
 scope: [cli]
 archetype: none
@@ -13,7 +13,7 @@ touches:
 blocked_reason:
 created: 2026-11-09
 updated: 2026-11-09
-completed:
+completed: 2026-11-09
 ---
 
 # DFS-062: Extract a shared CLI story-test helper
