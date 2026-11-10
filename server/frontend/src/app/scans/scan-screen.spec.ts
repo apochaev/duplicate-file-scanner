@@ -12,7 +12,7 @@ import { MatExpansionPanelHarness } from '@angular/material/expansion/testing';
 import { MatInputHarness } from '@angular/material/input/testing';
 import { ScanEntry, ScanProgress } from '../api/models';
 import { provideStubSurfacing, settle as settleFixture } from '../../testing/stub-surfacing';
-import { answerFinishFetches } from '../../testing/scan-finish';
+import { answerFinishFetches } from './scan-finish';
 import { EVENT_SOURCE } from './scan-events.service';
 import { ScanScreen } from './scan-screen';
 

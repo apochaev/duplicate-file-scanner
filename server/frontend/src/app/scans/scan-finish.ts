@@ -1,5 +1,5 @@
 import { HttpTestingController } from '@angular/common/http/testing';
-import { scanEntry } from '../app/results/result-test-data';
+import { scanEntry } from '../results/result-test-data';
 
 /**
  * Answers every open `GET /api/scans/<id>` with a COMPLETED entry that has a `finishedAt` (DFS-063.AC-12: a row whose

@@ -7,7 +7,7 @@ import { provideRouter, withHashLocation } from '@angular/router';
 import { ScanEntry, ScanProgress } from '../api/models';
 import { provideStubSurfacing, settle } from '../../testing/stub-surfacing';
 import { progress, scanEntry } from '../results/result-test-data';
-import { answerFinishFetches } from '../../testing/scan-finish';
+import { answerFinishFetches } from './scan-finish';
 import { EVENT_SOURCE } from './scan-events.service';
 import { CLOCK } from './scan-eta';
 import { ScanRow } from './scan-row';
