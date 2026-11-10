@@ -22,8 +22,8 @@ completed:
 ## Story
 
 As the page that shows a running scan
-I want `ScanProgress` to carry the totals of every finished phase and a signal that hashing has nothing left to read
-So that the redesigned progress row (DFS-063) can keep one totals line per finished phase and show "finishing…" instead of a frozen bar
+I want `ScanProgress` to keep the totals of every finished phase
+So that the redesigned progress row (DFS-063) can show one totals line per finished phase, and "finishing…" from the phase and the byte counts instead of a frozen bar
 
 ## Context
 
@@ -31,9 +31,13 @@ The product owner redesigned the scan progress row in Claude Design on 2026-11-0
 
 **What the stream already sends** (`ScanProgress`, `us.pochaev.dfs.server.scan`, DFS-040 decision 3): `phase`, walk counts (`directories`, `files`, `bytes`), the current hashing phase's `hashedFiles`/`hashFilesTotal` and `hashedBytes`/`hashBytesTotal`, and `groupsDone`/`groupsTotal`. The 30-second bytes rate and the ETA are computed in the browser (DFS-057 decision 2), so no rate is needed on the server.
 
-**What is missing:** the hash and group counts belong to the *current* phase and are overwritten when the next one starts, so the page cannot show "29594 compared → 13845 candidates" for a finished phase. `ScanRegistry`'s listener folds `ScanEvent`s (`PhaseStarted`, `HashProgress`, `GroupDone`) and could close each phase's totals when the next starts. The "nothing left to read but still finishing" state is not sent either; the page can only guess it from `hashedBytes == hashBytesTotal`.
+**What is missing:** the hash and group counts belong to the *current* phase and are overwritten when the next one starts, so the page cannot show "29594 compared → 13845 candidates" for a finished phase. `ScanRegistry`'s listener folds `ScanEvent`s (`PhaseStarted`, `HashProgress`, `GroupDone`) and could close each phase's totals when the next starts. The "nothing left to read but still finishing" state needs no field (decision 1).
 
 Any change to `ScanProgress` is a spec change (`./gradlew :server:updateOpenApi`, commit `server/frontend/openapi.json`).
+
+## Decisions
+
+1. **No `finishing` field** (2026-11-09). `HashProgress.bytesDone` reaches `bytesTotal` only when the last file ends, and the phase stays `FULL_HASH` until `HARD_LINKS` starts, so the page derives "finishing" from `phase == FULL_HASH && hashedBytes == hashBytesTotal`. A test pins that sequence in `ScanProgress`. The old bar's long stay at 100% is explained by this gap plus the hard-link work and result assembly; that is a hypothesis, confirmed by a by-hand run on a large drive (Definition of done). If the run shows a silent gap with no phase change, a field comes in a follow-up. Rejected: a `finishing` boolean (the server would need a core event or a guess to flip it) and a spike first (blocks DFS-063 on a long manual run).
 
 ## Acceptance criteria
 
@@ -41,7 +45,7 @@ Any change to `ScanProgress` is a spec change (`./gradlew :server:updateOpenApi`
 
 The full ID of each criterion is `DFS-064.AC-<n>`.
 
-- **AC-1** <to be refined>
+- **AC-1** After the last file of the full-hash phase is hashed and before the hard-link phase starts, `ScanProgress` reports `phase` `FULL_HASH` with `hashedBytes` equal to `hashBytesTotal` and `hashedFiles` equal to `hashFilesTotal`; it never reports more than `hashBytesTotal`.
 
 ## Scenarios
 
@@ -49,10 +53,12 @@ The full ID of each criterion is `DFS-064.AC-<n>`.
 Feature: Phase totals in the progress stream
 
   @AC-1
-  Scenario: <to be refined>
-    Given <concrete state>
-    When <action>
-    Then <observable outcome>
+  Scenario: Every byte hashed, hard links not started yet
+    Given a scan whose full-hash phase has 3 files of 100 bytes
+    When the third file's last bytes are reported and no HARD_LINKS phase has started
+    Then the progress shows phase "FULL_HASH", hashedFiles 3 of 3 and hashedBytes 300 of 300
+    When the HARD_LINKS phase starts
+    Then the progress shows phase "HARD_LINKS"
 ```
 
 ## Scope
@@ -74,8 +80,8 @@ Feature: Phase totals in the progress stream
 
 ## Open questions
 
-- **The stall at 100%.** Find out first why the old bar sat at 100% while files were still being hashed. `hashedBytes` counts finished files by their scan-time size, so it should not reach the total early. Is it the full-hash bar at 100% before the last large file finishes, the hard-links phase, or a missing update? A test must reproduce it, because the "finishing" signal is defined from the answer.
 - Which totals per finished phase: walk (folders, files, bytes), compare (files in, files out), hash (files, bytes), hard links (groups)?
 - Shape: a list of finished phases in `ScanProgress`, or fields per phase.
 - Does a COMPLETED scan keep them (DFS-063 shows them in the collapsed row, with duration)? Is a duration (start and finish time) sent, since the API has no finish time today?
 - Archetype (`endpoint`) and gates.
+- The by-hand run on a large drive (Definition of done): who runs it and where the result is recorded.
