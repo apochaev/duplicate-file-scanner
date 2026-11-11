@@ -1,7 +1,7 @@
 ---
 id: DFS-065
 title: Full-width results screen with a folder browser
-status: in-review
+status: done
 type: feature
 scope: []
 archetype: none
@@ -20,7 +20,7 @@ touches:
 blocked_reason:
 created: 2026-11-10
 updated: 2026-11-11
-completed:
+completed: 2026-11-11
 ---
 
 # DFS-065: Full-width results screen with a folder browser
