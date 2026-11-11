@@ -126,10 +126,10 @@ Feature: The login session outlives idleness and an ended one is explained
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
-- [ ] `./gradlew :server:npmTest` and `./gradlew :server:e2eTest` pass (the shell changes, so the browser flows run)
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
+- [x] `./gradlew :server:npmTest` and `./gradlew :server:e2eTest` pass (the shell changes, so the browser flows run)
 - [ ] By hand: leave a finished scan idle past the old 30 minutes (or shorten the timeout for the check), reload, and the results still load; restart the server, reload, and the notice appears
 
 ## Open questions
