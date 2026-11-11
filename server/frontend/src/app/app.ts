@@ -15,9 +15,6 @@ type Connection = 'checking' | 'connected' | 'disconnected';
  * DFS-066: when there is no session at load (a rejected or unauthenticated `/api/session`), or any `/api/**` call
  * answers 403 later (`SessionEnded`, set by the interceptor), the routed screen is replaced by one notice,
  * `SESSION_ENDED_NOTICE`, in `<p class="session-ended" role="alert">`.
- *
- * Stubs (design phase): `showNotice` throws the not-implemented error and the template calls it on every render; the
- * signatures, injected services, the template's structure and its CSS classes are final.
  */
 @Component({
   selector: 'app-root',
@@ -44,6 +41,6 @@ export class App {
    * seen since (`sessionEnded.ended()`) (DFS-066.AC-2, AC-3).
    */
   protected showNotice(): boolean {
-    throw new Error('not implemented: DFS-066');
+    return this.connection() === 'disconnected' || this.sessionEnded.ended();
   }
 }
