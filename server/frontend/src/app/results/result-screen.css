@@ -71,7 +71,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px 24px;
-  margin: 6px 0 16px;
+  margin: 6px 0 12px;
   padding: 0;
   list-style: none;
   color: var(--mat-sys-on-surface-variant, #555);
@@ -86,20 +86,13 @@
   border-radius: 2px;
 }
 
+/* Stacked, each part as wide as the page (DFS-065.AC-2): the folder browser above the tabs. */
 .result-layout {
-  display: grid;
-  grid-template-columns: minmax(16rem, 1fr) minmax(0, 3fr);
-  gap: 16px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .result-error {
   color: var(--mat-sys-error, #b3261e);
-}
-
-/* Below this the Sets table's File column could not hold a path (PATH_BUDGET), so the tree moves above the tabs. */
-@media (max-width: 960px) {
-  .result-layout {
-    grid-template-columns: 1fr;
-  }
 }

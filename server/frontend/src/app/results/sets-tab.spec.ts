@@ -10,7 +10,7 @@ import { provideStubSurfacing, settle } from '../../testing/stub-surfacing';
 import { CLIPBOARD } from './clipboard';
 import { Density } from './result-density';
 import { duplicateSet, setPage } from './result-test-data';
-import { SetsTab } from './sets-tab';
+import { PATH_BUDGET, SetsTab, pathBudget } from './sets-tab';
 
 describe('SetsTab', () => {
   let fixture: ComponentFixture<SetsTab>;
@@ -320,5 +320,22 @@ describe('SetsTab', () => {
     expect(
       await loader.getAllHarnesses(MatProgressBarHarness.with({ selector: '[aria-label="Loading duplicate sets"]' })),
     ).toHaveLength(0);
+  });
+});
+
+describe('pathBudget', () => {
+  it('DFS-065.AC-8 fits the measured column, less the badges a row carries', () => {
+    expect(pathBudget(720, 7.2, false, false)).toBe(100);
+    expect(pathBudget(720, 7.2, true, false)).toBe(91);
+    expect(pathBudget(720, 7.2, true, true)).toBe(78);
+  });
+
+  it('DFS-065.AC-8 never goes below 24 characters', () => {
+    expect(pathBudget(100, 7.2, true, true)).toBe(24);
+  });
+
+  it('DFS-065.AC-8 falls back to PATH_BUDGET when nothing was measured', () => {
+    expect(pathBudget(0, 7.2, false, false)).toBe(PATH_BUDGET);
+    expect(pathBudget(720, 0, false, false)).toBe(PATH_BUDGET);
   });
 });

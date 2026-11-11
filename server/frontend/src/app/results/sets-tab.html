@@ -19,10 +19,11 @@
   }
   @if (page(); as result) {
     @if (result.totalItems > 0) {
+      <span class="char-probe" #charProbe aria-hidden="true">0000000000</span>
       <table class="sets-table">
         <thead>
           <tr>
-            <th scope="col" class="col-file">File</th>
+            <th scope="col" class="col-file" #fileHeader>File</th>
             <th scope="col" class="col-modified">Modified</th>
             <th scope="col" class="col-reclaimable">Reclaimable</th>
             <th scope="col" class="col-copy"><span class="visually-hidden">Copy path</span></th>
@@ -47,7 +48,7 @@
             </tr>
             @for (copy of set.copies; track copy.links[0].path) {
               @let link = copy.links[0];
-              @let short = shortPath(link.path);
+              @let short = shortPath(link.path, copy);
               <tr class="copy-row" [class.in-selected-folder]="copyInSelectedFolder(copy)">
                 <td class="copy-path">
                   <div class="copy-path-line">

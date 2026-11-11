@@ -10,7 +10,6 @@ import { MatButtonToggleGroupHarness } from '@angular/material/button-toggle/tes
 import { MatPaginatorHarness } from '@angular/material/paginator/testing';
 import { MatProgressBarHarness } from '@angular/material/progress-bar/testing';
 import { MatTabGroupHarness } from '@angular/material/tabs/testing';
-import { MatTreeHarness } from '@angular/material/tree/testing';
 import { FolderNode, ScanEntry, SetPage } from '../api/models';
 import { provideStubSurfacing, settle } from '../../testing/stub-surfacing';
 import { CLIPBOARD } from './clipboard';
@@ -134,12 +133,27 @@ describe('ResultScreen', () => {
    * Opens the screen and answers getScan, the roots and the first page of sets. The Sets tab is selected on open
    * (DFS-060 decision 2), and the Overlaps tab requests nothing until it is selected.
    */
-  async function openLoaded(roots: FolderNode[], sets: SetPage, scan: ScanEntry = completed): Promise<void> {
+  async function openLoaded(
+    roots: FolderNode[],
+    sets: SetPage,
+    scan: ScanEntry = completed,
+    rootChildren: FolderNode[] = [],
+  ): Promise<void> {
     await open(scan.id);
     expectScan(http, scan.id).flush(scan);
     await step();
     expectFolders(http, scan.id, null).flush(roots);
     expectSets(http, scan.id, null).flush(sets);
+    await step();
+    // One root: the folder browser opens at its subfolders (DFS-065.AC-3).
+    await answerSubfolders(rootChildren);
+  }
+
+  /** Answers every pending subfolder request of the folder browser with `children` (DFS-065.AC-3). */
+  async function answerSubfolders(children: FolderNode[] = []): Promise<void> {
+    http
+      .match((r) => r.method === 'GET' && r.url.endsWith('/folders') && r.params.has('parent'))
+      .forEach((req) => req.flush(children));
     await step();
   }
 
@@ -159,10 +173,13 @@ describe('ResultScreen', () => {
     return Array.from(page().querySelectorAll(selector)).map((el) => (el.textContent ?? '').replace(/\s+/g, ' ').trim());
   }
 
-  /** Selects the tree row named `name`, or "All folders". */
-  async function selectFolder(name: string): Promise<void> {
+  /**
+   * Selects the folder browser's row named `name`, or "All folders"; a folder with subfolders is then listed, and its
+   * request is answered with `children` (DFS-065.AC-3, AC-5).
+   */
+  async function selectFolder(name: string, children: FolderNode[] = []): Promise<void> {
     if (name === 'All folders') {
-      await (await loader.getHarness(MatButtonHarness.with({ text: 'All folders' }))).click();
+      page().querySelector<HTMLButtonElement>('button.all-folders')!.click();
     } else {
       const button = Array.from(page().querySelectorAll<HTMLButtonElement>('button.folder-select')).find(
         (candidate) => (candidate.querySelector('.folder-name')?.textContent ?? '').trim() === name,
@@ -171,28 +188,22 @@ describe('ResultScreen', () => {
       button.click();
     }
     await step();
+    await answerSubfolders(children);
   }
 
-  async function expandFolder(name: string, children: FolderNode[], path: string): Promise<void> {
-    const toggle = await loader.getHarness(MatButtonHarness.with({ selector: `[aria-label="Expand ${name}"]` }));
-    await toggle.click();
-    await step();
-    expectFolders(http, 's-1', path).flush(children);
-    await step();
-  }
-
-  /** Opens the Archive scan, expands down to old-drive and selects it; its filtered sets are answered. */
+  /** Opens the Archive scan, drills down to old-drive and selects it; its filtered sets are answered. */
   async function openWithOldDriveSelected(): Promise<void> {
-    await openLoaded([archive], archiveSets, archiveScan);
-    await expandFolder('Archive', [backups, downloads], 'C:\\Archive');
-    await expandFolder('Backups', [oldDrive], 'C:\\Archive\\Backups');
+    await openLoaded([archive], archiveSets, archiveScan, [backups, downloads]);
+    await selectFolder('Backups', [oldDrive]);
+    expectSets(http, 's-1', 'C:\\Archive\\Backups').flush(filteredSets);
+    await step();
     await selectFolder('old-drive');
     expectSets(http, 's-1', 'C:\\Archive\\Backups\\old-drive').flush(filteredSets);
     await step();
   }
 
   function expectNoResultView(): void {
-    expect(page().querySelector('app-folder-tree')).toBeNull();
+    expect(page().querySelector('app-folder-browser')).toBeNull();
     expect(page().querySelector('mat-tab-group')).toBeNull();
   }
 
@@ -239,10 +250,10 @@ describe('ResultScreen', () => {
   });
 
   it('DFS-060.AC-2 keeps the figures of the whole scan when a folder filters the sets', async () => {
-    await openLoaded([archive], archiveSets, archiveScan);
+    await openLoaded([archive], archiveSets, archiveScan, [backups, downloads]);
 
-    await selectFolder('Archive');
-    expectSets(http, 's-1', 'C:\\Archive').flush(filteredSets);
+    await selectFolder('Backups');
+    expectSets(http, 's-1', 'C:\\Archive\\Backups').flush(filteredSets);
     await step();
 
     expect(text('.result-figures .figure-value')).toEqual(['118.4 GB', '8412', '21930', '474.0 GB · 76214 files']);
@@ -362,20 +373,27 @@ describe('ResultScreen', () => {
     expectNoResultView();
   });
 
-  it('DFS-060.AC-4 shows the roots by duplicate space then name and loads the children of Photos only when it is expanded', async () => {
+  it('DFS-060.AC-4, DFS-065.AC-3 lists the roots by duplicate space then name and the subfolders of a selected folder', async () => {
     await openLoaded([photos, backup], oneSet);
 
     expect(text('button.folder-select .folder-name')).toEqual(['Backup', 'Photos']);
-    expect(text('button.folder-select .folder-size')).toEqual(['900 B', '12.0 GB']);
-    const nodes = await (await loader.getHarness(MatTreeHarness)).getNodes();
-    expect(await nodes[0].isExpandable()).toBe(false);
-    expect(await nodes[1].isExpandable()).toBe(true);
+    expect(text('.folder-size')).toEqual(['900 B', '12.0 GB']);
 
-    await nodes[1].expand();
+    await selectFolder('Photos', [folder('C:\\Photos\\2024', { bytes: 2048, files: 7 })]);
+    expectSets(http, 's-1', 'C:\\Photos').flush(oneSet);
     await step();
-    expectFolders(http, 's-1', 'C:\\Photos').flush([folder('C:\\Photos\\2024', { bytes: 2048, files: 7 })]);
-    await step();
-    expect(text('button.folder-select .folder-name')).toEqual(['Backup', 'Photos', '2024']);
+    expect(text('button.folder-select .folder-name')).toEqual(['2024']);
+    expect(text('.crumb')).toEqual(['All folders', 'Photos']);
+  });
+
+  it('DFS-065.AC-2 stacks the folder browser above the tabs, with no left column', async () => {
+    await openLoaded([photos, backup], oneSet);
+
+    const layout = page().querySelector('.result-layout')!;
+    expect(Array.from(layout.children).map((el) => el.tagName.toLowerCase())).toEqual([
+      'app-folder-browser',
+      'mat-tab-group',
+    ]);
   });
 
   it('DFS-049.AC-6 opens with "All folders" selected and the sets requested without under', async () => {
@@ -393,8 +411,7 @@ describe('ResultScreen', () => {
     expectSets(http, 's-1', 'C:\\Photos').flush(setPage([], { totalItems: 0 }));
     await step();
     expect(page().querySelector('button.all-folders')?.getAttribute('aria-pressed')).toBe('false');
-    const pressed = Array.from(page().querySelectorAll('button.folder-select')).map((b) => b.getAttribute('aria-pressed'));
-    expect(pressed).toEqual(['false', 'true']);
+    expect(text('.crumb')).toEqual(['All folders', 'Photos']);
 
     await selectFolder('All folders');
     expectSets(http, 's-1', null).flush(oneSet);
@@ -490,7 +507,7 @@ describe('ResultScreen', () => {
 
     toggles = await (await loader.getHarness(MatButtonToggleGroupHarness.with({ selector: '.sets-filter' }))).getToggles();
     expect(await Promise.all(toggles.map((toggle) => toggle.isChecked()))).toEqual([true, false]);
-    expect(page().querySelector('button.folder-select[aria-pressed="true"] .folder-name')?.textContent?.trim()).toBe('old-drive');
+    expect(page().querySelector('.crumb-current')?.textContent?.trim()).toBe('old-drive');
     expect(page().querySelectorAll('tbody.duplicate-set')).toHaveLength(1);
   });
 
@@ -611,6 +628,8 @@ describe('ResultScreen', () => {
     expect(
       await loader.getAllHarnesses(MatProgressBarHarness.with({ selector: '[aria-label="Loading duplicate sets"]' })),
     ).toHaveLength(0);
+    // The single root's subfolders, requested by the folder browser (DFS-065.AC-3).
+    await answerSubfolders();
   });
 
   it('DFS-060.AC-10 shows the server message when the roots cannot be loaded', async () => {

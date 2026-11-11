@@ -52,7 +52,7 @@
     <p class="result-error" role="alert">{{ message }}</p>
   } @else if (roots(); as folders) {
     <div class="result-layout">
-      <app-folder-tree
+      <app-folder-browser
         [scanId]="scan()!.id"
         [roots]="folders"
         [selected]="selectedFolder()"

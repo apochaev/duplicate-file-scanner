@@ -1,0 +1,194 @@
+.folder-browser {
+  display: block;
+  min-width: 0;
+}
+
+.browser-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  margin-bottom: 4px;
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.breadcrumb li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.crumb {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--mat-sys-primary, #6750a4);
+  font: inherit;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.crumb:hover {
+  background: var(--mat-sys-surface-container, #f3edf7);
+}
+
+.crumb-current {
+  color: inherit;
+  font-weight: 500;
+}
+
+.crumb-separator {
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.all-folders[aria-pressed='true'] {
+  color: inherit;
+  font-weight: 500;
+}
+
+.current-summary {
+  color: var(--mat-sys-on-surface-variant, #555);
+  font-size: 0.875rem;
+}
+
+.folder-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.folder-table th,
+.folder-table td {
+  padding: 2px 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.folder-table thead th {
+  font-weight: normal;
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant, #555);
+  border-bottom: 1px solid var(--mat-sys-outline-variant, #ccc);
+}
+
+.folder-row {
+  border-bottom: 1px solid var(--mat-sys-surface-variant, #eee);
+  cursor: pointer;
+}
+
+.folder-row:hover {
+  background: var(--mat-sys-surface-container, #f3edf7);
+}
+
+.no-duplicates {
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.col-name {
+  width: 40%;
+  max-width: 0;
+}
+
+.col-bar {
+  width: 20%;
+}
+
+.col-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.col-pin {
+  width: 4rem;
+  text-align: right !important;
+}
+
+.folder-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.folder-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.folder-more {
+  flex: none;
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.folder-bar {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--mat-sys-surface-variant, #e7e0ec);
+}
+
+.folder-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--mat-sys-primary, #6750a4);
+}
+
+.folder-pin {
+  --mat-button-text-container-height: 24px;
+  min-width: 0;
+  padding: 0 8px;
+  font-size: 0.75rem;
+}
+
+/* Material's 48 px touch target would spill over the row and pin instead of select. */
+.folder-pin ::ng-deep .mat-mdc-button-touch-target {
+  display: none;
+}
+
+.show-all {
+  margin-top: 2px;
+}
+
+.no-subfolders {
+  margin: 4px 8px;
+  color: var(--mat-sys-on-surface-variant, #555);
+}
+
+.folder-error {
+  color: var(--mat-sys-error, #b3261e);
+  overflow-wrap: anywhere;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* Narrow windows drop the two count columns. */
+@media (max-width: 720px) {
+  .col-wide {
+    display: none;
+  }
+}

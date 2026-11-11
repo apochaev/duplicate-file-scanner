@@ -1,15 +1,39 @@
+/* One slim bar: the title and the connection state (DFS-065.AC-1). */
+.app-bar {
+  --mat-toolbar-standard-height: 44px;
+  gap: 16px;
+}
+
 h1 {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 500;
   margin: 0;
 }
 
-main {
-  padding: 1rem;
-  max-width: 960px;
-  margin: 0 auto;
+.connection {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: normal;
+  color: var(--mat-sys-on-surface-variant, #555);
 }
 
-.connection {
-  margin: 0 0 1rem;
-  color: var(--mat-sys-on-surface-variant, #555);
+.connection::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #2e7d32;
+}
+
+/* Full width with gutters (DFS-065.AC-1); a screen that wants a column sets its own maximum width. */
+main {
+  padding: 12px 24px 24px;
+}
+
+@media (max-width: 600px) {
+  main {
+    padding: 12px 16px 16px;
+  }
 }

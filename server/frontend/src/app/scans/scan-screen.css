@@ -1,5 +1,8 @@
+/* The scan screen keeps the column it was designed for (DFS-065.AC-1). */
 :host {
   display: block;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 .scans {

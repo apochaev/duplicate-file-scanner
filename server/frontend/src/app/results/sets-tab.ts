@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, ElementRef, effect, input, output, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -22,6 +22,25 @@ export const NO_DUPLICATES_UNDER_FOLDER = 'No duplicates under this folder';
  * ~62 characters in a wider column; 62 did not fit (DFS-060 verification).
  */
 export const PATH_BUDGET = 56;
+
+/** The fewest characters a measured path budget allows (DFS-065.AC-8). */
+export const MIN_PATH_BUDGET = 24;
+/** Characters kept free for a "<n> links" badge, and for an "in selected" badge (DFS-065.AC-8). */
+export const LINKS_BADGE_CHARS = 9;
+export const SELECTED_BADGE_CHARS = 13;
+
+/**
+ * A copy row's path budget from the File column's measured width (DFS-065.AC-8): `contentWidth / charWidth` rounded
+ * down, less the badges the row carries, never below `MIN_PATH_BUDGET`; `PATH_BUDGET` when either width is not a
+ * positive number (nothing measured).
+ */
+export function pathBudget(contentWidth: number, charWidth: number, links: boolean, selected: boolean): number {
+  if (!(contentWidth > 0) || !(charWidth > 0)) {
+    return PATH_BUDGET;
+  }
+  const chars = Math.floor(contentWidth / charWidth) - (links ? LINKS_BADGE_CHARS : 0) - (selected ? SELECTED_BADGE_CHARS : 0);
+  return Math.max(MIN_PATH_BUDGET, chars);
+}
 
 /**
  * The Sets tab (DFS-049 decisions 4 and 5, DFS-060 decision 4, `ui.md` U3): one page of duplicate sets as one grouped
@@ -63,6 +82,32 @@ export class SetsTab {
   readonly filterChanged = output<boolean>();
 
   protected readonly pageSizeOptions = [25, 50, 100];
+
+  /** The File column's heading and a ten-character probe in the path font, measured for the path budget (AC-8). */
+  private readonly fileHeader = viewChild<ElementRef<HTMLElement>>('fileHeader');
+  private readonly charProbe = viewChild<ElementRef<HTMLElement>>('charProbe');
+  /** The File column's content width and one path character's width in px; zero until measured (DFS-065.AC-8). */
+  private readonly columnWidth = signal(0);
+  private readonly charWidth = signal(0);
+
+  constructor() {
+    effect((onCleanup) => {
+      const header = this.fileHeader()?.nativeElement;
+      const probe = this.charProbe()?.nativeElement;
+      if (header === undefined || probe === undefined || typeof ResizeObserver === 'undefined') {
+        return;
+      }
+      const observer = new ResizeObserver(() => this.measure(header, probe));
+      observer.observe(header);
+      onCleanup(() => observer.disconnect());
+    });
+  }
+
+  private measure(header: HTMLElement, probe: HTMLElement): void {
+    const style = getComputedStyle(header);
+    this.columnWidth.set(header.clientWidth - parseFloat(style.paddingLeft || '0') - parseFloat(style.paddingRight || '0'));
+    this.charWidth.set(probe.getBoundingClientRect().width / 10);
+  }
   protected readonly copiesText = copiesText;
   protected readonly formatBytes = formatBytes;
 
@@ -95,9 +140,13 @@ export class SetsTab {
     return fileName(set.copies[0].links[0].path);
   }
 
-  /** A copy row's path: `displayPath(path, roots(), PATH_BUDGET)` (DFS-060 AC-7). */
-  protected shortPath(path: string): ShortPath {
-    return displayPath(path, this.roots(), PATH_BUDGET);
+  /**
+   * A copy row's path: `displayPath(path, roots(), budget)` (DFS-060 AC-7), the budget from the measured column and the
+   * row's badges (`pathBudget`, DFS-065.AC-8).
+   */
+  protected shortPath(path: string, copy: CopyView): ShortPath {
+    const budget = pathBudget(this.columnWidth(), this.charWidth(), copy.links.length > 1, this.copyInSelectedFolder(copy));
+    return displayPath(path, this.roots(), budget);
   }
 
   /**
