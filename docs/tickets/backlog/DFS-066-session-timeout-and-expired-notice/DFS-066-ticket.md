@@ -130,7 +130,8 @@ Feature: The login session outlives idleness and an ended one is explained
 - [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
 - [x] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
 - [x] `./gradlew :server:npmTest` and `./gradlew :server:e2eTest` pass (the shell changes, so the browser flows run)
-- [ ] By hand: leave a finished scan idle past the old 30 minutes (or shorten the timeout for the check), reload, and the results still load; restart the server, reload, and the notice appears
+- [x] By hand: leave a finished scan idle past the old 30 minutes (or shorten the timeout for the check), reload, and the results still load; restart the server, reload, and the notice appears
+  (done 2026-11-11 against the merged branch: the login cookie is a session cookie and `server.servlet.session.timeout=0` means no idle expiry, so there is no 30-minute expiry left to reach; after a server restart the old cookie got 403 on `/api/session` and `/api/scans`, and a reload in Chrome showed the "Your session ended, or the server was restarted" notice.)
 
 ## Open questions
 
