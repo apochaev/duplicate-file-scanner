@@ -94,6 +94,8 @@ describe('Session ended notice', () => {
 
   it('DFS-066.AC-2 replaces the result screen with the notice when a page of sets answers 403', async () => {
     const fixture = await shell(connected);
+    http.expectOne('/api/scans').flush([]);
+    await settle(fixture);
     const loader: HarnessLoader = TestbedHarnessEnvironment.loader(fixture);
     await router.navigateByUrl('/scans/s1');
     await settle(fixture);
@@ -152,6 +154,8 @@ describe('Session ended notice', () => {
 
   it('DFS-066.AC-4 keeps the unknown scan message for a 404 UNKNOWN_SCAN and shows no notice', async () => {
     const fixture = await shell(connected);
+    http.expectOne('/api/scans').flush([]);
+    await settle(fixture);
     await router.navigateByUrl('/scans/gone');
     await settle(fixture);
     refuse(expectScan(http, 'gone'), 404, UNKNOWN_SCAN);
@@ -164,6 +168,8 @@ describe('Session ended notice', () => {
 
   it('DFS-066.AC-4 keeps the generic message for a 500 and shows no notice', async () => {
     const fixture = await shell(connected);
+    http.expectOne('/api/scans').flush([]);
+    await settle(fixture);
     await router.navigateByUrl('/scans/s1');
     await settle(fixture);
     expectScan(http, 's1').flush(scanEntry('s1', { status: 'COMPLETED' }));
