@@ -62,3 +62,14 @@
 - Recurrences: 1
 - Recommendation: apply; a small wording rule with no downside.
 - Decision: pending
+
+### DFS-066.L-6: Title and slug not updated after a decision changed the goal
+
+- Status: proposed
+- Impact: local
+- Target: `.claude/skills/tickets/SKILL.md` (refine), if made a rule
+- Change: before asking for `ready`, `refine` checks that the title and slug still describe the decisions as settled, and proposes a rename while the ticket is a draft.
+- Evidence: the title reads "Keep the login session for a day and explain an expired one", but decision 1 chose "No idle timeout", over 24 h and 8 h. No ticket edit after `ready` (672693c onward) touched the title, so the folder and branch slug stayed as they were.
+- Recurrences: 1
+- Recommendation: park; one occurrence and cosmetic. If a second ticket repeats it, `/learn add` re-proposes it with the new evidence.
+- Decision: pending
