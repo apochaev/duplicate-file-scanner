@@ -6,7 +6,7 @@
    },
    "branch": "tickets/DFS-066-session-timeout-and-expired-notice",
    "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-066-session-timeout-and-expired-notice",
-   "state": "awaiting-approval",
+   "state": "done",
    "phases": [
       {
          "id": "design",
@@ -136,7 +136,7 @@
    "gates": [
       {
          "after": "done",
-         "status": "pending"
+         "status": "approved"
       }
    ],
    "defects": [
