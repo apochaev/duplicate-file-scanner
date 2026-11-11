@@ -2,13 +2,10 @@
   <h1>DFS server is running</h1>
 </mat-toolbar>
 <main>
-  @switch (connection()) {
-    @case ('connected') {
-      <p class="connection">Connected</p>
-      <router-outlet />
-    }
-    @case ('disconnected') {
-      <p>Open the link printed in the console</p>
-    }
+  @if (showNotice()) {
+    <p class="session-ended" role="alert">{{ notice }}</p>
+  } @else if (connection() === 'connected') {
+    <p class="connection">Connected</p>
+    <router-outlet />
   }
 </main>

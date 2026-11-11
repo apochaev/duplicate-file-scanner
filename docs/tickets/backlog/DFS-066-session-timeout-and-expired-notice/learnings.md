@@ -1,0 +1,4 @@
+# DFS-066 learnings
+
+- Template gap (component archetype): a criterion satisfied by a configuration property alone (AC-1, `server.servlet.session.timeout`) cannot be stubbed, so its test can only fail the red gate on an assertion, not on `not implemented:`. The archetype and the red gate have no rule for a property-only criterion; the ticket's pairing with archetype `component` made it a Java test in a frontend pipeline.
+- Stub reach through an HTTP interceptor: a stub called inside an RxJS `catchError` becomes a failed HTTP call, which a screen's own `catch` swallows into its generic message, so the story test fails on an assertion. The archetype's item 3 covers `subscribe` callbacks but not interceptors; the fix used here is a stubbed method called from the shell's template on every render (`App.showNotice()`).

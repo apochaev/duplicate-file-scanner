@@ -1,7 +1,7 @@
 ---
 id: DFS-066
 title: Keep the login session for a day and explain an expired one
-status: ready
+status: in-progress
 type: fix
 scope: [build]
 archetype: component
