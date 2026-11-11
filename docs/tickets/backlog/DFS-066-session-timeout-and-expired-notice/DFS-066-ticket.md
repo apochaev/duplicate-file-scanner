@@ -31,7 +31,11 @@ Reported 2026-11-11: reloading the page after a scan has finished sometimes show
 
 Root cause (read from the code, not yet reproduced by hand): the scan data is not lost. `ScanRegistry` keeps every scan until the process exits and nothing evicts it. The 403 is the session check. `TokenExchangeController` trades the `?token=` link for an `HttpSession` and `SecurityConfiguration` keeps the login in it (`HttpSessionSecurityContextRepository`, DFS-036 decision 3). `application.properties` sets the cookie's name, `HttpOnly` and `SameSite` but no `server.servlet.session.timeout`, so Spring Boot's default of 30 idle minutes applies. A running scan keeps the session alive by polling and streaming; a finished scan left idle does not, so the next `/api/**` call after 30 minutes answers 403. A server restart has the same effect (new token, no sessions). The page has no text for a 403: only `404 UNKNOWN_SCAN` and `409 SCAN_NOT_COMPLETED` have messages (`result-error.ts`).
 
-Options considered with the user: a long timeout (chosen), a page keep-alive ping, a signed cookie replacing the session (a change to DFS-036's settled design), a notice for 403 (chosen), and persisting the newest completed scan across restarts (a separate ticket if wanted).
+Options considered with the user: a long timeout (chosen, as no timeout at all), a page keep-alive ping, a signed cookie replacing the session (a change to DFS-036's settled design), a notice for 403 (chosen), and persisting the newest completed scan across restarts (a separate ticket if wanted).
+
+## Decisions
+
+1. **No idle timeout.** The session lasts until the server stops, which is the stated goal ("as long as the user needs it or until server restart"). Set in `application.properties` as a zero or negative `server.servlet.session.timeout`, which Spring Boot passes to Tomcat as "never expires"; the ticket's test must prove the effective value, not only the property (see the open question on the seam). Chosen over 24 h and 8 h: one user and one browser, so uncleaned sessions cost nothing, and the cookie stays `HttpOnly` and `SameSite=Strict` on `127.0.0.1`.
 
 ## Acceptance criteria
 
@@ -39,7 +43,7 @@ Options considered with the user: a long timeout (chosen), a page keep-alive pin
 
 The full ID of each criterion is `DFS-066.AC-<n>`.
 
-- **AC-1** <to be refined: a session idle for longer than the old 30 minutes is still accepted>
+- **AC-1** The session set by the token link never expires from idleness: the running server's session timeout is "never", not Spring Boot's 30 minutes
 - **AC-2** <to be refined: a 403 from `/api/**` shows a message saying the session ended and to open the link printed in the console, on the scan screen and the result screen>
 
 ## Scenarios
@@ -66,6 +70,5 @@ The full ID of each criterion is `DFS-066.AC-<n>`.
 
 ## Open questions
 
-- Timeout length: 24 h recommended; is a shorter or longer one wanted?
-- Does a test exist that can set a short timeout, or does the check stay by hand (decide at refinement, DFS-066.AC-1)?
+- How a test observes AC-1 (decision 2).
 - Archetype and gates are not set (draft).
