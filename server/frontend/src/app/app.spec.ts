@@ -38,12 +38,12 @@ describe('App', () => {
     return (fixture.nativeElement as HTMLElement).textContent ?? '';
   }
 
-  it('DFS-037.AC-3 shows the heading and "Connected" when /api/session answers 200', async () => {
+  it('DFS-037.AC-3, DFS-065.AC-1 shows the heading and "Connected" when /api/session answers 200', async () => {
     const text = await render((req) => req.flush({ authenticated: true }));
     // Connected, the page also shows the scan screen, which lists the scans (DFS-041).
     http.expectOne('/api/scans').flush([]);
 
-    expect(text).toContain('DFS server is running');
+    expect(text).toContain('Duplicate File Scanner');
     expect(text).toContain('Connected');
   });
 
@@ -76,7 +76,7 @@ describe('App', () => {
   it('DFS-037.AC-3 asks for the console link when /api/session answers 403', async () => {
     const text = await render((req) => req.flush('', { status: 403, statusText: 'Forbidden' }));
 
-    expect(text).toContain('DFS server is running');
+    expect(text).toContain('Duplicate File Scanner');
     expect(text).toContain('Open the link printed in the console');
     expect(text).not.toContain('Connected');
   });

@@ -1,0 +1,95 @@
+<nav class="folder-browser" aria-label="Scan folders">
+  <div class="browser-head">
+    <ol class="breadcrumb" aria-label="Current folder">
+      <li>
+        <button type="button" class="crumb all-folders" [attr.aria-pressed]="selected() === null" (click)="select(null)">
+          All folders
+        </button>
+      </li>
+      @for (crumb of crumbs(); track crumb.path; let last = $last) {
+        <li>
+          <span class="crumb-separator" aria-hidden="true">›</span>
+          <button
+            type="button"
+            class="crumb folder-crumb"
+            [class.crumb-current]="last"
+            [attr.aria-current]="last ? 'location' : null"
+            [attr.title]="crumb.path"
+            (click)="select(crumb.path)"
+          >
+            {{ crumb.name }}
+          </button>
+        </li>
+      }
+    </ol>
+    @if (current(); as folder) {
+      <span class="current-summary">
+        {{ formatBytes(folder.bytes) }} · {{ folder.files }} files · {{ formatBytes(folder.duplicateBytes) }} in duplicates
+      </span>
+    }
+  </div>
+
+  @if (levelLoading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Loading subfolders" />
+  }
+  @if (levelError(); as message) {
+    <p class="folder-error" role="alert">{{ message }}</p>
+  } @else if (level(); as folders) {
+    @if (folders.length === 0) {
+      <p class="no-subfolders">No subfolders</p>
+    } @else {
+      <table class="folder-table">
+        <thead>
+          <tr>
+            <th scope="col" class="col-name">Folder</th>
+            <th scope="col" class="col-bar">Duplicates</th>
+            <th scope="col" class="col-num">Dup. size</th>
+            <th scope="col" class="col-num col-wide">Dup. files</th>
+            <th scope="col" class="col-num">Size</th>
+            <th scope="col" class="col-num col-wide">Files</th>
+            <th scope="col" class="col-pin"><span class="visually-hidden">Pin</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (folder of rows(); track folder.path) {
+            <tr class="folder-row" [class.no-duplicates]="folder.duplicateBytes === 0" (click)="select(folder.path)">
+              <td class="col-name">
+                <button type="button" class="folder-select" [attr.title]="folder.path" (click)="$event.stopPropagation(); select(folder.path)">
+                  <span class="folder-name">{{ folder.name }}</span>
+                  @if (folder.hasChildren) {
+                    <span class="folder-more" aria-hidden="true">▸</span>
+                  }
+                </button>
+              </td>
+              <td class="col-bar">
+                <span class="folder-bar" aria-hidden="true">
+                  <span class="folder-bar-fill" [style.width.%]="duplicateWidth(folder)"></span>
+                </span>
+              </td>
+              <td class="col-num folder-duplicate-size">{{ formatBytes(folder.duplicateBytes) }}</td>
+              <td class="col-num col-wide folder-duplicate-files">{{ folder.duplicateFiles }}</td>
+              <td class="col-num folder-size">{{ formatBytes(folder.bytes) }}</td>
+              <td class="col-num col-wide folder-files">{{ folder.files }}</td>
+              <td class="col-pin">
+                <button
+                  mat-button
+                  type="button"
+                  class="folder-pin"
+                  [attr.aria-label]="'Pin for comparison: ' + folder.name"
+                  (click)="pin(folder.path, $event)"
+                >
+                  Pin
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @if (folders.length > foldedRows) {
+        <button mat-button type="button" class="show-all" (click)="toggleExpanded()">
+          {{ expanded() ? 'Show fewer' : 'Show all ' + folders.length + ' folders' }}
+        </button>
+      }
+    }
+  }
+</nav>

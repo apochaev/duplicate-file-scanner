@@ -10,7 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { FolderNode, ScanEntry, SetPage } from '../api/models';
 import { ResultsService, ScansService } from '../api/services';
-import { FolderTree } from './folder-tree';
+import { FolderBrowser } from './folder-browser';
 import { OverlapsTab } from './overlaps-tab';
 import { DENSITY_STORAGE, Density, readDensity, writeDensity } from './result-density';
 import { headerFigures, spaceSegments } from './result-format';
@@ -21,13 +21,13 @@ export const DEFAULT_PAGE_SIZE = 50;
 
 /**
  * The result screen of one scan at `#/scans/<id>` (DFS-049, DFS-060, `ui.md` U3): a header with "Back to scans", the
- * scan's folders, its start time, the Compact/Comfortable toggle, four figures and a three-segment bar; the folder tree
- * on the left; on the right the Sets tab (selected on open, DFS-060 decision 2) and the Overlaps tab second.
+ * scan's folders, its start time, the Compact/Comfortable toggle, four figures and a three-segment bar; below it the folder
+ * browser (DFS-065), then the Sets tab (selected on open, DFS-060 decision 2) and the Overlaps tab second.
  *
  * Loading order (DFS-049 decision 9, AC-4): `getScan(id)` first; a `404 UNKNOWN_SCAN` or a status other than COMPLETED
  * shows its alert and nothing else is requested. For a COMPLETED scan, `listFolders(id)` (the roots) and the first page
  * of `listSets(id)` are requested together; a `409 SCAN_NOT_COMPLETED` from either shows "This scan has not finished
- * yet". The tree and the tabs appear once the roots have loaded; the Sets tab shows its own progress bar until its page
+ * yet". The folder browser and the tabs appear once the roots have loaded; the Sets tab shows its own progress bar until its page
  * has.
  *
  * Header totals (DFS-060 decision 1): `totals` holds the latest page answered for a request without `under`, so the
@@ -43,7 +43,7 @@ export const DEFAULT_PAGE_SIZE = 50;
     MatButtonToggleModule,
     MatProgressBarModule,
     MatTabsModule,
-    FolderTree,
+    FolderBrowser,
     OverlapsTab,
     SetsTab,
   ],
@@ -57,7 +57,7 @@ export class ResultScreen implements OnInit {
   protected readonly roots = signal<FolderNode[] | null>(null);
   /** The roots' paths, which the Sets table shortens paths against (DFS-060 AC-7). */
   protected readonly rootPaths = computed(() => (this.roots() ?? []).map((root) => root.path));
-  /** The alert that replaces the tree and the tab (AC-4, or a failed `getScan`/roots load); null when there is none. */
+  /** The alert that replaces the folder browser and the tabs (AC-4, or a failed `getScan`/roots load); null when there is none. */
   protected readonly fatalError = signal<string | null>(null);
 
   /** The selected folder's path, null for "All folders" (AC-6). */
@@ -75,7 +75,7 @@ export class ResultScreen implements OnInit {
   protected readonly setsLoading = signal(false);
   protected readonly setsError = signal<string | null>(null);
   /**
-   * The folder pinned for comparison, null when none (DFS-050 decision 3, AC-5): shared by the tree (which pins) and
+   * The folder pinned for comparison, null when none (DFS-050 decision 3, AC-5): shared by the folder browser (which pins) and
    * the Overlaps tab (which shows and unpins it). Lasts while the screen shows this scan; not in the URL.
    */
   protected readonly pinnedFolder = signal<string | null>(null);

@@ -1,11 +1,13 @@
-<mat-toolbar>
-  <h1>DFS server is running</h1>
+<mat-toolbar class="app-bar">
+  <h1>Duplicate File Scanner</h1>
+  @if (connection() === 'connected' && !showNotice()) {
+    <span class="connection" role="status">Connected</span>
+  }
 </mat-toolbar>
 <main>
   @if (showNotice()) {
     <p class="session-ended" role="alert">{{ notice }}</p>
   } @else if (connection() === 'connected') {
-    <p class="connection">Connected</p>
     <router-outlet />
   }
 </main>

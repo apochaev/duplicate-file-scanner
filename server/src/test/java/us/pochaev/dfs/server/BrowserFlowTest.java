@@ -127,10 +127,9 @@ class BrowserFlowTest {
     }
 
     @Test
-    @DisplayName("DFS-053.AC-4 Expanding All folders loads the subfolders and selecting one filters the views")
-    void treeFiltersTheViews() {
+    @DisplayName("DFS-053.AC-4, DFS-065.AC-3 The folder browser opens the single root's subfolders and selecting one filters the views")
+    void folderBrowserFiltersTheViews() {
         openResults();
-        expandRoot();
 
         assertThat(folderSelect("keep")).isVisible();
         folderSelect("extra").click();
@@ -168,7 +167,6 @@ class BrowserFlowTest {
     @DisplayName("DFS-053.AC-6 Pinning a folder and selecting another shows the comparison, and Unpin removes it")
     void pinCompareAndUnpin() {
         openResults();
-        expandRoot();
 
         page.getByLabel("Pin for comparison: keep").click();
         tab("Overlaps").click();
@@ -228,11 +226,6 @@ class BrowserFlowTest {
         page.locator(".open-results").click();
         assertThat(page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Scan results"))).isVisible();
         assertThat(page.locator(".sets-table")).isVisible();
-    }
-
-    /** The scanned root is the only tree row with a toggle until it is expanded. */
-    private void expandRoot() {
-        page.locator(".folder-toggle").first().click();
     }
 
     private Locator folderSelect(String name) {
