@@ -1,7 +1,7 @@
 ---
 id: DFS-066
 title: Keep the login session for a day and explain an expired one
-status: in-review
+status: done
 type: fix
 scope: [build]
 archetype: component
@@ -16,7 +16,7 @@ touches:
 blocked_reason:
 created: 2026-11-11
 updated: 2026-11-11
-completed:
+completed: 2026-11-11
 ---
 
 # DFS-066: Keep the login session for a day and explain an expired one
