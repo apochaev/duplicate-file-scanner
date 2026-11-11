@@ -1,0 +1,99 @@
+{
+   "ticket": "DFS-066",
+   "archetype": {
+      "name": "component",
+      "version": 6
+   },
+   "branch": "tickets/DFS-066-session-timeout-and-expired-notice",
+   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-066-session-timeout-and-expired-notice",
+   "state": "blocked",
+   "phases": [
+      {
+         "id": "design",
+         "agent": "architect",
+         "after": [],
+         "status": "done",
+         "runs": [
+            {
+               "attempt": 1,
+               "model": "sonnet",
+               "effort": "high",
+               "turns": 38,
+               "wallClockSeconds": 338,
+               "outcome": "passed",
+               "note": "touches: 10 changed files, all inside touches"
+            }
+         ],
+         "artifacts": [
+            "docs/tickets/backlog/DFS-066-session-timeout-and-expired-notice/DFS-066-ticket.md",
+            "docs/tickets/backlog/DFS-066-session-timeout-and-expired-notice/design.md",
+            "docs/tickets/backlog/DFS-066-session-timeout-and-expired-notice/learnings.md",
+            "docs/tickets/backlog/DFS-066-session-timeout-and-expired-notice/progress.md",
+            "server/frontend/src/app/app.config.ts",
+            "server/frontend/src/app/app.html",
+            "server/frontend/src/app/app.ts",
+            "server/frontend/src/app/session/session-ended.interceptor.ts",
+            "server/frontend/src/app/session/session-ended.ts"
+         ],
+         "commit": "f557d90d84e18cd0dc5ea135e8483595acd544fe"
+      },
+      {
+         "id": "tests",
+         "agent": "test-author",
+         "after": [
+            "design"
+         ],
+         "status": "in-progress",
+         "runs": [
+            {
+               "attempt": 1,
+               "model": "sonnet",
+               "effort": "medium",
+               "turns": 19,
+               "wallClockSeconds": 236,
+               "outcome": "failed-gate",
+               "note": "red: only SessionTimeoutTest AC-1 fails, on an assertion (no stub possible for a property); all 7 frontend tests fail on the stub"
+            }
+         ],
+         "artifacts": [],
+         "commit": null
+      },
+      {
+         "id": "implement",
+         "agent": "implementer",
+         "after": [
+            "tests"
+         ],
+         "status": "pending",
+         "runs": [],
+         "artifacts": [],
+         "commit": null
+      },
+      {
+         "id": "verify",
+         "agent": "verifier",
+         "after": [
+            "implement"
+         ],
+         "status": "pending",
+         "runs": [],
+         "artifacts": [],
+         "commit": null
+      }
+   ],
+   "gates": [
+      {
+         "after": "done",
+         "status": "pending"
+      }
+   ],
+   "defects": [
+      {
+         "id": 1,
+         "phase": "tests",
+         "route": "test-author",
+         "summary": "red: AC-1 test fails on an assertion, not the stub exception (property-only criterion has no stub)",
+         "status": "open"
+      }
+   ]
+}
