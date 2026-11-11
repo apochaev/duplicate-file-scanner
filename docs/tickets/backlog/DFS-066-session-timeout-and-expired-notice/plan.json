@@ -6,7 +6,7 @@
    },
    "branch": "tickets/DFS-066-session-timeout-and-expired-notice",
    "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-066-session-timeout-and-expired-notice",
-   "state": "blocked",
+   "state": "running",
    "phases": [
       {
          "id": "design",
@@ -43,7 +43,7 @@
          "after": [
             "design"
          ],
-         "status": "in-progress",
+         "status": "done",
          "runs": [
             {
                "attempt": 1,
@@ -52,11 +52,25 @@
                "turns": 19,
                "wallClockSeconds": 236,
                "outcome": "failed-gate",
-               "note": "red: only SessionTimeoutTest AC-1 fails, on an assertion (no stub possible for a property); all 7 frontend tests fail on the stub"
+               "note": "red: only SessionTimeoutTest AC-1 fails, on an assertion (no stub possible for a property); all 7 frontend tests fail on the stub; user-approved exception (2026-11-11): AC-1 is property-only, red on an assertion; proven green in implement"
+            },
+            {
+               "attempt": 1,
+               "model": "sonnet",
+               "effort": "medium",
+               "turns": 3,
+               "wallClockSeconds": 33,
+               "outcome": "passed",
+               "note": "reopened by test defect (DFS-066 defect 2); verified with green (1146 passed, 3 skipped), not test-phase, since src/main already holds the implementation"
             }
          ],
-         "artifacts": [],
-         "commit": null
+         "artifacts": [
+            "docs/tickets/backlog/DFS-066-session-timeout-and-expired-notice/progress.md",
+            "docs/tickets/backlog/DFS-066-session-timeout-and-expired-notice/test-plan.md",
+            "server/frontend/src/app/session/session-ended.spec.ts",
+            "server/src/test/java/us/pochaev/dfs/server/SessionTimeoutTest.java"
+         ],
+         "commit": "41e1e840089f88bd985308e593833def331fd196"
       },
       {
          "id": "implement",
@@ -64,10 +78,34 @@
          "after": [
             "tests"
          ],
-         "status": "pending",
-         "runs": [],
-         "artifacts": [],
-         "commit": null
+         "status": "done",
+         "runs": [
+            {
+               "attempt": 1,
+               "model": "sonnet",
+               "effort": "medium",
+               "turns": 9,
+               "wallClockSeconds": 150,
+               "outcome": "failed-gate",
+               "note": "3 of 7 session-ended specs fail in afterEach http.verify(): unflushed GET /api/scans from the initial route; confirmed a test defect by reading the spec; implementation left uncommitted"
+            },
+            {
+               "attempt": 2,
+               "model": "sonnet",
+               "effort": "medium",
+               "turns": 0,
+               "wallClockSeconds": 0,
+               "outcome": "passed",
+               "note": "implementation from attempt 1 (uncommitted) kept after the tests rework; battery green, disabled, freeze, touches, stubs, traceability, consistency all PASS"
+            }
+         ],
+         "artifacts": [
+            "docs/tickets/backlog/DFS-066-session-timeout-and-expired-notice/progress.md",
+            "server/frontend/src/app/app.ts",
+            "server/frontend/src/app/session/session-ended.ts",
+            "server/src/main/resources/application.properties"
+         ],
+         "commit": "a506c380975c69a563b2a34538222ea69564afe3"
       },
       {
          "id": "verify",
@@ -93,7 +131,14 @@
          "phase": "tests",
          "route": "test-author",
          "summary": "red: AC-1 test fails on an assertion, not the stub exception (property-only criterion has no stub)",
-         "status": "open"
+         "status": "closed"
+      },
+      {
+         "id": 2,
+         "phase": "implement",
+         "route": "test-author",
+         "summary": "green: 3 session-ended specs leave the initial GET /api/scans unflushed (http.verify fails); test defect, not implementation",
+         "status": "closed"
       }
    ]
 }
