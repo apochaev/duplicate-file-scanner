@@ -1,39 +1,59 @@
-import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTableModule } from '@angular/material/table';
-import { FolderPairView, PairPage, SummaryPage } from '../api/models';
+import { FolderGroupView, FolderPairView, GroupFolderView, GroupPage } from '../api/models';
 import { OverlapsService } from '../api/services';
-import { plural } from '../scans/scan-format';
+import { formatBytes, plural } from '../scans/scan-format';
+import { PathCopy } from './path-copy';
+import { Density } from './result-density';
 import { failureMessage } from './result-error';
-import {
-  copiedElsewhereText,
-  duplicatesInsideText,
-  isAllCopiedElsewhere,
-  pairCoverageText,
-  pairSideText,
-  summaryTotalText,
-} from './result-format';
+import { pairCoverageText, pairSideText } from './result-format';
+import { ShortPath } from './result-path';
 
-/** The fixed note above the tables (DFS-050 decision 2, AC-4); the only text on the tab that says "safe" or "deleted". */
-export const OVERLAP_NOTE =
-  'A copy elsewhere may itself be deleted by another choice; checking what is safe comes with the deletion plan.';
+/** The list with no groups to show (DFS-068, "Loading, empty and error states"). */
+export const NO_GROUPS = 'No folders share files';
 
-/** The Folders table with no items (AC-10). */
-export const NO_FOLDERS = 'No folders with copies here';
+/** The line a group shows when two or more of its folders are fully shared (DFS-068.AC-4). */
+export const FULLY_SHARED_NOTE = 'Fully shared folders: any one can go, not all.';
 
-/** The Folder pairs table with no items (AC-10). */
-export const NO_PAIRS = 'No folder pairs share copies here';
+/** The "app" tag's tooltip (DFS-068.AC-8). */
+export const APP_TAG_TITLE = 'Managed by an application; deleting here can break it';
 
-/** The Comparison block with the pinned folder itself or "All folders" selected (AC-7). */
+/**
+ * Path elements that mark a folder as managed by an application (DFS-068 G4): `*` stands for any run of characters,
+ * everything else is literal, and an element is compared without regard to letter case (DFS-068.AC-8).
+ */
+export const APP_FOLDER_PATTERNS: readonly string[] = [
+  '*.auh',
+  'Adobe Premiere Pro Auto-Save',
+  '*.lrdata',
+  '*.photoslibrary',
+  '*.fcpbundle',
+];
+
+/**
+ * Whether any element of the path (split at `\` and `/`) matches one of `APP_FOLDER_PATTERNS`, compared
+ * case-insensitively: `D:\a\Photo.AUH\x` is managed by an application, `D:\a\Photos` is not (DFS-068.AC-8).
+ */
+export function isAppManaged(path: string): boolean {
+  throw new Error('not implemented: DFS-068');
+}
+
+/**
+ * The character budget of a folder line's path: one fixed number, since the line's width is not measured (the Sets
+ * tab measures its File column, this tab does not); the full path is the tooltip (DFS-068.AC-2).
+ */
+export const FOLDER_PATH_BUDGET = 64;
+
+/** The Comparison block with the pinned folder itself or "All folders" selected (DFS-050 AC-7). */
 export const COMPARE_HINT = 'Select another folder to compare with the pinned one';
 
-/** Each table's first page size (decision 5, AC-9). */
+/** The paginator's first page size (DFS-068 G3: 10, 25 and 50 groups per page). */
 export const OVERLAPS_PAGE_SIZE = 10;
 
-/** What the Comparison block shows while a folder is pinned (decision 3, AC-6, AC-7). */
+/** What the Comparison block shows while a folder is pinned (DFS-050 decision 3, AC-6, AC-7). */
 export type Comparison =
   /** The pinned folder itself or "All folders" is selected: `COMPARE_HINT`, no request. */
   | { readonly kind: 'hint' }
@@ -45,10 +65,15 @@ export type Comparison =
   | { readonly kind: 'failed'; readonly message: string };
 
 /**
- * The Overlaps tab, the result screen's first tab (DFS-050, `ui.md` U3): top to bottom, "Pinned: <path>" with "Unpin"
- * and the Comparison block while a folder is pinned, the fixed note, the selected folder's own summary as a header
- * (none under "All folders"), the "Folders" table of summaries and the "Folder pairs" table, each table paged on its
- * own (10, 25, 50) with its own loading, empty and error states.
+ * The Overlaps tab, the result screen's second tab (DFS-050, DFS-068, `ui.md` U3): top to bottom, "Pinned: <path>" with
+ * "Unpin" and the Comparison block while a folder is pinned (as DFS-050 built them), then one list of folder groups
+ * from `/groups`, a paginator (10, 25, 50) and the "Show N small groups" / "Hide small groups" button.
+ *
+ * Each group (`div.group`) is a `div.group-header` (files, copies, size, number of folders, the reclaimable bytes with
+ * a bar scaled to the page's largest), one `li.folder-line` per folder (short path with the full path as tooltip, "×N",
+ * a bar and "<sharedFiles> of <folderFiles> files", "fully shared", "also in N other groups", the "app" tag, the copy
+ * button), the `p.fully-shared-note` when two or more folders are fully shared, and a `mat-expansion-panel.group-sets`
+ * listing the first sets ("and N more" when the group has more).
  *
  * A container: it requests its pages itself through `OverlapsService`, following its inputs. The selection and the pin
  * are owned by the result screen; "Unpin" is emitted. Two effects: (`scanId`, `folder`) → `selectionChanged()`;
@@ -56,7 +81,7 @@ export type Comparison =
  */
 @Component({
   selector: 'app-overlaps-tab',
-  imports: [MatButtonModule, MatChipsModule, MatPaginatorModule, MatProgressBarModule, MatTableModule],
+  imports: [MatButtonModule, MatExpansionModule, MatPaginatorModule, MatProgressBarModule, PathCopy],
   templateUrl: './overlaps-tab.html',
   styleUrl: './overlaps-tab.css',
 })
@@ -66,48 +91,39 @@ export class OverlapsTab {
   readonly folder = input<string | null>(null);
   /** The pinned folder's path, or null when nothing is pinned. */
   readonly pinned = input<string | null>(null);
-  /** The user clicked "Unpin" (AC-5). */
+  /** The scan's roots, which paths are shown relative to (as the Sets tab does); empty shows paths whole (DFS-068.AC-2). */
+  readonly roots = input<readonly string[]>([]);
+  /** The row density: `density-compact` or `density-comfortable` on the section (as the Sets tab does). */
+  readonly density = input<Density>('compact');
+  /** The user clicked "Unpin" (DFS-050 AC-5). */
   readonly unpinned = output<void>();
 
   protected readonly pageSizeOptions = [10, 25, 50];
-  protected readonly summaryColumns = ['folder', 'copied', 'inside', 'total'];
-  protected readonly pairColumns = ['a', 'b'];
 
-  /** The Folders table's page; null before it has loaded and after a new selection until its page 0 has. */
-  protected readonly summaries = signal<SummaryPage | null>(null);
-  protected readonly summariesIndex = signal(0);
-  protected readonly summariesSize = signal(OVERLAPS_PAGE_SIZE);
-  protected readonly summariesLoading = signal(false);
-  protected readonly summariesError = signal<string | null>(null);
-
-  /** The Folder pairs table's page; null before it has loaded and after a new selection until its page 0 has. */
-  protected readonly pairs = signal<PairPage | null>(null);
-  protected readonly pairsIndex = signal(0);
-  protected readonly pairsSize = signal(OVERLAPS_PAGE_SIZE);
-  protected readonly pairsLoading = signal(false);
-  protected readonly pairsError = signal<string | null>(null);
+  /** The groups' page; null before it has loaded and after a new selection until its page 0 has. */
+  protected readonly groups = signal<GroupPage | null>(null);
+  protected readonly pageIndex = signal(0);
+  protected readonly pageSize = signal(OVERLAPS_PAGE_SIZE);
+  protected readonly loading = signal(false);
+  protected readonly error = signal<string | null>(null);
+  /** True after "Show N small groups": `loadGroups` then sends `minBytes: 0`; false sends no `minBytes` (AC-7). */
+  protected readonly smallShown = signal(false);
 
   /** The Comparison block's state; null while nothing is pinned (no block). */
   protected readonly comparison = signal<Comparison | null>(null);
 
-  /** The selected folder's own summary (`SummaryPage.folder`); null under "All folders" (AC-1). */
-  protected readonly header = computed(() => this.summaries()?.folder ?? null);
-
-  protected readonly note = OVERLAP_NOTE;
-  protected readonly noFolders = NO_FOLDERS;
-  protected readonly noPairs = NO_PAIRS;
+  protected readonly noGroups = NO_GROUPS;
+  protected readonly fullySharedNote = FULLY_SHARED_NOTE;
+  protected readonly appTagTitle = APP_TAG_TITLE;
   protected readonly compareHint = COMPARE_HINT;
   protected readonly plural = plural;
-  protected readonly copiedElsewhereText = copiedElsewhereText;
-  protected readonly duplicatesInsideText = duplicatesInsideText;
-  protected readonly summaryTotalText = summaryTotalText;
-  protected readonly isAllCopiedElsewhere = isAllCopiedElsewhere;
+  protected readonly formatBytes = formatBytes;
   protected readonly pairSideText = pairSideText;
   protected readonly pairCoverageText = pairCoverageText;
+  protected readonly isAppManaged = isAppManaged;
 
   private readonly overlaps = inject(OverlapsService);
-  private summariesRequest = 0;
-  private pairsRequest = 0;
+  private groupsRequest = 0;
   private compareRequest = 0;
 
   constructor() {
@@ -125,76 +141,42 @@ export class OverlapsTab {
   }
 
   /**
-   * A new scan or folder selection (AC-1, AC-9): both tables back to page 0 with their current size, their pages
-   * cleared (so no header or row of the previous folder lingers), then `loadSummaries()` and `loadPairs()`.
+   * A new scan or folder selection (AC-6): back to page 0 with the current page size, small groups hidden again
+   * (`smallShown` false), the page cleared (so no group of the previous folder lingers), then `loadGroups()`.
    */
   protected selectionChanged(): void {
-    this.summaries.set(null);
-    this.pairs.set(null);
-    this.summariesIndex.set(0);
-    this.pairsIndex.set(0);
-    void this.loadSummaries();
-    void this.loadPairs();
+    throw new Error('not implemented: DFS-068');
   }
 
   /**
-   * Requests the Folders table's current page: `listSummaries({ id: scanId, under, page, size })`, `under` left out for
-   * "All folders" (AC-1, AC-9). `summariesLoading` while it runs; on failure `summariesError` gets `failureMessage`
-   * (AC-10). An answer to a superseded request is ignored.
+   * Requests the current page: `listGroups({ id: scanId, under, minBytes, page, size })`, `under` left out for "All
+   * folders" (AC-6), `minBytes` left out unless `smallShown()` (then `0`) (AC-7), `page` and `size` from the paginator.
+   * `loading` while it runs; on failure `error` gets `failureMessage`. An answer to a superseded request is ignored
+   * (AC-1, AC-6, AC-7, AC-9).
    */
-  protected async loadSummaries(): Promise<void> {
-    const request = ++this.summariesRequest;
-    const under = this.folder();
-    this.summariesLoading.set(true);
-    this.summariesError.set(null);
-    try {
-      const page = await this.overlaps.listSummaries({
-        id: this.scanId(),
-        ...(under === null ? {} : { under }),
-        page: this.summariesIndex(),
-        size: this.summariesSize(),
-      });
-      if (request === this.summariesRequest) {
-        this.summaries.set(page);
-        this.summariesLoading.set(false);
-      }
-    } catch (failure) {
-      if (request === this.summariesRequest) {
-        this.summariesLoading.set(false);
-        this.summariesError.set(failureMessage(failure));
-      }
-    }
+  protected async loadGroups(): Promise<void> {
+    throw new Error('not implemented: DFS-068');
   }
 
-  /** As `loadSummaries`, for the Folder pairs table: `listPairs({ id: scanId, under, page, size })` (AC-1, AC-9, AC-10). */
-  protected async loadPairs(): Promise<void> {
-    const request = ++this.pairsRequest;
-    const under = this.folder();
-    this.pairsLoading.set(true);
-    this.pairsError.set(null);
-    try {
-      const page = await this.overlaps.listPairs({
-        id: this.scanId(),
-        ...(under === null ? {} : { under }),
-        page: this.pairsIndex(),
-        size: this.pairsSize(),
-      });
-      if (request === this.pairsRequest) {
-        this.pairs.set(page);
-        this.pairsLoading.set(false);
-      }
-    } catch (failure) {
-      if (request === this.pairsRequest) {
-        this.pairsLoading.set(false);
-        this.pairsError.set(failureMessage(failure));
-      }
-    }
+  /** "Show N small groups": sets `smallShown`, back to page 0, `loadGroups()` (AC-7). */
+  protected showSmallGroups(): void {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** "Hide small groups": clears `smallShown`, back to page 0, `loadGroups()` (AC-7). */
+  protected hideSmallGroups(): void {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** The paginator's page or size change: stores both, `loadGroups()` (G3). */
+  protected changePage(event: PageEvent): void {
+    throw new Error('not implemented: DFS-068');
   }
 
   /**
-   * Updates the Comparison block (AC-5, AC-6, AC-7): nothing pinned → null; the pinned folder or "All folders" selected
-   * → `hint`, no request; otherwise `loading`, then `getPair({ id: scanId, a: pinned, b: folder })` → `loaded`, or
-   * `failed` with `failureMessage` (a `400 NESTED_FOLDERS` shows the server's message). A superseded answer is ignored.
+   * Updates the Comparison block (DFS-050 AC-5, AC-6, AC-7; unchanged by DFS-068, AC-9): nothing pinned → null; the
+   * pinned folder or "All folders" selected → `hint`, no request; otherwise `loading`, then `getPair({ id: scanId, a:
+   * pinned, b: folder })` → `loaded`, or `failed` with `failureMessage`. A superseded answer is ignored.
    */
   protected async compare(): Promise<void> {
     const request = ++this.compareRequest;
@@ -221,22 +203,87 @@ export class OverlapsTab {
     }
   }
 
-  /** The Folders paginator's page or size change: requests that page of this table only (AC-9). */
-  protected changeSummariesPage(event: PageEvent): void {
-    this.summariesIndex.set(event.pageIndex);
-    this.summariesSize.set(event.pageSize);
-    void this.loadSummaries();
-  }
-
-  /** The Folder pairs paginator's page or size change: requests that page of this table only (AC-9). */
-  protected changePairsPage(event: PageEvent): void {
-    this.pairsIndex.set(event.pageIndex);
-    this.pairsSize.set(event.pageSize);
-    void this.loadPairs();
-  }
-
-  /** "Unpin" clicked: emits `unpinned` (AC-5). */
+  /** "Unpin" clicked: emits `unpinned` (DFS-050 AC-5). */
   protected unpin(): void {
     this.unpinned.emit();
+  }
+
+  /** The section's density class: `density-compact` or `density-comfortable`. */
+  protected densityClass(): string {
+    return `density-${this.density()}`;
+  }
+
+  /** A group's first words: "<files> file(s)", `plural(group.files, 'file')`, e.g. "5 files" (AC-1). */
+  protected filesText(group: FolderGroupView): string {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /**
+   * A group's muted text after `filesText`: "· <copies> copies · <size> · shared by <n> folders", with `copiesText`
+   * for the copies, `groupSizeText` for the size and `plural(group.folders.length, 'folder')` (AC-1).
+   */
+  protected groupMetaText(group: FolderGroupView): string {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /**
+   * "<size> each" when every set of the group is listed (`totalSets` equals `sets.length`) and all have one size;
+   * otherwise "<total> in all", the sum of the folders' `sharedBytes`, both through `formatBytes` (AC-1).
+   */
+  protected groupSizeText(group: FolderGroupView): string {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /**
+   * The width of a group's reclaimable bar, in percent: `barPercent` of its `reclaimableBytes` over the largest
+   * `reclaimableBytes` on the page, so the largest group's bar is full (AC-1).
+   */
+  protected reclaimableWidth(group: FolderGroupView): number {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** A folder line's path: `displayPath(path, roots(), FOLDER_PATH_BUDGET)` (AC-2). */
+  protected shortPath(path: string): ShortPath {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** "×<copiesEach>", shown only when `copiesEach` is above 1 (AC-2). */
+  protected copiesEachText(folder: GroupFolderView): string {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** "<sharedFiles> of <folderFiles> files", always the plural "files", e.g. "1 of 1 files" (AC-2). */
+  protected sharedText(folder: GroupFolderView): string {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** The width of a folder line's bar, in percent: `barPercent(sharedFiles, folderFiles)` (AC-2). */
+  protected shareWidth(folder: GroupFolderView): number {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** Whether the folder's `sharedFiles` equals its `folderFiles`: it gets the "fully shared" tag (AC-3). */
+  protected isFullyShared(folder: GroupFolderView): boolean {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** "also in <otherGroups> other groups" (`plural(n, 'other group')`: "also in 1 other group") (AC-3). */
+  protected otherGroupsText(folder: GroupFolderView): string {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** How many of the group's folders are fully shared; `FULLY_SHARED_NOTE` shows at 2 or more (AC-4). */
+  protected fullySharedCount(group: FolderGroupView): number {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** A set row's text: "<size> · <copies>", `formatBytes(size)` and `copiesText(copies)` (AC-5). */
+  protected setDetailText(size: number, copies: number): string {
+    throw new Error('not implemented: DFS-068');
+  }
+
+  /** How many of the group's sets are not listed: `totalSets` less `sets.length`, shown as "and N more" above 0 (AC-5). */
+  protected hiddenSets(group: FolderGroupView): number {
+    throw new Error('not implemented: DFS-068');
   }
 }

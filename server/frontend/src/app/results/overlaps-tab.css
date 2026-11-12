@@ -1,3 +1,8 @@
+.overlaps-tab {
+  display: block;
+  min-width: 0;
+}
+
 .pinned-bar {
   display: flex;
   flex-wrap: wrap;
@@ -7,7 +12,6 @@
 }
 
 .pinned-folder,
-.summary-folder,
 .side-text {
   font-family: monospace;
   overflow-wrap: anywhere;
@@ -20,29 +24,23 @@
   border-radius: 8px;
 }
 
-.comparison h3,
-.summaries h3,
-.pairs h3 {
+.comparison h3 {
   margin: 8px 0 4px;
 }
 
-.overlap-note,
-.summary-label,
-.side-coverage {
+.side-coverage,
+.group-meta,
+.path-folders,
+.shared-count,
+.other-groups,
+.copies-each,
+.set-detail {
   color: var(--mat-sys-on-surface-variant, #555);
 }
 
 .side-coverage.side-full {
   color: var(--mat-sys-on-surface, inherit);
   font-weight: 500;
-}
-
-.folder-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 16px;
-  margin: 8px 0 16px;
 }
 
 .pair-row.comparison-pair {
@@ -57,20 +55,154 @@
   gap: 2px;
 }
 
-.summaries-table,
-.pairs-table {
-  width: 100%;
-}
-
-.summaries,
-.pairs {
+.groups {
   margin: 16px 0;
-  overflow-x: auto;
 }
 
-.summaries-error,
-.pairs-error,
+.groups-error,
 .comparison-error {
   color: var(--mat-sys-error, #b3261e);
+  overflow-wrap: anywhere;
+}
+
+/* One group: a header row like the Sets tab's set header, one line per folder, then the sets expander. */
+.group {
+  margin: 0 0 12px;
+  border: 1px solid var(--mat-sys-outline-variant, #ccc);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.group-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 4px 8px;
+  background: var(--mat-sys-surface-container, #f3edf7);
+}
+
+.density-comfortable .group-header {
+  padding: 8px;
+}
+
+.group-files {
+  font-weight: 500;
+}
+
+.group-reclaimable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.group-reclaimable-bytes {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.bar {
+  display: inline-block;
+  width: 6rem;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--mat-sys-surface-variant, #e7e0ec);
+}
+
+.share .bar {
+  width: 3rem;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--mat-sys-primary, #6750a4);
+}
+
+.group-folders,
+.group-set-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.folder-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  padding: 2px 8px;
+}
+
+.density-comfortable .folder-line {
+  padding: 8px;
+}
+
+.short-path {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.path-folders {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+
+.path-name {
+  flex: none;
+  font-weight: 500;
+  white-space: pre;
+}
+
+.share {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.tag {
+  padding: 0 6px;
+  border: 1px solid var(--mat-sys-outline-variant, #ccc);
+  border-radius: 8px;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+.tag.fully-shared {
+  background: var(--mat-sys-secondary-container, #e8def8);
+}
+
+.fully-shared-note,
+.more-sets {
+  margin: 2px 8px 6px;
+}
+
+/* Compact rows: the Copy button no taller than a line of text (Material's default is 40 px). */
+.density-compact app-path-copy {
+  --mat-button-text-container-height: 24px;
+}
+
+.group-sets {
+  box-shadow: none;
+  border-top: 1px solid var(--mat-sys-outline-variant, #ccc);
+  border-radius: 0;
+}
+
+.group-set {
+  display: flex;
+  gap: 12px;
+  padding: 2px 0;
+}
+
+.set-name {
+  font-weight: 500;
   overflow-wrap: anywhere;
 }

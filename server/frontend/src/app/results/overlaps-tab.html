@@ -1,4 +1,4 @@
-<section class="overlaps-tab" aria-label="Folder overlaps">
+<section class="overlaps-tab" [class]="densityClass()" aria-label="Folder overlaps">
   @if (pinned(); as pinnedPath) {
     <div class="pinned-bar">
       <span class="pinned-folder">Pinned: {{ pinnedPath }}</span>
@@ -29,119 +29,97 @@
     }
   }
 
-  <p class="overlap-note">{{ note }}</p>
-
-  @if (header(); as own) {
-    <section class="folder-header" aria-label="Selected folder">
-      <span class="summary-folder">{{ own.folder }}</span>
-      <span class="summary-field summary-copied"><span class="summary-label">Copied elsewhere</span> {{ copiedElsewhereText(own) }}</span>
-      <span class="summary-field summary-inside"><span class="summary-label">Duplicates inside</span> {{ duplicatesInsideText(own) }}</span>
-      <span class="summary-field summary-total"><span class="summary-label">Total</span> {{ summaryTotalText(own) }}</span>
-      @if (isAllCopiedElsewhere(own)) {
-        <mat-chip-set aria-label="Selected folder coverage">
-          <mat-chip class="all-copied">all copied elsewhere</mat-chip>
-        </mat-chip-set>
-      }
-    </section>
-  }
-
-  <section class="summaries" aria-label="Folders" [attr.aria-busy]="summariesLoading()">
-    <h3>Folders</h3>
-    @if (summariesLoading()) {
-      <mat-progress-bar mode="indeterminate" aria-label="Loading folders" />
+  <section class="groups" aria-label="Folder groups" [attr.aria-busy]="loading()">
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" aria-label="Loading folder groups" />
     }
-    @if (summariesError(); as message) {
-      <p class="summaries-error" role="alert">{{ message }}</p>
-    } @else if (summaries(); as result) {
+    @if (error(); as message) {
+      <p class="groups-error" role="alert">{{ message }}</p>
+    } @else if (groups(); as result) {
       @if (result.totalItems > 0) {
-        <p class="summaries-count">{{ plural(result.totalItems, 'folder') }}</p>
-        <table mat-table class="summaries-table" [dataSource]="result.items" aria-label="Folder summaries">
-          <ng-container matColumnDef="folder">
-            <th mat-header-cell *matHeaderCellDef>Folder</th>
-            <td mat-cell *matCellDef="let summary">
-              <span class="summary-folder">{{ summary.folder }}</span>{{ ' ' }}
-              @if (isAllCopiedElsewhere(summary)) {
-                <mat-chip-set aria-label="Folder coverage">
-                  <mat-chip class="all-copied">all copied elsewhere</mat-chip>
-                </mat-chip-set>
+        @for (group of result.items; track group.sets[0].digest) {
+          <div class="group">
+            <div class="group-header">
+              <span class="group-files">{{ filesText(group) }}</span>
+              <span class="group-meta">{{ groupMetaText(group) }}</span>
+              <span class="group-reclaimable">
+                <span class="bar" aria-hidden="true">
+                  <span class="bar-fill" [style.width.%]="reclaimableWidth(group)"></span>
+                </span>
+                <span class="group-reclaimable-bytes">{{ formatBytes(group.reclaimableBytes) }}</span>
+              </span>
+            </div>
+            <ul class="group-folders" aria-label="Folders of the group">
+              @for (line of group.folders; track line.folder) {
+                @let short = shortPath(line.folder);
+                <li class="folder-line">
+                  <span class="short-path" [attr.title]="line.folder">
+                    <span class="path-folders">{{ short.folders }}</span><span class="path-name">{{ short.name }}</span>
+                  </span>
+                  @if (line.copiesEach > 1) {
+                    <span class="copies-each">{{ copiesEachText(line) }}</span>
+                  }
+                  <span class="share">
+                    <span class="bar" aria-hidden="true">
+                      <span class="bar-fill" [style.width.%]="shareWidth(line)"></span>
+                    </span>
+                    <span class="shared-count">{{ sharedText(line) }}</span>
+                  </span>
+                  @if (isFullyShared(line)) {
+                    <span class="tag fully-shared">fully shared</span>
+                  }
+                  @if (line.otherGroups > 0) {
+                    <span class="other-groups">{{ otherGroupsText(line) }}</span>
+                  }
+                  @if (isAppManaged(line.folder)) {
+                    <span class="tag app-tag" [attr.title]="appTagTitle">app</span>
+                  }
+                  <app-path-copy class="folder-copy" [path]="line.folder" />
+                </li>
               }
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="copied">
-            <th mat-header-cell *matHeaderCellDef>Copied elsewhere</th>
-            <td mat-cell *matCellDef="let summary">{{ copiedElsewhereText(summary) }}</td>
-          </ng-container>
-          <ng-container matColumnDef="inside">
-            <th mat-header-cell *matHeaderCellDef>Duplicates inside</th>
-            <td mat-cell *matCellDef="let summary">{{ duplicatesInsideText(summary) }}</td>
-          </ng-container>
-          <ng-container matColumnDef="total">
-            <th mat-header-cell *matHeaderCellDef>Total</th>
-            <td mat-cell *matCellDef="let summary">{{ summaryTotalText(summary) }}</td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="summaryColumns"></tr>
-          <tr mat-row class="summary-row" *matRowDef="let summary; columns: summaryColumns"></tr>
-        </table>
+            </ul>
+            @if (fullySharedCount(group) >= 2) {
+              <p class="fully-shared-note">{{ fullySharedNote }}</p>
+            }
+            <mat-expansion-panel class="group-sets">
+              <mat-expansion-panel-header>
+                <mat-panel-title>{{ plural(group.totalSets, 'set') }}</mat-panel-title>
+              </mat-expansion-panel-header>
+              <ng-template matExpansionPanelContent>
+                <ul class="group-set-list" aria-label="Sets of the group">
+                  @for (set of group.sets; track set.digest) {
+                    <li class="group-set">
+                      <span class="set-name">{{ set.name }}</span>
+                      <span class="set-detail">{{ setDetailText(set.size, set.copies) }}</span>
+                    </li>
+                  }
+                </ul>
+                @if (hiddenSets(group) > 0) {
+                  <p class="more-sets">and {{ hiddenSets(group) }} more</p>
+                }
+              </ng-template>
+            </mat-expansion-panel>
+          </div>
+        }
         <mat-paginator
-          class="summaries-paginator"
+          class="groups-paginator"
           [length]="result.totalItems"
-          [pageIndex]="summariesIndex()"
-          [pageSize]="summariesSize()"
+          [pageIndex]="pageIndex()"
+          [pageSize]="pageSize()"
           [pageSizeOptions]="pageSizeOptions"
-          [disabled]="summariesLoading()"
-          (page)="changeSummariesPage($event)"
-          aria-label="Folder pages"
+          [disabled]="loading()"
+          (page)="changePage($event)"
+          aria-label="Folder group pages"
         />
       } @else {
-        <p class="summaries-empty">{{ noFolders }}</p>
+        <p class="groups-empty">{{ noGroups }}</p>
       }
-    }
-  </section>
-
-  <section class="pairs" aria-label="Folder pairs" [attr.aria-busy]="pairsLoading()">
-    <h3>Folder pairs</h3>
-    @if (pairsLoading()) {
-      <mat-progress-bar mode="indeterminate" aria-label="Loading folder pairs" />
-    }
-    @if (pairsError(); as message) {
-      <p class="pairs-error" role="alert">{{ message }}</p>
-    } @else if (pairs(); as result) {
-      @if (result.totalItems > 0) {
-        <p class="pairs-count">{{ plural(result.totalItems, 'folder pair') }}</p>
-        <table mat-table class="pairs-table" [dataSource]="result.items" aria-label="Folder pairs">
-          <ng-container matColumnDef="a">
-            <th mat-header-cell *matHeaderCellDef>Folder A</th>
-            <td mat-cell *matCellDef="let pair">
-              <div class="pair-side side-a">
-                <span class="side-text">{{ pairSideText(pair.a) }}</span>
-                <span class="side-coverage" [class.side-full]="pair.a.full">{{ pairCoverageText(pair.a) }}</span>
-              </div>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="b">
-            <th mat-header-cell *matHeaderCellDef>Folder B</th>
-            <td mat-cell *matCellDef="let pair">
-              <div class="pair-side side-b">
-                <span class="side-text">{{ pairSideText(pair.b) }}</span>
-                <span class="side-coverage" [class.side-full]="pair.b.full">{{ pairCoverageText(pair.b) }}</span>
-              </div>
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="pairColumns"></tr>
-          <tr mat-row class="pair-row" *matRowDef="let pair; columns: pairColumns"></tr>
-        </table>
-        <mat-paginator
-          class="pairs-paginator"
-          [length]="result.totalItems"
-          [pageIndex]="pairsIndex()"
-          [pageSize]="pairsSize()"
-          [pageSizeOptions]="pageSizeOptions"
-          [disabled]="pairsLoading()"
-          (page)="changePairsPage($event)"
-          aria-label="Folder pair pages"
-        />
-      } @else {
-        <p class="pairs-empty">{{ noPairs }}</p>
+      @if (smallShown()) {
+        <button mat-button type="button" class="hide-small" (click)="hideSmallGroups()">Hide small groups</button>
+      } @else if (result.hiddenSmall > 0) {
+        <button mat-button type="button" class="show-small" (click)="showSmallGroups()">
+          Show {{ plural(result.hiddenSmall, 'small group') }}
+        </button>
       }
     }
   </section>
