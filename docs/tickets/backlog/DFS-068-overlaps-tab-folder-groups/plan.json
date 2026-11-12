@@ -6,13 +6,13 @@
   },
   "branch": "tickets/DFS-068-overlaps-tab-folder-groups",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-068-overlaps-tab-folder-groups",
-  "state": "awaiting-approval",
+  "state": "running",
   "phases": [
     {
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "done",
+      "status": "pending",
       "runs": [
         {
           "attempt": 1,

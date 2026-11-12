@@ -15,6 +15,8 @@ touches:
   - server/frontend/src/app/results/overlaps-tab.css
   - server/frontend/src/app/results/overlaps-tab.spec.ts
   - server/frontend/src/app/results/result-test-data.ts
+  - server/frontend/src/app/results/result-screen.html
+  - server/frontend/src/app/results/result-screen.spec.ts
   - server/src/test/java/us/pochaev/dfs/server/BrowserFlowTest.java
   - CLAUDE.md
   - docs/design/ui.md
@@ -150,6 +152,7 @@ Feature: Overlaps tab shows folder groups
 **Touches:**
 - `server/frontend/src/app/results/overlaps-tab.ts`, `.html`, `.css`, `.spec.ts`: the groups list replaces the tables; Vitest tests per scenario.
 - `server/frontend/src/app/results/result-test-data.ts`: group test data.
+- `server/frontend/src/app/results/result-screen.html`, `result-screen.spec.ts`: the host binds the tab's `roots` and `density` inputs; its three Overlaps tests stop answering `/summaries` and `/pairs` (added at the DFS-068 design gate, 2026-11-12).
 - `server/src/test/java/us/pochaev/dfs/server/BrowserFlowTest.java`: the Overlaps flow asserts a group instead of the tables.
 - `CLAUDE.md`, `docs/design/ui.md`: the Overlaps tab description and U3 "as built".
 - `docs/design/folder-groups.md`: status line set to implemented for G2–G4.
