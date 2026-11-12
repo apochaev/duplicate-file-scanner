@@ -1,0 +1,3 @@
+# DFS-067 learnings
+
+- **DFS-067.L-1** (verifier) The ticket's `touches` listed `server/src/test/java/us/pochaev/dfs/server/analysis` and `GroupApiTest.java` but not the `result` test package, while the design put the lazy per-scan state (`GroupState`, package-private) in `result` and asked for a counting-build-function test there (security matrix, checklist 10). The test-author had to drop `GroupStateTest`, leaving build-once, failed-build-retried and refused-request-builds-nothing untested (checked by inspection only). Refinement of an `endpoint` ticket that adds per-scan state should list the test package of the state's own package (here `server/src/test/java/us/pochaev/dfs/server/result`), or the architect should flag the mismatch at the design gate.
