@@ -6,13 +6,13 @@
   },
   "branch": "tickets/DFS-068-overlaps-tab-folder-groups",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-068-overlaps-tab-folder-groups",
-  "state": "running",
+  "state": "awaiting-approval",
   "phases": [
     {
       "id": "design",
       "agent": "architect",
       "after": [],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -22,6 +22,15 @@
           "wallClockSeconds": 410,
           "outcome": "passed",
           "note": "PASS touches DFS-068: 8 changed files, all inside touches"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "high",
+          "turns": 16,
+          "wallClockSeconds": 49,
+          "outcome": "passed",
+          "note": "rework after gate feedback; PASS touches DFS-068: 9 changed files, all inside touches"
         }
       ],
       "artifacts": [
@@ -31,9 +40,10 @@
         "docs/tickets/backlog/DFS-068-overlaps-tab-folder-groups/progress.md",
         "server/frontend/src/app/results/overlaps-tab.css",
         "server/frontend/src/app/results/overlaps-tab.html",
-        "server/frontend/src/app/results/overlaps-tab.ts"
+        "server/frontend/src/app/results/overlaps-tab.ts",
+        "server/frontend/src/app/results/result-screen.html"
       ],
-      "commit": "757f69b8410dc474049ab8828c3a8ca4829a0231"
+      "commit": "d84bedc6b3c4e232003dd2c03be27d974a1a6958"
     },
     {
       "id": "tests",
