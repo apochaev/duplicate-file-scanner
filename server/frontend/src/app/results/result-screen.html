@@ -81,6 +81,8 @@
               [scanId]="scan()!.id"
               [folder]="selectedFolder()"
               [pinned]="pinnedFolder()"
+              [roots]="rootPaths()"
+              [density]="density()"
               (unpinned)="unpin()"
             />
           </ng-template>

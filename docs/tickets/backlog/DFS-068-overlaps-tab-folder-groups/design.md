@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Overlaps tab (`overlaps-tab.ts`, the result screen's second tab, lazy via `matTabContent`) swaps its Folders and Folder pairs tables, the fixed note and the folder header for one list of groups from `GET /api/scans/{id}/groups` (`OverlapsService.listGroups`, already in the generated client). The Pinned bar and Comparison block (`getPair`) stay as built in DFS-050. No new browser API, no new route, no new file: every change is in the four `overlaps-tab.*` files.
+The Overlaps tab (`overlaps-tab.ts`, the result screen's second tab, lazy via `matTabContent`) swaps its Folders and Folder pairs tables, the fixed note and the folder header for one list of groups from `GET /api/scans/{id}/groups` (`OverlapsService.listGroups`, already in the generated client). The Pinned bar and Comparison block (`getPair`) stay as built in DFS-050. No new browser API, no new route, no new file: the change is in the three `overlaps-tab.*` files plus a two-input binding in `result-screen.html` (real, not a stub); the specs `overlaps-tab.spec.ts` and `result-screen.spec.ts` are rewritten by the test-author.
 
 Acceptance criteria and the stub each reaches (all stubs throw `not implemented: DFS-068`):
 - AC-1 header rows from `/groups`: `loadGroups` (every list test goes through it), `filesText`, `groupMetaText`, `groupSizeText`, `reclaimableWidth`.
@@ -18,12 +18,12 @@ Acceptance criteria and the stub each reaches (all stubs throw `not implemented:
 Placement: `server/frontend/src/app/results/`, inside the existing lazy `OverlapsTab`. Checklist items marked not applicable: 4 (browser APIs), 6 (input and validation), 8 (live updates), 12 (dev server).
 
 Look at closely:
-- **Wiring outside `touches`.** The tab gets two new optional inputs, `roots` (for `displayPath`, as Sets) and `density` (`density-compact`/`density-comfortable`). The result screen must pass them: `[roots]="rootPaths()" [density]="density()"` in `result-screen.html`, which is not in `touches`. Without it the tab still works but shows absolute paths and always Compact. Recommend adding `result-screen.html` to `touches`.
-- **`result-screen.spec.ts` is not in `touches` either** and must change: three tests answer `/summaries` and `/pairs` (see Expected breakage).
+- **Wiring in `result-screen.html` (done).** The tab gets two new optional inputs, `roots` (for `displayPath`, as Sets) and `density` (`density-compact`/`density-comfortable`). The architect added the real binding `[roots]="rootPaths()" [density]="density()"` to `<app-overlaps-tab>` (both files are now in `touches`); `:server:ngBuild` is green.
+- **`result-screen.spec.ts` (in `touches`; the test-author rewrites its three Overlaps tests).** They answer `/summaries` and `/pairs` today and must answer `/groups` (see Expected breakage). The architect does not edit it.
 - "<size> each" needs every set of the group listed, but `/groups` lists only 20: with `totalSets` above the listed sets the header shows "<total> in all" (sum of the folders' `sharedBytes`).
 - A new folder selection or scan hides small groups again.
 
-Expected breakage (the user approves this list): `overlaps-tab.spec.ts` (the old tables' tests, rewritten by the test-author), `result-screen.spec.ts` (three Overlaps tests), `BrowserFlowTest` (two flows, `e2eTest` only). Existing tests read for the design: none (`result-screen.spec.ts` and `BrowserFlowTest` were grepped for the selectors the design replaces, not read in full).
+Expected breakage (the user approves this list): `overlaps-tab.spec.ts` (the old tables' tests), `result-screen.spec.ts` (three Overlaps tests, `DFS-060.AC-1`, `DFS-050.AC-5`, `DFS-050.AC-6`), both rewritten by the test-author and both in `touches`; `BrowserFlowTest` (two flows, `e2eTest` only). Existing tests read for the design: none (`result-screen.spec.ts` and `BrowserFlowTest` were grepped for the selectors the design replaces, not read in full).
 
 ## Components and files
 
@@ -33,6 +33,8 @@ Expected breakage (the user approves this list): `overlaps-tab.spec.ts` (the old
 | `src/app/results/overlaps-tab.html` | template | | | structure below |
 | `src/app/results/overlaps-tab.css` | style | | | group, header, folder line, bar, tag styles; old table styles dropped |
 | `src/app/results/overlaps-tab.spec.ts` | spec | | | test-author rewrites it |
+| `src/app/results/result-screen.html` | template (real change) | | | `<app-overlaps-tab>` gains `[roots]="rootPaths()" [density]="density()"` |
+| `src/app/results/result-screen.spec.ts` | spec | | | test-author rewrites the three Overlaps tests to answer `/groups` |
 | `src/app/results/result-test-data.ts` | test data | | | test-author adds group builders (`folderGroup`, `groupFolder`, `groupPage`, `expectGroups`); not written by the architect |
 
 Template structure (CSS classes final): `section.overlaps-tab.density-*` > `.pinned-bar` (`.pinned-folder`, `button.unpin`), `section.comparison` (unchanged), then `section.groups[aria-busy]` > `mat-progress-bar` (label "Loading folder groups"), `p.groups-error[role=alert]`, `p.groups-empty`, and per group `div.group` > `div.group-header` (`.group-files`, `.group-meta`, `.group-reclaimable` with `.bar`/`.bar-fill` and `.group-reclaimable-bytes`), `ul.group-folders` > `li.folder-line` (`.short-path[title]` with `.path-folders` and `.path-name`, `.copies-each`, `.share` with `.bar` and `.shared-count`, `.tag.fully-shared`, `.other-groups`, `.tag.app-tag[title]`, `app-path-copy.folder-copy`), `p.fully-shared-note`, `mat-expansion-panel.group-sets` (title `plural(totalSets, 'set')`, content `ul.group-set-list` > `li.group-set` with `.set-name` and `.set-detail`, `p.more-sets`). After the groups: `mat-paginator.groups-paginator` (label "Folder group pages", 10/25/50, default 10), `button.hide-small` ("Hide small groups", while `smallShown`) or `button.show-small` ("Show N small groups", when `hiddenSmall` > 0).
@@ -69,7 +71,7 @@ None. The copy button is the existing `PathCopy`, which already uses the `CLIPBO
 2. Promise timing in tests: specs use `settle(fixture)` after every step.
 3. Stubs reachable and surfaced: every group test goes through `loadGroups` (called from an effect, so its rejection reaches `provideStubSurfacing()`); helper stubs are called from the template. No stub is reached from an RxJS `subscribe`. Existing specs that break are listed below. Pure-helper tests (`isAppManaged`) hit the exported function's stub.
 4. Browser APIs jsdom lacks: not applicable: the tab uses none new (clipboard already behind `CLIPBOARD`).
-5. Where the screen sits: unchanged, the second tab inside `<ng-template matTabContent>` of `result-screen.html`. New inputs `roots` and `density` need the result screen to bind them (outside `touches`, see Summary).
+5. Where the screen sits: unchanged, the second tab inside `<ng-template matTabContent>` of `result-screen.html`. New inputs `roots` and `density` are bound in `result-screen.html` (`[roots]="rootPaths()" [density]="density()"`, in `touches`, done).
 6. Input and validation: not applicable: no input.
 7. Loading, empty and error states: see Page states.
 8. Live updates: not applicable: COMPLETED scans only.
@@ -82,12 +84,12 @@ None. The copy button is the existing `PathCopy`, which already uses the `CLIPBO
 ## Expected breakage
 
 - `overlaps-tab.spec.ts`: asserts the Folders and Folder pairs tables, the note and `/summaries`/`/pairs` requests; the test-author rewrites it (in `touches`).
-- `result-screen.spec.ts`: three tests (`DFS-060.AC-1 shows the folder summary and the Folders table once Overlaps is selected`, `DFS-050.AC-5 pins a folder...`, `DFS-050.AC-6 compares the pinned folder...`) answer `/summaries` and `/pairs` through `openOverlaps` and `expectSummaries`; they must ask for `/groups` instead. Not in `touches`; needs adding.
+- `result-screen.spec.ts`: three tests (`DFS-060.AC-1 shows the folder summary and the Folders table once Overlaps is selected`, `DFS-050.AC-5 pins a folder...`, `DFS-050.AC-6 compares the pinned folder...`) answer `/summaries` and `/pairs` through `openOverlaps` and `expectSummaries`; they must ask for `/groups` instead. In `touches`; the test-author rewrites them.
 - `BrowserFlowTest`: `resultScreenOpensOnSets` asserts `.summaries-table` and `folderBrowserFiltersTheViews` asserts `.folder-header .summary-folder`; both are rewritten (ticket decision 1). Runs only in `:server:e2eTest`, not in the red gate.
 
 ## Open design notes (as of the design phase)
 
-- `roots` and `density` inputs, and the one-line binding in `result-screen.html`, are added by the architect (the ticket says "using Sets' rule" and "Compact and Comfortable" but names no input); the binding needs `result-screen.html` in `touches`.
+- `roots` and `density` inputs, and the binding in `result-screen.html`, are added by the architect (the ticket says "using Sets' rule" and "Compact and Comfortable" but names no input); `result-screen.html` is now in `touches`.
 - The path budget is the constant `FOLDER_PATH_BUDGET` = 64 rather than a measured one (no `ResizeObserver` in the tab).
 - "<size> each" requires all sets listed and equal; otherwise "<total> in all", the sum of `sharedBytes`.
 - "Show N small groups" uses `plural` ("Show 1 small group"); "also in N other groups" likewise ("1 other group"). "N of M files" is always "files".
@@ -97,7 +99,7 @@ None. The copy button is the existing `PathCopy`, which already uses the `CLIPBO
 
 ## Stubs (as of the design phase)
 
-- Files stubbed: `overlaps-tab.ts` (with `overlaps-tab.html` and `overlaps-tab.css`, structure final).
+- Files stubbed: `overlaps-tab.ts` (with `overlaps-tab.html` and `overlaps-tab.css`, structure final). `result-screen.html` carries the real two-input binding (no stub).
 - Throwing `new Error('not implemented: DFS-068')`: `isAppManaged`, `selectionChanged`, `loadGroups`, `showSmallGroups`, `hideSmallGroups`, `changePage`, `filesText`, `groupMetaText`, `groupSizeText`, `reclaimableWidth`, `shortPath`, `copiesEachText`, `sharedText`, `shareWidth`, `isFullyShared`, `otherGroupsText`, `fullySharedCount`, `setDetailText`, `hiddenSets`. Real and unchanged: `compare`, `unpin`, `densityClass`, the two effects.
 - The template's structure and CSS classes are final; tests find elements by them and by Material harnesses.
 - Compiled with `./gradlew :server:ngBuild`.
