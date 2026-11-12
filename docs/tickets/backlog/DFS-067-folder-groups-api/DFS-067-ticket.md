@@ -64,6 +64,10 @@ The page also carries `totalItems` and `hiddenSmall`: the groups matching `under
 
 `/summaries`, `/pairs` and `/pair` stay unchanged. `OverlapAnalysisScaleTest`'s budget (the 150,000-file case, under 10 s) must still hold with groups built.
 
+## Decisions
+
+1. **A set whose copies all sit in one folder is a one-folder group.** `IMG_001.jpg` and `IMG_001 (1).jpg` side by side give a group with one folder and `copiesEach` 2. Chosen over leaving it to Sets: the Folders table this view replaces showed internal duplicates (`internalBytes`), so dropping them would silently remove that information from the Overlaps tab. DFS-068 can label such a group "duplicates inside this folder" from the data alone.
+
 ## Acceptance criteria
 
 The full ID of each criterion is `DFS-067.AC-<n>`.
@@ -109,6 +113,13 @@ Feature: Folder groups in the overlaps API
     And set S2 has two copies in "R/A" and one in "R/B"
     When I GET /api/scans/{id}/groups?minBytes=0
     Then S1 and S2 are in different groups
+
+  @AC-1 @AC-2 @AC-3
+  Scenario: Copies side by side in one folder form a one-folder group
+    Given "R/Photos/IMG_001.jpg" and "R/Photos/IMG_001 (1).jpg" are identical, 3 MB, and no other copy exists
+    When I GET /api/scans/{id}/groups?minBytes=0
+    Then one group has the single folder "R/Photos" with copiesEach 2 and sharedFiles 2
+    And its files is 1, copies 2 and reclaimableBytes 3 MB
 
   @AC-3
   Scenario: A folder in two groups counts the other group
@@ -186,6 +197,5 @@ Feature: Folder groups in the overlaps API
 ## Open questions
 
 - Archetype (`endpoint` likely) and gates.
-- A set with copies only inside one folder (`IMG_001.jpg` and `IMG_001 (1).jpg` side by side): listed as a one-folder group (the draft's reading of G1), or left to Sets only?
 - A physical copy whose hard links sit in two different folders: does it put both folders in the set's folder list (the draft's reading) or only the folder of its first path?
 - Refusal for a negative `minBytes`: reuse `400` `INVALID_PAGE` or a new code?
