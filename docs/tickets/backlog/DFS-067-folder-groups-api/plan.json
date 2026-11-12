@@ -49,10 +49,26 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 51,
+          "wallClockSeconds": 703,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-067: red and traceability pass; red: 48 story tests fail with stubs, 0 other tests fail on the ticket's stub, 0 fail in declared classes, 1156 other tests pass (3 skipped); traceability: 10 criteria traced through 12 scenarios; first return failed touches (GroupStateTest outside touches), fixed by same agent"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-067-folder-groups-api/progress.md",
+        "docs/tickets/backlog/DFS-067-folder-groups-api/test-plan.md",
+        "server/src/test/java/us/pochaev/dfs/server/GroupApiTest.java",
+        "server/src/test/java/us/pochaev/dfs/server/analysis/FolderGroupsScaleTest.java",
+        "server/src/test/java/us/pochaev/dfs/server/analysis/FolderGroupsTest.java"
+      ],
+      "commit": "1692e38799a2b16d4c349d1e434872a1316320f8"
     },
     {
       "id": "implement",
@@ -60,10 +76,29 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 39,
+          "wallClockSeconds": 279,
+          "outcome": "passed",
+          "note": "green: 1201 passed, 3 skipped; disabled, freeze, touches (23 files), stubs, traceability (10 criteria, 12 scenarios), consistency all PASS"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/folder-groups.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-067-folder-groups-api/progress.md",
+        "server/src/main/java/us/pochaev/dfs/server/analysis/FolderGroups.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/GroupIndex.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/GroupState.java",
+        "server/src/main/java/us/pochaev/dfs/server/result/OverlapController.java"
+      ],
+      "commit": "7f259d847ec6c1d575b4e418f2b0e12e7bcaf3db"
     },
     {
       "id": "verify",
@@ -71,16 +106,30 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 24,
+          "wallClockSeconds": 164,
+          "outcome": "passed",
+          "note": "PASS consistency DFS-067: plan.json parses; state running agrees with ticket status in-progress"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-067-folder-groups-api/DFS-067-ticket.md",
+        "docs/tickets/backlog/DFS-067-folder-groups-api/learnings.md",
+        "docs/tickets/backlog/DFS-067-folder-groups-api/verification.md"
+      ],
+      "commit": "b2469fcfcd9115bcbe526c12ee6f3c827d63a6eb"
     }
   ],
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
