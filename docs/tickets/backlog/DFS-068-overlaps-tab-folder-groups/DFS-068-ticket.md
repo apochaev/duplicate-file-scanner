@@ -1,11 +1,11 @@
 ---
 id: DFS-068
 title: Overlaps tab shows folder groups
-status: draft
+status: ready
 type: feature
 scope: []
-archetype:
-# gates: [done]        # pipeline tickets: decided in refine, required from ready on
+archetype: component
+gates: [design, done]
 priority: high
 lane: frontend
 depends_on: [DFS-067]
@@ -138,6 +138,13 @@ Feature: Overlaps tab shows folder groups
     Then the Comparison block shows that pair
 ```
 
+## Decisions
+
+1. **No summary header** (2026-11-12). The selected folder's own summary above the list is dropped; the folder browser's breadcrumb and rows already show the selection and its totals. The tab calls `/groups` and `/pair` only. In `BrowserFlowTest`, `resultScreenOpensOnSets` (asserts `.summaries-table`) and `folderBrowserFiltersTheViews` (asserts `.folder-header .summary-folder`) are rewritten to assert groups.
+2. **Archetype and gates** (2026-11-12). `component`, `gates: [design, done]`: the pipeline pauses after the architect so the template structure is checked before tests and code.
+3. **Live check split** (2026-11-12). The verifier runs the live check on a fixture folder (done-item); the user checks a real `d:/` scan after close (named post-close check), so `done` never waits on it.
+4. **Keep 1 MiB** (2026-11-12). The small-group cut is DFS-067's `minBytes` default; the tab sends no `minBytes` unless "Show small groups" is clicked (then `0`).
+
 ## Scope
 
 **Touches:**
@@ -159,10 +166,10 @@ Feature: Overlaps tab shows folder groups
 - [ ] `./gradlew build` is green (includes `:server:npmTest`)
 - [ ] `./gradlew :server:e2eTest` is green
 - [ ] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
-- [ ] Checked by hand on a real scan in Compact and Comfortable density
+- [ ] Live check on the built jar over a small fixture folder (a few large duplicate files, plus an `X.auh/Contents` subfolder so the app tag shows): the Overlaps tab's DOM is read in Compact and Comfortable density, with the result in `verification.md`
+
+**Post-close check** (not a done-item): after close, the user opens the Overlaps tab on a real `d:/` scan in both densities (long names, the 206 MB group, app-folder paths, many folders in one group) and records the result as a note under this ticket's `## Post-close check` section in `completed/`; a problem found becomes a new ticket.
 
 ## Open questions
 
-- Archetype (`component` likely) and gates.
-- Keep or drop the selected folder's summary header above the list? (The draft drops it; the folder browser already shows the folder's totals.)
-- Is 1 MiB the right default cut for small groups? (Set by DFS-067's `minBytes` default.)
+None.
