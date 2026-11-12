@@ -67,15 +67,16 @@ The page also carries `totalItems` and `hiddenSmall`: the groups matching `under
 ## Decisions
 
 1. **A set whose copies all sit in one folder is a one-folder group.** `IMG_001.jpg` and `IMG_001 (1).jpg` side by side give a group with one folder and `copiesEach` 2. Chosen over leaving it to Sets: the Folders table this view replaces showed internal duplicates (`internalBytes`), so dropping them would silently remove that information from the Overlaps tab. DFS-068 can label such a group "duplicates inside this folder" from the data alone.
+2. **A copy whose hard links sit in several folders puts every one of them in the folder list.** With `R/A/f` and `R/B/f` hard links of one file and `R/C/f` a separate copy, the folders are A, B and C, each `copiesEach` 1, and the group answers `copies` 2: the physical-copy count stays 2, the per-folder figures stay true to what each folder holds. Chosen over listing only the first path's folder: a folder holding the file would vanish from the group, and its "N of M files" and "fully shared" claims, which the user relies on to delete a folder, would be wrong, and the result would depend on path order.
 
 ## Acceptance criteria
 
 The full ID of each criterion is `DFS-067.AC-<n>`.
 
 - **AC-1** Sets whose copies sit directly in the same folders, with the same `copiesEach` per folder, are answered as one group; a set whose folders or per-folder copy counts differ is in a different group.
-- **AC-2** A group lists only the folders that directly hold its paths, never their ancestors, sorted by path.
+- **AC-2** A group lists each folder that directly holds any of its paths, once, never their ancestors, sorted by path.
 - **AC-3** A group answers `files`, `copies`, `reclaimableBytes` (sum of (physical copies − 1) × size), and per folder `copiesEach`, `sharedFiles`, `sharedBytes`, `folderFiles`, `folderBytes` and `otherGroups` as defined in Context.
-- **AC-4** Paths that are hard links of one physical copy add no copy: they raise neither `copies`, `copiesEach` nor `reclaimableBytes`.
+- **AC-4** Paths that are hard links of one physical copy add no copy: they raise neither `copies` nor `reclaimableBytes`, and `copiesEach` counts physical copies, so two links of one copy in one folder count once; a copy with links in several folders appears in each of them.
 - **AC-5** Groups are ordered by `reclaimableBytes` descending, then by first folder path, then by the folder lists compared path by path.
 - **AC-6** With `under`, only groups with at least one folder at or under that path are answered, and `totalItems` and `hiddenSmall` count only those.
 - **AC-7** Groups below `minBytes` (default 1048576) are left out and counted in `hiddenSmall`; `minBytes=0` answers every group and `hiddenSmall` `0`.
@@ -134,6 +135,7 @@ Feature: Folder groups in the overlaps API
     Given "R/A/f" and "R/B/f" are hard links of one file and "R/C/f" is a separate copy of the same content
     When I GET /api/scans/{id}/groups?minBytes=0
     Then the group holding f answers copies 2 and reclaimableBytes equal to the size of f
+    And its folders are "R/A", "R/B" and "R/C", each with copiesEach 1
 
   @AC-5
   Scenario: Heaviest group first
@@ -197,5 +199,4 @@ Feature: Folder groups in the overlaps API
 ## Open questions
 
 - Archetype (`endpoint` likely) and gates.
-- A physical copy whose hard links sit in two different folders: does it put both folders in the set's folder list (the draft's reading) or only the folder of its first path?
 - Refusal for a negative `minBytes`: reuse `400` `INVALID_PAGE` or a new code?
