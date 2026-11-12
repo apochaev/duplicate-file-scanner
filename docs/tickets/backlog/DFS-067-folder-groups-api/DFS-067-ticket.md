@@ -1,7 +1,7 @@
 ---
 id: DFS-067
 title: Folder groups in the overlaps API
-status: ready
+status: in-progress
 type: feature
 scope: [build]
 archetype: endpoint

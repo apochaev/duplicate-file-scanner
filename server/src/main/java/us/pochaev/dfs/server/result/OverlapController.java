@@ -143,6 +143,42 @@ class OverlapController {
         return state.index().pair(pa, pb);
     }
 
+    /**
+     * DFS-067: a page of the scan's folder groups. Checks, in order (decision 3): the scan ID and completion through
+     * {@code ScanRegistry.completedState(id, GroupState.class, r -> new GroupState(r, FolderGroups::of))} ({@code 404}
+     * {@code UNKNOWN_SCAN}, {@code 409} {@code SCAN_NOT_COMPLETED}); {@code under} as for {@code listSummaries}, through
+     * {@link GroupState#insideRoots}; paging ({@code 400 INVALID_PAGE}); a negative {@code minBytes}
+     * ({@code 400 INVALID_MIN_BYTES}); only then {@link GroupState#index()}, so a refused request builds nothing.
+     */
+    @GetMapping("/{id}/groups")
+    @Operation(operationId = "listGroups", summary = "A page of a completed scan's folder groups: duplicate sets whose"
+            + " copies sit directly in the same folders, ranked by reclaimable bytes; with under, those with a folder"
+            + " at or inside it; groups below minBytes are left out and counted")
+    @ApiResponse(responseCode = "200", description = "The page; past the end it has no items and the same total",
+            content = @Content(schema = @Schema(implementation = GroupPage.class)))
+    @ApiResponse(responseCode = "400", description = RELATIVE + "; " + BAD_PAGE
+            + "; or minBytes below 0 (INVALID_MIN_BYTES)",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "403", description = OUTSIDE,
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "404", description = NO_SUCH_SCAN,
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
+    @ApiResponse(responseCode = "409", description = NOT_COMPLETED,
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
+    GroupPage listGroups(
+            @PathVariable String id,
+            @Parameter(description = "An absolute folder inside one of the scan's roots; without it, every group")
+            @RequestParam(required = false) String under,
+            @Parameter(description = "Groups reclaiming fewer bytes than this are left out of items and counted in"
+                    + " hiddenSmall; 0 or more, 0 answers every group")
+            @RequestParam(defaultValue = "1048576") long minBytes,
+            @Parameter(description = "The page, from 0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Groups per page, 1 to 500")
+            @RequestParam(defaultValue = "50") int size) {
+        throw new UnsupportedOperationException("not implemented: DFS-067");
+    }
+
     private OverlapState state(String id) {
         return switch (registry.completedState(id, OverlapState.class, r -> new OverlapState(r, OverlapAnalysis::of))) {
             case Result.Success<OverlapState> ok -> ok.value();

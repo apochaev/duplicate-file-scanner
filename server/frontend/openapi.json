@@ -827,6 +827,111 @@
         }
       }
     },
+    "/api/scans/{id}/groups" : {
+      "get" : {
+        "tags" : [ "overlaps" ],
+        "summary" : "A page of a completed scan's folder groups: duplicate sets whose copies sit directly in the same folders, ranked by reclaimable bytes; with under, those with a folder at or inside it; groups below minBytes are left out and counted",
+        "operationId" : "listGroups",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "under",
+          "in" : "query",
+          "description" : "An absolute folder inside one of the scan's roots; without it, every group",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "minBytes",
+          "in" : "query",
+          "description" : "Groups reclaiming fewer bytes than this are left out of items and counted in hiddenSmall; 0 or more, 0 answers every group",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 1048576
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "The page, from 0",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Groups per page, 1 to 500",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The page; past the end it has no items and the same total",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GroupPage"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The path is not absolute (RELATIVE_PATH); page below 0 or size outside 1 to 500 (INVALID_PAGE); or minBytes below 0 (INVALID_MIN_BYTES)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "The path lies outside every root of the scan (PATH_OUTSIDE_ROOTS)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No such scan in this server run (UNKNOWN_SCAN)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The scan is not COMPLETED (SCAN_NOT_COMPLETED)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/scans/{id}/folders" : {
       "get" : {
         "tags" : [ "results" ],
@@ -1642,6 +1747,143 @@
           }
         },
         "required" : [ "bytesWithCopy", "filesWithCopy", "folder", "full", "totalBytes", "totalFiles" ]
+      },
+      "FolderGroupView" : {
+        "type" : "object",
+        "properties" : {
+          "files" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The number of duplicate sets in the group"
+          },
+          "copies" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Physical copies over all its sets"
+          },
+          "reclaimableBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "For each set, (physical copies - 1) x size, summed: the figure /sets uses"
+          },
+          "folders" : {
+            "type" : "array",
+            "description" : "The folders that directly hold any of its paths, once each, never their ancestors, sorted by path",
+            "items" : {
+              "$ref" : "#/components/schemas/GroupFolderView"
+            }
+          },
+          "sets" : {
+            "type" : "array",
+            "description" : "The first 20 sets, largest reclaimable first, then by digest",
+            "items" : {
+              "$ref" : "#/components/schemas/GroupSetView"
+            }
+          },
+          "totalSets" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Every set of the group, not only the listed ones"
+          }
+        },
+        "required" : [ "copies", "files", "folders", "reclaimableBytes", "sets", "totalSets" ]
+      },
+      "GroupFolderView" : {
+        "type" : "object",
+        "properties" : {
+          "folder" : {
+            "type" : "string",
+            "description" : "The folder's path as the scan holds it (Path.toString(): backslashes on Windows)"
+          },
+          "copiesEach" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Physical copies of each set of the group with a path directly in this folder; a copy with two links here counts once"
+          },
+          "sharedFiles" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The folder's link paths in the group's sets; two links of one copy here count twice"
+          },
+          "sharedBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Their summed size in bytes"
+          },
+          "folderFiles" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Counted files directly in the folder (from the scan's folder totals)"
+          },
+          "folderBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Their summed size in bytes"
+          },
+          "otherGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "How many other groups of the scan list this folder, whatever under and minBytes asked for"
+          }
+        },
+        "required" : [ "copiesEach", "folder", "folderBytes", "folderFiles", "otherGroups", "sharedBytes", "sharedFiles" ]
+      },
+      "GroupPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "description" : "Ordered by reclaimableBytes, largest first, then the first folder's path, then the folder lists path by path",
+            "items" : {
+              "$ref" : "#/components/schemas/FolderGroupView"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The page asked for, from 0"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The page size asked for, 1 to 500"
+          },
+          "totalItems" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Every matching group of at least minBytes reclaimable"
+          },
+          "hiddenSmall" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Matching groups below minBytes, left out of items; 0 when minBytes is 0"
+          }
+        },
+        "required" : [ "hiddenSmall", "items", "page", "size", "totalItems" ]
+      },
+      "GroupSetView" : {
+        "type" : "object",
+        "properties" : {
+          "digest" : {
+            "type" : "string",
+            "description" : "Lowercase hexadecimal SHA-256 of the content; identifies the set, as in /sets"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The file name of the set's first path"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Size of each file in bytes"
+          },
+          "copies" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The set's physical copies, at least two; hard links add none"
+          }
+        },
+        "required" : [ "copies", "digest", "name", "size" ]
       },
       "FolderNode" : {
         "type" : "object",
