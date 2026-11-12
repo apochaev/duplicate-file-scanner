@@ -62,13 +62,14 @@ The page also carries `totalItems` and `hiddenSmall`: the groups matching `under
 - **`minBytes`:** defaults to 1048576 (1 MiB); `0` returns every group.
 - **Paging and refusals:** as for `/summaries` (`409` `SCAN_NOT_COMPLETED`, `404` `UNKNOWN_SCAN`, the same page and size rules).
 
-`/summaries`, `/pairs` and `/pair` stay unchanged. `OverlapAnalysisScaleTest`'s budget (the 150,000-file case, under 10 s) must still hold with groups built.
+`/summaries`, `/pairs` and `/pair` stay unchanged, and so does `OverlapAnalysisScaleTest`: the groups are a separate structure (decision 4) with a scale test of their own on the same 150,000-file case, whose budget the architect fixes in `design.md` from a measurement.
 
 ## Decisions
 
 1. **A set whose copies all sit in one folder is a one-folder group.** `IMG_001.jpg` and `IMG_001 (1).jpg` side by side give a group with one folder and `copiesEach` 2. Chosen over leaving it to Sets: the Folders table this view replaces showed internal duplicates (`internalBytes`), so dropping them would silently remove that information from the Overlaps tab. DFS-068 can label such a group "duplicates inside this folder" from the data alone.
 2. **A copy whose hard links sit in several folders puts every one of them in the folder list.** With `R/A/f` and `R/B/f` hard links of one file and `R/C/f` a separate copy, the folders are A, B and C, each `copiesEach` 1, and the group answers `copies` 2: the physical-copy count stays 2, the per-folder figures stay true to what each folder holds. Chosen over listing only the first path's folder: a folder holding the file would vanish from the group, and its "N of M files" and "fully shared" claims, which the user relies on to delete a folder, would be wrong, and the result would depend on path order.
 3. **A negative `minBytes` is refused with `400` `INVALID_MIN_BYTES`**, raised in the controller after the scan, path and paging checks and before any group is built, so a refused request has no side effect. A distinct code follows the scan API's naming (`INVALID_MIN_SIZE`, `RELATIVE_LOCATION`); reusing `INVALID_PAGE` would carry a false message, and treating a negative as 0 would hide a caller's mistake. A non-numeric `minBytes` (or `page`, `size`) is not handled here: no handler maps Spring's type-mismatch error today, so it answers Spring's own `400`, exactly as `/summaries` does for `page=abc`; the ticket changes that for none of them.
+4. **The groups are a separate per-scan structure** (`FolderGroups`, package `analysis`), kept by `ScanRegistry.completedState` under its own key and built on the first `/groups` request; `OverlapAnalysis` is not changed. Chosen over building them inside `OverlapAnalysis.of`: the pair analysis is the expensive part (a pair update for every pair of folders a set spans) and DFS-068's tab no longer calls `/summaries` or `/pairs`, so the first `/groups` request would pay for pairs nothing else needs.
 
 ## Acceptance criteria
 
@@ -204,7 +205,7 @@ Feature: Folder groups in the overlaps API
 - [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
 - [ ] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
 - [ ] `server/frontend/openapi.json` regenerated and `OpenApiSpecTest` green
-- [ ] `OverlapAnalysisScaleTest` still under its 10 s budget with groups built
+- [ ] A scale test builds the groups for the 150,000-file case of `OverlapAnalysisScaleTest` within the budget `design.md` fixes, and `OverlapAnalysisScaleTest` itself is unchanged and green
 
 ## Open questions
 
