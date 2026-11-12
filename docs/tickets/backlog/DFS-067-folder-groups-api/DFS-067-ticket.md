@@ -1,7 +1,7 @@
 ---
 id: DFS-067
 title: Folder groups in the overlaps API
-status: ready
+status: in-review
 type: feature
 scope: [build]
 archetype: endpoint
@@ -202,11 +202,11 @@ Feature: Folder groups in the overlaps API
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
-- [ ] `server/frontend/openapi.json` regenerated and `OpenApiSpecTest` green
-- [ ] A scale test builds the groups for the 150,000-file case of `OverlapAnalysisScaleTest` within the budget `design.md` fixes, and `OverlapAnalysisScaleTest` itself is unchanged and green
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
+- [x] `server/frontend/openapi.json` regenerated and `OpenApiSpecTest` green
+- [x] A scale test builds the groups for the 150,000-file case of `OverlapAnalysisScaleTest` within the budget `design.md` fixes, and `OverlapAnalysisScaleTest` itself is unchanged and green (budget 3 s; measured 529 ms, 49,991 groups)
 
 ## Open questions
 
