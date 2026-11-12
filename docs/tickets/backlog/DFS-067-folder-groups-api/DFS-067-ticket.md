@@ -68,6 +68,7 @@ The page also carries `totalItems` and `hiddenSmall`: the groups matching `under
 
 1. **A set whose copies all sit in one folder is a one-folder group.** `IMG_001.jpg` and `IMG_001 (1).jpg` side by side give a group with one folder and `copiesEach` 2. Chosen over leaving it to Sets: the Folders table this view replaces showed internal duplicates (`internalBytes`), so dropping them would silently remove that information from the Overlaps tab. DFS-068 can label such a group "duplicates inside this folder" from the data alone.
 2. **A copy whose hard links sit in several folders puts every one of them in the folder list.** With `R/A/f` and `R/B/f` hard links of one file and `R/C/f` a separate copy, the folders are A, B and C, each `copiesEach` 1, and the group answers `copies` 2: the physical-copy count stays 2, the per-folder figures stay true to what each folder holds. Chosen over listing only the first path's folder: a folder holding the file would vanish from the group, and its "N of M files" and "fully shared" claims, which the user relies on to delete a folder, would be wrong, and the result would depend on path order.
+3. **A negative `minBytes` is refused with `400` `INVALID_MIN_BYTES`**, raised in the controller after the scan, path and paging checks and before any group is built, so a refused request has no side effect. A distinct code follows the scan API's naming (`INVALID_MIN_SIZE`, `RELATIVE_LOCATION`); reusing `INVALID_PAGE` would carry a false message, and treating a negative as 0 would hide a caller's mistake. A non-numeric `minBytes` (or `page`, `size`) is not handled here: no handler maps Spring's type-mismatch error today, so it answers Spring's own `400`, exactly as `/summaries` does for `page=abc`; the ticket changes that for none of them.
 
 ## Acceptance criteria
 
@@ -82,6 +83,7 @@ The full ID of each criterion is `DFS-067.AC-<n>`.
 - **AC-7** Groups below `minBytes` (default 1048576) are left out and counted in `hiddenSmall`; `minBytes=0` answers every group and `hiddenSmall` `0`.
 - **AC-8** A group answers its first 20 sets, largest reclaimable first, each with `digest`, `name`, `size` and `copies`, and `totalSets` counting all of them.
 - **AC-9** The endpoint refuses like `/summaries`: `409` `SCAN_NOT_COMPLETED`, `404` `UNKNOWN_SCAN`, `400` `RELATIVE_PATH`, `403` `PATH_OUTSIDE_ROOTS`, and the same paging refusals.
+- **AC-10** A negative `minBytes` is refused with `400` `INVALID_MIN_BYTES` and a `{code, message}` body naming `minBytes`; `minBytes=0` is accepted.
 
 ## Scenarios
 
@@ -169,6 +171,14 @@ Feature: Folder groups in the overlaps API
     When I GET /api/scans/{id}/groups
     Then the answer is 409 SCAN_NOT_COMPLETED
     And a relative under answers 400 RELATIVE_PATH and an under outside the roots answers 403 PATH_OUTSIDE_ROOTS
+
+  @AC-10
+  Scenario: A negative minBytes is refused
+    Given a completed scan with one group
+    When I GET /api/scans/{id}/groups?minBytes=-1
+    Then the answer is 400 with code INVALID_MIN_BYTES and a message naming minBytes
+    When I GET /api/scans/{id}/groups?minBytes=0
+    Then the answer is 200 with the group
 ```
 
 ## Scope
@@ -199,4 +209,3 @@ Feature: Folder groups in the overlaps API
 ## Open questions
 
 - Archetype (`endpoint` likely) and gates.
-- Refusal for a negative `minBytes`: reuse `400` `INVALID_PAGE` or a new code?
