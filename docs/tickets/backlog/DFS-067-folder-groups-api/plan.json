@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-067-folder-groups-api",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-067-folder-groups-api",
-  "state": "awaiting-approval",
+  "state": "done",
   "phases": [
     {
       "id": "design",
@@ -133,7 +133,7 @@
     },
     {
       "after": "done",
-      "status": "pending"
+      "status": "approved"
     }
   ],
   "defects": []
