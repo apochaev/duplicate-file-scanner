@@ -3,9 +3,9 @@ id: DFS-067
 title: Folder groups in the overlaps API
 status: draft
 type: feature
-scope: []
-archetype:
-# gates: [done]        # pipeline tickets: decided in refine, required from ready on
+scope: [build]
+archetype: endpoint
+gates: [design, done]
 priority: high
 lane: backend
 depends_on: []
@@ -70,6 +70,7 @@ The page also carries `totalItems` and `hiddenSmall`: the groups matching `under
 2. **A copy whose hard links sit in several folders puts every one of them in the folder list.** With `R/A/f` and `R/B/f` hard links of one file and `R/C/f` a separate copy, the folders are A, B and C, each `copiesEach` 1, and the group answers `copies` 2: the physical-copy count stays 2, the per-folder figures stay true to what each folder holds. Chosen over listing only the first path's folder: a folder holding the file would vanish from the group, and its "N of M files" and "fully shared" claims, which the user relies on to delete a folder, would be wrong, and the result would depend on path order.
 3. **A negative `minBytes` is refused with `400` `INVALID_MIN_BYTES`**, raised in the controller after the scan, path and paging checks and before any group is built, so a refused request has no side effect. A distinct code follows the scan API's naming (`INVALID_MIN_SIZE`, `RELATIVE_LOCATION`); reusing `INVALID_PAGE` would carry a false message, and treating a negative as 0 would hide a caller's mistake. A non-numeric `minBytes` (or `page`, `size`) is not handled here: no handler maps Spring's type-mismatch error today, so it answers Spring's own `400`, exactly as `/summaries` does for `page=abc`; the ticket changes that for none of them.
 4. **The groups are a separate per-scan structure** (`FolderGroups`, package `analysis`), kept by `ScanRegistry.completedState` under its own key and built on the first `/groups` request; `OverlapAnalysis` is not changed. Chosen over building them inside `OverlapAnalysis.of`: the pair analysis is the expensive part (a pair update for every pair of folders a set spans) and DFS-068's tab no longer calls `/summaries` or `/pairs`, so the first `/groups` request would pay for pairs nothing else needs.
+5. **Archetype `endpoint`, gates `[design, done]`.** A read-only query with its records, a per-scan structure and a spec change is the `endpoint` archetype. The design gate stays although nothing here deletes: the spec is the contract DFS-068 builds the tab on, so a wrong field name or shape is cheapest to catch there, and the architect fixes the scale budget (decision 4) in the same review. The architect disposes of checklist items 5 to 7 (records, the spec, the generated client) in `design.md`; items 1 to 4 are met by AC-9 and AC-10.
 
 ## Acceptance criteria
 
@@ -209,4 +210,4 @@ Feature: Folder groups in the overlaps API
 
 ## Open questions
 
-- Archetype (`endpoint` likely) and gates.
+None.
