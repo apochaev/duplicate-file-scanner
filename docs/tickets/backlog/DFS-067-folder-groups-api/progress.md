@@ -13,3 +13,8 @@
 - Wrote `GroupApiTest` (server), `FolderGroupsTest`, `FolderGroupsScaleTest` (analysis) and `test-plan.md`; every criterion AC-1 to AC-10 covered. A `GroupStateTest` in `result` was dropped (outside touches); the package-private build-once contracts have no unit test.
 - Ran them against the stubs: all fail with `UnsupportedOperationException: not implemented: DFS-067`, none for another reason, none pass.
 - Expected commit: `test(server): folder groups story tests [DFS-067]` with the four test files, `test-plan.md`, `progress.md`.
+
+## Implement phase (implementer)
+
+- Implemented `FolderGroups.of`, `GroupIndex.page`, `GroupState.index` and `insideRoots`, `OverlapController.listGroups` (its `path` helper now takes a `Predicate<Path>`, behaviour unchanged). Docs: CLAUDE.md server entry, ui.md U3 (new "As built (DFS-067)" bullet), folder-groups.md status line. `openapi.json` unchanged (no mapping or record changed); `./gradlew build` green, no stub markers, no test file touched.
+- Expected commit: `feat(server): folder groups endpoint [DFS-067]`.

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 import us.pochaev.dfs.scanner.domain.model.ErrorCode;
 import us.pochaev.dfs.scanner.domain.model.Result;
+import us.pochaev.dfs.server.analysis.FolderGroups;
 import us.pochaev.dfs.server.analysis.OverlapAnalysis;
 import us.pochaev.dfs.server.api.ApiError;
 import us.pochaev.dfs.server.api.ApiException;
@@ -22,11 +23,12 @@ import us.pochaev.dfs.server.scan.ScanRegistry;
 
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.function.Predicate;
 
 /**
  * The overlaps API (DFS-048): a COMPLETED scan's folder summaries and folder pairs, ranked by DFS-046's overlap
  * analysis, filtered to any folder, and the pair of any two folders. Every path is under {@code /api}, so it needs the
- * session cookie (DFS-036); all three operations are GETs. The tag names the generated client's service
+ * session cookie (DFS-036); all four operations are GETs. The tag names the generated client's service
  * ({@code OverlapsService}), each operation ID its method (endpoint archetype, checklist item 6).
  * <p>
  * Checks run in this order (decision 4, DFS-047 decision 5): the scan ID ({@code 404 UNKNOWN_SCAN}, also for a
@@ -80,7 +82,7 @@ class OverlapController {
             @RequestParam(defaultValue = "50") int size) {
         // Take the ID as a String: a malformed one must be the same 404 as an unknown one (checklist item 4).
         OverlapState state = state(id);
-        Path path = path(state, under);
+        Path path = path(state::insideRoots, under);
         checkPage(page, size);
         return state.index().summaries(path, page, size);
     }
@@ -107,7 +109,7 @@ class OverlapController {
             @Parameter(description = "Pairs per page, 1 to 500")
             @RequestParam(defaultValue = "50") int size) {
         OverlapState state = state(id);
-        Path path = path(state, under);
+        Path path = path(state::insideRoots, under);
         checkPage(page, size);
         return state.index().pairs(path, page, size);
     }
@@ -138,8 +140,8 @@ class OverlapController {
         if (a == null || b == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "MISSING_FOLDER", "Both a and b are required");
         }
-        Path pa = path(state, a);
-        Path pb = path(state, b);
+        Path pa = path(state::insideRoots, a);
+        Path pb = path(state::insideRoots, b);
         return state.index().pair(pa, pb);
     }
 
@@ -176,7 +178,19 @@ class OverlapController {
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Groups per page, 1 to 500")
             @RequestParam(defaultValue = "50") int size) {
-        throw new UnsupportedOperationException("not implemented: DFS-067");
+        GroupState state = switch (registry.completedState(id, GroupState.class,
+                r -> new GroupState(r, FolderGroups::of))) {
+            case Result.Success<GroupState> ok -> ok.value();
+            case Result.Failure<GroupState> f -> throw new ApiException(
+                    f.code() == ErrorCode.UNKNOWN_SCAN ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT,
+                    f.code().name(), f.message());
+        };
+        Path path = path(state::insideRoots, under);
+        checkPage(page, size);
+        if (minBytes < 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_MIN_BYTES", "minBytes must be 0 or more");
+        }
+        return state.index().page(path, minBytes, page, size);
     }
 
     private OverlapState state(String id) {
@@ -196,7 +210,7 @@ class OverlapController {
     }
 
     /** The requested path, normalized; null when none was given. */
-    private static Path path(OverlapState state, String value) {
+    private static Path path(Predicate<Path> insideRoots, String value) {
         if (value == null) {
             return null;
         }
@@ -209,7 +223,7 @@ class OverlapController {
         if (value.isBlank() || !path.isAbsolute()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "RELATIVE_PATH", "The path is not absolute: " + value);
         }
-        if (!state.insideRoots(path)) {
+        if (!insideRoots.test(path)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "PATH_OUTSIDE_ROOTS",
                     "The path lies outside every root of the scan: " + value);
         }
