@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Folder groups mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1f1f1f;--muted:#5f6368;--line:#e0e0e0;--blue:#1565c0;--head:#f1f1f1}
+body{margin:0;font-family:Roboto,Arial,sans-serif;color:var(--ink);background:#fff;font-variant-numeric:tabular-nums}
+main{padding:16px 24px 48px;max-width:1500px}
+.note{background:#fffbe6;border:1px solid #f0e2a0;padding:8px 12px;font-size:13px;margin-bottom:16px}
+.tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:8px}
+.tabs div{flex:1;text-align:center;padding:12px;font-weight:500;font-size:14px}
+.tabs .on{border-bottom:2px solid var(--blue)}
+table{width:100%;border-collapse:collapse}
+th{font-size:13px;color:var(--muted);font-weight:400;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:4px 8px;font-size:13px;border-bottom:1px solid #f0f0f0}
+.r{text-align:right}
+tr.g td{background:var(--head);font-size:15px;padding:6px 8px;border-bottom:none}
+tr.g b{font-weight:500}
+.sub{color:var(--muted)}
+.path{font-family:"Roboto Mono",monospace;font-size:12px}
+.bar{display:inline-block;height:6px;background:var(--blue);border-radius:3px;vertical-align:middle;margin-right:8px}
+.share{display:inline-block;width:70px;height:6px;background:#e3e6ea;border-radius:3px;vertical-align:middle;margin-right:8px;overflow:hidden}
+.share i{display:block;height:100%;background:var(--blue)}
+.tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:8px;margin-left:6px;font-weight:500}
+.full{background:#e6f4ea;color:#1e6b34}
+.app{background:#f3e8fd;color:#6a1b9a}
+.x2{color:var(--muted);margin-left:6px}
+.link{color:var(--blue);font-size:12px;cursor:pointer}
+.files td{color:var(--muted);font-size:12px;padding-left:28px}
+.small{padding:10px 8px;font-size:13px}
+.callout{font-size:12px;color:var(--muted);padding:2px 8px 8px 28px}
+</style>
+</head>
+<body>
+<main>
+<div class="note"><b>Mockup for review, not built.</b> Design: <code>docs/design/folder-groups.md</code>. Every row uses the 2026-11-12 scan of <code>d:/</code>; the small groups are shown expanded below the cut so all four examples are visible.</div>
+
+<div class="tabs"><div>Sets</div><div class="on">Overlaps</div></div>
+
+<table>
+<thead><tr>
+  <th>Folders sharing the same files</th><th style="width:220px">Shared in this folder</th><th style="width:120px">Modified</th><th class="r" style="width:150px">Reclaimable</th><th style="width:50px"></th>
+</tr></thead>
+<tbody>
+
+<!-- group 1 -->
+<tr class="g"><td colspan="3"><b>5 files</b> <span class="sub">· 10 copies · 41.2 MB each on average · shared by 2 folders</span></td>
+  <td class="r"><span class="bar" style="width:90px"></span><b>206.2 MB</b></td><td></td></tr>
+<tr><td class="path">Media\Photo\Import\2020-07 Camper Van\2020-07-09 Gemini Bridges</td>
+  <td><span class="share"><i style="width:3%"></i></span>5 of 190 files</td><td>2020-07-09</td><td></td><td><span class="link">Copy</span></td></tr>
+<tr><td class="path">Media\Photo\Import\…\_AVP3481.auh\Contents\History\resources<span class="tag app" title="Managed by an application; deleting here can break it">app</span></td>
+  <td><span class="share"><i style="width:42%"></i></span>5 of 12 files</td><td>2020-07-09</td><td></td><td><span class="link">Copy</span></td></tr>
+<tr class="files"><td colspan="5">▾ _AVP3480.ARW 41.3 MB · _AVP3477.ARW 41.3 MB · _AVP3478.ARW 41.3 MB · _AVP3479.ARW 41.2 MB · _AVP3481.ARW 41.1 MB </td></tr>
+
+</tbody>
+</table>
+<div class="small"><span class="link">Hide small groups</span> <span class="sub">(under 1 MiB reclaimable each)</span></div>
+
+<table><tbody>
+<!-- group 2 -->
+<tr class="g"><td colspan="3"><b>1 file</b> <span class="sub">· 3 copies · 87.7 KB each · shared by 2 folders</span></td>
+  <td class="r" style="width:150px"><b>175.4 KB</b></td><td style="width:50px"></td></tr>
+<tr><td class="path">Media\Video\Processing\2020-08-20 Sunset GGBr<span class="tag full">fully shared</span></td>
+  <td style="width:220px"><span class="share"><i style="width:100%"></i></span>1 of 1 file</td><td style="width:120px">2020-08-23</td><td></td><td><span class="link">Copy</span></td></tr>
+<tr><td class="path">Media\Video\Processing\2020-08-20 Sunset GGBr\Adobe Premiere Pro Auto-Save<span class="x2">×2</span><span class="tag app">app</span></td>
+  <td><span class="share"><i style="width:29%"></i></span>2 of 7 files</td><td>2020-08-23</td><td></td><td><span class="link">Copy</span></td></tr>
+<tr class="files"><td colspan="5">▸ 2020-08-21 Sunset GGBr.prproj</td></tr>
+
+<!-- group 3 -->
+<tr class="g"><td colspan="3"><b>1 file</b> <span class="sub">· 2 copies · 3.6 KB · shared by 2 folders</span></td>
+  <td class="r"><b>3.6 KB</b></td><td></td></tr>
+<tr><td class="path">Media\Video\Import\2020-06-23 Garmin Road trip\Garmin<span class="tag full">fully shared</span></td>
+  <td><span class="share"><i style="width:100%"></i></span>1 of 1 file</td><td></td><td></td><td><span class="link">Copy</span></td></tr>
+<tr><td class="path">Media\Video\Import\2020-07-28 Virb Road Trip\Garmin<span class="tag full">fully shared</span></td>
+  <td><span class="share"><i style="width:100%"></i></span>1 of 1 file</td><td></td><td></td><td><span class="link">Copy</span></td></tr>
+<tr><td colspan="5" class="callout">Fully shared folders: any one can go, not all.</td></tr>
+
+<!-- group 4 -->
+<tr class="g"><td colspan="3"><b>1 file</b> <span class="sub">· 2 copies · 319 B · shared by 2 folders</span></td>
+  <td class="r"><b>319 B</b></td><td></td></tr>
+<tr><td class="path">Media\Video\Import\2020-06-23 Garmin Road trip</td>
+  <td><span class="share"><i style="width:50%"></i></span>1 of 2 files</td><td></td><td></td><td><span class="link">Copy</span></td></tr>
+<tr><td class="path">Media\Video\Import\2020-07-28 Virb Road Trip<span class="tag full">fully shared</span></td>
+  <td><span class="share"><i style="width:100%"></i></span>1 of 1 file</td><td></td><td></td><td><span class="link">Copy</span></td></tr>
+</tbody></table>
+
+<p class="sub" style="font-size:12px;margin-top:20px">Not shown here, because nothing in this scan needs it: "also in K other groups" on a folder line, when that folder's other files are shared with different folders.</p>
+</main>
+</body>
+</html>
