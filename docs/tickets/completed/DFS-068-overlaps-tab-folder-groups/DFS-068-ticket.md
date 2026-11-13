@@ -1,7 +1,7 @@
 ---
 id: DFS-068
 title: Overlaps tab shows folder groups
-status: in-review
+status: done
 type: feature
 scope: []
 archetype: component
@@ -24,7 +24,7 @@ touches:
 blocked_reason:
 created: 2026-11-12
 updated: 2026-11-12
-completed:
+completed: 2026-11-12
 ---
 
 # DFS-068: Overlaps tab shows folder groups
