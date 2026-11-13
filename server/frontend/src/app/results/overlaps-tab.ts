@@ -9,8 +9,8 @@ import { formatBytes, plural } from '../scans/scan-format';
 import { PathCopy } from './path-copy';
 import { Density } from './result-density';
 import { failureMessage } from './result-error';
-import { pairCoverageText, pairSideText } from './result-format';
-import { ShortPath } from './result-path';
+import { barPercent, copiesText, pairCoverageText, pairSideText } from './result-format';
+import { displayPath, ShortPath } from './result-path';
 
 /** The list with no groups to show (DFS-068, "Loading, empty and error states"). */
 export const NO_GROUPS = 'No folders share files';
@@ -38,7 +38,11 @@ export const APP_FOLDER_PATTERNS: readonly string[] = [
  * case-insensitively: `D:\a\Photo.AUH\x` is managed by an application, `D:\a\Photos` is not (DFS-068.AC-8).
  */
 export function isAppManaged(path: string): boolean {
-  throw new Error('not implemented: DFS-068');
+  const escape = (part: string) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+  const matchers = APP_FOLDER_PATTERNS.map(
+    (pattern) => new RegExp('^' + pattern.split('*').map(escape).join('.*') + '$', 'i'),
+  );
+  return path.split(/[\\/]/).some((element) => matchers.some((matcher) => matcher.test(element)));
 }
 
 /**
@@ -145,7 +149,10 @@ export class OverlapsTab {
    * (`smallShown` false), the page cleared (so no group of the previous folder lingers), then `loadGroups()`.
    */
   protected selectionChanged(): void {
-    throw new Error('not implemented: DFS-068');
+    this.pageIndex.set(0);
+    this.smallShown.set(false);
+    this.groups.set(null);
+    void this.loadGroups();
   }
 
   /**
@@ -155,22 +162,50 @@ export class OverlapsTab {
    * (AC-1, AC-6, AC-7, AC-9).
    */
   protected async loadGroups(): Promise<void> {
-    throw new Error('not implemented: DFS-068');
+    const request = ++this.groupsRequest;
+    const under = this.folder();
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const page = await this.overlaps.listGroups({
+        id: this.scanId(),
+        ...(under === null ? {} : { under }),
+        ...(this.smallShown() ? { minBytes: 0 } : {}),
+        page: this.pageIndex(),
+        size: this.pageSize(),
+      });
+      if (request === this.groupsRequest) {
+        this.groups.set(page);
+        this.loading.set(false);
+      }
+    } catch (failure) {
+      if (request === this.groupsRequest) {
+        this.groups.set(null);
+        this.error.set(failureMessage(failure));
+        this.loading.set(false);
+      }
+    }
   }
 
   /** "Show N small groups": sets `smallShown`, back to page 0, `loadGroups()` (AC-7). */
   protected showSmallGroups(): void {
-    throw new Error('not implemented: DFS-068');
+    this.smallShown.set(true);
+    this.pageIndex.set(0);
+    void this.loadGroups();
   }
 
   /** "Hide small groups": clears `smallShown`, back to page 0, `loadGroups()` (AC-7). */
   protected hideSmallGroups(): void {
-    throw new Error('not implemented: DFS-068');
+    this.smallShown.set(false);
+    this.pageIndex.set(0);
+    void this.loadGroups();
   }
 
   /** The paginator's page or size change: stores both, `loadGroups()` (G3). */
   protected changePage(event: PageEvent): void {
-    throw new Error('not implemented: DFS-068');
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    void this.loadGroups();
   }
 
   /**
@@ -215,7 +250,7 @@ export class OverlapsTab {
 
   /** A group's first words: "<files> file(s)", `plural(group.files, 'file')`, e.g. "5 files" (AC-1). */
   protected filesText(group: FolderGroupView): string {
-    throw new Error('not implemented: DFS-068');
+    return plural(group.files, 'file');
   }
 
   /**
@@ -223,7 +258,7 @@ export class OverlapsTab {
    * for the copies, `groupSizeText` for the size and `plural(group.folders.length, 'folder')` (AC-1).
    */
   protected groupMetaText(group: FolderGroupView): string {
-    throw new Error('not implemented: DFS-068');
+    return `· ${copiesText(group.copies)} · ${this.groupSizeText(group)} · shared by ${plural(group.folders.length, 'folder')}`;
   }
 
   /**
@@ -231,7 +266,11 @@ export class OverlapsTab {
    * otherwise "<total> in all", the sum of the folders' `sharedBytes`, both through `formatBytes` (AC-1).
    */
   protected groupSizeText(group: FolderGroupView): string {
-    throw new Error('not implemented: DFS-068');
+    const sets = group.sets;
+    if (group.totalSets === sets.length && sets.length > 0 && sets.every((set) => set.size === sets[0].size)) {
+      return `${formatBytes(sets[0].size)} each`;
+    }
+    return `${formatBytes(group.folders.reduce((sum, folder) => sum + folder.sharedBytes, 0))} in all`;
   }
 
   /**
@@ -239,51 +278,52 @@ export class OverlapsTab {
    * `reclaimableBytes` on the page, so the largest group's bar is full (AC-1).
    */
   protected reclaimableWidth(group: FolderGroupView): number {
-    throw new Error('not implemented: DFS-068');
+    const largest = Math.max(0, ...(this.groups()?.items ?? []).map((item) => item.reclaimableBytes));
+    return barPercent(group.reclaimableBytes, largest);
   }
 
   /** A folder line's path: `displayPath(path, roots(), FOLDER_PATH_BUDGET)` (AC-2). */
   protected shortPath(path: string): ShortPath {
-    throw new Error('not implemented: DFS-068');
+    return displayPath(path, this.roots(), FOLDER_PATH_BUDGET);
   }
 
   /** "×<copiesEach>", shown only when `copiesEach` is above 1 (AC-2). */
   protected copiesEachText(folder: GroupFolderView): string {
-    throw new Error('not implemented: DFS-068');
+    return `×${folder.copiesEach}`;
   }
 
   /** "<sharedFiles> of <folderFiles> files", always the plural "files", e.g. "1 of 1 files" (AC-2). */
   protected sharedText(folder: GroupFolderView): string {
-    throw new Error('not implemented: DFS-068');
+    return `${folder.sharedFiles} of ${folder.folderFiles} files`;
   }
 
   /** The width of a folder line's bar, in percent: `barPercent(sharedFiles, folderFiles)` (AC-2). */
   protected shareWidth(folder: GroupFolderView): number {
-    throw new Error('not implemented: DFS-068');
+    return barPercent(folder.sharedFiles, folder.folderFiles);
   }
 
   /** Whether the folder's `sharedFiles` equals its `folderFiles`: it gets the "fully shared" tag (AC-3). */
   protected isFullyShared(folder: GroupFolderView): boolean {
-    throw new Error('not implemented: DFS-068');
+    return folder.sharedFiles === folder.folderFiles;
   }
 
   /** "also in <otherGroups> other groups" (`plural(n, 'other group')`: "also in 1 other group") (AC-3). */
   protected otherGroupsText(folder: GroupFolderView): string {
-    throw new Error('not implemented: DFS-068');
+    return `also in ${plural(folder.otherGroups, 'other group')}`;
   }
 
   /** How many of the group's folders are fully shared; `FULLY_SHARED_NOTE` shows at 2 or more (AC-4). */
   protected fullySharedCount(group: FolderGroupView): number {
-    throw new Error('not implemented: DFS-068');
+    return group.folders.filter((folder) => this.isFullyShared(folder)).length;
   }
 
   /** A set row's text: "<size> · <copies>", `formatBytes(size)` and `copiesText(copies)` (AC-5). */
   protected setDetailText(size: number, copies: number): string {
-    throw new Error('not implemented: DFS-068');
+    return `${formatBytes(size)} · ${copiesText(copies)}`;
   }
 
   /** How many of the group's sets are not listed: `totalSets` less `sets.length`, shown as "and N more" above 0 (AC-5). */
   protected hiddenSets(group: FolderGroupView): number {
-    throw new Error('not implemented: DFS-068');
+    return group.totalSets - group.sets.length;
   }
 }

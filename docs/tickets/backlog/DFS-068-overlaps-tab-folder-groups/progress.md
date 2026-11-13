@@ -23,3 +23,8 @@
 - `./gradlew :server:npmTest`: compiles; 29 tests fail, all with `not implemented: DFS-068` (plus its "Uncaught Exception" echoes); no new test passes.
 - `BrowserFlowTest` not touched (implementer rewrites the two flows and adds the layout flow; listed in the plan).
 - Expected commit: `test: add DFS-068 tests [DFS-068]`.
+
+## Implement phase (implementer)
+
+- Implemented every stub in `overlaps-tab.ts` (groups loading with superseded-answer guard, small-group toggle, paging, text helpers, `isAppManaged`); template and CSS unchanged from the design. Rewrote BrowserFlowTest flows `resultScreenOpensOnSets` and `folderBrowserFiltersTheViews` to assert groups (fixture groups are under 1 MiB, so they click "Show N small groups"), added `groupLayoutIsVisible`. Docs: CLAUDE.md, ui.md, folder-groups.md.
+- `./gradlew build` and `:server:e2eTest` green. Expected commit: `feat(server): overlaps tab shows folder groups [DFS-068]`.

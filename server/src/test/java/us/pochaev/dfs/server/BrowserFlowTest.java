@@ -121,9 +121,32 @@ class BrowserFlowTest {
         assertThat(tab("Sets")).hasAttribute("aria-selected", "true");
         tab("Overlaps").click();
         assertThat(tab("Overlaps")).hasAttribute("aria-selected", "true");
-        Locator folders = page.locator(".summaries-table");
-        assertThat(folders).containsText(fixture.keep().toString());
-        assertThat(folders).containsText(fixture.extra().toString());
+        showSmallGroups();
+        // The fixture's two duplicate sets are small, so they form one group of the folders keep and extra.
+        assertThat(page.locator("div.group")).hasCount(1);
+        assertThat(page.locator(".group-files")).hasText("2 files");
+        assertThat(page.locator(".group-meta")).containsText("shared by 2 folders");
+        assertThat(folderLine("keep")).hasCount(1);
+        assertEquals(fixture.keep().toString(), folderLine("keep").locator(".short-path").getAttribute("title"));
+        assertThat(folderLine("extra")).hasCount(1);
+        assertEquals(fixture.extra().toString(), folderLine("extra").locator(".short-path").getAttribute("title"));
+        assertThat(page.locator(".shared-count").first()).hasText(Pattern.compile("2 of \\d+ files"));
+        assertThat(page.locator(".app-tag")).hasCount(0);
+    }
+
+    @Test
+    @DisplayName("DFS-068.AC-1, DFS-068.AC-2 The group header, a folder line's path and its share figure are laid out with a width")
+    void groupLayoutIsVisible() {
+        openResults();
+        tab("Overlaps").click();
+        showSmallGroups();
+
+        for (String selector : List.of(".group-header .group-files", "li.folder-line .short-path", "li.folder-line .shared-count")) {
+            Locator element = page.locator(selector).first();
+            assertThat(element).isVisible();
+            com.microsoft.playwright.options.BoundingBox box = element.boundingBox();
+            assertTrue(box != null && box.width > 0 && box.height > 0, selector + " has no size: " + box);
+        }
     }
 
     @Test
@@ -135,7 +158,12 @@ class BrowserFlowTest {
         folderSelect("extra").click();
 
         tab("Overlaps").click();
-        assertThat(page.locator(".folder-header .summary-folder")).hasText(fixture.extra().toString());
+        showSmallGroups();
+        // Only the folders of the group under extra remain: the group's two lines still list keep and extra.
+        assertThat(page.locator("div.group")).hasCount(1);
+        assertThat(folderLine("extra")).hasCount(1);
+        assertEquals(fixture.extra().toString(), folderLine("extra").locator(".short-path").getAttribute("title"));
+        assertThat(page.locator(".summaries-table")).hasCount(0);
         tab("Sets").click();
         // Both sets have a copy under extra, and only those are marked.
         assertThat(page.locator(".selected-badge")).hasCount(2);
@@ -226,6 +254,18 @@ class BrowserFlowTest {
         page.locator(".open-results").click();
         assertThat(page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Scan results"))).isVisible();
         assertThat(page.locator(".sets-table")).isVisible();
+    }
+
+    /** The fixture's groups are under the 1 MiB default, so the tab offers them behind "Show N small groups". */
+    private void showSmallGroups() {
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName(Pattern.compile("Show \\d+ small groups?"))).click();
+        assertThat(page.locator("div.group").first()).isVisible();
+    }
+
+    /** The folder line whose path ends in the given folder name. */
+    private Locator folderLine(String name) {
+        return page.locator("li.folder-line").filter(new Locator.FilterOptions().setHas(
+                page.locator(".path-name").getByText(name, new Locator.GetByTextOptions().setExact(true))));
     }
 
     private Locator folderSelect(String name) {

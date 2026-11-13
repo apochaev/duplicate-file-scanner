@@ -1,6 +1,6 @@
 # Folder groups: the Overlaps tab, redesigned
 
-Status: G5 and G6 implemented (DFS-067, 2026-11-12); G2, G3 (tab) and G4 are DFS-068, G7 later. Ticketed as DFS-067 (API: G1, G3, G5, G6) and DFS-068 (tab: G2, G3, G4); open questions are tracked in those tickets. Replaces the Folders and Folder pairs tables of the Overlaps tab (DFS-050, `docs/design/ui.md` U3). Decisions are numbered G1–G7 so the ticket can cite them. Mockup: `docs/design/mockups/folder-groups-2026-11-12/index.html`.
+Status: G5 and G6 implemented (DFS-067, 2026-11-12); G2, G3 (tab) and G4 implemented (DFS-068, 2026-11-12); G7 later. Ticketed as DFS-067 (API: G1, G3, G5, G6) and DFS-068 (tab: G2, G3, G4); open questions are tracked in those tickets. Replaces the Folders and Folder pairs tables of the Overlaps tab (DFS-050, `docs/design/ui.md` U3). Decisions are numbered G1–G7 so the ticket can cite them. Mockup: `docs/design/mockups/folder-groups-2026-11-12/index.html`.
 
 ## Goal
 
