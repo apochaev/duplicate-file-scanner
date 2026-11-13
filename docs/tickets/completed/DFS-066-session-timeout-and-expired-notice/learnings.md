@@ -43,14 +43,14 @@
 
 ### DFS-066.L-4: Refinement does not check an HTTP status's existing meanings
 
-- Status: proposed
+- Status: parked
 - Impact: shared
 - Target: `.claude/skills/tickets/SKILL.md` (refine)
 - Change: before a ticket maps an HTTP status to one UI state, grep the API for that status's other uses (403 is also `PATH_OUTSIDE_ROOTS`); also flag open tickets that edit the same shell file (DFS-065 and `app.html`).
 - Evidence: AC-2 said "a 403 from any `/api/**` call" though 403 already means `PATH_OUTSIDE_ROOTS`; DFS-065, uncommitted on `main`, also rewrites `app.html`.
 - Recurrences: 1
 - Recommendation: park; one story, one occurrence; confirm a second before changing the skill.
-- Decision: pending
+- Decision: parked 2026-11-12 by the user
 
 ### DFS-066.L-5: Done-item must be reproducible in a verifier's time
 
@@ -65,11 +65,11 @@
 
 ### DFS-066.L-6: Title and slug not updated after a decision changed the goal
 
-- Status: proposed
+- Status: parked
 - Impact: local
 - Target: `.claude/skills/tickets/SKILL.md` (refine), if made a rule
 - Change: before asking for `ready`, `refine` checks that the title and slug still describe the decisions as settled, and proposes a rename while the ticket is a draft.
 - Evidence: the title reads "Keep the login session for a day and explain an expired one", but decision 1 chose "No idle timeout", over 24 h and 8 h. No ticket edit after `ready` (672693c onward) touched the title, so the folder and branch slug stayed as they were.
 - Recurrences: 1
 - Recommendation: park; one occurrence and cosmetic. If a second ticket repeats it, `/learn add` re-proposes it with the new evidence.
-- Decision: pending
+- Decision: parked 2026-11-12 by the user

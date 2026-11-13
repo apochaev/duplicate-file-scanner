@@ -12,22 +12,22 @@
 
 ### DFS-068.L-1: Ticket touches list missed the result screen host files
 
-- Status: proposed
+- Status: parked
 - Impact: local
 - Target: .claude/archetypes/component/archetype.md (edge-case checklist) or the refine guidance for frontend component tickets
 - Change: when a ticket changes a tab component's inputs or the endpoints it calls, refinement lists the host component's template and spec in `touches` and checks which host tests stub the replaced endpoints (grep the host spec for the child's request helpers).
 - Evidence: commit 84efb21 added `result-screen.html` and `result-screen.spec.ts` to `touches` after the ticket was `ready`, found at the design gate; commit d84bedc then changed `result-screen.html`. Related but different omissions: DFS-067.L-1 (test package of new state), DFS-030.L-1 (accumulator file). Same as the free-text note L-1 above.
 - Recurrences: 1 (DFS-068: see Evidence)
 - Recommendation: park until it recurs on another component ticket; apply if it does. The design gate caught it at the cost of one design rework (47 and 16 turns).
-- Decision:
+- Decision: parked 2026-11-12 by the user
 
 ### DFS-068.L-2: Test data did not follow the API's rules, so a wrong derived figure passed
 
-- Status: proposed
+- Status: parked
 - Impact: local
 - Target: .claude/archetypes/component/test-guide.md, with a matching line for the architect in design.md.tmpl
 - Change: require at least one test with realistic multi-field data built the way the server computes it whenever the frontend derives a number from several API fields, and have the architect check the design's formula against the mockup's meaning and carry any test-author flag about it into `design.md`.
 - Evidence: the verifier found the "in all" size doubled (commit 757f69b's design said "sum of sharedBytes"; the tests used one-folder groups whose `sharedBytes` did not match their copies, so they passed). The done gate then sent the ticket back: commits 1d72379, b724a06, a6c1295, a2901ae. Same as the free-text note L-4 above.
 - Recurrences: 1 (DFS-068: see Evidence)
 - Recommendation: park until it recurs, then apply. It caused the most rework in this story, but it is one occurrence.
-- Decision:
+- Decision: parked 2026-11-12 by the user
