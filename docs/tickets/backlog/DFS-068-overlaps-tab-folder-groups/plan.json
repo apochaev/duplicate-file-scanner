@@ -88,7 +88,7 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -98,6 +98,15 @@
           "wallClockSeconds": 494,
           "outcome": "passed",
           "note": "PASS green: 1214 passed, 3 skipped; PASS disabled; PASS freeze; PASS touches: 17 changed files; PASS stubs; PASS traceability: 9 criteria; PASS consistency"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 8,
+          "wallClockSeconds": 176,
+          "outcome": "passed",
+          "note": "rework after done-gate feedback; PASS green: 1214 passed, 3 skipped; PASS disabled; PASS freeze; PASS touches: 18 changed files; PASS stubs; PASS traceability: 9 criteria; PASS consistency"
         }
       ],
       "artifacts": [
@@ -108,7 +117,7 @@
         "server/frontend/src/app/results/overlaps-tab.ts",
         "server/src/test/java/us/pochaev/dfs/server/BrowserFlowTest.java"
       ],
-      "commit": "74c02e35720cd89e448590849ecf0252d5d3929b"
+      "commit": "a6c12959944e1e31d09ab13bdaa4ee570518a5da"
     },
     {
       "id": "verify",
