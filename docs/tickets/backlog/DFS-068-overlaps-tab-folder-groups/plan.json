@@ -51,7 +51,7 @@
       "after": [
         "design"
       ],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -61,6 +61,15 @@
           "wallClockSeconds": 237,
           "outcome": "passed",
           "note": "PASS test-phase DFS-068: red and traceability pass; red: 24 story tests fail with stubs, 30 other tests fail on the ticket's stub, 0 fail in declared classes, 1188 other tests pass (3 skipped); traceability: 9 criteria traced through 9 scenarios to tests and test-plan.md"
+        },
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 11,
+          "wallClockSeconds": 58,
+          "outcome": "passed",
+          "note": "reopened by done-gate feedback; verified by a plain npmTest run, not test-phase (implementation exists): 1 failed (the corrected 'in all' test, on its figures), 298 passed, as reported by the agent"
         }
       ],
       "artifacts": [
@@ -71,7 +80,7 @@
         "server/frontend/src/app/results/result-screen.spec.ts",
         "server/frontend/src/app/results/result-test-data.ts"
       ],
-      "commit": "34ef13f19447a7029ef4a59875eb48e30279ba03"
+      "commit": "b724a06a1a696e4e40422c4775a98fe9e46a5726"
     },
     {
       "id": "implement",
