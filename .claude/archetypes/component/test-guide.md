@@ -13,6 +13,7 @@ Consequences:
 - Never catch the error (`expect(...).toThrow()` around a step swallows the stub).
 - Do not write a local settle function; the shared one is frozen with the specs and cannot be weakened by the implementer.
 - A test that never reaches a stub passes against the stubs, and the red gate rejects a story test that passes. If a criterion's behavior does not go through a stub, report it to the architect rather than adding an artificial assertion.
+- **A criterion satisfied by a configuration property alone** (a `server.*` setting such as the session timeout, DFS-066.L-1) has no stub to reach. Test it with a Java test in the server's test tree that fails on an assertion, and name it in the test plan with Level `java, property`. The architect lists such a criterion in `design.md`, so the red check expects that one test to fail on its assertion, not on `not implemented:`.
 - Vitest still lists an error that Angular also threw as an "Uncaught Exception" under "vitest unhandled errors"; when its message is the ticket's stub, the red gate counts it as another test failing on the ticket's stub, which is accepted.
 
 ## Naming convention (D11)
@@ -35,6 +36,7 @@ Start from `skeletons/feature.spec.ts.tmpl`:
 - `TestBed.configureTestingModule({ imports: [<Component>], providers: [provideHttpClient(), provideHttpClientTesting(), provideStubSurfacing(), <fakes behind tokens>] })`.
 - `http = TestBed.inject(HttpTestingController)`, and `afterEach(() => http.verify())`, so an unexpected or missing request fails the test.
 - Render: `fixture = TestBed.createComponent(<Component>)`, `fixture.detectChanges()`, answer the requests the component makes on creation (`http.expectOne('/api/scans').flush([...])`), then `await settle(fixture)`.
+- A spec that bootstraps the shell (`App`, or any component hosting the router) also triggers the initial route's requests (e.g. `GET /api/scans`). Flush or match each one before `afterEach`'s `http.verify()`, or every such spec fails on the open request (DFS-066.L-3).
 - Answer a request with its method and body checked: `const req = http.expectOne('/api/scans'); expect(req.request.method).toBe('POST'); expect(req.request.body).toEqual({...}); req.flush(body, { status: 201, statusText: 'Created' })`. A refusal: `req.flush({ code: 'RELATIVE_LOCATION', message: '...' }, { status: 400, statusText: 'Bad Request' })`.
 - Build API models with small functions and defaults (`entry()`, `progress()` in `scan-screen.spec.ts`), so a test states only what it is about.
 - Builders shared by several specs go in a non-spec file in the feature folder (`results/result-test-data.ts`, DFS-049); `tsconfig.app.json` compiles it too, so it uses no Vitest globals (`expect`, `vi`).

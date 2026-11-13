@@ -10,36 +10,36 @@
 
 ### DFS-066.L-1: Property-only criterion has no red-gate rule
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/component/archetype.md` and `test-guide.md`
 - Change: a criterion satisfied only by a configuration property is exempt from the "fails on `not implemented:`" red check; test it with a Java test that fails on an assertion, and have the gate accept that without a user exception.
 - Evidence: `plan.json` defect 1 (tests, "red: AC-1 test fails on an assertion, not the stub exception"); the first `tests` run was `failed-gate` and needed a user-approved exception (2026-11-11).
 - Recurrences: 1
 - Recommendation: apply; it caused a failed gate and a manual exception, and recurs for any property-only criterion.
-- Decision: pending
+- Decision: applied 2026-11-12 by the user; commit `docs: apply DFS-066.L-1, DFS-066.L-2, DFS-066.L-3, DFS-066.L-5`; the red gate itself (tools/story-gate) is unchanged: only the guide and checklist wording is applied
 
 ### DFS-066.L-2: Stub reach through an HTTP interceptor
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/component/archetype.md`, item 3 (stub placement)
 - Change: never place a stub inside an interceptor's `catchError`, because a screen's own `catch` swallows the failure; use a stubbed method called from the shell template on every render (as `App.showNotice()`).
 - Evidence: this ticket's design phase; item 3 covers `subscribe` callbacks but not interceptors; the workaround was proven in this story.
 - Recurrences: 1
 - Recommendation: apply; the workaround is already proven.
-- Decision: pending
+- Decision: applied 2026-11-12 by the user; commit `docs: apply DFS-066.L-1, DFS-066.L-2, DFS-066.L-3, DFS-066.L-5`
 
 ### DFS-066.L-3: Spec leaves the initial route's HTTP call unflushed
 
-- Status: proposed
+- Status: applied
 - Impact: local
 - Target: `.claude/archetypes/component/test-guide.md`
 - Change: frontend specs that bootstrap the shell must flush or match the initial route's requests (e.g. `GET /api/scans`) before `http.verify()` in `afterEach`.
 - Evidence: `plan.json` defect 2 (3 session-ended specs left `GET /api/scans` open); cost a failed implement attempt (9 turns) and a reopened tests phase (3 turns).
 - Recurrences: 1
 - Recommendation: apply; it cost a failed implement attempt and a reopened tests phase.
-- Decision: pending
+- Decision: applied 2026-11-12 by the user; commit `docs: apply DFS-066.L-1, DFS-066.L-2, DFS-066.L-3, DFS-066.L-5`
 
 ### DFS-066.L-4: Refinement does not check an HTTP status's existing meanings
 
@@ -54,14 +54,14 @@
 
 ### DFS-066.L-5: Done-item must be reproducible in a verifier's time
 
-- Status: proposed
+- Status: applied
 - Impact: shared
 - Target: `.claude/skills/tickets/SKILL.md` (refine, done-item guidance)
 - Change: each done-item names a check a verifier can run in its time budget, or is marked "for the user"; avoid items like "shorten the timeout" when the value under test is "never".
 - Evidence: the verifier could not reproduce "shorten the timeout for the check" once the timeout was "never"; the unshortened check needs more than 30 idle minutes.
 - Recurrences: 1
 - Recommendation: apply; a small wording rule with no downside.
-- Decision: pending
+- Decision: applied 2026-11-12 by the user; commit `docs: apply DFS-066.L-1, DFS-066.L-2, DFS-066.L-3, DFS-066.L-5`
 
 ### DFS-066.L-6: Title and slug not updated after a decision changed the goal
 
