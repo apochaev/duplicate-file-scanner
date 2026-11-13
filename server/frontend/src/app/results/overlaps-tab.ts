@@ -263,14 +263,18 @@ export class OverlapsTab {
 
   /**
    * "<size> each" when every set of the group is listed (`totalSets` equals `sets.length`) and all have one size;
-   * otherwise "<total> in all", the sum of the folders' `sharedBytes`, both through `formatBytes` (AC-1).
+   * otherwise "<total> in all", the files' own size, one copy each:
+   * `reclaimableBytes * files / (copies - files)` (when `copies` equals `files` there is nothing to divide by and
+   * `reclaimableBytes` is used), both through `formatBytes` (AC-1).
    */
   protected groupSizeText(group: FolderGroupView): string {
     const sets = group.sets;
     if (group.totalSets === sets.length && sets.length > 0 && sets.every((set) => set.size === sets[0].size)) {
       return `${formatBytes(sets[0].size)} each`;
     }
-    return `${formatBytes(group.folders.reduce((sum, folder) => sum + folder.sharedBytes, 0))} in all`;
+    const extraCopies = group.copies - group.files;
+    const own = extraCopies > 0 ? Math.round((group.reclaimableBytes * group.files) / extraCopies) : group.reclaimableBytes;
+    return `${formatBytes(own)} in all`;
   }
 
   /**
