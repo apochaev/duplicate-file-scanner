@@ -79,10 +79,27 @@
       "after": [
         "tests"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 30,
+          "wallClockSeconds": 494,
+          "outcome": "passed",
+          "note": "PASS green: 1214 passed, 3 skipped; PASS disabled; PASS freeze; PASS touches: 17 changed files; PASS stubs; PASS traceability: 9 criteria; PASS consistency"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/folder-groups.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-068-overlaps-tab-folder-groups/progress.md",
+        "server/frontend/src/app/results/overlaps-tab.ts",
+        "server/src/test/java/us/pochaev/dfs/server/BrowserFlowTest.java"
+      ],
+      "commit": "74c02e35720cd89e448590849ecf0252d5d3929b"
     },
     {
       "id": "verify",
