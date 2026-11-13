@@ -165,11 +165,11 @@ Feature: Overlaps tab shows folder groups
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes
-- [ ] `./gradlew build` is green (includes `:server:npmTest`)
-- [ ] `./gradlew :server:e2eTest` is green
-- [ ] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
-- [ ] Live check on the built jar over a small fixture folder (a few large duplicate files, plus an `X.auh/Contents` subfolder so the app tag shows): the Overlaps tab's DOM is read in Compact and Comfortable density, with the result in `verification.md`
+- [x] Every scenario above is an automated test and passes
+- [x] `./gradlew build` is green (includes `:server:npmTest`)
+- [x] `./gradlew :server:e2eTest` is green
+- [x] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
+- [x] Live check on the built jar over a small fixture folder (a few large duplicate files, plus an `X.auh/Contents` subfolder so the app tag shows): the Overlaps tab's DOM is read in Compact and Comfortable density, with the result in `verification.md`
 
 **Post-close check** (not a done-item): after close, the user opens the Overlaps tab on a real `d:/` scan in both densities (long names, the 206 MB group, app-folder paths, many folders in one group) and records the result as a note under this ticket's `## Post-close check` section in `completed/`; a problem found becomes a new ticket.
 
