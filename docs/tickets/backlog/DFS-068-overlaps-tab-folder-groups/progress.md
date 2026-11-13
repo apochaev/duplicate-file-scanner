@@ -28,3 +28,9 @@
 
 - Implemented every stub in `overlaps-tab.ts` (groups loading with superseded-answer guard, small-group toggle, paging, text helpers, `isAppManaged`); template and CSS unchanged from the design. Rewrote BrowserFlowTest flows `resultScreenOpensOnSets` and `folderBrowserFiltersTheViews` to assert groups (fixture groups are under 1 MiB, so they click "Show N small groups"), added `groupLayoutIsVisible`. Docs: CLAUDE.md, ui.md, folder-groups.md.
 - `./gradlew build` and `:server:e2eTest` green. Expected commit: `feat(server): overlaps tab shows folder groups [DFS-068]`.
+
+## Gate feedback (done, user, 2026-11-12)
+
+"tests: fix the "in all" test data so sharedBytes follows /groups' real rules, expect the files' own size one copy each; implement: groupSizeText uses reclaimableBytes × files / (copies − files)"
+
+Rework: tests phase first (fix the "in all" Vitest data and expected value; do not touch src/main, the new expectation fails against the current implementation, which is intended), then implement (change `groupSizeText` in overlaps-tab.ts; design.md's "sum of sharedBytes" is superseded), then verify again.
