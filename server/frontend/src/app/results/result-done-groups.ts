@@ -24,7 +24,7 @@ export const DONE_STORAGE = new InjectionToken<DoneStorage | null>('DONE_STORAGE
  * The storage key of a scan's marks: `DONE_KEY_PREFIX` followed by the scan ID (DFS-069.AC-4).
  */
 export function doneStorageKey(scanId: string): string {
-  throw new Error('not implemented: DFS-069');
+  return DONE_KEY_PREFIX + scanId;
 }
 
 /**
@@ -32,7 +32,7 @@ export function doneStorageKey(scanId: string): string {
  * order the API lists the folders in does not matter; `['/b/x', '/a/x']` gives `'/a/x\n/b/x'` (DFS-069.AC-4).
  */
 export function groupKey(folders: readonly string[]): string {
-  throw new Error('not implemented: DFS-069');
+  return [...folders].sort().join('\n');
 }
 
 /**
@@ -41,7 +41,19 @@ export function groupKey(folders: readonly string[]): string {
  * strings (`{"a":1}`, `[1,2]`) (DFS-069.AC-6).
  */
 export function readDoneMarks(storage: DoneStorage | null, scanId: string): string[] {
-  throw new Error('not implemented: DFS-069');
+  if (storage === null) {
+    return [];
+  }
+  try {
+    const raw = storage.getItem(doneStorageKey(scanId));
+    if (raw === null) {
+      return [];
+    }
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.every((item) => typeof item === 'string') ? (parsed as string[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -49,7 +61,14 @@ export function readDoneMarks(storage: DoneStorage | null, scanId: string): stri
  * that throws, so the marks then last only for the visit (DFS-069.AC-4, AC-6).
  */
 export function writeDoneMarks(storage: DoneStorage | null, scanId: string, keys: readonly string[]): void {
-  throw new Error('not implemented: DFS-069');
+  if (storage === null) {
+    return;
+  }
+  try {
+    storage.setItem(doneStorageKey(scanId), JSON.stringify(keys));
+  } catch {
+    // The marks then last only for the visit.
+  }
 }
 
 /**
@@ -58,5 +77,13 @@ export function writeDoneMarks(storage: DoneStorage | null, scanId: string, keys
  * case-sensitive). Every key counts when `folder` is null, "All folders" (DFS-069.AC-3).
  */
 export function countMarksUnder(keys: readonly string[], folder: string | null): number {
-  throw new Error('not implemented: DFS-069');
+  if (folder === null) {
+    return keys.length;
+  }
+  const base = folder.replace(/[\\/]+$/, '');
+  return keys.filter((key) =>
+    key
+      .split('\n')
+      .some((path) => path === folder || path === base || (path.startsWith(base) && /[\\/]/.test(path.charAt(base.length)))),
+  ).length;
 }

@@ -10,7 +10,7 @@ import { OverlapsService } from '../api/services';
 import { formatBytes, plural } from '../scans/scan-format';
 import { PathCopy } from './path-copy';
 import { Density } from './result-density';
-import { DONE_STORAGE } from './result-done-groups';
+import { countMarksUnder, DONE_STORAGE, groupKey, readDoneMarks, writeDoneMarks } from './result-done-groups';
 import { failureMessage } from './result-error';
 import { barPercent, copiesText, pairCoverageText, pairSideText } from './result-format';
 import { displayPath, ShortPath } from './result-path';
@@ -281,12 +281,12 @@ export class OverlapsTab {
 
   /** The stored marks of `scanId()`: `readDoneMarks(doneStorage, scanId())`, empty when nothing usable is stored (AC-4, AC-6). */
   protected loadMarks(): readonly string[] {
-    throw new Error('not implemented: DFS-069');
+    return readDoneMarks(this.doneStorage, this.scanId());
   }
 
   /** Whether `marks()` holds the key of the group, `groupKey` of its folders' paths (AC-1, AC-2, AC-4). */
   protected isDone(group: FolderGroupView): boolean {
-    throw new Error('not implemented: DFS-069');
+    return this.marks().includes(groupKey(group.folders.map((folder) => folder.folder)));
   }
 
   /**
@@ -294,7 +294,11 @@ export class OverlapsTab {
    * it, then `writeDoneMarks(doneStorage, scanId(), marks())`. No request is made.
    */
   protected toggleDone(group: FolderGroupView, done: boolean): void {
-    throw new Error('not implemented: DFS-069');
+    const key = groupKey(group.folders.map((folder) => folder.folder));
+    const current = this.marks();
+    const next = done ? (current.includes(key) ? current : [...current, key]) : current.filter((item) => item !== key);
+    this.marks.set(next);
+    writeDoneMarks(this.doneStorage, this.scanId(), next);
   }
 
   /**
@@ -302,12 +306,13 @@ export class OverlapsTab {
    * `totalItems` less M, at least 0; the text always says "groups", also for 1.
    */
   protected countsText(totalItems: number): string {
-    throw new Error('not implemented: DFS-069');
+    const done = countMarksUnder(this.marks(), this.folder());
+    return `${Math.max(0, totalItems - done)} groups left · ${done} dealt with`;
   }
 
   /** The expander's title: "Dealt with on this page (<K>)", K being `doneGroups().length` (AC-2). */
   protected doneTitle(): string {
-    throw new Error('not implemented: DFS-069');
+    return `Dealt with on this page (${this.doneGroups().length})`;
   }
 
   /** The section's density class: `density-compact` or `density-comfortable`. */
