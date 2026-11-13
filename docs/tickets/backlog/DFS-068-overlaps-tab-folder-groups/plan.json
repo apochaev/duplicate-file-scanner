@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-068-overlaps-tab-folder-groups",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-068-overlaps-tab-folder-groups",
-  "state": "running",
+  "state": "awaiting-approval",
   "phases": [
     {
       "id": "design",
@@ -125,7 +125,7 @@
       "after": [
         "implement"
       ],
-      "status": "pending",
+      "status": "done",
       "runs": [
         {
           "attempt": 1,
@@ -135,6 +135,15 @@
           "wallClockSeconds": 289,
           "outcome": "passed",
           "note": "PASS consistency DFS-068; verifier found one defect next to AC-1 ('in all' size doubled), left to the done gate"
+        },
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 24,
+          "wallClockSeconds": 227,
+          "outcome": "passed",
+          "note": "second verify after done-gate rework; PASS consistency DFS-068; in-all defect fixed, 9/9 criteria met"
         }
       ],
       "artifacts": [
@@ -142,7 +151,7 @@
         "docs/tickets/backlog/DFS-068-overlaps-tab-folder-groups/learnings.md",
         "docs/tickets/backlog/DFS-068-overlaps-tab-folder-groups/verification.md"
       ],
-      "commit": "cdc2d8992b1380e3129b37b3124af07317252056"
+      "commit": "a2901ae8453b8927e4b6427d732024b62352ebda"
     }
   ],
   "gates": [
