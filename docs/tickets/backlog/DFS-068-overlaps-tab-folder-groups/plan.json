@@ -6,7 +6,7 @@
   },
   "branch": "tickets/DFS-068-overlaps-tab-folder-groups",
   "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-068-overlaps-tab-folder-groups",
-  "state": "awaiting-approval",
+  "state": "running",
   "phases": [
     {
       "id": "design",
@@ -51,10 +51,27 @@
       "after": [
         "design"
       ],
-      "status": "pending",
-      "runs": [],
-      "artifacts": [],
-      "commit": null
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 29,
+          "wallClockSeconds": 237,
+          "outcome": "passed",
+          "note": "PASS test-phase DFS-068: red and traceability pass; red: 24 story tests fail with stubs, 30 other tests fail on the ticket's stub, 0 fail in declared classes, 1188 other tests pass (3 skipped); traceability: 9 criteria traced through 9 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-068-overlaps-tab-folder-groups/learnings.md",
+        "docs/tickets/backlog/DFS-068-overlaps-tab-folder-groups/progress.md",
+        "docs/tickets/backlog/DFS-068-overlaps-tab-folder-groups/test-plan.md",
+        "server/frontend/src/app/results/overlaps-tab.spec.ts",
+        "server/frontend/src/app/results/result-screen.spec.ts",
+        "server/frontend/src/app/results/result-test-data.ts"
+      ],
+      "commit": "34ef13f19447a7029ef4a59875eb48e30279ba03"
     },
     {
       "id": "implement",
@@ -82,7 +99,7 @@
   "gates": [
     {
       "after": "design",
-      "status": "pending"
+      "status": "approved"
     },
     {
       "after": "done",
