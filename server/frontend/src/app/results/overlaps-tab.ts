@@ -1,5 +1,7 @@
-import { Component, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, computed, effect, inject, input, linkedSignal, output, signal, untracked } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -8,6 +10,7 @@ import { OverlapsService } from '../api/services';
 import { formatBytes, plural } from '../scans/scan-format';
 import { PathCopy } from './path-copy';
 import { Density } from './result-density';
+import { DONE_STORAGE } from './result-done-groups';
 import { failureMessage } from './result-error';
 import { barPercent, copiesText, pairCoverageText, pairSideText } from './result-format';
 import { displayPath, ShortPath } from './result-path';
@@ -57,6 +60,9 @@ export const COMPARE_HINT = 'Select another folder to compare with the pinned on
 /** The paginator's first page size (DFS-068 G3: 10, 25 and 50 groups per page). */
 export const OVERLAPS_PAGE_SIZE = 10;
 
+/** The main list when every group of the loaded page is marked (DFS-069.AC-7). */
+export const ALL_DONE_NOTE = 'All groups on this page are dealt with.';
+
 /** What the Comparison block shows while a folder is pinned (DFS-050 decision 3, AC-6, AC-7). */
 export type Comparison =
   /** The pinned folder itself or "All folders" is selected: `COMPARE_HINT`, no request. */
@@ -79,13 +85,28 @@ export type Comparison =
  * button), the `p.fully-shared-note` when two or more folders are fully shared, and a `mat-expansion-panel.group-sets`
  * listing the first sets ("and N more" when the group has more).
  *
+ * DFS-069: each `div.group-header` starts with a `mat-checkbox.group-done-check` "Mark as dealt with". A ticked group
+ * (its key, `groupKey` of its folders' paths, is among `marks()`) leaves `div.open-groups` and appears, muted
+ * (`div.group.group-done`, checkbox ticked), in `mat-expansion-panel.done-groups` titled "Dealt with on this page (K)"
+ * below the paginator's list: collapsed, absent when K is 0, its content not lazy. `p.groups-counts` above the list
+ * reads "N groups left · M dealt with"; `p.all-done-note` replaces the main list when its page is all marked. Marks are
+ * client-side only: no request, kept in `DONE_STORAGE` under `dfs.results.done.<scanId>`.
+ *
  * A container: it requests its pages itself through `OverlapsService`, following its inputs. The selection and the pin
  * are owned by the result screen; "Unpin" is emitted. Two effects: (`scanId`, `folder`) → `selectionChanged()`;
  * (`scanId`, `pinned`, `folder`) → `compare()`. Neither tracks what those methods read or write.
  */
 @Component({
   selector: 'app-overlaps-tab',
-  imports: [MatButtonModule, MatExpansionModule, MatPaginatorModule, MatProgressBarModule, PathCopy],
+  imports: [
+    MatButtonModule,
+    MatCheckboxModule,
+    MatExpansionModule,
+    MatPaginatorModule,
+    MatProgressBarModule,
+    NgTemplateOutlet,
+    PathCopy,
+  ],
   templateUrl: './overlaps-tab.html',
   styleUrl: './overlaps-tab.css',
 })
@@ -116,7 +137,21 @@ export class OverlapsTab {
   /** The Comparison block's state; null while nothing is pinned (no block). */
   protected readonly comparison = signal<Comparison | null>(null);
 
+  /**
+   * The keys of this scan's marked groups (DFS-069.AC-4): read from `DONE_STORAGE` through `loadMarks()` and read again
+   * when `scanId` changes; `toggleDone` replaces it, so a mark lasts the visit even when nothing can be stored (AC-6).
+   */
+  protected readonly marks = linkedSignal<readonly string[]>(() => {
+    this.scanId();
+    return this.loadMarks();
+  });
+  /** The loaded page's unmarked groups, in the server's order (AC-1, AC-2, AC-7). */
+  protected readonly openGroups = computed(() => (this.groups()?.items ?? []).filter((group) => !this.isDone(group)));
+  /** The loaded page's marked groups, in the server's order: the expander's content, K is its length (AC-1, AC-2). */
+  protected readonly doneGroups = computed(() => (this.groups()?.items ?? []).filter((group) => this.isDone(group)));
+
   protected readonly noGroups = NO_GROUPS;
+  protected readonly allDoneNote = ALL_DONE_NOTE;
   protected readonly fullySharedNote = FULLY_SHARED_NOTE;
   protected readonly appTagTitle = APP_TAG_TITLE;
   protected readonly compareHint = COMPARE_HINT;
@@ -127,6 +162,7 @@ export class OverlapsTab {
   protected readonly isAppManaged = isAppManaged;
 
   private readonly overlaps = inject(OverlapsService);
+  private readonly doneStorage = inject(DONE_STORAGE);
   private groupsRequest = 0;
   private compareRequest = 0;
 
@@ -241,6 +277,37 @@ export class OverlapsTab {
   /** "Unpin" clicked: emits `unpinned` (DFS-050 AC-5). */
   protected unpin(): void {
     this.unpinned.emit();
+  }
+
+  /** The stored marks of `scanId()`: `readDoneMarks(doneStorage, scanId())`, empty when nothing usable is stored (AC-4, AC-6). */
+  protected loadMarks(): readonly string[] {
+    throw new Error('not implemented: DFS-069');
+  }
+
+  /** Whether `marks()` holds the key of the group, `groupKey` of its folders' paths (AC-1, AC-2, AC-4). */
+  protected isDone(group: FolderGroupView): boolean {
+    throw new Error('not implemented: DFS-069');
+  }
+
+  /**
+   * The checkbox changed (AC-1, AC-2, AC-4, AC-6): ticked adds the group's key to `marks()` (once), unticked removes
+   * it, then `writeDoneMarks(doneStorage, scanId(), marks())`. No request is made.
+   */
+  protected toggleDone(group: FolderGroupView, done: boolean): void {
+    throw new Error('not implemented: DFS-069');
+  }
+
+  /**
+   * "<N> groups left · <M> dealt with" (AC-3, AC-5): M is `countMarksUnder(marks(), folder())`, N is the loaded page's
+   * `totalItems` less M, at least 0; the text always says "groups", also for 1.
+   */
+  protected countsText(totalItems: number): string {
+    throw new Error('not implemented: DFS-069');
+  }
+
+  /** The expander's title: "Dealt with on this page (<K>)", K being `doneGroups().length` (AC-2). */
+  protected doneTitle(): string {
+    throw new Error('not implemented: DFS-069');
   }
 
   /** The section's density class: `density-compact` or `density-comfortable`. */

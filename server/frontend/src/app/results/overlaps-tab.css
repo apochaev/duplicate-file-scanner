@@ -82,6 +82,24 @@
   background: var(--mat-sys-surface-container, #f3edf7);
 }
 
+.groups-counts,
+.all-done-note {
+  margin: 4px 0 8px;
+}
+
+/* A marked group: dimmed, in the "Dealt with on this page" expander (DFS-069). */
+.group-done {
+  opacity: 0.6;
+}
+
+.done-groups {
+  margin: 12px 0;
+}
+
+.group-done-check {
+  margin-right: 4px;
+}
+
 .density-comfortable .group-header {
   padding: 8px;
 }

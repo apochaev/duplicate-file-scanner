@@ -37,9 +37,60 @@
       <p class="groups-error" role="alert">{{ message }}</p>
     } @else if (groups(); as result) {
       @if (result.totalItems > 0) {
-        @for (group of result.items; track group.sets[0].digest) {
-          <div class="group">
+        <p class="groups-counts">{{ countsText(result.totalItems) }}</p>
+        @if (openGroups().length === 0 && result.items.length > 0) {
+          <p class="all-done-note">{{ allDoneNote }}</p>
+        }
+        <div class="open-groups">
+          @for (group of openGroups(); track group.sets[0].digest) {
+            <ng-container *ngTemplateOutlet="groupCard; context: { $implicit: group }" />
+          }
+        </div>
+        <mat-paginator
+          class="groups-paginator"
+          [length]="result.totalItems"
+          [pageIndex]="pageIndex()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="loading()"
+          (page)="changePage($event)"
+          aria-label="Folder group pages"
+        />
+        @if (doneGroups().length > 0) {
+          <mat-expansion-panel class="done-groups">
+            <mat-expansion-panel-header>
+              <mat-panel-title>{{ doneTitle() }}</mat-panel-title>
+            </mat-expansion-panel-header>
+            <div class="done-list">
+              @for (group of doneGroups(); track group.sets[0].digest) {
+                <ng-container *ngTemplateOutlet="groupCard; context: { $implicit: group }" />
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+      } @else {
+        <p class="groups-empty">{{ noGroups }}</p>
+      }
+      @if (smallShown()) {
+        <button mat-button type="button" class="hide-small" (click)="hideSmallGroups()">Hide small groups</button>
+      } @else if (result.hiddenSmall > 0) {
+        <button mat-button type="button" class="show-small" (click)="showSmallGroups()">
+          Show {{ plural(result.hiddenSmall, 'small group') }}
+        </button>
+      }
+    }
+  </section>
+
+  <ng-template #groupCard let-group>
+    @let done = isDone(group);
+          <div class="group" [class.group-done]="done">
             <div class="group-header">
+              <mat-checkbox
+                class="group-done-check"
+                [checked]="done"
+                (change)="toggleDone(group, $event.checked)"
+                (click)="$event.stopPropagation()"
+              >Mark as dealt with</mat-checkbox>
               <span class="group-files">{{ filesText(group) }}</span>
               <span class="group-meta">{{ groupMetaText(group) }}</span>
               <span class="group-reclaimable">
@@ -100,27 +151,5 @@
               </ng-template>
             </mat-expansion-panel>
           </div>
-        }
-        <mat-paginator
-          class="groups-paginator"
-          [length]="result.totalItems"
-          [pageIndex]="pageIndex()"
-          [pageSize]="pageSize()"
-          [pageSizeOptions]="pageSizeOptions"
-          [disabled]="loading()"
-          (page)="changePage($event)"
-          aria-label="Folder group pages"
-        />
-      } @else {
-        <p class="groups-empty">{{ noGroups }}</p>
-      }
-      @if (smallShown()) {
-        <button mat-button type="button" class="hide-small" (click)="hideSmallGroups()">Hide small groups</button>
-      } @else if (result.hiddenSmall > 0) {
-        <button mat-button type="button" class="show-small" (click)="showSmallGroups()">
-          Show {{ plural(result.hiddenSmall, 'small group') }}
-        </button>
-      }
-    }
-  </section>
+  </ng-template>
 </section>

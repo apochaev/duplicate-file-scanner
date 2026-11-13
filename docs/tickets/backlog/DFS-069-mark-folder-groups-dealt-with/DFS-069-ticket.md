@@ -1,7 +1,7 @@
 ---
 id: DFS-069
 title: Mark folder groups as dealt with
-status: ready
+status: in-progress
 type: feature
 scope: []
 archetype: component
