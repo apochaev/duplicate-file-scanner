@@ -4,12 +4,14 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { HarnessLoader } from '@angular/cdk/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { MatButtonHarness } from '@angular/material/button/testing';
+import { MatCheckboxHarness } from '@angular/material/checkbox/testing';
 import { MatExpansionPanelHarness } from '@angular/material/expansion/testing';
 import { MatPaginatorHarness } from '@angular/material/paginator/testing';
 import { MatProgressBarHarness } from '@angular/material/progress-bar/testing';
-import { GroupPage } from '../api/models';
+import { FolderGroupView, GroupPage } from '../api/models';
 import { provideStubSurfacing, settle } from '../../testing/stub-surfacing';
 import { isAppManaged, OverlapsTab } from './overlaps-tab';
+import { DONE_STORAGE, DoneStorage } from './result-done-groups';
 import {
   expectGroups,
   expectPair,
@@ -538,5 +540,328 @@ describe('OverlapsTab', () => {
       await loader.getAllHarnesses(MatProgressBarHarness.with({ selector: '[aria-label="Loading the comparison"]' })),
     ).toHaveLength(0);
     expect(page().querySelector('.comparison-pair')).not.toBeNull();
+  });
+});
+
+/** DFS-069: marking folder groups as dealt with. */
+describe('OverlapsTab dealt with', () => {
+  class FakeStorage implements DoneStorage {
+    readonly data = new Map<string, string>();
+    getItem(key: string): string | null {
+      return this.data.get(key) ?? null;
+    }
+    setItem(key: string, value: string): void {
+      this.data.set(key, value);
+    }
+  }
+
+  const THROWING: DoneStorage = {
+    getItem: () => {
+      throw new Error('storage disabled');
+    },
+    setItem: () => {
+      throw new Error('storage disabled');
+    },
+  };
+
+  const DOT = '·';
+  const KEY_S1 = 'dfs.results.done.s1';
+  const KEY_G1 = '/a/x\n/b/x';
+  const KEY_G2 = '/a/y\n/b/y';
+  const KEY_G3 = '/a/z\n/c/z';
+
+  let http: HttpTestingController;
+  let fixture: ComponentFixture<OverlapsTab>;
+  let loader: HarnessLoader;
+  let storage: FakeStorage;
+
+  async function configure(token: DoneStorage | null = storage): Promise<void> {
+    await TestBed.configureTestingModule({
+      imports: [OverlapsTab],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideStubSurfacing(),
+        { provide: DONE_STORAGE, useValue: token },
+      ],
+    }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
+  }
+
+  beforeEach(() => {
+    storage = new FakeStorage();
+  });
+
+  afterEach(() => http.verify());
+
+  function pairOf(letter: string, other = 'b'): FolderGroupView {
+    return folderGroup(
+      [groupFolder(`/a/${letter}`), groupFolder(`/${other}/${letter}`)],
+      [groupSet(`${letter}.bin`)],
+    );
+  }
+
+  /** G1 (/a/x, /b/x), G2 (/a/y, /b/y), G3 (/a/z, /c/z), as the ticket's Background. */
+  function threeGroups(): FolderGroupView[] {
+    return [pairOf('x'), pairOf('y'), pairOf('z', 'c')];
+  }
+
+  async function step(): Promise<void> {
+    await settle(fixture);
+  }
+
+  /** Creates the tab for `scanId` and answers its first /groups request with `answer`. */
+  async function open(
+    answer: GroupPage,
+    scanId = 's1',
+    folder: string | null = null,
+  ): Promise<void> {
+    fixture = TestBed.createComponent(OverlapsTab);
+    fixture.componentRef.setInput('scanId', scanId);
+    fixture.componentRef.setInput('folder', folder);
+    fixture.componentRef.setInput('roots', []);
+    loader = TestbedHarnessEnvironment.loader(fixture);
+    await settle(fixture);
+    expectGroups(http, scanId, folder).flush(answer);
+    await step();
+  }
+
+  function page(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  function norm(el: Element | null | undefined): string {
+    return (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
+  }
+
+  /** The first folder path of each group card under `container`, e.g. ['/a/x', '/a/z']. */
+  function firstFolders(container: string): (string | null | undefined)[] {
+    return Array.from(page().querySelectorAll(`${container} > div.group`)).map((g) =>
+      g.querySelector('.short-path')?.getAttribute('title'),
+    );
+  }
+
+  async function tick(container: string, index: number): Promise<void> {
+    const boxes = await loader.getAllHarnesses(
+      MatCheckboxHarness.with({ selector: `${container} > div.group .group-done-check` }),
+    );
+    await boxes[index].check();
+    await step();
+  }
+
+  async function untick(container: string, index: number): Promise<void> {
+    const boxes = await loader.getAllHarnesses(
+      MatCheckboxHarness.with({ selector: `${container} > div.group .group-done-check` }),
+    );
+    await boxes[index].uncheck();
+    await step();
+  }
+
+  async function doneExpander() {
+    return loader.getAllHarnesses(MatExpansionPanelHarness.with({ selector: '.done-groups' }));
+  }
+
+  it('DFS-069.AC-1 shows a "Mark as dealt with" checkbox in every header, ticking moves the group to Dealt with without a request', async () => {
+    await configure();
+    await open(groupPage(threeGroups()));
+
+    const labels = await loader.getAllHarnesses(MatCheckboxHarness.with({ label: 'Mark as dealt with' }));
+    expect(labels).toHaveLength(3);
+    expect(page().querySelectorAll('div.group-header > mat-checkbox')).toHaveLength(3);
+
+    await tick('.open-groups', 1);
+
+    expect(firstFolders('.open-groups')).toEqual(['/a/x', '/a/z']);
+    expect(firstFolders('.done-list')).toEqual(['/a/y']);
+    const panels = await doneExpander();
+    expect(panels).toHaveLength(1);
+    expect(await panels[0].getTitle()).toBe('Dealt with on this page (1)');
+    http.expectNone((r) => r.url.endsWith('/groups'));
+  });
+
+  it('DFS-069.AC-2 keeps the Dealt with expander collapsed with the group muted and ticked, and unticking returns it in the server order', async () => {
+    storage.data.set(KEY_S1, JSON.stringify([KEY_G2]));
+    await configure();
+    await open(groupPage(threeGroups()));
+
+    const panels = await doneExpander();
+    expect(panels).toHaveLength(1);
+    expect(await panels[0].getTitle()).toBe('Dealt with on this page (1)');
+    expect(await panels[0].isExpanded()).toBe(false);
+    const muted = page().querySelectorAll('.done-list > div.group.group-done');
+    expect(muted).toHaveLength(1);
+    expect(page().querySelectorAll('.open-groups .group-done')).toHaveLength(0);
+    const boxes = await loader.getAllHarnesses(
+      MatCheckboxHarness.with({ selector: '.done-list > div.group .group-done-check' }),
+    );
+    expect(await boxes[0].isChecked()).toBe(true);
+
+    await panels[0].expand();
+    await step();
+    await untick('.done-list', 0);
+
+    expect(firstFolders('.open-groups')).toEqual(['/a/x', '/a/y', '/a/z']);
+    expect(await doneExpander()).toHaveLength(0);
+  });
+
+  it('DFS-069.AC-2 shows no Dealt with expander when no group is marked', async () => {
+    await configure();
+    await open(groupPage(threeGroups()));
+
+    expect(page().querySelectorAll('div.group')).toHaveLength(3);
+    expect(page().querySelector('mat-expansion-panel.done-groups')).toBeNull();
+    expect(await doneExpander()).toHaveLength(0);
+  });
+
+  it('DFS-069.AC-3 counts the groups left and dealt with', async () => {
+    storage.data.set(KEY_S1, JSON.stringify([KEY_G1, KEY_G2]));
+    await configure();
+    await open(groupPage(threeGroups()));
+
+    expect(norm(page().querySelector('p.groups-counts'))).toBe(`1 groups left ${DOT} 2 dealt with`);
+  });
+
+  it('DFS-069.AC-3 counts only the marks under the selected folder', async () => {
+    storage.data.set(KEY_S1, JSON.stringify([KEY_G1, KEY_G3]));
+    await configure();
+    const [g1, g2] = threeGroups();
+    await open(groupPage([g1, g2], { totalItems: 2 }), 's1', '/b');
+
+    expect(norm(page().querySelector('p.groups-counts'))).toBe(`1 groups left ${DOT} 1 dealt with`);
+  });
+
+  it('DFS-069.AC-3 never shows a negative number of groups left', async () => {
+    storage.data.set(KEY_S1, JSON.stringify(['/k/1', '/k/2', '/k/3', '/k/4', '/k/5']));
+    await configure();
+    await open(groupPage(threeGroups()));
+
+    expect(norm(page().querySelector('p.groups-counts'))).toBe(`0 groups left ${DOT} 5 dealt with`);
+  });
+
+  it('DFS-069.AC-4 stores a mark per scan under dfs.results.done.<scanId> and finds it again after a reload', async () => {
+    await configure();
+    await open(groupPage(threeGroups()));
+
+    await tick('.open-groups', 0);
+
+    expect(JSON.parse(storage.data.get(KEY_S1) ?? 'null')).toEqual([KEY_G1]);
+
+    fixture.destroy();
+    await open(groupPage(threeGroups()));
+    expect(firstFolders('.done-list')).toEqual(['/a/x']);
+    expect(firstFolders('.open-groups')).toEqual(['/a/y', '/a/z']);
+
+    fixture.destroy();
+    await open(groupPage(threeGroups()), 's2');
+    expect(firstFolders('.open-groups')).toEqual(['/a/x', '/a/y', '/a/z']);
+    expect(page().querySelector('mat-expansion-panel.done-groups')).toBeNull();
+  });
+
+  it('DFS-069.AC-4 recognises a group whatever order the answer lists its folders in', async () => {
+    storage.data.set(KEY_S1, JSON.stringify([KEY_G1]));
+    await configure();
+    const reversed = folderGroup(
+      [groupFolder('/b/x'), groupFolder('/a/x')],
+      [groupSet('x.bin')],
+    );
+    await open(groupPage([reversed, pairOf('y')]));
+
+    expect(firstFolders('.done-list')).toEqual(['/b/x']);
+    expect(firstFolders('.open-groups')).toEqual(['/a/y']);
+  });
+
+  it('DFS-069.AC-5 keeps marks across paging, a folder selection and the small-groups toggle, with the server figures', async () => {
+    storage.data.set(KEY_S1, JSON.stringify([KEY_G1]));
+    await configure();
+    const answer = () => groupPage([pairOf('x'), pairOf('y')], { totalItems: 30, hiddenSmall: 4 });
+    await open(answer());
+
+    const pager = await loader.getHarness(MatPaginatorHarness.with({ selector: '.groups-paginator' }));
+    expect(await pager.getRangeLabel()).toContain('of 30');
+    expect(firstFolders('.done-list')).toEqual(['/a/x']);
+
+    await pager.goToNextPage();
+    await step();
+    expectGroups(http, 's1', null, null, 1, 10).flush({ ...answer(), page: 1 });
+    await step();
+    expect(firstFolders('.done-list')).toEqual(['/a/x']);
+    await pager.goToPreviousPage();
+    await step();
+    expectGroups(http, 's1', null, null, 0, 10).flush(answer());
+    await step();
+    expect(firstFolders('.done-list')).toEqual(['/a/x']);
+
+    fixture.componentRef.setInput('folder', '/a');
+    await step();
+    expectGroups(http, 's1', '/a').flush(answer());
+    await step();
+    expect(firstFolders('.done-list')).toEqual(['/a/x']);
+    fixture.componentRef.setInput('folder', null);
+    await step();
+    expectGroups(http, 's1', null).flush(answer());
+    await step();
+    expect(firstFolders('.done-list')).toEqual(['/a/x']);
+
+    await (await loader.getHarness(MatButtonHarness.with({ text: 'Show 4 small groups' }))).click();
+    await step();
+    expectGroups(http, 's1', null, 0).flush(answer());
+    await step();
+    expect(firstFolders('.done-list')).toEqual(['/a/x']);
+    await (await loader.getHarness(MatButtonHarness.with({ text: 'Hide small groups' }))).click();
+    await step();
+    expectGroups(http, 's1', null, null).flush(answer());
+    await step();
+    expect(firstFolders('.done-list')).toEqual(['/a/x']);
+
+    expect(await pager.getRangeLabel()).toContain('of 30');
+    expect(await loader.getAllHarnesses(MatButtonHarness.with({ text: 'Show 4 small groups' }))).toHaveLength(1);
+    expect(norm(page().querySelector('p.groups-counts'))).toBe(`29 groups left ${DOT} 1 dealt with`);
+  });
+
+  it('DFS-069.AC-6 marks groups for the visit when the browser has no storage', async () => {
+    await configure(null);
+    await open(groupPage(threeGroups()));
+
+    await tick('.open-groups', 0);
+
+    expect(firstFolders('.done-list')).toEqual(['/a/x']);
+    expect(firstFolders('.open-groups')).toEqual(['/a/y', '/a/z']);
+    expect(storage.data.size).toBe(0);
+  });
+
+  it('DFS-069.AC-6 loads and marks groups when the storage throws', async () => {
+    await configure(THROWING);
+    await open(groupPage(threeGroups()));
+
+    expect(page().querySelectorAll('.open-groups > div.group')).toHaveLength(3);
+    await tick('.open-groups', 0);
+
+    expect(firstFolders('.done-list')).toEqual(['/a/x']);
+  });
+
+  it('DFS-069.AC-6 treats a stored value that is not a JSON array of strings as no marks', async () => {
+    await configure();
+    for (const value of ['{not json', '{"a":1}', '[1,2]']) {
+      storage.data.set(KEY_S1, value);
+      await open(groupPage(threeGroups()));
+
+      expect(page().querySelectorAll('.open-groups > div.group'), value).toHaveLength(3);
+      expect(norm(page().querySelector('p.groups-counts')), value).toBe(`3 groups left ${DOT} 0 dealt with`);
+      fixture.destroy();
+    }
+  });
+
+  it('DFS-069.AC-7 says all groups on the page are dealt with and keeps the paginator enabled', async () => {
+    storage.data.set(KEY_S1, JSON.stringify([KEY_G1, KEY_G2, KEY_G3]));
+    await configure();
+    await open(groupPage(threeGroups(), { totalItems: 30 }));
+
+    expect(norm(page().querySelector('p.all-done-note'))).toBe('All groups on this page are dealt with.');
+    expect(page().querySelectorAll('.open-groups > div.group')).toHaveLength(0);
+    const pager = await loader.getHarness(MatPaginatorHarness.with({ selector: '.groups-paginator' }));
+    expect(await pager.isNextPageDisabled()).toBe(false);
+    const panels = await doneExpander();
+    expect(await panels[0].getTitle()).toBe('Dealt with on this page (3)');
+    expect(firstFolders('.done-list')).toEqual(['/a/x', '/a/y', '/a/z']);
   });
 });
