@@ -16,3 +16,10 @@
 - Applied the gate feedback: bound `[roots]="rootPaths()" [density]="density()"` on `<app-overlaps-tab>` in `result-screen.html` (real change); `:server:ngBuild` green.
 - Updated design.md: Summary, file list (added `result-screen.html`, `result-screen.spec.ts`), Expected breakage (both specs now in touches, test-author rewrites), checklist and open-notes wording. `result-screen.spec.ts` not edited.
 - Expected commit: `docs: rework design DFS-068 [DFS-068]` (design.md, progress.md, result-screen.html).
+
+## Test phase (test-author)
+
+- Rewrote `overlaps-tab.spec.ts` (26 tests, AC-1..AC-9 plus the kept DFS-050 comparison tests), the three Overlaps tests of `result-screen.spec.ts` (`/groups` instead of `/summaries` and `/pairs`), and `result-test-data.ts` (group builders, `expectGroups`; summaries/pairs builders removed). Wrote `test-plan.md`.
+- `./gradlew :server:npmTest`: compiles; 29 tests fail, all with `not implemented: DFS-068` (plus its "Uncaught Exception" echoes); no new test passes.
+- `BrowserFlowTest` not touched (implementer rewrites the two flows and adds the layout flow; listed in the plan).
+- Expected commit: `test: add DFS-068 tests [DFS-068]`.

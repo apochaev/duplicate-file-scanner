@@ -4,21 +4,22 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { HarnessLoader } from '@angular/cdk/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { MatButtonHarness } from '@angular/material/button/testing';
+import { MatExpansionPanelHarness } from '@angular/material/expansion/testing';
 import { MatPaginatorHarness } from '@angular/material/paginator/testing';
 import { MatProgressBarHarness } from '@angular/material/progress-bar/testing';
-import { FolderPairView, PairPage, SummaryPage } from '../api/models';
+import { GroupPage } from '../api/models';
 import { provideStubSurfacing, settle } from '../../testing/stub-surfacing';
-import { OverlapsTab } from './overlaps-tab';
+import { isAppManaged, OverlapsTab } from './overlaps-tab';
 import {
+  expectGroups,
   expectPair,
-  expectPairs,
-  expectSummaries,
+  folderGroup,
+  groupFolder,
+  groupPage,
+  groupSet,
   pair,
-  pairPage,
   refuse,
   side,
-  summary,
-  summaryPage,
 } from './result-test-data';
 
 describe('OverlapsTab', () => {
@@ -27,7 +28,8 @@ describe('OverlapsTab', () => {
   let loader: HarnessLoader;
   let unpinned: number;
 
-  const NOTE = 'A copy elsewhere may itself be deleted by another choice; checking what is safe comes with the deletion plan.';
+  const APP_TITLE = 'Managed by an application; deleting here can break it';
+  const FULLY_SHARED_NOTE = 'Fully shared folders: any one can go, not all.';
 
   beforeEach(async () => {
     unpinned = 0;
@@ -40,11 +42,16 @@ describe('OverlapsTab', () => {
 
   afterEach(() => http.verify());
 
-  async function render(folder: string | null = null, pinned: string | null = null): Promise<void> {
+  async function render(
+    folder: string | null = null,
+    pinned: string | null = null,
+    roots: string[] = ['D:/'],
+  ): Promise<void> {
     fixture = TestBed.createComponent(OverlapsTab);
     fixture.componentRef.setInput('scanId', 's-1');
     fixture.componentRef.setInput('folder', folder);
     fixture.componentRef.setInput('pinned', pinned);
+    fixture.componentRef.setInput('roots', roots);
     fixture.componentInstance.unpinned.subscribe(() => unpinned++);
     loader = TestbedHarnessEnvironment.loader(fixture);
     await settle(fixture);
@@ -54,24 +61,11 @@ describe('OverlapsTab', () => {
     await settle(fixture);
   }
 
-  /** Answers the summaries and pairs requests made for `under` (page 0, size 10). */
-  async function answer(
-    summaries: SummaryPage,
-    pairs: PairPage,
-    under: string | null = null,
-  ): Promise<void> {
-    expectSummaries(http, 's-1', under).flush(summaries);
-    expectPairs(http, 's-1', under).flush(pairs);
+  /** Renders the tab on "All folders" and answers its first /groups request with `answer`. */
+  async function renderAnswered(answer: GroupPage, roots: string[] = ['D:/']): Promise<void> {
+    await render(null, null, roots);
+    expectGroups(http, 's-1').flush(answer);
     await step();
-  }
-
-  async function renderAnswered(
-    summaries: SummaryPage = summaryPage([]),
-    pairs: PairPage = pairPage([]),
-    folder: string | null = null,
-  ): Promise<void> {
-    await render(folder);
-    await answer(summaries, pairs, folder);
   }
 
   function page(): HTMLElement {
@@ -86,286 +80,439 @@ describe('OverlapsTab', () => {
     return Array.from(page().querySelectorAll(selector)).map((el) => norm(el));
   }
 
-  const backup2019 = summary('D:\\Backup\\2019', {
-    totalFiles: 340,
-    totalBytes: 1288490188,
-    filesWithCopyElsewhere: 340,
-    bytesWithCopyElsewhere: 1288490188,
+  function widths(selector: string): number[] {
+    return Array.from(page().querySelectorAll<HTMLElement>(selector)).map((el) => parseFloat(el.style.width));
+  }
+
+  const MEDIA = 'D:/Media/Photo/Import/2020-07 Camper Van/2020-07-09 Gemini Bridges';
+  const AUH = `${MEDIA}/_AVP3481.auh/Contents/History/resources`;
+
+  /** The ticket's heaviest group of the d:/ scan: 5 files, 10 copies, 206.2 MB reclaimable. */
+  function heaviest() {
+    const sets = Array.from({ length: 5 }, (_, i) => groupSet(`_AVP348${i}.dat`, 43200000, 2));
+    return folderGroup(
+      [
+        groupFolder(MEDIA, { sharedFiles: 5, folderFiles: 190 }),
+        groupFolder(AUH, { sharedFiles: 5, folderFiles: 12 }),
+      ],
+      sets,
+      { reclaimableBytes: 216200000 },
+    );
+  }
+
+  it('DFS-068.AC-1, DFS-068.AC-2, DFS-068.AC-8 reads the heaviest group of the d:/ scan', async () => {
+    await renderAnswered(groupPage([heaviest()]));
+
+    expect(text('.group-header .group-files')).toEqual(['5 files']);
+    expect(text('.group-header .group-meta')).toEqual(['· 10 copies · 41.2 MB each · shared by 2 folders']);
+    expect(text('.group-header .group-reclaimable-bytes')).toEqual(['206.2 MB']);
+
+    const lines = Array.from(page().querySelectorAll('li.folder-line'));
+    expect(lines).toHaveLength(2);
+    expect(norm(lines[0].querySelector('.shared-count'))).toBe('5 of 190 files');
+    expect(lines[0].querySelector('.app-tag')).toBeNull();
+    expect(norm(lines[1].querySelector('.shared-count'))).toBe('5 of 12 files');
+    expect(norm(lines[1].querySelector('.app-tag'))).toBe('app');
+    expect(lines[1].querySelector('.app-tag')?.getAttribute('title')).toBe(APP_TITLE);
   });
-  const photos2019 = summary('C:\\Photos\\2019', {
-    totalFiles: 400,
-    totalBytes: 1503238553,
-    filesWithCopyElsewhere: 340,
-    bytesWithCopyElsewhere: 1288490188,
-    internalDuplicateFiles: 12,
-    internalBytes: 83886080,
+
+  it('DFS-068.AC-1 lists the groups in the server order, the reclaimable bars scaled to the page\'s largest', async () => {
+    const big = folderGroup([groupFolder('D:/A'), groupFolder('D:/B')], [groupSet('big.iso', 200, 2)]);
+    const half = folderGroup([groupFolder('D:/C'), groupFolder('D:/D')], [groupSet('half.iso', 100, 2)]);
+    const small = folderGroup([groupFolder('D:/E'), groupFolder('D:/F')], [groupSet('small.iso', 50, 2)]);
+    // The server's order is kept, even when a later group is the largest.
+    await renderAnswered(groupPage([half, big, small]));
+
+    expect(page().querySelectorAll('div.group')).toHaveLength(3);
+    expect(text('.group-header .group-reclaimable-bytes')).toEqual(['100 B', '200 B', '50 B']);
+    expect(widths('.group-header .bar-fill')).toEqual([50, 100, 25]);
+    expect(text('.group-header .group-meta')[0]).toBe('· 2 copies · 100 B each · shared by 2 folders');
   });
 
-  it('DFS-050.AC-1 shows no header under "All folders", then the selected folder\'s summary above its tables', async () => {
-    await renderAnswered(summaryPage([backup2019], { totalItems: 34 }), pairPage([], { totalItems: 12 }));
+  it('DFS-068.AC-1 shows the total as "in all" when the group has sets not listed or sets of different sizes', async () => {
+    const unlisted = folderGroup(
+      [groupFolder('D:/A', { sharedFiles: 25, sharedBytes: 26214400 })],
+      Array.from({ length: 20 }, (_, i) => groupSet(`f${i}.bin`, 1048576, 2)),
+      { files: 25, totalSets: 25 },
+    );
+    const mixed = folderGroup(
+      [groupFolder('D:/B', { sharedFiles: 2, sharedBytes: 3145728 })],
+      [groupSet('one.bin', 1048576, 2), groupSet('two.bin', 2097152, 2)],
+    );
+    await renderAnswered(groupPage([unlisted, mixed]));
 
-    expect(page().querySelector('.folder-header')).toBeNull();
-    expect(text('section.summaries h3')).toEqual(['Folders']);
-    expect(text('section.pairs h3')).toEqual(['Folder pairs']);
-    expect(page().querySelectorAll('mat-paginator')).toHaveLength(2);
-    expect(page().querySelector('.summaries-paginator')).not.toBeNull();
-    expect(page().querySelector('.pairs-paginator')).not.toBeNull();
+    expect(text('.group-header .group-meta')).toEqual([
+      '· 40 copies · 25.0 MB in all · shared by 1 folder',
+      '· 4 copies · 3.0 MB in all · shared by 1 folder',
+    ]);
+  });
 
-    fixture.componentRef.setInput('folder', 'D:\\Backup');
+  it('DFS-068.AC-1 shows a progress bar while /groups loads, then the list', async () => {
+    await render();
+    const req = expectGroups(http, 's-1');
     await step();
-    await answer(
-      summaryPage([backup2019], { totalItems: 34, folder: summary('D:\\Backup', { totalFiles: 5, totalBytes: 900 }) }),
-      pairPage([], { totalItems: 12 }),
-      'D:\\Backup',
-    );
+    const bars = await loader.getAllHarnesses(MatProgressBarHarness.with({ selector: '[aria-label="Loading folder groups"]' }));
+    expect(bars).toHaveLength(1);
 
-    expect(text('.folder-header .summary-folder')).toEqual(['D:\\Backup']);
-    expect(text('.folder-header .summary-total')).toEqual(['Total 5 files · 900 B']);
-    const header = page().querySelector('.folder-header') as HTMLElement;
-    const folders = page().querySelector('section.summaries') as HTMLElement;
-    expect(header.compareDocumentPosition(folders) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    req.flush(groupPage([heaviest()]));
+    await step();
+    expect(
+      await loader.getAllHarnesses(MatProgressBarHarness.with({ selector: '[aria-label="Loading folder groups"]' })),
+    ).toHaveLength(0);
+    expect(page().querySelectorAll('div.group')).toHaveLength(1);
   });
 
-  it('DFS-050.AC-2 reads each folder row and the selected folder\'s header, with the chip only on a fully copied folder', async () => {
-    await renderAnswered(
-      summaryPage([backup2019, photos2019], { folder: backup2019 }),
-      pairPage([]),
-      'D:\\Backup\\2019',
-    );
+  it('DFS-068.AC-1 says "No folders share files" with no paginator when there are no groups', async () => {
+    await renderAnswered(groupPage([], { totalItems: 0 }));
 
-    const rows = Array.from(page().querySelectorAll('tr.summary-row'));
-    expect(rows).toHaveLength(2);
-    const cells = (row: Element) => Array.from(row.querySelectorAll('td')).map((td) => norm(td));
-    expect(cells(rows[0])).toEqual([
-      'D:\\Backup\\2019 all copied elsewhere',
-      '340 / 340 files · 1.2 GB',
-      '0 files · 0 B',
-      '340 files · 1.2 GB',
-    ]);
-    expect(cells(rows[1])).toEqual([
-      'C:\\Photos\\2019',
-      '340 / 400 files · 1.2 GB',
-      '12 files · 80.0 MB',
-      '400 files · 1.4 GB',
-    ]);
-    expect(rows[0].querySelector('mat-chip')).not.toBeNull();
-    expect(rows[1].querySelector('mat-chip')).toBeNull();
-    expect(text('th')).toEqual(expect.arrayContaining(['Folder', 'Copied elsewhere', 'Duplicates inside', 'Total']));
-
-    expect(text('.folder-header .summary-folder')).toEqual(['D:\\Backup\\2019']);
-    expect(text('.folder-header .summary-copied')).toEqual(['Copied elsewhere 340 / 340 files · 1.2 GB']);
-    expect(text('.folder-header .summary-inside')).toEqual(['Duplicates inside 0 files · 0 B']);
-    expect(text('.folder-header .summary-total')).toEqual(['Total 340 files · 1.2 GB']);
-    expect(page().querySelector('.folder-header mat-chip.all-copied')).not.toBeNull();
+    expect(text('.groups-empty')).toEqual(['No folders share files']);
+    expect(page().querySelector('mat-paginator')).toBeNull();
+    expect(page().querySelector('div.group')).toBeNull();
   });
 
-  it('DFS-050.AC-2 gives an empty folder no "all copied elsewhere" chip', async () => {
-    const empty = summary('D:\\Empty', {
-      totalFiles: 0,
-      totalBytes: 0,
-      filesWithCopyElsewhere: 0,
-      bytesWithCopyElsewhere: 0,
+  it('DFS-068.AC-1 shows the server message in an alert when /groups is refused', async () => {
+    await render('D:/Elsewhere');
+    refuse(expectGroups(http, 's-1', 'D:/Elsewhere'), 403, {
+      code: 'PATH_OUTSIDE_ROOTS',
+      message: 'The path is outside the scanned folders',
     });
-    await renderAnswered(summaryPage([empty, backup2019]));
+    await step();
 
-    const rows = Array.from(page().querySelectorAll('tr.summary-row'));
-    expect(rows).toHaveLength(2);
-    expect(rows[0].querySelector('mat-chip')).toBeNull();
-    expect(norm(rows[0].querySelector('td'))).toBe('D:\\Empty');
-    expect(rows[1].querySelector('mat-chip')).not.toBeNull();
+    const alert = page().querySelector('.groups-error');
+    expect(alert?.getAttribute('role')).toBe('alert');
+    expect(norm(alert)).toBe('The path is outside the scanned folders');
+    expect(page().querySelector('div.group')).toBeNull();
   });
 
-  it('DFS-050.AC-3 shows side A then side B in the API order, "partial" and "all have a copy in the other"', async () => {
-    const row: FolderPairView = pair(
-      side('C:\\Photos\\2019', { filesWithCopy: 340, totalFiles: 400, bytesWithCopy: 1288490188, full: false }),
-      side('D:\\Backup\\2019', { filesWithCopy: 340, totalFiles: 340, bytesWithCopy: 1288490188, full: true }),
-    );
-    await renderAnswered(summaryPage([]), pairPage([row]));
+  it('DFS-068.AC-1 pages the groups: 10 per page by default, 10, 25 and 50 offered', async () => {
+    await renderAnswered(groupPage([heaviest()], { totalItems: 34 }));
 
-    expect(page().querySelectorAll('tr.pair-row')).toHaveLength(1);
-    expect(text('tr.pair-row .pair-side .side-text')).toEqual([
-      'C:\\Photos\\2019: 340 / 400 files · 1.2 GB',
-      'D:\\Backup\\2019: 340 / 340 files · 1.2 GB',
+    const pager = await loader.getHarness(MatPaginatorHarness.with({ selector: '.groups-paginator' }));
+    expect(await pager.getPageSize()).toBe(10);
+
+    await pager.goToNextPage();
+    await step();
+    expectGroups(http, 's-1', null, null, 1, 10).flush(groupPage([heaviest()], { totalItems: 34, page: 1 }));
+    await step();
+
+    await pager.setPageSize(25);
+    await step();
+    expectGroups(http, 's-1', null, null, 0, 25).flush(groupPage([heaviest()], { totalItems: 34, size: 25 }));
+    await step();
+  });
+
+  it('DFS-068.AC-2 shows the short path with the full path as tooltip, "×N" only above 1, and a copy button', async () => {
+    const group = folderGroup(
+      [
+        groupFolder('D:/Media/Photo/2020', { copiesEach: 1, sharedFiles: 3, folderFiles: 7 }),
+        groupFolder('D:/Media/Photo/2020/Sunset', { copiesEach: 2, sharedFiles: 2, folderFiles: 7 }),
+      ],
+      [groupSet('a.bin')],
+    );
+    await renderAnswered(groupPage([group]), ['D:/Media']);
+
+    const lines = Array.from(page().querySelectorAll('li.folder-line'));
+    expect(lines.map((line) => norm(line.querySelector('.short-path')))).toEqual(['Photo/2020', 'Photo/2020/Sunset']);
+    expect(lines.map((line) => line.querySelector('.short-path')?.getAttribute('title'))).toEqual([
+      'D:/Media/Photo/2020',
+      'D:/Media/Photo/2020/Sunset',
     ]);
-    expect(text('tr.pair-row .pair-side .side-coverage')).toEqual(['partial', 'all have a copy in the other']);
-    expect(text('tr.pair-row .side-a .side-text')).toEqual(['C:\\Photos\\2019: 340 / 400 files · 1.2 GB']);
-    expect(text('tr.pair-row .side-b .side-coverage')).toEqual(['all have a copy in the other']);
+    expect(lines[0].querySelector('.copies-each')).toBeNull();
+    expect(norm(lines[1].querySelector('.copies-each'))).toBe('×2');
+    expect(lines.map((line) => norm(line.querySelector('.shared-count')))).toEqual(['3 of 7 files', '2 of 7 files']);
+    expect(widths('li.folder-line .share .bar-fill')[0]).toBeCloseTo((3 / 7) * 100, 1);
+    expect(page().querySelectorAll('li.folder-line app-path-copy')).toHaveLength(2);
+    const copy = await loader.getAllHarnesses(MatButtonHarness.with({ selector: '[aria-label="Copy path of D:/Media/Photo/2020"]' }));
+    expect(copy).toHaveLength(1);
   });
 
-  it('DFS-050.AC-4 shows the note above the tables and no verdict wording for two folders each fully covered by the other', async () => {
-    const both = pair(
-      side('D:\\A', { totalFiles: 5, filesWithCopy: 5, full: true }),
-      side('D:\\B', { totalFiles: 5, filesWithCopy: 5, full: true }),
-    );
-    await renderAnswered(
-      summaryPage([backup2019], { folder: backup2019 }),
-      pairPage([both]),
-      'D:\\Backup\\2019',
-    );
+  it('DFS-068.AC-2 cuts a long path from the middle and keeps the whole path as the tooltip', async () => {
+    await renderAnswered(groupPage([heaviest()]));
 
-    expect(text('.pair-side .side-coverage')).toEqual(['all have a copy in the other', 'all have a copy in the other']);
-    expect(text('.overlap-note')).toEqual([NOTE]);
-    const noteEl = page().querySelector('.overlap-note') as HTMLElement;
-    for (const section of ['section.folder-header', 'section.summaries', 'section.pairs']) {
-      const el = page().querySelector(section) as HTMLElement;
-      expect(noteEl.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const second = page().querySelectorAll('li.folder-line')[1];
+    expect(second.querySelector('.short-path')?.getAttribute('title')).toBe(AUH);
+    expect(norm(second.querySelector('.path-folders'))).toContain('…');
+    expect(norm(second.querySelector('.path-name'))).toBe('resources');
+  });
+
+  it('DFS-068.AC-2, DFS-068.AC-3, DFS-068.AC-8 reads two copies in an auto-save folder', async () => {
+    const sunset = 'D:/Media/2020-08-20 Sunset GGBr';
+    const group = folderGroup(
+      [
+        groupFolder(sunset, { copiesEach: 1, sharedFiles: 1, folderFiles: 1 }),
+        groupFolder(`${sunset}/Adobe Premiere Pro Auto-Save`, { copiesEach: 2, sharedFiles: 2, folderFiles: 7 }),
+      ],
+      [groupSet('Sunset.prproj')],
+    );
+    await renderAnswered(groupPage([group]));
+
+    const lines = Array.from(page().querySelectorAll('li.folder-line'));
+    expect(norm(lines[0].querySelector('.fully-shared'))).toBe('fully shared');
+    expect(lines[0].querySelector('.copies-each')).toBeNull();
+    expect(lines[1].querySelector('.fully-shared')).toBeNull();
+    expect(norm(lines[1].querySelector('.copies-each'))).toBe('×2');
+    expect(norm(lines[1].querySelector('.shared-count'))).toBe('2 of 7 files');
+    expect(norm(lines[1].querySelector('.app-tag'))).toBe('app');
+    expect(lines[0].querySelector('.app-tag')).toBeNull();
+  });
+
+  it('DFS-068.AC-3, DFS-068.AC-4 marks two fully shared folders and says any one can go, not all', async () => {
+    const group = folderGroup(
+      [
+        groupFolder('D:/Trips/2020-06-23 Garmin Road trip/Garmin', { sharedFiles: 1, folderFiles: 1 }),
+        groupFolder('D:/Trips/2020-07-28 Virb Road Trip/Garmin', { sharedFiles: 1, folderFiles: 1 }),
+      ],
+      [groupSet('GMETRIX.FIT')],
+    );
+    await renderAnswered(groupPage([group]));
+
+    expect(text('li.folder-line .fully-shared')).toEqual(['fully shared', 'fully shared']);
+    expect(text('.fully-shared-note')).toEqual([FULLY_SHARED_NOTE]);
+  });
+
+  it('DFS-068.AC-4 shows no "any one can go" line for one fully shared folder, or none', async () => {
+    const one = folderGroup(
+      [groupFolder('D:/A', { sharedFiles: 1, folderFiles: 1 }), groupFolder('D:/B', { sharedFiles: 1, folderFiles: 4 })],
+      [groupSet('a.bin')],
+    );
+    const two = folderGroup(
+      [groupFolder('D:/C', { sharedFiles: 1, folderFiles: 3 }), groupFolder('D:/D', { sharedFiles: 1, folderFiles: 4 })],
+      [groupSet('b.bin')],
+    );
+    const both = folderGroup(
+      [groupFolder('D:/E', { sharedFiles: 1, folderFiles: 1 }), groupFolder('D:/F', { sharedFiles: 1, folderFiles: 1 })],
+      [groupSet('c.bin')],
+    );
+    await renderAnswered(groupPage([one, two, both]));
+
+    const groups = Array.from(page().querySelectorAll('div.group'));
+    expect(groups.map((g) => g.querySelectorAll('.fully-shared').length)).toEqual([1, 0, 2]);
+    expect(groups.map((g) => g.querySelector('.fully-shared-note') !== null)).toEqual([false, false, true]);
+  });
+
+  it('DFS-068.AC-3 shows "also in N other groups" only for a folder with otherGroups above 0', async () => {
+    const group = folderGroup(
+      [groupFolder('D:/A', { otherGroups: 2 }), groupFolder('D:/B', { otherGroups: 0 }), groupFolder('D:/C', { otherGroups: 1 })],
+      [groupSet('a.bin')],
+    );
+    await renderAnswered(groupPage([group]));
+
+    const lines = Array.from(page().querySelectorAll('li.folder-line'));
+    expect(lines.map((line) => line.querySelector('.other-groups') === null ? null : norm(line.querySelector('.other-groups')))).toEqual([
+      'also in 2 other groups',
+      null,
+      'also in 1 other group',
+    ]);
+  });
+
+  it('DFS-068.AC-5 lists the sets of a group of 25 when it is expanded, 20 of them, then "and 5 more"', async () => {
+    const sets = Array.from({ length: 20 }, (_, i) => groupSet(`file-${i}.bin`, 1048576, 2));
+    const group = folderGroup([groupFolder('D:/A'), groupFolder('D:/B')], sets, { files: 25, totalSets: 25 });
+    const small = folderGroup([groupFolder('D:/C'), groupFolder('D:/D')], [groupSet('only.bin', 2048, 3)]);
+    await renderAnswered(groupPage([group, small]));
+
+    expect(page().querySelectorAll('.group-set')).toHaveLength(0);
+    const panels = await loader.getAllHarnesses(MatExpansionPanelHarness.with({ selector: '.group-sets' }));
+    expect(panels).toHaveLength(2);
+    expect(await panels[0].getTitle()).toBe('25 sets');
+    await panels[0].expand();
+    await step();
+
+    const first = page().querySelectorAll('div.group')[0];
+    expect(first.querySelectorAll('.group-set')).toHaveLength(20);
+    expect(norm(first.querySelectorAll('.set-name')[0])).toBe('file-0.bin');
+    expect(norm(first.querySelectorAll('.set-detail')[0])).toBe('1.0 MB · 2 copies');
+    expect(norm(first.querySelector('.more-sets'))).toBe('and 5 more');
+
+    await panels[1].expand();
+    await step();
+    const second = page().querySelectorAll('div.group')[1];
+    expect(text('.group-set .set-name').slice(-1)).toEqual(['only.bin']);
+    expect(norm(second.querySelector('.set-detail'))).toBe('2.0 KB · 3 copies');
+    expect(second.querySelector('.more-sets')).toBeNull();
+  });
+
+  it('DFS-068.AC-6 requests /groups under the selected folder, and without it for "All folders"', async () => {
+    await renderAnswered(groupPage([heaviest()]));
+
+    fixture.componentRef.setInput('folder', 'D:/Media');
+    await step();
+    expectGroups(http, 's-1', 'D:/Media').flush(groupPage([heaviest()]));
+    await step();
+    expect(page().querySelectorAll('div.group')).toHaveLength(1);
+
+    fixture.componentRef.setInput('folder', null);
+    await step();
+    expectGroups(http, 's-1', null).flush(groupPage([heaviest()]));
+    await step();
+  });
+
+  it('DFS-068.AC-7 shows "Show 9 small groups", reloads with minBytes 0, then "Hide small groups" reloads without it', async () => {
+    await renderAnswered(groupPage([heaviest()], { hiddenSmall: 9 }));
+
+    expect(await loader.getAllHarnesses(MatButtonHarness.with({ text: 'Hide small groups' }))).toHaveLength(0);
+    await (await loader.getHarness(MatButtonHarness.with({ text: 'Show 9 small groups' }))).click();
+    await step();
+    expectGroups(http, 's-1', null, 0).flush(groupPage([heaviest(), heaviest()], { hiddenSmall: 9 }));
+    await step();
+    expect(page().querySelectorAll('div.group')).toHaveLength(2);
+    expect(await loader.getAllHarnesses(MatButtonHarness.with({ text: 'Show 9 small groups' }))).toHaveLength(0);
+
+    await (await loader.getHarness(MatButtonHarness.with({ text: 'Hide small groups' }))).click();
+    await step();
+    expectGroups(http, 's-1', null, null).flush(groupPage([heaviest()], { hiddenSmall: 9 }));
+    await step();
+    expect(page().querySelectorAll('div.group')).toHaveLength(1);
+    expect(await loader.getAllHarnesses(MatButtonHarness.with({ text: 'Show 9 small groups' }))).toHaveLength(1);
+  });
+
+  it('DFS-068.AC-7 shows no small-groups button when none are hidden', async () => {
+    await renderAnswered(groupPage([heaviest()], { hiddenSmall: 0 }));
+
+    expect(page().querySelectorAll('div.group')).toHaveLength(1);
+    expect(page().querySelector('button.show-small')).toBeNull();
+    expect(page().querySelector('button.hide-small')).toBeNull();
+  });
+
+  it('DFS-068.AC-7 keeps "Show N small groups" under an empty list', async () => {
+    await renderAnswered(groupPage([], { totalItems: 0, hiddenSmall: 4 }));
+
+    expect(text('.groups-empty')).toEqual(['No folders share files']);
+    expect(await loader.getAllHarnesses(MatButtonHarness.with({ text: 'Show 4 small groups' }))).toHaveLength(1);
+  });
+
+  it('DFS-068.AC-8 tags "Photo.AUH/x" case-insensitively and leaves "Photos" and its lookalikes plain', async () => {
+    const group = folderGroup(
+      [
+        groupFolder('D:/a/Photo.AUH/x'),
+        groupFolder('D:/a/Photos'),
+        groupFolder('D:/a/auh'),
+        groupFolder('D:/a/Lightroom Catalog Previews.LRDATA'),
+        groupFolder('D:/a/photoslibrary'),
+      ],
+      [groupSet('a.bin')],
+    );
+    await renderAnswered(groupPage([group]));
+
+    const tagged = Array.from(page().querySelectorAll('li.folder-line')).map(
+      (line) => line.querySelector('.app-tag') !== null,
+    );
+    expect(tagged).toEqual([true, false, false, true, false]);
+    expect(page().querySelector('.app-tag')?.getAttribute('title')).toBe(APP_TITLE);
+  });
+
+  it('DFS-068.AC-8 isAppManaged matches the five patterns on any path element, ignoring letter case', () => {
+    for (const path of [
+      'D:/a/Photo.AUH/x',
+      'D:\\a\\x.auh\\Contents',
+      'D:/a/adobe premiere pro auto-save',
+      'D:/a/Lib.LrData/Previews',
+      'D:/a/My.PhotosLibrary',
+      'D:/a/Project.FCPBUNDLE',
+    ]) {
+      expect(isAppManaged(path), path).toBe(true);
     }
-    const verdict = /safe|delete|can go/i;
-    for (const selector of ['tr', '.folder-header', 'mat-chip', '.pair-side', 'th']) {
-      for (const content of text(selector)) expect(content).not.toMatch(verdict);
+    for (const path of ['D:/a/Photos', 'D:/a/auh', 'D:/a/x.auh.bak', 'D:/a/Adobe Premiere Pro Auto-Saves', 'D:/a/x']) {
+      expect(isAppManaged(path), path).toBe(false);
     }
   });
 
-  it('DFS-050.AC-5 shows "Pinned: <path>" with an "Unpin" link that emits unpinned, and nothing once unpinned', async () => {
-    await render(null, 'D:\\Backup');
-    await answer(summaryPage([]), pairPage([]));
+  it('DFS-068.AC-9 shows no Folders table, Folder pairs table or fixed note, and calls neither /summaries nor /pairs', async () => {
+    await renderAnswered(groupPage([heaviest()]));
 
-    expect(text('.pinned-folder')).toEqual(['Pinned: D:\\Backup']);
+    expect(page().querySelector('div.group')).not.toBeNull();
+    expect(page().querySelector('.summaries-table')).toBeNull();
+    expect(page().querySelector('section.summaries')).toBeNull();
+    expect(page().querySelector('section.pairs')).toBeNull();
+    expect(page().querySelector('.overlap-note')).toBeNull();
+    expect(page().querySelector('.folder-header')).toBeNull();
+    expect(norm(page())).not.toContain('Folder pairs');
+    http.expectNone((r) => r.url.endsWith('/summaries') || r.url.endsWith('/pairs'));
+  });
+
+  it('DFS-050.AC-5 shows "Pinned: <path>" with an "Unpin" button that emits unpinned, and nothing once unpinned', async () => {
+    await render(null, 'D:/Backup');
+    expectGroups(http, 's-1').flush(groupPage([heaviest()]));
+    await step();
+
+    expect(text('.pinned-folder')).toEqual(['Pinned: D:/Backup']);
     const unpin = await loader.getHarness(MatButtonHarness.with({ text: 'Unpin' }));
     await unpin.click();
     await step();
     expect(unpinned).toBe(1);
 
-    fixture.componentRef.setInput('pinned', 'C:\\Photos');
+    fixture.componentRef.setInput('pinned', 'C:/Photos');
     await step();
-    expect(text('.pinned-folder')).toEqual(['Pinned: C:\\Photos']);
+    expect(text('.pinned-folder')).toEqual(['Pinned: C:/Photos']);
 
     fixture.componentRef.setInput('pinned', null);
     await step();
     expect(page().querySelector('.pinned-folder')).toBeNull();
     expect(page().querySelector('section.comparison')).toBeNull();
-    expect(await loader.getAllHarnesses(MatButtonHarness.with({ text: 'Unpin' }))).toHaveLength(0);
   });
 
-  it('DFS-050.AC-6 requests /pair with a=<pinned> and b=<selected> and shows one pair row in the Comparison block', async () => {
-    await render('C:\\Photos', 'D:\\Backup');
-    expectSummaries(http, 's-1', 'C:\\Photos').flush(summaryPage([]));
-    expectPairs(http, 's-1', 'C:\\Photos').flush(pairPage([]));
-    const req = expectPair(http, 's-1', 'D:\\Backup', 'C:\\Photos');
+  it('DFS-068.AC-9, DFS-050.AC-6 requests /pair with a=<pinned> and b=<selected> and shows one pair row in the Comparison block', async () => {
+    await render('C:/Photos', 'D:/Backup');
+    expectGroups(http, 's-1', 'C:/Photos').flush(groupPage([heaviest()]));
+    const req = expectPair(http, 's-1', 'D:/Backup', 'C:/Photos');
     expect(req.request.method).toBe('GET');
     req.flush(
       pair(
-        side('C:\\Photos', { filesWithCopy: 340, totalFiles: 3210, bytesWithCopy: 1288490188, full: false }),
-        side('D:\\Backup', { filesWithCopy: 2, totalFiles: 2, bytesWithCopy: 900, full: true }),
+        side('C:/Photos', { filesWithCopy: 340, totalFiles: 3210, bytesWithCopy: 1288490188, full: false }),
+        side('D:/Backup', { filesWithCopy: 2, totalFiles: 2, bytesWithCopy: 900, full: true }),
       ),
     );
     await step();
 
     expect(text('section.comparison h3')).toEqual(['Comparison']);
     expect(text('.comparison-pair .pair-side .side-text')).toEqual([
-      'C:\\Photos: 340 / 3210 files · 1.2 GB',
-      'D:\\Backup: 2 / 2 files · 900 B',
+      'C:/Photos: 340 / 3210 files · 1.2 GB',
+      'D:/Backup: 2 / 2 files · 900 B',
     ]);
     expect(text('.comparison-pair .pair-side .side-coverage')).toEqual(['partial', 'all have a copy in the other']);
-    expect(page().querySelector('.comparison-hint')).toBeNull();
+    expect(page().querySelector('div.group')).not.toBeNull();
   });
 
   it('DFS-050.AC-7 sends no /pair for the pinned folder itself or "All folders" and shows the hint', async () => {
-    await render('D:\\Backup', 'D:\\Backup');
-    await answer(summaryPage([]), pairPage([]), 'D:\\Backup');
+    await render('D:/Backup', 'D:/Backup');
+    expectGroups(http, 's-1', 'D:/Backup').flush(groupPage([heaviest()]));
+    await step();
     http.expectNone((r) => r.url.endsWith('/pair'));
     expect(text('.comparison-hint')).toEqual(['Select another folder to compare with the pinned one']);
 
     fixture.componentRef.setInput('folder', null);
     await step();
-    await answer(summaryPage([]), pairPage([]));
+    expectGroups(http, 's-1', null).flush(groupPage([heaviest()]));
+    await step();
     http.expectNone((r) => r.url.endsWith('/pair'));
     expect(text('.comparison-hint')).toEqual(['Select another folder to compare with the pinned one']);
   });
 
   it('DFS-050.AC-7 shows the server message when /pair answers 400 NESTED_FOLDERS', async () => {
-    await render('C:\\Photos\\2019', 'C:\\Photos');
-    expectSummaries(http, 's-1', 'C:\\Photos\\2019').flush(summaryPage([]));
-    expectPairs(http, 's-1', 'C:\\Photos\\2019').flush(pairPage([]));
-    refuse(expectPair(http, 's-1', 'C:\\Photos', 'C:\\Photos\\2019'), 400, {
+    await render('C:/Photos/2019', 'C:/Photos');
+    expectGroups(http, 's-1', 'C:/Photos/2019').flush(groupPage([heaviest()]));
+    refuse(expectPair(http, 's-1', 'C:/Photos', 'C:/Photos/2019'), 400, {
       code: 'NESTED_FOLDERS',
-      message: 'C:\\Photos contains C:\\Photos\\2019',
+      message: 'C:/Photos contains C:/Photos/2019',
     });
     await step();
 
     const alert = page().querySelector('.comparison-error');
     expect(alert?.getAttribute('role')).toBe('alert');
-    expect(norm(alert)).toBe('C:\\Photos contains C:\\Photos\\2019');
+    expect(norm(alert)).toBe('C:/Photos contains C:/Photos/2019');
     expect(page().querySelector('.comparison-pair')).toBeNull();
   });
 
-  it('DFS-050.AC-9 shows count lines and pages each table on its own, then both from page 0 for another folder', async () => {
-    await renderAnswered(
-      summaryPage([backup2019], { totalItems: 34 }),
-      pairPage([pair(side('D:\\A'), side('D:\\B'))], { totalItems: 12 }),
-    );
-
-    expect(text('.summaries-count')).toEqual(['34 folders']);
-    expect(text('.pairs-count')).toEqual(['12 folder pairs']);
-    const summariesPager = await loader.getHarness(MatPaginatorHarness.with({ selector: '.summaries-paginator' }));
-    const pairsPager = await loader.getHarness(MatPaginatorHarness.with({ selector: '.pairs-paginator' }));
-    expect(await summariesPager.getPageSize()).toBe(10);
-    expect(await pairsPager.getPageSize()).toBe(10);
-
-    await summariesPager.goToNextPage();
-    await step();
-    expectSummaries(http, 's-1', null, 1, 10).flush(summaryPage([backup2019], { totalItems: 34, page: 1 }));
-    http.expectNone((r) => r.url.endsWith('/pairs'));
-    await step();
-
-    await pairsPager.setPageSize(25);
-    await step();
-    expectPairs(http, 's-1', null, 0, 25).flush(
-      pairPage([pair(side('D:\\A'), side('D:\\B'))], { totalItems: 12, size: 25 }),
-    );
-    http.expectNone((r) => r.url.endsWith('/summaries'));
-    await step();
-
-    fixture.componentRef.setInput('folder', 'C:\\Photos');
-    await step();
-    expectSummaries(http, 's-1', 'C:\\Photos', 0, null).flush(summaryPage([backup2019], { totalItems: 34 }));
-    expectPairs(http, 's-1', 'C:\\Photos', 0, null).flush(pairPage([], { totalItems: 0 }));
-    await step();
-  });
-
-  it('DFS-050.AC-10 says there is nothing to show and no paginator when neither table has items', async () => {
-    await renderAnswered(summaryPage([], { totalItems: 0 }), pairPage([], { totalItems: 0 }));
-
-    expect(text('.summaries-empty')).toEqual(['No folders with copies here']);
-    expect(text('.pairs-empty')).toEqual(['No folder pairs share copies here']);
-    expect(page().querySelector('mat-paginator')).toBeNull();
-    expect(page().querySelector('.summaries-count')).toBeNull();
-    expect(page().querySelector('.pairs-count')).toBeNull();
-  });
-
-  it('DFS-050.AC-10 shows a progress bar while a table loads, then its server message while the other table keeps its rows', async () => {
-    await render();
-    const summaries = expectSummaries(http, 's-1', null);
-    const pairs = expectPairs(http, 's-1', null);
-    await step();
-    const bar = await loader.getAllHarnesses(MatProgressBarHarness.with({ selector: '[aria-label="Loading folders"]' }));
-    expect(bar).toHaveLength(1);
-
-    pairs.flush(pairPage([pair(side('D:\\A'), side('D:\\B'))]));
-    refuse(summaries, 403, { code: 'PATH_OUTSIDE_ROOTS', message: 'The path is outside the scanned folders' });
-    await step();
-
-    const alert = page().querySelector('.summaries-error');
-    expect(alert?.getAttribute('role')).toBe('alert');
-    expect(norm(alert)).toBe('The path is outside the scanned folders');
-    expect(
-      await loader.getAllHarnesses(MatProgressBarHarness.with({ selector: '[aria-label="Loading folders"]' })),
-    ).toHaveLength(0);
-    expect(page().querySelectorAll('tr.pair-row')).toHaveLength(1);
-    expect(page().querySelector('.pairs-error')).toBeNull();
-  });
-
   it('DFS-050.AC-10 shows a progress bar while the comparison loads', async () => {
-    await render('C:\\Photos', 'D:\\Backup');
-    expectSummaries(http, 's-1', 'C:\\Photos').flush(summaryPage([]));
-    expectPairs(http, 's-1', 'C:\\Photos').flush(pairPage([]));
-    const req = expectPair(http, 's-1', 'D:\\Backup', 'C:\\Photos');
+    await render('C:/Photos', 'D:/Backup');
+    expectGroups(http, 's-1', 'C:/Photos').flush(groupPage([heaviest()]));
+    const req = expectPair(http, 's-1', 'D:/Backup', 'C:/Photos');
     await step();
 
     const bars = await loader.getAllHarnesses(MatProgressBarHarness.with({ selector: '[aria-label="Loading the comparison"]' }));
     expect(bars).toHaveLength(1);
 
-    req.flush(pair(side('C:\\Photos'), side('D:\\Backup')));
+    req.flush(pair(side('C:/Photos'), side('D:/Backup')));
     await step();
     expect(
       await loader.getAllHarnesses(MatProgressBarHarness.with({ selector: '[aria-label="Loading the comparison"]' })),

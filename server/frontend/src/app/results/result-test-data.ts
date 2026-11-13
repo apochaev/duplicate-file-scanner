@@ -3,13 +3,14 @@ import {
   DuplicateSetView,
   FolderNode,
   FolderPairView,
-  FolderSummaryView,
-  PairPage,
+  FolderGroupView,
+  GroupFolderView,
+  GroupPage,
+  GroupSetView,
   PairSideView,
   ScanEntry,
   ScanProgress,
   SetPage,
-  SummaryPage,
 } from '../api/models';
 
 /** Builders and request helpers shared by the DFS-049 specs, so a test states only what it is about. */
@@ -94,27 +95,7 @@ export function expectSets(
   );
 }
 
-/** DFS-050: builders and request helpers for the Overlaps tab. */
-
-export function summary(path: string, update: Partial<FolderSummaryView> = {}): FolderSummaryView {
-  return {
-    folder: path,
-    totalFiles: 10,
-    totalBytes: 1000,
-    filesWithCopyElsewhere: 4,
-    bytesWithCopyElsewhere: 400,
-    internalDuplicateFiles: 0,
-    internalBytes: 0,
-    ...update,
-  };
-}
-
-export function summaryPage(
-  items: FolderSummaryView[],
-  update: Partial<SummaryPage> = {},
-): SummaryPage {
-  return { items, page: 0, size: 10, totalItems: items.length, ...update };
-}
+/** DFS-050, DFS-068: builders and request helpers for the Overlaps tab. */
 
 export function side(path: string, update: Partial<PairSideView> = {}): PairSideView {
   return { folder: path, totalFiles: 10, totalBytes: 1000, filesWithCopy: 4, bytesWithCopy: 400, full: false, ...update };
@@ -124,54 +105,79 @@ export function pair(a: PairSideView, b: PairSideView): FolderPairView {
   return { a, b };
 }
 
-export function pairPage(items: FolderPairView[], update: Partial<PairPage> = {}): PairPage {
-  return { items, page: 0, size: 10, totalItems: items.length, ...update };
-}
-
-/** The one `GET /api/scans/<id>/<kind>` (`summaries` or `pairs`) with `under` (null: absent), `page` and, when given, `size`. */
-export function expectOverlaps(
-  http: HttpTestingController,
-  id: string,
-  kind: 'summaries' | 'pairs',
-  under: string | null,
-  page = 0,
-  size: number | null = 10,
-): TestRequest {
-  return http.expectOne(
-    (r) =>
-      r.method === 'GET' &&
-      r.url === `/api/scans/${id}/${kind}` &&
-      r.params.has('under') === (under !== null) &&
-      (r.params.get('under') ?? null) === under &&
-      r.params.get('page') === String(page) &&
-      (size === null || r.params.get('size') === String(size)),
-  );
-}
-
-export function expectSummaries(
-  http: HttpTestingController,
-  id: string,
-  under: string | null,
-  page = 0,
-  size: number | null = 10,
-): TestRequest {
-  return expectOverlaps(http, id, 'summaries', under, page, size);
-}
-
-export function expectPairs(
-  http: HttpTestingController,
-  id: string,
-  under: string | null,
-  page = 0,
-  size: number | null = 10,
-): TestRequest {
-  return expectOverlaps(http, id, 'pairs', under, page, size);
-}
-
 /** The one `GET /api/scans/<id>/pair?a=&b=`. */
 export function expectPair(http: HttpTestingController, id: string, a: string, b: string): TestRequest {
   return http.expectOne(
     (r) =>
       r.method === 'GET' && r.url === `/api/scans/${id}/pair` && r.params.get('a') === a && r.params.get('b') === b,
+  );
+}
+
+let setCounter = 0;
+
+/** A set of a group: its name, size and physical copies; each gets its own digest. */
+export function groupSet(name: string, size = 1048576, copies = 2, update: Partial<GroupSetView> = {}): GroupSetView {
+  setCounter++;
+  return { digest: `G-DIGEST-${setCounter}`, name, size, copies, ...update };
+}
+
+/** One folder line of a group: 1 of 5 files shared once, in no other group, unless `update` says otherwise. */
+export function groupFolder(path: string, update: Partial<GroupFolderView> = {}): GroupFolderView {
+  return {
+    folder: path,
+    copiesEach: 1,
+    sharedFiles: 1,
+    sharedBytes: 1048576,
+    folderFiles: 5,
+    folderBytes: 5242880,
+    otherGroups: 0,
+    ...update,
+  };
+}
+
+/** A group of `folders` holding `sets` (all listed unless `update.totalSets` says more); two copies per file by default. */
+export function folderGroup(
+  folders: GroupFolderView[],
+  sets: GroupSetView[] = [groupSet('a.bin')],
+  update: Partial<FolderGroupView> = {},
+): FolderGroupView {
+  const size = sets.reduce((sum, set) => sum + set.size * (set.copies - 1), 0);
+  return {
+    files: sets.length,
+    copies: sets.reduce((sum, set) => sum + set.copies, 0),
+    reclaimableBytes: size,
+    folders,
+    sets,
+    totalSets: sets.length,
+    ...update,
+  };
+}
+
+export function groupPage(items: FolderGroupView[], update: Partial<GroupPage> = {}): GroupPage {
+  return { items, page: 0, size: 10, totalItems: items.length, hiddenSmall: 0, ...update };
+}
+
+/**
+ * The one `GET /api/scans/<id>/groups` with `under` and `minBytes` as given (null: the parameter is absent), `page`
+ * and `size`.
+ */
+export function expectGroups(
+  http: HttpTestingController,
+  id: string,
+  under: string | null = null,
+  minBytes: number | null = null,
+  page = 0,
+  size = 10,
+): TestRequest {
+  return http.expectOne(
+    (r) =>
+      r.method === 'GET' &&
+      r.url === `/api/scans/${id}/groups` &&
+      r.params.has('under') === (under !== null) &&
+      (r.params.get('under') ?? null) === under &&
+      r.params.has('minBytes') === (minBytes !== null) &&
+      (r.params.get('minBytes') ?? null) === (minBytes === null ? null : String(minBytes)) &&
+      r.params.get('page') === String(page) &&
+      r.params.get('size') === String(size),
   );
 }

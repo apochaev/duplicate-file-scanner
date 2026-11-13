@@ -21,19 +21,19 @@ import {
   duplicateSet,
   expectFolders,
   expectPair,
-  expectPairs,
   expectScan,
   expectSets,
-  expectSummaries,
+  expectGroups,
   folder,
+  folderGroup,
+  groupFolder,
+  groupPage,
+  groupSet,
   pair,
-  pairPage,
   refuse,
   scanEntry,
   setPage,
   side,
-  summary,
-  summaryPage,
 } from './result-test-data';
 
 describe('ResultScreen', () => {
@@ -157,11 +157,10 @@ describe('ResultScreen', () => {
     await step();
   }
 
-  /** Selects the Overlaps tab and answers its two first requests with `summaries` and no pairs. */
-  async function openOverlaps(summaries: ReturnType<typeof summaryPage> = summaryPage([]), id = 's-1'): Promise<void> {
+  /** Selects the Overlaps tab and answers its first request, /groups, with `groups`. */
+  async function openOverlaps(groups: ReturnType<typeof groupPage> = groupPage([]), id = 's-1'): Promise<void> {
     await selectTab('Overlaps');
-    expectSummaries(http, id, null).flush(summaries);
-    expectPairs(http, id, null).flush(pairPage([]));
+    expectGroups(http, id, null).flush(groups);
     await step();
   }
 
@@ -223,19 +222,31 @@ describe('ResultScreen', () => {
     expect(page().querySelector('app-sets-tab')).not.toBeNull();
     expect(page().querySelectorAll('tbody.duplicate-set')).toHaveLength(1);
     expect(page().querySelector('app-overlaps-tab')).toBeNull();
-    http.expectNone((r) => r.url.endsWith('/summaries') || r.url.endsWith('/pairs'));
+    http.expectNone((r) => r.url.endsWith('/groups') || r.url.endsWith('/summaries') || r.url.endsWith('/pairs'));
   });
 
-  it('DFS-060.AC-1 shows the folder summary and the Folders table once Overlaps is selected', async () => {
+  it('DFS-060.AC-1, DFS-068.AC-1, DFS-068.AC-9 shows the folder groups, not the old tables, once Overlaps is selected', async () => {
     await openLoaded([photos, backup], oneSet);
 
-    await openOverlaps(summaryPage([summary('C:\\Photos')]));
+    await openOverlaps(
+      groupPage([
+        folderGroup(
+          [groupFolder('C:\\Photos\\2019'), groupFolder('D:\\Backup\\2019')],
+          [groupSet('cat.jpg')],
+        ),
+      ]),
+    );
 
     const tabs = await loader.getHarness(MatTabGroupHarness);
     expect(await (await tabs.getSelectedTab()).getLabel()).toBe('Overlaps');
     expect(page().querySelector('app-overlaps-tab')).not.toBeNull();
-    expect(text('.summaries-table')[0]).toContain('C:\\Photos');
-    expect(text('.overlap-note')).toHaveLength(1);
+    expect(page().querySelectorAll('div.group')).toHaveLength(1);
+    expect(text('.group-header .group-files')).toEqual(['1 file']);
+    // The paths are shown relative to the scan's roots, the root's name first (two roots).
+    expect(text('li.folder-line .short-path')).toEqual(['Photos\\2019', 'Backup\\2019']);
+    expect(page().querySelector('app-overlaps-tab section.overlaps-tab.density-compact')).not.toBeNull();
+    expect(page().querySelector('.summaries-table')).toBeNull();
+    expect(page().querySelector('.overlap-note')).toBeNull();
   });
 
   it('DFS-060.AC-2 shows the scan folders, the start time and the four figures', async () => {
@@ -646,7 +657,7 @@ describe('ResultScreen', () => {
     expectNoResultView();
   });
 
-  it('DFS-050.AC-5 pins a folder from the tree, replaces the pin, and unpins it, with no selection change', async () => {
+  it('DFS-068.AC-9, DFS-050.AC-5 pins a folder from the tree, replaces the pin, and unpins it, with no selection change', async () => {
     await openLoaded([photos, backup], oneSet);
     await openOverlaps();
     expect(page().querySelectorAll('button.folder-pin')).toHaveLength(2);
@@ -670,15 +681,14 @@ describe('ResultScreen', () => {
     expect(page().querySelector('button.all-folders')?.getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('DFS-050.AC-6 compares the pinned folder with a folder selected in the tree', async () => {
+  it('DFS-068.AC-6, DFS-068.AC-9, DFS-050.AC-6 compares the pinned folder with a folder selected in the tree', async () => {
     await openLoaded([photos, backup], oneSet);
     await openOverlaps();
     await (await loader.getHarness(MatButtonHarness.with({ selector: '[aria-label="Pin for comparison: Backup"]' }))).click();
     await step();
 
     await selectFolder('Photos');
-    expectSummaries(http, 's-1', 'C:\\Photos').flush(summaryPage([]));
-    expectPairs(http, 's-1', 'C:\\Photos').flush(pairPage([]));
+    expectGroups(http, 's-1', 'C:\\Photos').flush(groupPage([]));
     expectPair(http, 's-1', 'D:\\Backup', 'C:\\Photos').flush(
       pair(
         side('C:\\Photos', { filesWithCopy: 340, totalFiles: 3210, bytesWithCopy: 1288490188, full: false }),
