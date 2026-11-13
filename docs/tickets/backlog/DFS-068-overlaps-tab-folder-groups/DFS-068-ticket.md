@@ -1,7 +1,7 @@
 ---
 id: DFS-068
 title: Overlaps tab shows folder groups
-status: in-progress
+status: in-review
 type: feature
 scope: []
 archetype: component
