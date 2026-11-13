@@ -34,3 +34,7 @@
 "tests: fix the "in all" test data so sharedBytes follows /groups' real rules, expect the files' own size one copy each; implement: groupSizeText uses reclaimableBytes × files / (copies − files)"
 
 Rework: tests phase first (fix the "in all" Vitest data and expected value; do not touch src/main, the new expectation fails against the current implementation, which is intended), then implement (change `groupSizeText` in overlaps-tab.ts; design.md's "sum of sharedBytes" is superseded), then verify again.
+
+## Tests rework (in all)
+
+Test-author: the "in all" test now uses /groups-consistent data (25 files in 2 folders with 20 listed; 3 MB + 2 MB in two folders; 1 MB + 2 MB with three copies per file) and expects the files own size (25.0 / 5.0 / 3.0 MB). Against the current implementation it fails with 50.0 / 10.0 / 9.0 MB; the other 298 tests pass. Expected commit: test(server): fix in-all expectation [DFS-068].

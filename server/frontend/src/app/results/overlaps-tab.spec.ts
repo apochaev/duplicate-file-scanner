@@ -130,20 +130,40 @@ describe('OverlapsTab', () => {
   });
 
   it('DFS-068.AC-1 shows the total as "in all" when the group has sets not listed or sets of different sizes', async () => {
+    // As /groups computes them: a folder's sharedBytes counts every copy it holds, reclaimableBytes is the files'
+    // size times (copies - files) / files, so "in all" is the files' own size, one copy each.
+    // 25 files of 1 MB, two copies each (one per folder), only 20 listed: 50 copies, 25 MB reclaimable.
     const unlisted = folderGroup(
-      [groupFolder('D:/A', { sharedFiles: 25, sharedBytes: 26214400 })],
+      [
+        groupFolder('D:/A', { sharedFiles: 25, sharedBytes: 26214400 }),
+        groupFolder('D:/B', { sharedFiles: 25, sharedBytes: 26214400 }),
+      ],
       Array.from({ length: 20 }, (_, i) => groupSet(`f${i}.bin`, 1048576, 2)),
-      { files: 25, totalSets: 25 },
+      { files: 25, copies: 50, reclaimableBytes: 26214400, totalSets: 25 },
     );
+    // 3 MB + 2 MB files in two folders: 4 copies, 5 MB reclaimable, 5 MB in all.
     const mixed = folderGroup(
-      [groupFolder('D:/B', { sharedFiles: 2, sharedBytes: 3145728 })],
-      [groupSet('one.bin', 1048576, 2), groupSet('two.bin', 2097152, 2)],
+      [
+        groupFolder('D:/B', { sharedFiles: 2, sharedBytes: 5242880 }),
+        groupFolder('D:/C', { sharedFiles: 2, sharedBytes: 5242880 }),
+      ],
+      [groupSet('three.bin', 3145728, 2), groupSet('two.bin', 2097152, 2)],
     );
-    await renderAnswered(groupPage([unlisted, mixed]));
+    // 1 MB + 2 MB files, three copies each (one per folder): 6 copies, 6 MB reclaimable, 3 MB in all.
+    const triple = folderGroup(
+      [
+        groupFolder('D:/D', { sharedFiles: 2, sharedBytes: 3145728 }),
+        groupFolder('D:/E', { sharedFiles: 2, sharedBytes: 3145728 }),
+        groupFolder('D:/F', { sharedFiles: 2, sharedBytes: 3145728 }),
+      ],
+      [groupSet('one.bin', 1048576, 3), groupSet('two.bin', 2097152, 3)],
+    );
+    await renderAnswered(groupPage([unlisted, mixed, triple]));
 
     expect(text('.group-header .group-meta')).toEqual([
-      '· 40 copies · 25.0 MB in all · shared by 1 folder',
-      '· 4 copies · 3.0 MB in all · shared by 1 folder',
+      '· 50 copies · 25.0 MB in all · shared by 2 folders',
+      '· 4 copies · 5.0 MB in all · shared by 2 folders',
+      '· 6 copies · 3.0 MB in all · shared by 3 folders',
     ]);
   });
 
