@@ -85,7 +85,7 @@ export type Comparison =
  * button), the `p.fully-shared-note` when two or more folders are fully shared, and a `mat-expansion-panel.group-sets`
  * listing the first sets ("and N more" when the group has more).
  *
- * DFS-069: each `div.group-header` starts with a `mat-checkbox.group-done-check` "Mark as dealt with". A ticked group
+ * DFS-069: each `div.group-header` starts with a `mat-checkbox.group-done-check` "Reviewed". A ticked group
  * (its key, `groupKey` of its folders' paths, is among `marks()`) leaves `div.open-groups` and appears, muted
  * (`div.group.group-done`, checkbox ticked), in `mat-expansion-panel.done-groups` titled "Dealt with on this page (K)"
  * below the paginator's list: collapsed, absent when K is 0, its content not lazy. `p.groups-counts` above the list

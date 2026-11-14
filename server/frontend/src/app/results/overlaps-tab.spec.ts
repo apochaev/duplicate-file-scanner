@@ -661,11 +661,11 @@ describe('OverlapsTab dealt with', () => {
     return loader.getAllHarnesses(MatExpansionPanelHarness.with({ selector: '.done-groups' }));
   }
 
-  it('DFS-069.AC-1 shows a "Mark as dealt with" checkbox in every header, ticking moves the group to Dealt with without a request', async () => {
+  it('DFS-069.AC-1 shows a "Reviewed" checkbox in every header, ticking moves the group to Dealt with without a request', async () => {
     await configure();
     await open(groupPage(threeGroups()));
 
-    const labels = await loader.getAllHarnesses(MatCheckboxHarness.with({ label: 'Mark as dealt with' }));
+    const labels = await loader.getAllHarnesses(MatCheckboxHarness.with({ label: 'Reviewed' }));
     expect(labels).toHaveLength(3);
     expect(page().querySelectorAll('div.group-header > mat-checkbox')).toHaveLength(3);
 

@@ -90,7 +90,7 @@
                 [checked]="done"
                 (change)="toggleDone(group, $event.checked)"
                 (click)="$event.stopPropagation()"
-              >Mark as dealt with</mat-checkbox>
+              >Reviewed</mat-checkbox>
               <span class="group-files">{{ filesText(group) }}</span>
               <span class="group-meta">{{ groupMetaText(group) }}</span>
               <span class="group-reclaimable">
