@@ -1,0 +1,124 @@
+{
+  "ticket": "DFS-069",
+  "archetype": {
+    "name": "component",
+    "version": 7
+  },
+  "branch": "tickets/DFS-069-mark-folder-groups-dealt-with",
+  "worktree": "C:/Users/apoch/Projects/us.pochaev/dfs/duplicate-file-scanner-DFS-069-mark-folder-groups-dealt-with",
+  "state": "awaiting-approval",
+  "phases": [
+    {
+      "id": "design",
+      "agent": "architect",
+      "after": [],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "high",
+          "turns": 48,
+          "wallClockSeconds": 520,
+          "outcome": "passed",
+          "note": "touches: 9 changed files, all inside touches"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-069-mark-folder-groups-dealt-with/DFS-069-ticket.md",
+        "docs/tickets/backlog/DFS-069-mark-folder-groups-dealt-with/design.md",
+        "docs/tickets/backlog/DFS-069-mark-folder-groups-dealt-with/learnings.md",
+        "docs/tickets/backlog/DFS-069-mark-folder-groups-dealt-with/progress.md",
+        "server/frontend/src/app/results/overlaps-tab.css",
+        "server/frontend/src/app/results/overlaps-tab.html",
+        "server/frontend/src/app/results/overlaps-tab.ts",
+        "server/frontend/src/app/results/result-done-groups.ts"
+      ],
+      "commit": "0c206d6d4c22b8dbbfb8a3818d4c9df2e5ec64bc"
+    },
+    {
+      "id": "tests",
+      "agent": "test-author",
+      "after": [
+        "design"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 18,
+          "wallClockSeconds": 137,
+          "outcome": "passed",
+          "note": "red: 24 story tests fail with stubs, 23 other tests fail on the ticket's stub, 5 fail in declared classes, 1189 other tests pass (3 skipped); traceability: 7 criteria traced through 13 scenarios to tests and test-plan.md"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-069-mark-folder-groups-dealt-with/test-plan.md",
+        "server/frontend/src/app/results/overlaps-tab.spec.ts",
+        "server/frontend/src/app/results/result-done-groups.spec.ts"
+      ],
+      "commit": "2d3b8e09aacaf44009c7ff9808efe2991f2be0a5"
+    },
+    {
+      "id": "implement",
+      "agent": "implementer",
+      "after": [
+        "tests"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "sonnet",
+          "effort": "medium",
+          "turns": 27,
+          "wallClockSeconds": 341,
+          "outcome": "passed",
+          "note": "green: 1238 passed, 3 skipped; disabled, freeze, touches, stubs, traceability, consistency pass"
+        }
+      ],
+      "artifacts": [
+        "CLAUDE.md",
+        "docs/design/ui.md",
+        "docs/tickets/backlog/DFS-069-mark-folder-groups-dealt-with/progress.md",
+        "server/frontend/src/app/results/overlaps-tab.ts",
+        "server/frontend/src/app/results/result-done-groups.ts"
+      ],
+      "commit": "60fb0af2ba83cb4c675d0d603f0146384cdf6703"
+    },
+    {
+      "id": "verify",
+      "agent": "verifier",
+      "after": [
+        "implement"
+      ],
+      "status": "done",
+      "runs": [
+        {
+          "attempt": 1,
+          "model": "opus",
+          "effort": "medium",
+          "turns": 29,
+          "wallClockSeconds": 372,
+          "outcome": "passed",
+          "note": "consistency passes"
+        }
+      ],
+      "artifacts": [
+        "docs/tickets/backlog/DFS-069-mark-folder-groups-dealt-with/DFS-069-ticket.md",
+        "docs/tickets/backlog/DFS-069-mark-folder-groups-dealt-with/learnings.md",
+        "docs/tickets/backlog/DFS-069-mark-folder-groups-dealt-with/verification.md"
+      ],
+      "commit": "24faa861174735ae82afe32c0cce9ca6479564e3"
+    }
+  ],
+  "gates": [
+    {
+      "after": "done",
+      "status": "pending"
+    }
+  ],
+  "defects": []
+}
