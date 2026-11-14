@@ -1,7 +1,7 @@
 ---
 id: DFS-069
 title: Mark folder groups as dealt with
-status: in-review
+status: done
 type: feature
 scope: []
 archetype: component
@@ -22,7 +22,7 @@ touches:
 blocked_reason:
 created: 2026-11-13
 updated: 2026-11-13
-completed:
+completed: 2026-11-13
 ---
 
 # DFS-069: Mark folder groups as dealt with
