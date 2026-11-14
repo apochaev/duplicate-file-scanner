@@ -174,11 +174,11 @@ Feature: Mark folder groups as dealt with
 
 ## Definition of done
 
-- [ ] Every scenario above is an automated test and passes (Vitest, `:server:npmTest`)
-- [ ] `./gradlew build` is green (includes the ArchUnit and module-export tests)
-- [ ] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
-- [ ] `server/frontend/openapi.json` is unchanged
-- [ ] `CLAUDE.md` and `docs/design/ui.md` describe the checkbox, the "Dealt with on this page" expander, the counts and the storage key
+- [x] Every scenario above is an automated test and passes (Vitest, `:server:npmTest`)
+- [x] `./gradlew build` is green (includes the ArchUnit and module-export tests)
+- [x] No source files changed outside the paths listed under Touches (the ticket folder's own files excepted)
+- [x] `server/frontend/openapi.json` is unchanged
+- [x] `CLAUDE.md` and `docs/design/ui.md` describe the checkbox, the "Dealt with on this page" expander, the counts and the storage key
 
 ## Open questions
 
